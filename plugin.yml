@@ -1,0 +1,60 @@
+name: RealShopping
+main: com.github.kuben.realshopping.RealShopping
+version: 0.20
+
+commands:
+   rsenter:
+      description: Enter a store. Use this command standing at the entrance.
+      usage: /rsenter OR right click on glass standing at the entrance.
+      permission: realshopping.rsenter
+      permission-message: You don't have permission to use this command
+   rspay:
+      description: Pay for the things you have taken.
+      usage: /rspay OR right click on a "cash register".
+      permission: realshopping.rspay
+      permission-message: You don't have permission to use this command
+   rsexit:
+      description: Leave a store.
+      usage: /rsexit OR right click on glass standing at the exit.
+      permission: realshopping.rsexit
+      permission-message: You don't have permission to use this command
+   rscost:
+      description: Check how much you need to pay for your articles.
+      usage: /rscost OR left click on a "cash register".
+      permission: realshopping.rscost
+      permission-message: You don't have permission to use this command
+   rsprices:
+      description: Look at the price list.
+      usage: /rsprices [store] [page]
+      permission: realshopping.rsprices
+      permission-message: You don't have permission to use this command
+   rssetprices:
+      description: Add/remove prices.
+      usage: /rssetprices add|del [store] item_id[:cost]
+      permission: realshopping.rssetprices
+      permission-message: You don't have permission to use this command
+   rssetchests:
+      description: Manage self-refilling chests.
+      usage: /rssetchests create|del|additems|delitems [item_id[,item_id[,item_id...]]]
+      permission: realshopping.rssetchests
+      permission-message: You don't have permission to use this command
+   rssetstores:
+      description: Add or remove player stores.
+      usage: /rssetstores entrance|exit|createstore|delstore [name]
+      permission: realshopping.rssetstores
+      permission-message: You don't have permission to use this command
+   rsset:
+      description: Add or remove admin stores.
+      usage: /rsset entrance|exit|createstore|delstore [name]
+      permission: realshopping.rsset
+      permission-message: You don't have permission to use this command
+   rsunjail:
+      description: Unjail a player and teleport him outside the store he stole from.
+      usage: /rsunjail player
+      permission: realshopping.rsunjail
+      permission-message: You don't have permission to use this command
+   rsreload:
+      description: Reloads the config and saves the prices.xml
+      usage: /rsreload
+      permission: realshopping.rsreload
+      permission-message: You don't have permission to use this command
