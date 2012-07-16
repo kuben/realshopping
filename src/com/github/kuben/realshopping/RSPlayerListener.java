@@ -32,6 +32,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 
@@ -76,5 +77,12 @@ public class RSPlayerListener implements Listener {
 					}
 				}
 		}
+	}
+	@EventHandler (priority = EventPriority.MONITOR)
+	public void onLogin(PlayerLoginEvent event){
+		Player player = event.getPlayer();
+		if(!RealShopping.newUpdate.equals(""))
+			if(player.isOp())
+				player.sendMessage(ChatColor.LIGHT_PURPLE + RealShopping.newUpdate);
 	}
 }

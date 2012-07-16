@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang.ArrayUtils;
 import org.bukkit.Material;
 
 import org.bukkit.Location;
@@ -32,8 +34,7 @@ import org.bukkit.inventory.PlayerInventory;
 public class Shop {
 
 	public Map<String, String> players = new HashMap<String, String>();
-	public Map<String, ItemStack[][]> origInvs = new HashMap<String, ItemStack[][]>();
-	public Map<Location,ArrayList<Integer>> chests = new HashMap<Location, ArrayList<Integer>>();
+	public Map<Location,ArrayList<Integer[]>> chests = new HashMap<Location, ArrayList<Integer[]>>();
 	public List<Location> entrance = new ArrayList<Location>(), exit = new ArrayList<Location>();
 	public String name, world, owner;//Admin stores: owner = @admin
 	
@@ -65,7 +66,7 @@ public class Shop {
 	}
 	public boolean addChest(Location l){
 		if(!chests.containsKey(l)){
-			chests.put(l, new ArrayList<Integer>());
+			chests.put(l, new ArrayList<Integer[]>());
 			return true;
 		}
 		else return false;
@@ -75,30 +76,36 @@ public class Shop {
 		else return false;
 		return true;
 	}
-	public int addChestItem(Location l, int[] id){
+	public int addChestItem(Location l, int[][] id){
 		int  j = -1;
 		if(chests.containsKey(l)){
 			j++;
-			for(int i:id){
-				if(!chests.get(l).contains(i)){
-					if(chests.get(l).size() < 27){
-						if(Material.getMaterial(i) != null){
-							chests.get(l).add(i);
-							j++;
-						}
+			for(int[] i:id){
+				if(chests.get(l).size() < 27){
+					if(Material.getMaterial(i[0]) != null){
+						chests.get(l).add(ArrayUtils.toObject(i));
+						j++;
 					}
 				}
 			}
 		}
 		return j;
 	}
-	public int delChestItem(Location l, int[] id){
+	public int delChestItem(Location l, int[][] id){
 		int j = -1;
 		if(chests.containsKey(l)){
 			j++;
-			for(Object i:id) {
-				if(chests.get(l).contains(i)){
-					chests.get(l).remove(i);
+			for(int[] i:id) {
+				boolean match = false;
+				int k = 0;
+				for(;k < chests.get(l).size();k++){
+					if(chests.get(l).get(k)[0] == i[0] && chests.get(l).get(k)[1] == i[1]){
+						match = true;
+						break;
+					}
+				}
+				if(match){
+					chests.get(l).remove(k);
 					j++;
 				}
 			}

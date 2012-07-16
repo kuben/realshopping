@@ -1,6 +1,6 @@
 name: RealShopping
 main: com.github.kuben.realshopping.RealShopping
-version: 0.20
+version: 0.21
 
 commands:
    rsenter:
@@ -47,6 +47,11 @@ commands:
       description: Add or remove admin stores.
       usage: /rsset entrance|exit|createstore|delstore [name]
       permission: realshopping.rsset
+      permission-message: You don't have permission to use this command
+   rsclaim:
+      description: Claims items other players have stolen from your stores.
+      usage: /rsclaim
+      permission: realshopping.rsclaim
       permission-message: You don't have permission to use this command
    rsunjail:
       description: Unjail a player and teleport him outside the store he stole from.
