@@ -1,6 +1,6 @@
 name: RealShopping
 main: com.github.kuben.realshopping.RealShopping
-version: 0.21
+version: 0.30
 
 commands:
    rsenter:
@@ -52,6 +52,11 @@ commands:
       description: Claims items other players have stolen from your stores.
       usage: /rsclaim
       permission: realshopping.rsclaim
+      permission-message: You don't have permission to use this command
+   rsshipped:
+      description: Manages items shipped from stores.
+      usage: /rsshipped [collect [ID] | inspect ID]
+      permission: realshopping.rsshipped
       permission-message: You don't have permission to use this command
    rsunjail:
       description: Unjail a player and teleport him outside the store he stole from.

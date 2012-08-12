@@ -26,15 +26,21 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.StorageMinecart;
 import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+import org.bukkit.inventory.Inventory;
+
+import com.sun.xml.internal.stream.Entity;
 
 public class RSPlayerListener implements Listener {
 	@EventHandler (priority = EventPriority.HIGH)
@@ -50,6 +56,7 @@ public class RSPlayerListener implements Listener {
 	@EventHandler (priority = EventPriority.HIGH)
 	public void onInteract(PlayerInteractEvent event){
 		Player player = event.getPlayer();
+		//player.sendMessage(event.getItem() + " , " + event.useItemInHand() + " , " + event.useInteractedBlock());
 		Block b = event.getClickedBlock();
 		if(RealShopping.jailedPlayers.containsKey(player.getName())) event.setCancelled(true);
 		else {
@@ -65,24 +72,62 @@ public class RSPlayerListener implements Listener {
 				} else if(b.getType() == Material.OBSIDIAN) {
 					if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.STEP){
 						if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
-							if(player.hasPermission("realshopping.rspay")) event.setCancelled(RealShopping.pay(player));
+							if(player.hasPermission("realshopping.rspay")){
+								StorageMinecart[] SM = RealShopping.checkForCarts(event.getClickedBlock().getLocation());
+								Inventory[] carts = new Inventory[SM.length];
+								for(int i = 0;i < SM.length;i++)
+									carts[i] = SM[i].getInventory();
+								event.setCancelled(RealShopping.pay(player, carts));
+							}
 						} else if(event.getAction() == Action.LEFT_CLICK_BLOCK) if(player.hasPermission("realshopping.rscost")){
 							if(RealShopping.shopMap.get(RealShopping.playerMap.get(player.getName())).players.containsKey(player.getName())){
 								event.setCancelled(true);
-								player.sendMessage(LangPack.YOURARTICLESCOST + RealShopping.cost(player) + RealShopping.unit);
+								StorageMinecart[] SM = RealShopping.checkForCarts(event.getClickedBlock().getLocation());
+								Inventory[] carts = new Inventory[SM.length];
+								for(int i = 0;i < SM.length;i++)
+									carts[i] = SM[i].getInventory();
+								player.sendMessage(LangPack.YOURARTICLESCOST + RealShopping.cost(player, carts) + RealShopping.unit);
 							} else {
 								player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
+							}
+						}
+					} else if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.RED_MUSHROOM){
+						if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
+							if(player.hasPermission("realshopping.rspay")){
+								Object[] mcArr = player.getWorld().getEntitiesByClass(StorageMinecart.class).toArray();
+								StorageMinecart sM = null;
+								for(Object o:mcArr)
+									if(((StorageMinecart)o).getLocation().getBlock().getLocation().equals(b.getLocation().subtract(0,1,0)))
+										sM = (StorageMinecart)o;
+								if(sM != null)
+									event.setCancelled(RealShopping.shipCartContents(sM, player));
 							}
 						}
 					}
 				}
 		}
 	}
+/*	@EventHandler (priority = EventPriority.LOW)
+	public void uno(PlayerInteractEvent event){
+		if(event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK)
+			if(RealShopping.shopMap.get(RealShopping.playerMap.get(event.getPlayer().getName())).players.containsKey(event.getPlayer().getName()))
+				event.setCancelled(true);
+	}
+	@EventHandler (priority = EventPriority.LOW)
+	public void dos(PlayerInteractEntityEvent event){
+		if(event. == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK)
+			if(RealShopping.shopMap.get(RealShopping.playerMap.get(event.getPlayer().getName())).players.containsKey(event.getPlayer().getName()))
+				event.setCancelled(true);
+	}
+	void checkIllegalItemUse(){
+
+	}*/
 	@EventHandler (priority = EventPriority.MONITOR)
 	public void onLogin(PlayerLoginEvent event){
 		Player player = event.getPlayer();
 		if(!RealShopping.newUpdate.equals(""))
-			if(player.isOp())
+			if(player.isOp()){
 				player.sendMessage(ChatColor.LIGHT_PURPLE + RealShopping.newUpdate);
+			}
 	}
 }

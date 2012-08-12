@@ -55,12 +55,12 @@ public class RSCommandExecutor implements CommandExecutor {
     		else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE);
     	} else if(cmd.getName().equalsIgnoreCase("rspay")){
     		if(player != null){
-    			return rs.pay(player);
+    			return rs.pay(player, null);
     		}
     		else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE);
     	} else if(cmd.getName().equalsIgnoreCase("rscost")){
     		if(player != null){
-    			player.sendMessage(ChatColor.RED + LangPack.YOURARTICLESCOST + rs.cost(player));
+    			player.sendMessage(ChatColor.RED + LangPack.YOURARTICLESCOST + rs.cost(player, null));
     			return true;
     		}
     		else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE);
@@ -317,6 +317,43 @@ public class RSCommandExecutor implements CommandExecutor {
     				rs.stolenToClaim.remove(player.getName());
     				return true;
     			} else sender.sendMessage(ChatColor.RED + "Nothing to claim.");
+    		} else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE);
+    	} else if(cmd.getName().equalsIgnoreCase("rsshipped")){
+    		if(player != null){
+    			if(args.length == 0){
+        			if(rs.shippedToCollect.containsKey(player.getName())){
+        				int toClaim = rs.shippedToCollect.get(player.getName()).size();
+        				if(toClaim != 0) sender.sendMessage(ChatColor.GREEN + "You have packages with ids from 1 to " + toClaim + " to pick up.");
+        				else sender.sendMessage(ChatColor.GREEN + "You don't have any packages to pick up.");
+        				return true;
+        			} else sender.sendMessage(ChatColor.RED + "There are no packages to pick up.");
+    			} else if(args.length == 1 && args[0].equalsIgnoreCase("collect")){
+    				Location l = new Location(player.getWorld(), player.getLocation().getBlockX(), player.getLocation().getBlockY() - 1, player.getLocation().getBlockZ());
+    				return rs.collectShipped(l, player, 1);
+   				} else if(args.length == 1 && args[0].equalsIgnoreCase("inspect")){
+    				sender.sendMessage("You have to specify the id of the package you want to inspect.");
+    			} else if(args.length == 2 && args[0].equalsIgnoreCase("collect")){
+    				Location l = new Location(player.getWorld(), player.getLocation().getBlockX(), player.getLocation().getBlockY() - 1, player.getLocation().getBlockZ());
+    				try {
+    					return rs.collectShipped(l, player, Integer.parseInt(args[1]));
+    				} catch (NumberFormatException e){
+    					sender.sendMessage(args[1] + " is not an integer.");
+    				}
+    			} else if(args.length == 2 && args[0].equalsIgnoreCase("inspect")){
+        			if(rs.shippedToCollect.containsKey(player.getName())){
+        				try {
+            				String str = rs.formatItemStackToMess(rs.shippedToCollect.get(player.getName()).get(Integer.parseInt(args[1]) - 1));
+            				sender.sendMessage("The contents of the package are: " + str);
+            				return true;
+        				} catch (ArrayIndexOutOfBoundsException e){
+        					sender.sendMessage("ArrayIndexOutOfBoundsException");
+        				} catch (IndexOutOfBoundsException e){
+        					sender.sendMessage("There's no package with the id " + args[1]);
+        				} catch (NumberFormatException e){
+        					sender.sendMessage(args[1] + " is not an integer.");
+        				}
+        			} else sender.sendMessage(ChatColor.RED + "There are no packages to pick up.");
+    			}
     		} else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE);
     	} else if(cmd.getName().equalsIgnoreCase("rsunjail")){
     		if (args.length == 1){
