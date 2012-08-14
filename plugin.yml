@@ -28,6 +28,11 @@ commands:
       usage: /rsprices [store] [page]
       permission: realshopping.rsprices
       permission-message: You don't have permission to use this command
+   rsstores:
+      description: Manages your stores (and admin stores if you have permission).
+      usage: /rsstores store [buyfor %_of_sell_price|collect [-c] [amount]|ban player|unban player|startsale %_off [itemID[,itemID[,itemID]]]...]|endsale]
+      permission: realshopping.rsstores
+      permission-message: You don't have permission to use this command
    rssetprices:
       description: Add/remove prices.
       usage: /rssetprices add|del [store] item_id[:cost]
@@ -47,11 +52,6 @@ commands:
       description: Add or remove admin stores.
       usage: /rsset entrance|exit|createstore|delstore [name]
       permission: realshopping.rsset
-      permission-message: You don't have permission to use this command
-   rsclaim:
-      description: Claims items other players have stolen from your stores.
-      usage: /rsclaim
-      permission: realshopping.rsclaim
       permission-message: You don't have permission to use this command
    rsshipped:
       description: Manages items shipped from stores.

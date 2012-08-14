@@ -35,10 +35,12 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 
 import com.sun.xml.internal.stream.Entity;
 
@@ -47,10 +49,10 @@ public class RSPlayerListener implements Listener {
 	public void onTeleport(PlayerTeleportEvent event){
 		Player player = event.getPlayer();
 		if(RealShopping.playerMap.containsKey(player.getName()) && event.getCause() != TeleportCause.UNKNOWN){
-			if(!RealShopping.hasPaid(player)){
+//			if(!RealShopping.hasPaid(player)){
 				event.setCancelled(true);
 				RealShopping.punish(player);
-			}
+//			}
 		}
 	}
 	@EventHandler (priority = EventPriority.HIGH)
@@ -103,6 +105,18 @@ public class RSPlayerListener implements Listener {
 									event.setCancelled(RealShopping.shipCartContents(sM, player));
 							}
 						}
+					} else if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.BROWN_MUSHROOM){
+						if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
+							if(event.hasItem()){
+								event.setCancelled(RealShopping.addItemToSell(player, event.getItem()));
+							} else {
+								event.setCancelled(RealShopping.confirmToSell(player));
+							}
+						} else if(event.getAction() == Action.LEFT_CLICK_BLOCK){
+							if(!event.hasItem()){
+								event.setCancelled(RealShopping.cancelToSell(player));
+							}
+						}
 					}
 				}
 		}
@@ -123,7 +137,7 @@ public class RSPlayerListener implements Listener {
 
 	}*/
 	@EventHandler (priority = EventPriority.MONITOR)
-	public void onLogin(PlayerLoginEvent event){
+	public void onLogin(PlayerJoinEvent event){
 		Player player = event.getPlayer();
 		if(!RealShopping.newUpdate.equals(""))
 			if(player.isOp()){

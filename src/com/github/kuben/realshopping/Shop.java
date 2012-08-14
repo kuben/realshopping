@@ -21,8 +21,10 @@ package com.github.kuben.realshopping;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.bukkit.Material;
@@ -35,8 +37,12 @@ public class Shop {
 
 	public Map<String, String> players = new HashMap<String, String>();
 	public Map<Location,ArrayList<Integer[]>> chests = new HashMap<Location, ArrayList<Integer[]>>();
+	public Map<String,ArrayList<ItemStack>> sellToStore = new HashMap<String, ArrayList<ItemStack>>();
+	public Map<Integer, Integer> sale = new HashMap<Integer, Integer>();
 	public List<Location> entrance = new ArrayList<Location>(), exit = new ArrayList<Location>();
+	public Set<String> banned = new HashSet<String>();
 	public String name, world, owner;//Admin stores: owner = @admin
+	public int buyFor = 0;
 	
 	public Shop(String name, String world, String owner){
 		super();

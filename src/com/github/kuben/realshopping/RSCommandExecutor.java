@@ -20,11 +20,14 @@
 package com.github.kuben.realshopping;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Chest;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -100,6 +103,222 @@ public class RSCommandExecutor implements CommandExecutor {
 					sender.sendMessage(ChatColor.RED + "" + args[1] + LangPack.ISNOTAVALIDPAGENUMBER);
 				}
 			}
+    	} else if(cmd.getName().equalsIgnoreCase("rsstores")) {
+    		if(args.length > 0){
+    			boolean isOwner = false;
+    			if(rs.shopMap.containsKey(args[0]))
+    				if(rs.shopMap.get(args[0]).owner.equalsIgnoreCase("@admin")){
+    					if(player == null){
+    						isOwner = true;
+    					} else if(player.hasPermission("realshopping.rsset")){
+    						isOwner = true;
+    					}
+    				} else {
+    					if(player != null){
+    						if(rs.shopMap.get(args[0]).owner.equalsIgnoreCase(player.getName())){
+    							isOwner = true;
+    						}
+    					}
+    				}
+    			else {
+    				sender.sendMessage(args[0] + LangPack.DOESNTEXIST);
+    				return false;
+    			}
+    			
+    			if(args.length == 1){
+    				sender.sendMessage("Store " + args[0] + ((rs.shopMap.get(args[0]).owner.equalsIgnoreCase("@admin"))?"":" owned by " + rs.shopMap.get(args[0]).owner));
+    				if(rs.shopMap.get(args[0]).buyFor > 0) sender.sendMessage("Buys for " + rs.shopMap.get(args[0]).buyFor + "% of original price.");
+    				if(!rs.shopMap.get(args[0]).sale.isEmpty()) sender.sendMessage("Has a " + rs.shopMap.get(args[0]).sale.values().toArray()[0] + "% off sale right now!");
+	    		}
+    			
+    			if(isOwner){
+    	    		if(args.length == 2 && args[1].equalsIgnoreCase("collect")){
+    	        		if(player != null){
+    	        			if(!rs.shopMap.get(args[0]).owner.equalsIgnoreCase("@admin")){
+    	        				if(rs.stolenToClaim.containsKey(player.getName())){
+    	        					for(ItemStack iS:rs.stolenToClaim.get(player.getName())){
+    	        						player.getWorld().dropItem(player.getLocation(), iS);
+    	        					}
+    	        					rs.stolenToClaim.remove(player.getName());
+    	        					return true;
+    	        				} else sender.sendMessage(ChatColor.RED + "Nothing to collect.");
+    	        			}
+    	        		} else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE); 
+    	    		} else if(args.length == 3 && args[1].equalsIgnoreCase("collect")){
+    	        		if(player != null){
+    	        			if(!rs.shopMap.get(args[0]).owner.equalsIgnoreCase("@admin")){
+    	        				if(args[2].equalsIgnoreCase("-c")){
+    	        					if(player.getLocation().subtract(0, 1, 0).getBlock().getState() instanceof Chest){
+    	    	        				if(rs.stolenToClaim.containsKey(player.getName())){
+    	    	        					ItemStack[] tempIs = new ItemStack[27];
+    	    	        					ItemStack[] origIs = (ItemStack[]) rs.stolenToClaim.get(player.getName()).toArray();
+    	    	        					int i = 0;
+    	    	        					for(;i < 27 || i < origIs.length;i++){
+    	    	        						tempIs[i] = origIs[i];
+    	    	        					}
+    	    	        					((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().setContents(tempIs);
+    	    	        					player.sendMessage("Filled chest with " + i + " items.");
+    	    	        					if(origIs.length < 28) rs.stolenToClaim.remove(player.getName());
+    	    	        					else {
+    	    	        						List newIs = new ArrayList();
+    	    	        						for(;i < origIs.length;i++){
+    	    	        							newIs.add(origIs[i]);
+   	    	        							}
+    	    	        						rs.stolenToClaim.put(player.getName(), newIs);
+    	    	        					}
+    	        							return true;
+    	    	        				} else sender.sendMessage(ChatColor.RED + "Nothing to collect.");
+    	        					} else sender.sendMessage("The block you are standing on isn't a chest.");
+    	        				} else {
+    	        					try {
+    	    	        				if(rs.stolenToClaim.containsKey(player.getName())){
+    	    	        					int amount = Integer.parseInt(args[2]);
+    	    	        					ItemStack[] tempIs = (ItemStack[])rs.stolenToClaim.get(player.getName()).toArray();
+    	    	        					int i = 0;
+    	    	        					for(;i < amount && i < tempIs.length;i++){
+    	    	        						player.getWorld().dropItem(player.getLocation(), tempIs[i]);
+    	    	        					}
+    	    	        					player.sendMessage("Dropped " + i + " items.");
+    	    	        					if(tempIs.length < 28) rs.stolenToClaim.remove(player.getName());
+    	    	        					else {
+    	    	        						List newIs = new ArrayList();
+    	    	        						for(;i < tempIs.length;i++){
+    	    	        							newIs.add(tempIs[i]);
+   	    	        							}
+    	    	        						rs.stolenToClaim.put(player.getName(), newIs);
+    	    	        					}
+    	    	        					rs.stolenToClaim.remove(player.getName());
+    	    	        					return true;
+    	    	        				} else sender.sendMessage(ChatColor.RED + "Nothing to collect.");
+    	        					} catch(NumberFormatException e){
+    	        						sender.sendMessage(args[2] + " is not an integer.");
+    	        					}
+    	        				}
+    	        			}
+    	        		} else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE); 
+    	    		} else if(args.length == 4 && args[1].equalsIgnoreCase("collect")){
+    	        		if(player != null){
+    	        			if(!rs.shopMap.get(args[0]).owner.equalsIgnoreCase("@admin")){
+    	        				if(args[2].equalsIgnoreCase("-c")){
+    	        					try {
+        	        					if(player.getLocation().subtract(0, 1, 0).getBlock().getState() instanceof Chest){
+        	    	        				if(rs.stolenToClaim.containsKey(player.getName())){
+        	    	        					int amount = Integer.parseInt(args[2]);
+        	    	        					ItemStack[] origIs = (ItemStack[]) rs.stolenToClaim.get(player.getName()).toArray();
+        	    	        					ItemStack[] tempIs = new ItemStack[Math.min(Math.min(27, amount),origIs.length)];
+        	    	        					int i = 0;
+        	    	        					for(;i < tempIs.length;i++){
+        	    	        						tempIs[i] = origIs[i];
+        	    	        					}
+        	    	        					((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().setContents(tempIs);
+        	    	        					player.sendMessage("Filled chest with " + i + " items.");
+        	    	        					if(origIs.length <= Math.min(27, amount)) rs.stolenToClaim.remove(player.getName());
+        	    	        					else {
+        	    	        						List newIs = new ArrayList();
+        	    	        						for(;i < origIs.length;i++){
+        	    	        							newIs.add(origIs[i]);
+       	    	        							}
+        	    	        						rs.stolenToClaim.put(player.getName(), newIs);
+        	    	        					}
+        	        							return true;
+        	    	        				} else sender.sendMessage(ChatColor.RED + "Nothing to collect.");
+        	        					} else sender.sendMessage("The block you are standing on isn't a chest.");
+    	        					} catch(NumberFormatException e){
+    	        						sender.sendMessage(args[2] + " is not an integer.");
+    	        					}
+    	        				}
+    	        			}
+    	        		} else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE); 
+    	    		}
+    	    		
+    	    		else if(args.length == 3 && args[1].equalsIgnoreCase("buyfor")){
+    					try {
+	    					int pcnt = Integer.parseInt(args[2]);
+	    					if(pcnt <= 100){
+	    						if(pcnt >= 0){
+	    							rs.shopMap.get(args[0]).buyFor = pcnt;
+	    							if(pcnt > 0) sender.sendMessage("Buying things for " + pcnt + "% of selling price.");
+	    							else sender.sendMessage("Not buying from players.");
+	    							rs.updateEntrancesDb();
+	    							return true;
+	    						} else sender.sendMessage("You can't use a value bellow 0."); 
+	    					} else  sender.sendMessage("You can't use a value over 100.");
+    					} catch(NumberFormatException e){
+    						sender.sendMessage(args[2] + " is not an integer.");
+    					}
+    	     		}
+    	    		
+    	    		else if(args.length == 3 && args[1].equalsIgnoreCase("ban")){
+    	    			if(rs.shopMap.get(args[0]).banned.contains(args[2].toLowerCase())) sender.sendMessage(args[2] + " is already banned from your store.");
+    	    			else {
+    	    				rs.shopMap.get(args[0]).banned.add(args[2].toLowerCase());
+    	    				sender.sendMessage("Banned " + args[2] + " from store.");
+    	    			}
+    	    			rs.updateEntrancesDb();
+    	    			return true;
+    	     		} else if(args.length == 3 && args[1].equalsIgnoreCase("unban")){
+    	     			if(rs.shopMap.get(args[0]).banned.contains(args[2].toLowerCase())){
+    	     				rs.shopMap.get(args[0]).banned.remove(args[2].toLowerCase());
+    	     				sender.sendMessage(args[2] + " is no longer banned from your store.");
+    	     			} else sender.sendMessage(args[2] + " was not banned from your store.");
+    	     			rs.updateEntrancesDb();
+    	     			return true;
+    	    		}
+    	    		
+    	    		else if(args.length == 3 && args[1].equalsIgnoreCase("startsale")){
+    					try {
+	    					int pcnt = Integer.parseInt(args[2]);
+	    					if(pcnt < 100){
+	    						if(pcnt > 0){
+	    							if(rs.prices.containsKey(args[0])){
+	    								rs.shopMap.get(args[0]).sale.clear();
+	    								Object[] keys = rs.prices.get(args[0]).keySet().toArray();
+	    								int i = 0;
+	    								for(;i < keys.length;i++){
+	    									rs.shopMap.get(args[0]).sale.put((Integer)keys[i], pcnt);
+	    								}
+	    								if(pcnt > 0) sender.sendMessage(pcnt + "% off " + i + " items.");
+	    								else sender.sendMessage("No items are sold in the store.");
+	    								return true;
+	    							} else sender.sendMessage("No items are sold in the store.");
+	    						} else sender.sendMessage("You can't use a value of 0 or bellow."); 
+	    					} else  sender.sendMessage("You can't use a value of 100 or more.");
+    					} catch(NumberFormatException e){
+    						sender.sendMessage(args[2] + " is not an integer.");
+    					}
+    	    		} else if(args.length == 4 && args[1].equalsIgnoreCase("startsale")){
+    					try {
+	    					int pcnt = Integer.parseInt(args[2]);
+	    					if(pcnt < 100){
+	    						if(pcnt > 0){
+	    							String[] keys = args[3].split(",");
+	    							if(keys.length > 0){
+	    								rs.shopMap.get(args[0]).sale.clear();
+	    								int i = 0;
+	    								int j = 0;
+	    								for(;i < keys.length;i++){
+	    									int type = Integer.parseInt(keys[i]);
+	    									if(rs.prices.get(args[0]).containsKey(type)){
+	    										rs.shopMap.get(args[0]).sale.put(type, pcnt);
+	    										j++;
+	    									}
+	    								}
+	    								if(pcnt > 0) sender.sendMessage(pcnt + "% off " + j + " items.");
+	    								else sender.sendMessage("No items are sold in the store.");
+	    								return true;
+	    							} else sender.sendMessage(args[3] + " is not a valid argument."); 
+	    						} else sender.sendMessage("You can't use a value of 0 or bellow."); 
+	    					} else  sender.sendMessage("You can't use a value of 100 or more.");
+    					} catch(NumberFormatException e){
+    						sender.sendMessage(args[2] + " is not an integer.");
+    					}
+    	    		} else if(args.length == 2 && args[1].equalsIgnoreCase("endsale")){
+    	    			rs.shopMap.get(args[0]).sale.clear();
+    	    			sender.sendMessage("Sale ended.");
+    	    			return true;
+    	    		}
+    			} else sender.sendMessage("You don't have permission to manage that store.");
+    		}
     	} else if(cmd.getName().equalsIgnoreCase("rssetprices")){
     		String shop = "";
     		int ii = 1;
@@ -307,16 +526,6 @@ public class RSCommandExecutor implements CommandExecutor {
     					return true;
     				} else player.sendMessage(ChatColor.RED + args[1] + LangPack.WASNTFOUND);
     			}
-    		} else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE);
-    	} else if(cmd.getName().equalsIgnoreCase("rsclaim")){
-    		if(player != null){
-    			if(rs.stolenToClaim.containsKey(player.getName())){
-    				for(ItemStack iS:rs.stolenToClaim.get(player.getName())){
-    					player.getWorld().dropItem(player.getLocation(), iS);
-    				}
-    				rs.stolenToClaim.remove(player.getName());
-    				return true;
-    			} else sender.sendMessage(ChatColor.RED + "Nothing to claim.");
     		} else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE);
     	} else if(cmd.getName().equalsIgnoreCase("rsshipped")){
     		if(player != null){
