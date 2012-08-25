@@ -1,6 +1,6 @@
 name: RealShopping
 main: com.github.kuben.realshopping.RealShopping
-version: 0.30
+version: 0.31
 
 commands:
    rsenter:
@@ -25,32 +25,32 @@ commands:
       permission-message: You don't have permission to use this command
    rsprices:
       description: Look at the price list.
-      usage: /rsprices [store] [page]
+      usage: /rsprices [STORE] [PAGE]
       permission: realshopping.rsprices
       permission-message: You don't have permission to use this command
    rsstores:
       description: Manages your stores (and admin stores if you have permission).
-      usage: /rsstores store [buyfor %_of_sell_price|collect [-c] [amount]|ban player|unban player|startsale %_off [itemID[,itemID[,itemID]]]...]|endsale]
+      usage: /rsstores store [buyfor %_OF_SELL_PRICE|collect [-c] [AMOUNT]|ban PLAYER|unban PLAYER|startsale %_OFF [ITEMID[,ITEMID[,ITEMID...]]]|endsale]
       permission: realshopping.rsstores
       permission-message: You don't have permission to use this command
    rssetprices:
       description: Add/remove prices.
-      usage: /rssetprices add|del [store] item_id[:cost]
+      usage: /rssetprices add|del [STORE] ITEM_ID[:COST]
       permission: realshopping.rssetprices
       permission-message: You don't have permission to use this command
    rssetchests:
       description: Manage self-refilling chests.
-      usage: /rssetchests create|del|additems|delitems [item_id[,item_id[,item_id...]]]
+      usage: /rssetchests create|del|additems|delitems [ITEMID[,ITEMID[,ITEMID...]]]
       permission: realshopping.rssetchests
       permission-message: You don't have permission to use this command
    rssetstores:
       description: Add or remove player stores.
-      usage: /rssetstores entrance|exit|createstore|delstore [name]
+      usage: /rssetstores entrance|exit|createstore|delstore [NAME]
       permission: realshopping.rssetstores
       permission-message: You don't have permission to use this command
    rsset:
       description: Add or remove admin stores.
-      usage: /rsset entrance|exit|createstore|delstore [name]
+      usage: /rsset entrance|exit|createstore|delstore [NAME]
       permission: realshopping.rsset
       permission-message: You don't have permission to use this command
    rsshipped:
@@ -58,9 +58,14 @@ commands:
       usage: /rsshipped [collect [ID] | inspect ID]
       permission: realshopping.rsshipped
       permission-message: You don't have permission to use this command
+   rstplocs:
+      description: Makes it possible for users to teleport to certain allowed areas from a store, if they have paid for their items.
+      usage: /rstplocs setwhitelistmode|setblacklistmode|add RADIUS|remove
+      permission: realshopping.rsallowedtplocs
+      permission-message: You don't have permission to use this command
    rsunjail:
       description: Unjail a player and teleport him outside the store he stole from.
-      usage: /rsunjail player
+      usage: /rsunjail PLAYER
       permission: realshopping.rsunjail
       permission-message: You don't have permission to use this command
    rsreload:

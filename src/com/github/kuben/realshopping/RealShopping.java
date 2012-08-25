@@ -99,15 +99,22 @@ public class RealShopping extends JavaPlugin {
 	public static Map<String, Location> jailedPlayers;
 	public static Map<String, List<ItemStack>> stolenToClaim;
 	public static Map<String, List<ItemStack[]>> shippedToCollect;
+	public static Map<Location, Integer> forbiddenTpLocs;
+	
+	public static Set<Integer> forbiddenInStore;
+	public static Set<String> cartEnabledW;
+	
+	public static boolean tpLocBlacklist;
 	
     public static Economy econ;
     static boolean keepstolen;
+    static boolean enableSelling;
     static String punishment;
     static String langpack;
     static double pstorecreate;
-    static int[] hellLoc;
-    static int[] jailLoc;
-    static int[] dropLoc;
+    static Location hellLoc;
+    static Location jailLoc;
+    static Location dropLoc;
     String entrance;
     String exit;
 	static Logger log;	
@@ -129,8 +136,15 @@ public class RealShopping extends JavaPlugin {
     	jailedPlayers = new HashMap<String, Location>();
     	stolenToClaim = new HashMap<String, List<ItemStack>>();
     	shippedToCollect = new HashMap<String, List<ItemStack[]>>();
+    	forbiddenTpLocs = new HashMap<Location, Integer>();
+    	
+    	forbiddenInStore = new HashSet<Integer>();
+    	cartEnabledW = new HashSet<String>();
+    	
+    	tpLocBlacklist = false;
         econ = null;
         keepstolen = false;
+        enableSelling = false;
         punishment = null;
         langpack = null;
         hellLoc = null;
@@ -146,8 +160,8 @@ public class RealShopping extends JavaPlugin {
     	unit = "$";
     	
     	try {
-    		double newest = updateCheck(0.30);
-    		if(newest > 0.30){
+    		double newest = updateCheck(0.31);
+    		if(newest > 0.31){
     			newUpdate = "v" + newest + " of RealShopping is available for download. Update for new features and/or bugfixes.";
     			log.info(newUpdate);
     		}
@@ -170,25 +184,22 @@ public class RealShopping extends JavaPlugin {
     			getCommand("rssetprices").setExecutor(cmdExe);
     			getCommand("rssetchests").setExecutor(cmdExe);
     			getCommand("rsshipped").setExecutor(cmdExe);
+    			getCommand("rstplocs").setExecutor(cmdExe);
     			getCommand("rsunjail").setExecutor(cmdExe);
     			getCommand("rsreload").setExecutor(cmdExe);
     		}
-        	hellLoc = new int[3];
-    		hellLoc[0] = 0;
-    		hellLoc[1] = 0;
-    		hellLoc[2] = 0;
-        	jailLoc = new int[3];
-    		jailLoc[0] = 0;
-    		jailLoc[1] = 0;
-    		jailLoc[2] = 0;
-    		dropLoc = new int[3];
-    		dropLoc[0] = 0;
-    		dropLoc[1] = 0;
-    		dropLoc[2] = 0;
+    		if(getServer().getWorld("world") != null){
+    			hellLoc = new Location(getServer().getWorld("world"),0,0,0);
+    			jailLoc = new Location(getServer().getWorld("world"),0,0,0);
+    			dropLoc = new Location(getServer().getWorld("world"),0,0,0);
+    		}
+
             keepstolen = false;
             langpack = "default";
-            punishment = "hell";
+            punishment = "none";
             pstorecreate = 0.0;
+            tpLocBlacklist = true;
+            enableSelling = true;
         	File f = new File(mandir);
         	if(!f.exists()) f.mkdir();
     		FileInputStream fstream;
@@ -198,19 +209,23 @@ public class RealShopping extends JavaPlugin {
     			if(!f.exists()){
     				f.createNewFile();
     				PrintWriter pW = new PrintWriter(f);
+    				pW.println("Properties file for RealShopping v0.31");
     				pW.println("language-pack:default");
     				pW.println("punishment:none");
     				pW.println("keep-stolen-items-after-punish:false");
-    				pW.println("jail-location:0,0,0");
-    				pW.println("hell-location:0,0,0");
-    				pW.println("drop-items-at:0,0,0");
+    				pW.println("jail-location:world;0,0,0");
+    				pW.println("hell-location:world;0,0,0");
+    				pW.println("drop-items-at:world;0,0,0");
     				pW.println("player-stores-create-cost:0.0");
+    				pW.println("enable-shopping-carts-in-worlds:world");
+    				pW.println("enable-selling-to-stores:true");
     				pW.close();
     			} else {
     				fstream = new FileInputStream(f);
     				br = new BufferedReader(new InputStreamReader(fstream));
     				String s;
-    				int notInConfig = 127;
+    				boolean v31plus = false;
+    				int notInConfig = 2047;
     				while ((s = br.readLine()) != null){// Read realshopping.properties
     					if(s.split(":")[0].equals("language-pack")){
     						langpack = s.split(":")[1];
@@ -222,38 +237,94 @@ public class RealShopping extends JavaPlugin {
     						keepstolen = Boolean.parseBoolean(s.split(":")[1]);
     						notInConfig -= 4;
     					} else if(s.split(":")[0].equals("jail-location")){
-    						jailLoc[0] = Integer.parseInt(s.split(":")[1].split(",")[0]);
-    						jailLoc[1] = Integer.parseInt(s.split(":")[1].split(",")[1]);
-    						jailLoc[2] = Integer.parseInt(s.split(":")[1].split(",")[2]);
-    						notInConfig -= 8;
+    						if(v31plus){
+    							if(getServer().getWorld(s.split(":")[1].split(";")[0]) != null){
+    								jailLoc.setWorld(getServer().getWorld(s.split(":")[1].split(";")[0]));
+    								jailLoc.setX(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[0]));
+    								jailLoc.setY(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[1]));
+    								jailLoc.setZ(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[2]));
+    								notInConfig -= 8;
+    							}
+    						} else {
+								jailLoc.setWorld(getServer().getWorld("world"));
+								jailLoc.setX(Integer.parseInt(s.split(":")[1].split(",")[0]));
+								jailLoc.setY(Integer.parseInt(s.split(":")[1].split(",")[1]));
+								jailLoc.setZ(Integer.parseInt(s.split(":")[1].split(",")[2]));
+								notInConfig -= 8;
+    						}
     					} else if(s.split(":")[0].equals("hell-location")){
-    						hellLoc[0] = Integer.parseInt(s.split(":")[1].split(",")[0]);
-    						hellLoc[1] = Integer.parseInt(s.split(":")[1].split(",")[1]);
-    						hellLoc[2] = Integer.parseInt(s.split(":")[1].split(",")[2]);
-    						notInConfig -= 16;
+    						if(v31plus){
+    							if(getServer().getWorld(s.split(":")[1].split(";")[0]) != null){
+    								hellLoc.setWorld(getServer().getWorld(s.split(":")[1].split(";")[0]));
+    								hellLoc.setX(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[0]));
+    								hellLoc.setY(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[1]));
+    								hellLoc.setZ(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[2]));
+    								notInConfig -= 16;
+    							}
+    						} else {
+    							hellLoc.setWorld(getServer().getWorld("world"));
+    							hellLoc.setX(Integer.parseInt(s.split(":")[1].split(",")[0]));
+    							hellLoc.setY(Integer.parseInt(s.split(":")[1].split(",")[1]));
+    							hellLoc.setZ(Integer.parseInt(s.split(":")[1].split(",")[2]));
+								notInConfig -= 16;
+    						}
     					} else if(s.split(":")[0].equals("drop-items-at")){
-    						dropLoc[0] = Integer.parseInt(s.split(":")[1].split(",")[0]);
-    						dropLoc[1] = Integer.parseInt(s.split(":")[1].split(",")[1]);
-    						dropLoc[2] = Integer.parseInt(s.split(":")[1].split(",")[2]);
-    						notInConfig -= 32;
+    						if(v31plus){
+    							if(getServer().getWorld(s.split(":")[1].split(";")[0]) != null){
+    								dropLoc.setWorld(getServer().getWorld(s.split(":")[1].split(";")[0]));
+    								dropLoc.setX(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[0]));
+    								dropLoc.setY(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[1]));
+    								dropLoc.setZ(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[2]));
+    								notInConfig -= 32;
+    							}
+    						} else {
+    							dropLoc.setWorld(getServer().getWorld("world"));
+    							dropLoc.setX(Integer.parseInt(s.split(":")[1].split(",")[0]));
+    							dropLoc.setY(Integer.parseInt(s.split(":")[1].split(",")[1]));
+    							dropLoc.setZ(Integer.parseInt(s.split(":")[1].split(",")[2]));
+								notInConfig -= 32;
+    						}
     					} else if(s.split(":")[0].equals("player-stores-create-cost")){
     						pstorecreate = Double.parseDouble(s.split(":")[1]);
     						notInConfig -= 64;
-    					} else if(s.split(":")[0].equals("enable-hell")){
-    						notInConfig += 128;
+    					} else if(s.split(":")[0].equals("enable-shopping-carts-in-worlds")){
+    						if(s.split(":").length > 1){
+    							for(String str:s.split(":")[1].split(",")){
+    								if(getServer().getWorld(str) != null) cartEnabledW.add(str);
+    							}
+    						}
+    						notInConfig -= 128;
+    					} else if(s.split(":")[0].equals("enable-selling-to-stores")){
+    						enableSelling = Boolean.parseBoolean(s.split(":")[1]);
+    						notInConfig -= 256;
+    					} else if(s.equals("Properties file for RealShopping v0.31")){
+    						notInConfig -= 512;
+    						v31plus = true;
     					}
     				}
     				fstream.close();
     				br.close();
     				if(notInConfig > 0){
         				PrintWriter pW = new PrintWriter(f);
+        				pW.println("Properties file for RealShopping v0.31");
         				pW.println("language-pack:"+langpack);
         				pW.println("punishment:"+punishment);
         				pW.println("keep-stolen-items-after-punish:"+keepstolen);
-        				pW.println("jail-location:"+jailLoc[0]+","+jailLoc[1]+","+jailLoc[2]);
-        				pW.println("hell-location:"+hellLoc[0]+","+hellLoc[1]+","+hellLoc[2]);
-        				pW.println("drop-items-at:"+dropLoc[0]+","+dropLoc[1]+","+dropLoc[2]);
+        				pW.println("jail-location:"+jailLoc.getWorld().getName()+";"+jailLoc.getBlockX()+","+jailLoc.getBlockY()+","+jailLoc.getBlockZ());
+        				pW.println("hell-location:"+hellLoc.getWorld().getName()+";"+hellLoc.getBlockX()+","+hellLoc.getBlockY()+","+hellLoc.getBlockZ());
+        				pW.println("drop-items-at:"+dropLoc.getWorld().getName()+";"+dropLoc.getBlockX()+","+dropLoc.getBlockY()+","+dropLoc.getBlockZ());
         				pW.println("player-stores-create-cost:"+pstorecreate);
+        				pW.print("enable-shopping-carts-in-worlds:");
+        				boolean i = true;
+        				for(String str:cartEnabledW){
+        					if(i){
+        						pW.print(str);
+        						i = false;
+        					}
+        					else pW.print("," + str);
+        				}
+        				pW.println();
+        				pW.println("enable-selling-to-stores:"+enableSelling);
         				pW.close();
     				}
     			}
@@ -278,7 +349,7 @@ public class RealShopping extends JavaPlugin {
     				while ((s = br.readLine()) != null){// Read shops.db
     					if(s.equals("Shops database for RealShopping v0.20") || s.equals("Shops database for RealShopping v0.21")){
     						v2plus = true;
-    					} else if(s.equals("Shops database for RealShopping v0.30")) { 
+    					} else if(s.equals("Shops database for RealShopping v0.30") || s.equals("Shops database for RealShopping v0.31")) { 
     						v2plus = true;
     						v3plus = true;
     					} else {
@@ -370,7 +441,7 @@ public class RealShopping extends JavaPlugin {
     				br = new BufferedReader(new InputStreamReader(fstream));
     				String s;
     				while ((s = br.readLine()) != null){
-    					if(s.equals("Jailed players database for RealShopping v0.21") || s.equals("Jailed players database for RealShopping v0.30")){
+    					if(s.equals("Jailed players database for RealShopping v0.21") || s.equals("Jailed players database for RealShopping v0.30") || s.equals("Jailed players database for RealShopping v0.31")){
 
     					} else {
     						jailedPlayers.put(s.split(";")[0], stringToLoc(s.split(";")[1], s.split(";")[2]));
@@ -383,6 +454,29 @@ public class RealShopping extends JavaPlugin {
     		} catch (Exception e){
 				e.printStackTrace();
     			log.info("Failed while reading jailed.db");
+    		}
+    		
+    		try {
+    			f = new File(mandir + "allowedtplocs.db");
+    			if(f.exists()){
+    				fstream = new FileInputStream(f);
+    				br = new BufferedReader(new InputStreamReader(fstream));
+    				String s;
+    				while ((s = br.readLine()) != null){
+    					if(s.length() > 50 && s.substring(0, 49).equals("Allowed teleport locations for RealShopping v0.31")){
+    						if(s.substring(51).equals("Blacklist")) tpLocBlacklist = true;
+    						else tpLocBlacklist = false;
+    					} else {
+    						forbiddenTpLocs.put(stringToLoc(s.split(";")[0], s.split(";")[1]), Integer.parseInt(s.split(";")[2]));
+    					}
+    				}
+    				fstream.close();
+    				br.close();
+    			}
+    			f.delete();
+    		} catch (Exception e){
+				e.printStackTrace();
+    			log.info("Failed while reading allowedtplocs.db");
     		}
     		
     		try {
@@ -442,6 +536,7 @@ public class RealShopping extends JavaPlugin {
     		if(!f.exists()) f.mkdir();
         	LangPack.initialize(langpack);
         	unit = LangPack.UNIT;
+    		initForbiddenInStore();
     		initMaxDur();
     		log.info("RealShopping initialized");
     	} else {
@@ -518,8 +613,18 @@ public class RealShopping extends JavaPlugin {
 			pW = new PrintWriter(f);
 			keys = jailedPlayers.keySet().toArray();
 			for(int i = 0;i < keys.length;i++){
-				if(i == 0) pW.println("Jailed players database for RealShopping v0.30");
+				if(i == 0) pW.println("Jailed players database for RealShopping v0.31");
 				pW.println((String)keys[i] + ";" + jailedPlayers.get(keys[i]).getWorld().getName() + ";" + locAsString(jailedPlayers.get(keys[i])));
+			}
+			pW.close();
+			
+			f = new File(mandir+"allowedtplocs.db");
+			if(!f.exists()) f.createNewFile();
+			pW = new PrintWriter(f);
+			keys = forbiddenTpLocs.keySet().toArray();
+			for(int i = 0;i < keys.length;i++){
+				if(i == 0) pW.println("Allowed teleport locations for RealShopping v0.31 " + (tpLocBlacklist?"Blacklist":"Whitelist"));
+				pW.println(((Location)keys[i]).getWorld().getName() + ";" + locAsString((Location)keys[i]) + ";" + forbiddenTpLocs.get(keys[i]));
 			}
 			pW.close();
 			
@@ -577,7 +682,7 @@ public class RealShopping extends JavaPlugin {
 			if(!f.exists()) f.createNewFile();
 			PrintWriter pW = new PrintWriter(f);
 			Object[] keys = shopMap.keySet().toArray();
-			pW.println("Shops database for RealShopping v0.30");
+			pW.println("Shops database for RealShopping v0.31");
 			for(int i = 0;i<keys.length;i++){
 				Shop tempShop = shopMap.get(keys[i]);
 				pW.print(keys[i] + ":" + tempShop.world + ":" + tempShop.owner + ":" + tempShop.buyFor);
@@ -652,7 +757,7 @@ public class RealShopping extends JavaPlugin {
 					}
 					return true;
 				} else {
-					player.sendMessage(ChatColor.RED + "You are banned from " + keys[i]);
+					player.sendMessage(ChatColor.RED + LangPack.YOUAREBANNEDFROM + keys[i]);
 					return false;
 				}
 			} else {
@@ -800,7 +905,7 @@ public class RealShopping extends JavaPlugin {
     }
     
     public static boolean addItemToSell(Player p, ItemStack iS){
-    	if(playerMap.containsKey(p.getName())){
+    	if(enableSelling && playerMap.containsKey(p.getName())){
     		if(shopMap.get(playerMap.get(p.getName())).buyFor > 0 && prices.containsKey(playerMap.get(p.getName())) && prices.get(playerMap.get(p.getName())).size() > 0){
     			if(prices.get(playerMap.get(p.getName())).containsKey(iS.getTypeId())){
     				if(shopMap.get(playerMap.get(p.getName())).players.containsKey(p.getName()) && !shopMap.get(playerMap.get(p.getName())).players.get(p.getName()).equals("")){
@@ -820,7 +925,7 @@ public class RealShopping extends JavaPlugin {
     								shopMap.get(playerMap.get(p.getName())).sellToStore.get(p.getName()).add(iS);
     								pItems.remove(iS.getTypeId());//Simply remove because no more items left
     							} else {
-    								p.sendMessage("You don't own the item(s) you want to sell.");
+    								p.sendMessage(ChatColor.RED + LangPack.YOUDONTOWNTHEITEMSYOUWANTTOSELL);
     								return false;
     							}
     						//	Update player inv var
@@ -831,36 +936,36 @@ public class RealShopping extends JavaPlugin {
     							}
     							if(!pInv.equals("")) pInv = pInv.substring(1);		
     							shopMap.get(playerMap.get(p.getName())).players.put(p.getName(), pInv);
-    							p.sendMessage(RealShopping.formatItemStackToMess(new ItemStack[]{iS}) + " added to to-sell list. Confirm sale by right-clicking the same block with no items. Cancel by left-clicking.");
+    							p.sendMessage(ChatColor.GREEN + RealShopping.formatItemStackToMess(new ItemStack[]{iS}) + LangPack.ADDEDTOSELLLIST);
     							return true;
-    						} else p.sendMessage("You don't own the item(s) you want to sell.");
-    					} else p.sendMessage("You don't own the item(s) you want to sell.");
-    				} else p.sendMessage("You don't own the item(s) you want to sell.");
-    			} else p.sendMessage("This store doesn't buy " + iS.getType());
-    		} else p.sendMessage("This store doesn't buy any items.");
+    						} else p.sendMessage(ChatColor.RED + LangPack.YOUDONTOWNTHEITEMSYOUWANTTOSELL);
+    					} else p.sendMessage(ChatColor.RED + LangPack.YOUDONTOWNTHEITEMSYOUWANTTOSELL);
+    				} else p.sendMessage(ChatColor.RED + LangPack.YOUDONTOWNTHEITEMSYOUWANTTOSELL);
+    			} else p.sendMessage(ChatColor.RED + LangPack.THISSTOREDOESNTBUY + iS.getType());
+    		} else p.sendMessage(ChatColor.RED + LangPack.THISSTOREDOESNTBUYANYITEMS);
     	} else p.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
     	return false;
     }
     
     public static boolean cancelToSell(Player p){
-    	if(shopMap.get(playerMap.get(p.getName())).sellToStore.containsKey(p.getName())){
+    	if(enableSelling && shopMap.get(playerMap.get(p.getName())).sellToStore.containsKey(p.getName())){
 			//Update player inv var
     		List<ItemStack> pList = shopMap.get(playerMap.get(p.getName())).sellToStore.get(p.getName());
 			String pInv = shopMap.get(playerMap.get(p.getName())).players.get(p.getName());
 			for(int i = 0;i < pList.size();i++){
-				pInv += "," + pList.get(i).getTypeId() + ":" + ((maxDurMap.containsKey(pList.get(i).getTypeId()))?maxDurMap.get(pList.get(i).getTypeId()) - pList.get(i).getDurability():pList.get(i).getAmount());
+				if(!pInv.equals("")) pInv += ",";
+				pInv += pList.get(i).getTypeId() + ":" + ((maxDurMap.containsKey(pList.get(i).getTypeId()))?maxDurMap.get(pList.get(i).getTypeId()) - pList.get(i).getDurability():pList.get(i).getAmount());
 			}
-			if(!shopMap.get(playerMap.get(p.getName())).players.get(p.getName()).equals("")) pInv = pInv.substring(1);		
-			shopMap.get(playerMap.get(p.getName())).players.put(p.getName(), pInv);
+			shopMap.get(playerMap.get(p.getName())).players.put(p.getName(), createStrOneOccur(pInv.split(",")));
 			shopMap.get(playerMap.get(p.getName())).sellToStore.remove(p.getName());
-			p.sendMessage("Cancelled selling items.");
+			p.sendMessage(ChatColor.GREEN + LangPack.CANCELLEDSELLINGITEMS);
 			return true;
     	}
     	return false;
     }
     
     public static boolean confirmToSell(Player p){
-    	if(shopMap.get(playerMap.get(p.getName())).buyFor > 0){
+    	if(enableSelling && shopMap.get(playerMap.get(p.getName())).buyFor > 0){
     		if(shopMap.get(playerMap.get(p.getName())).sellToStore.containsKey(p.getName())){
     			List<ItemStack> sList = shopMap.get(playerMap.get(p.getName())).sellToStore.get(p.getName());
     			Object[] pInv = ArrayUtils.addAll(p.getInventory().getContents(), p.getInventory().getArmorContents());
@@ -877,7 +982,7 @@ public class RealShopping extends JavaPlugin {
     				}
     				if(!cont){
     					shopMap.get(playerMap.get(p.getName())).sellToStore.remove(p.getName());
-    					p.sendMessage("You don't have all the items you were going to sell. Cancelled sale.");
+    					p.sendMessage(ChatColor.RED + LangPack.YOUDONTHAVEALLTHEITEMSYOUWANTEDTOSELL);
     					return false;
     				}
     			}
@@ -906,12 +1011,13 @@ public class RealShopping extends JavaPlugin {
     				if(econ.getBalance(shopMap.get(playerMap.get(p.getName())).owner) >= payment){
     					econ.depositPlayer(p.getName(), payment);
     					econ.withdrawPlayer(shopMap.get(playerMap.get(p.getName())).owner, payment);//If player owned store, pay player
-    					p.sendMessage("Sold " + sList.size() + " items for " + payment + unit);
+    					p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sList.size() + LangPack.ITEMSFOR + payment + unit);
     					cont = true;
     				}
     			} else {
 					econ.depositPlayer(p.getName(), payment);
-					p.sendMessage("Sold " + sList.size() + " items for " + payment + unit);
+					shopMap.get(playerMap.get(p.getName())).sellToStore.remove(p.getName());
+					p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sList.size() + LangPack.ITEMSFOR + payment + unit);
 					cont = true;
     			}
     			if(cont){
@@ -972,33 +1078,35 @@ public class RealShopping extends JavaPlugin {
     								, aL[6].getBlock()
     								, aL[7].getBlock()
     								, aL[8].getBlock()};
-    	Object[] mcArr = l.getWorld().getEntitiesByClass(StorageMinecart.class).toArray();
-    	String rails = "";
-    	for(int i = 0;i < b.length;i++){//Get rails in area
-    		if(b[i].getType() == Material.RAILS || b[i].getType() == Material.POWERED_RAIL || b[i].getType() == Material.DETECTOR_RAIL){
-    			rails += "," + i;
-    		}
-    	}
     	StorageMinecart firstCart = null;//First cart found on first block
-    	if(!rails.equals("")){
-    		for(int j = 1;j < rails.split(",").length;j++){//Repeat for every rail in area until a minecart is found
-    			int areaInt = Integer.parseInt(rails.split(",")[j]);
-        		int k = 0;
-        		boolean hasCart = false;
-        		for(;k < mcArr.length;k++){//Repeat until a minecart is found on the block, or no minecarts are found
-        			if(((StorageMinecart)mcArr[k]).getLocation().getBlock().getLocation().equals(aL[areaInt])){//If minecart is on the rail
-        				hasCart = true;
+    	if(cartEnabledW.contains(l.getWorld().getName())){
+        	Object[] mcArr = l.getWorld().getEntitiesByClass(StorageMinecart.class).toArray();
+        	String rails = "";
+        	for(int i = 0;i < b.length;i++){//Get rails in area
+        		if(b[i].getType() == Material.RAILS || b[i].getType() == Material.POWERED_RAIL || b[i].getType() == Material.DETECTOR_RAIL){
+        			rails += "," + i;
+        		}
+        	}
+        	if(!rails.equals("")){
+        		for(int j = 1;j < rails.split(",").length;j++){//Repeat for every rail in area until a minecart is found
+        			int areaInt = Integer.parseInt(rails.split(",")[j]);
+            		int k = 0;
+            		boolean hasCart = false;
+            		for(;k < mcArr.length;k++){//Repeat until a minecart is found on the block, or no minecarts are found
+            			if(((StorageMinecart)mcArr[k]).getLocation().getBlock().getLocation().equals(aL[areaInt])){//If minecart is on the rail
+            				hasCart = true;
+            				break;
+            			}
+            		}
+        			if(hasCart){
+        				firstCart = (StorageMinecart)mcArr[k];
         				break;
         			}
         		}
-    			if(hasCart){
-    				firstCart = (StorageMinecart)mcArr[k];
-    				break;
-    			}
-    		}
+        	}
     	}
     	if(firstCart == null) return new StorageMinecart[0];
-    	else return new StorageMinecart[]{firstCart};
+    	else return new StorageMinecart[]{firstCart};//TODO add more carts
     }
     
 	public static boolean shipCartContents(StorageMinecart sM, Player p) {
@@ -1041,7 +1149,7 @@ public class RealShopping extends JavaPlugin {
 			}
 			
 			if(bought.isEmpty()){
-				p.sendMessage("You can't ship an empty cart.");
+				p.sendMessage(ChatColor.RED + LangPack.YOUCANTSHIPANEMPTYCART);
 				return true;
 			}
 			
@@ -1081,7 +1189,7 @@ public class RealShopping extends JavaPlugin {
 				shippedToCollect.put(p.getName(), new ArrayList<ItemStack[]>());
 			shippedToCollect.get(p.getName()).add(boughtIS);
 			
-			p.sendMessage(ChatColor.GREEN + "Package waiting to be delivered. Use /rsshipped to pick up the package.");
+			p.sendMessage(ChatColor.GREEN + LangPack.PACKAGEWAITINGTOBEDELIVERED);
 			
 			//Update player inv var
 			keys = oldInv.keySet().toArray();
@@ -1102,7 +1210,7 @@ public class RealShopping extends JavaPlugin {
 			}
 			if(!pInv.equals("")) pInv = pInv.substring(1);		
 			shopMap.get(playerMap.get(p.getName())).players.put(p.getName(), pInv);
-		} else p.sendMessage("You haven't bought anything.");
+		} else p.sendMessage(ChatColor.RED + LangPack.YOUHAVENTBOUGHTANYTHING);
 
 		return true;
 	}
@@ -1114,9 +1222,9 @@ public class RealShopping extends JavaPlugin {
 					((Chest)l.getBlock().getState()).getBlockInventory().setContents(shippedToCollect.get(p.getName()).get(id - 1));
 					shippedToCollect.get(p.getName()).remove(id - 1);
 					return true;
-				} else p.sendMessage("There's no package with the id " + id);
-			} else p.sendMessage("You haven't got any items waiting to be delivered.");
-		} else p.sendMessage("The block you are standing on isn't a chest.");
+				} else p.sendMessage(ChatColor.RED + LangPack.THERESNOPACKAGEWITHTHEID + id);
+			} else p.sendMessage(ChatColor.RED + LangPack.YOUHAVENTGOTANYITEMSWAITINGTOBEDELIVERED);
+		} else p.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUARESTANDINGONISNTACHEST);
 		return false;
 	}
 
@@ -1147,7 +1255,7 @@ public class RealShopping extends JavaPlugin {
  				if(page*9 < keys.length){//If page exists
  					boolean SL = false;
  					if(!shopMap.get(store).sale.isEmpty()){
- 						sender.sendMessage(ChatColor.GREEN + "There is a " + shopMap.get(store).sale.values().toArray()[0] + "% off sale at " + store);
+ 						sender.sendMessage(ChatColor.GREEN + LangPack.THEREISA + shopMap.get(store).sale.values().toArray()[0] + LangPack.PCNTOFFSALEAT + store);
  						SL = true;
  					}
  					if((page+1)*9 < keys.length){//Not last
@@ -1159,7 +1267,7 @@ public class RealShopping extends JavaPlugin {
  		 						cost *= pcnt;
  		 						cost = Math.round(cost);
  		 						cost /= 100;
- 		 						onSlStr = ChatColor.GREEN + " ON SALE!";
+ 		 						onSlStr = ChatColor.GREEN + LangPack.ONSALE;
  		 					}
  		 					sender.sendMessage(ChatColor.BLUE + "" + keys[i] + " " + Material.getMaterial(Integer.parseInt(keys[i] + "")) + ChatColor.BLACK + " - " + ChatColor.RED + cost + unit + onSlStr);
  		 				}
@@ -1173,7 +1281,7 @@ public class RealShopping extends JavaPlugin {
  		 						cost *= pcnt;
  		 						cost = Math.round(cost);
  		 						cost /= 100;
- 		 						onSlStr = ChatColor.GREEN + " ON SALE!";
+ 		 						onSlStr = ChatColor.GREEN + LangPack.ONSALE;
  		 					}
  		 					sender.sendMessage(ChatColor.BLUE + "" + keys[i] + " " + Material.getMaterial(Integer.parseInt(keys[i] + "")) + ChatColor.BLACK + " - " + ChatColor.RED + cost + unit + onSlStr);
  		 				}
@@ -1204,17 +1312,15 @@ public class RealShopping extends JavaPlugin {
         	p.sendMessage(ChatColor.RED + LangPack.TRYINGTOCHEATYOURWAYOUT);
         	log.info(p.getName() + LangPack.TRIEDTOSTEALFROMTHESTORE);
 
-        	Location dropL = new Location(p.getWorld(),dropLoc[0], dropLoc[1], dropLoc[2]);
-        	Location dropL2 = new Location(p.getWorld(),dropLoc[0] + 1, dropLoc[1], dropLoc[2]);
-         	Location loc = new Location(p.getWorld(),hellLoc[0] + 0.5, hellLoc[1], hellLoc[2] + 0.5);
-         	if(p.teleport(loc)){
+        	Location dropLoc2 = dropLoc.clone().add(1, 0, 0);
+         	if(p.teleport(hellLoc.clone().add(0.5, 0, 0.5))){
         		log.info(p.getName() + LangPack.WASTELEPORTEDTOHELL);
         		p.sendMessage(ChatColor.RED + LangPack.HAVEFUNINHELL);
-             	Block block = p.getWorld().getBlockAt(dropL);
+             	Block block = p.getWorld().getBlockAt(dropLoc);
              	if(block.getType() != Material.CHEST) block.setType(Material.CHEST);
              	BlockState blockState = block.getState();
              	
-             	block = p.getWorld().getBlockAt(dropL2);
+             	block = p.getWorld().getBlockAt(dropLoc2);
              	if(block.getType() != Material.CHEST) block.setType(Material.CHEST);
 
              	BlockState blockState2 = block.getState();
@@ -1258,8 +1364,7 @@ public class RealShopping extends JavaPlugin {
         	p.sendMessage(ChatColor.RED + LangPack.TRYINGTOCHEATYOURWAYOUT);
         	log.info(p.getName() + LangPack.TRIEDTOSTEALFROMTHESTORE);
 
-         	Location loc = new Location(p.getWorld(),jailLoc[0] + 0.5, jailLoc[1], jailLoc[2] + 0.5);
-         	if(p.teleport(loc)) {
+         	if(p.teleport(jailLoc.clone().add(0.5, 0, 0.5))) {
          		p.sendMessage(LangPack.YOUWEREJAILED);
          		log.info(p.getName() + LangPack.WASJAILED);
          	}
@@ -1360,6 +1465,26 @@ public class RealShopping extends JavaPlugin {
 		}
     }
     
+    public static boolean allowTpOutOfStore(Location l){
+    	Object[] keys = forbiddenTpLocs.keySet().toArray();
+    	boolean allow = true;
+    	if(tpLocBlacklist){
+    		for(Object loc:keys){
+    			if(l.getWorld() == ((Location)loc).getWorld());
+    			int xDif = l.getBlockX() - ((Location)loc).getBlockX();
+    			int yDif = l.getBlockY() - ((Location)loc).getBlockY();
+    			int zDif = l.getBlockZ() - ((Location)loc).getBlockZ();
+    			double temp = Math.sqrt(Math.pow(Math.max(xDif, xDif * -1), 2) + Math.pow(Math.max(yDif, yDif * -1), 2) + Math.pow(Math.max(zDif, zDif * -1), 2));
+    			if(temp <= forbiddenTpLocs.get(loc)){
+    					allow = false;
+    					break;
+    			}		
+    		}
+    	}
+
+    	return allow;
+    }
+    
     static String createInv(Player player){
 		ItemStack[] items = (ItemStack[]) ArrayUtils.addAll(player.getInventory().getContents(), player.getInventory().getArmorContents());
 		String str = "";
@@ -1394,7 +1519,7 @@ public class RealShopping extends JavaPlugin {
     static Map<Integer, Integer> createInvOneOccur(String[] inv){
     	//Creates a HashMap with each item in the players inventory occurring only once. The value is the amount of all items together.
 		Map<Integer, Integer> invOO = new HashMap<Integer, Integer>();
-		if(!inv[0].equals(""))//If inv not empty
+		if(!inv[0].trim().equals(""))//If inv not empty
 			for(int j = 0;j < inv.length;j++){
 				int type = Integer.parseInt(inv[j].split(":")[0]);
 				int amount;
@@ -1403,6 +1528,18 @@ public class RealShopping extends JavaPlugin {
 				else invOO.put(type, amount);
 			}
 		return invOO;
+    }
+    
+    static String createStrOneOccur(String[] inv){
+    	//Creates a string with each item in the players inventory occurring only once. The value is the amount of all items together.
+		Map<Integer, Integer> invOO = createInvOneOccur(inv);
+		String str = "";
+		Object[] keys = invOO.keySet().toArray();
+		for(Object o:keys){
+			str += "," + o + ":" + invOO.get(o);
+		}
+		if(!str.equals("")) str = str.substring(1);
+		return str;
     }
     
     private void initMaxDur(){
@@ -1455,6 +1592,36 @@ public class RealShopping extends JavaPlugin {
     	maxDurMap.put(359,239);//Shears
     	maxDurMap.put(259,65);//Flint and steel
     	maxDurMap.put(261,385);//Bow
+    }
+
+    private void initForbiddenInStore(){
+    	forbiddenInStore.add(297);//Bread
+    	forbiddenInStore.add(354);//Cake
+    	forbiddenInStore.add(366);//Cooked Chicken
+    	forbiddenInStore.add(349);//Cooked Fish
+    	forbiddenInStore.add(320);//Cooked Porkchop
+    	forbiddenInStore.add(357);//Cookie
+    	forbiddenInStore.add(322);//Golden Apple
+    	forbiddenInStore.add(360);//Melon Slice
+    	forbiddenInStore.add(282);//Mushroom Stew
+    	forbiddenInStore.add(363);//Raw Beef
+    	forbiddenInStore.add(365);//Raw Chicken
+    	forbiddenInStore.add(349);//Raw Fish
+    	forbiddenInStore.add(319);//Raw Porkchop
+    	forbiddenInStore.add(260);//Red Apple
+    	forbiddenInStore.add(367);//Rotten Flesh
+    	forbiddenInStore.add(364);//Steak
+
+    	forbiddenInStore.add(326);//Bucket of water
+    	forbiddenInStore.add(327);//Bucket of lava
+    	
+    	forbiddenInStore.add(373);//Potion
+    	forbiddenInStore.add(384);//Bottle o' enchanting
+    	forbiddenInStore.add(375);//Spider Eye
+    	forbiddenInStore.add(385);//Fire Charge
+    	forbiddenInStore.add(344);//Egg
+    	forbiddenInStore.add(368);//Ender Pearl
+    	forbiddenInStore.add(383);//Spawning egg
     }
     
 	public String locAsString(Location l){

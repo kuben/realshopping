@@ -126,9 +126,9 @@ public class RSCommandExecutor implements CommandExecutor {
     			}
     			
     			if(args.length == 1){
-    				sender.sendMessage("Store " + args[0] + ((rs.shopMap.get(args[0]).owner.equalsIgnoreCase("@admin"))?"":" owned by " + rs.shopMap.get(args[0]).owner));
-    				if(rs.shopMap.get(args[0]).buyFor > 0) sender.sendMessage("Buys for " + rs.shopMap.get(args[0]).buyFor + "% of original price.");
-    				if(!rs.shopMap.get(args[0]).sale.isEmpty()) sender.sendMessage("Has a " + rs.shopMap.get(args[0]).sale.values().toArray()[0] + "% off sale right now!");
+    				sender.sendMessage(ChatColor.GREEN + LangPack.STORE + args[0] + ((rs.shopMap.get(args[0]).owner.equalsIgnoreCase("@admin"))?"":LangPack.OWNEDBY + rs.shopMap.get(args[0]).owner));
+    				if(rs.shopMap.get(args[0]).buyFor > 0) sender.sendMessage(ChatColor.GREEN + LangPack.BUYSFOR + rs.shopMap.get(args[0]).buyFor + LangPack.PCNTOFORIGINAL);
+    				if(!rs.shopMap.get(args[0]).sale.isEmpty()) sender.sendMessage(ChatColor.GREEN + LangPack.HASA + rs.shopMap.get(args[0]).sale.values().toArray()[0] + LangPack.PCNTOFFSALERIGHTNOW);
 	    		}
     			
     			if(isOwner){
@@ -141,7 +141,7 @@ public class RSCommandExecutor implements CommandExecutor {
     	        					}
     	        					rs.stolenToClaim.remove(player.getName());
     	        					return true;
-    	        				} else sender.sendMessage(ChatColor.RED + "Nothing to collect.");
+    	        				} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
     	        			}
     	        		} else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE); 
     	    		} else if(args.length == 3 && args[1].equalsIgnoreCase("collect")){
@@ -157,7 +157,7 @@ public class RSCommandExecutor implements CommandExecutor {
     	    	        						tempIs[i] = origIs[i];
     	    	        					}
     	    	        					((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().setContents(tempIs);
-    	    	        					player.sendMessage("Filled chest with " + i + " items.");
+    	    	        					player.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH + i + LangPack.ITEMS);
     	    	        					if(origIs.length < 28) rs.stolenToClaim.remove(player.getName());
     	    	        					else {
     	    	        						List newIs = new ArrayList();
@@ -167,8 +167,8 @@ public class RSCommandExecutor implements CommandExecutor {
     	    	        						rs.stolenToClaim.put(player.getName(), newIs);
     	    	        					}
     	        							return true;
-    	    	        				} else sender.sendMessage(ChatColor.RED + "Nothing to collect.");
-    	        					} else sender.sendMessage("The block you are standing on isn't a chest.");
+    	    	        				} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
+    	        					} else sender.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUARESTANDINGONISNTACHEST);
     	        				} else {
     	        					try {
     	    	        				if(rs.stolenToClaim.containsKey(player.getName())){
@@ -178,7 +178,7 @@ public class RSCommandExecutor implements CommandExecutor {
     	    	        					for(;i < amount && i < tempIs.length;i++){
     	    	        						player.getWorld().dropItem(player.getLocation(), tempIs[i]);
     	    	        					}
-    	    	        					player.sendMessage("Dropped " + i + " items.");
+    	    	        					player.sendMessage(ChatColor.GREEN + LangPack.DROPPED + i + LangPack.ITEMS);
     	    	        					if(tempIs.length < 28) rs.stolenToClaim.remove(player.getName());
     	    	        					else {
     	    	        						List newIs = new ArrayList();
@@ -189,9 +189,9 @@ public class RSCommandExecutor implements CommandExecutor {
     	    	        					}
     	    	        					rs.stolenToClaim.remove(player.getName());
     	    	        					return true;
-    	    	        				} else sender.sendMessage(ChatColor.RED + "Nothing to collect.");
+    	    	        				} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
     	        					} catch(NumberFormatException e){
-    	        						sender.sendMessage(args[2] + " is not an integer.");
+    	        						sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTANINTEGER);
     	        					}
     	        				}
     	        			}
@@ -211,7 +211,7 @@ public class RSCommandExecutor implements CommandExecutor {
         	    	        						tempIs[i] = origIs[i];
         	    	        					}
         	    	        					((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().setContents(tempIs);
-        	    	        					player.sendMessage("Filled chest with " + i + " items.");
+        	    	        					player.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH + i + LangPack.ITEMS);
         	    	        					if(origIs.length <= Math.min(27, amount)) rs.stolenToClaim.remove(player.getName());
         	    	        					else {
         	    	        						List newIs = new ArrayList();
@@ -221,10 +221,10 @@ public class RSCommandExecutor implements CommandExecutor {
         	    	        						rs.stolenToClaim.put(player.getName(), newIs);
         	    	        					}
         	        							return true;
-        	    	        				} else sender.sendMessage(ChatColor.RED + "Nothing to collect.");
-        	        					} else sender.sendMessage("The block you are standing on isn't a chest.");
+        	    	        				} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
+        	        					} else sender.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUARESTANDINGONISNTACHEST);
     	        					} catch(NumberFormatException e){
-    	        						sender.sendMessage(args[2] + " is not an integer.");
+    	        						sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTANINTEGER);
     	        					}
     	        				}
     	        			}
@@ -232,35 +232,37 @@ public class RSCommandExecutor implements CommandExecutor {
     	    		}
     	    		
     	    		else if(args.length == 3 && args[1].equalsIgnoreCase("buyfor")){
-    					try {
-	    					int pcnt = Integer.parseInt(args[2]);
-	    					if(pcnt <= 100){
-	    						if(pcnt >= 0){
-	    							rs.shopMap.get(args[0]).buyFor = pcnt;
-	    							if(pcnt > 0) sender.sendMessage("Buying things for " + pcnt + "% of selling price.");
-	    							else sender.sendMessage("Not buying from players.");
-	    							rs.updateEntrancesDb();
-	    							return true;
-	    						} else sender.sendMessage("You can't use a value bellow 0."); 
-	    					} else  sender.sendMessage("You can't use a value over 100.");
-    					} catch(NumberFormatException e){
-    						sender.sendMessage(args[2] + " is not an integer.");
-    					}
+    	    			if(rs.enableSelling){
+    	    				try {
+    	    					int pcnt = Integer.parseInt(args[2]);
+    	    					if(pcnt <= 100){
+    	    						if(pcnt >= 0){
+    	    							rs.shopMap.get(args[0]).buyFor = pcnt;
+    	    							if(pcnt > 0) sender.sendMessage(ChatColor.GREEN + LangPack.BUYSFOR + pcnt + LangPack.PCNTOFORIGINAL);
+    	    							else sender.sendMessage(ChatColor.RED + LangPack.NOTBUYINGFROMPLAYERS);
+    	    							rs.updateEntrancesDb();
+    	    							return true;
+    	    						} else sender.sendMessage(ChatColor.RED + LangPack.YOUCANTUSEAVALUEBELLOW0);
+    	    					} else  sender.sendMessage(ChatColor.RED + LangPack.YOUCANTUSEAVALUEOVER100);
+    	    				} catch(NumberFormatException e){
+    	    					sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTANINTEGER);
+    	    				}
+    	    			} else sender.sendMessage(ChatColor.RED + LangPack.SELLINGTOSTORESISNOTENABLEDONTHISSERVER);
     	     		}
     	    		
     	    		else if(args.length == 3 && args[1].equalsIgnoreCase("ban")){
-    	    			if(rs.shopMap.get(args[0]).banned.contains(args[2].toLowerCase())) sender.sendMessage(args[2] + " is already banned from your store.");
+    	    			if(rs.shopMap.get(args[0]).banned.contains(args[2].toLowerCase())) sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISALREADYBANNEDFROMYOURSTORE);
     	    			else {
     	    				rs.shopMap.get(args[0]).banned.add(args[2].toLowerCase());
-    	    				sender.sendMessage("Banned " + args[2] + " from store.");
+    	    				sender.sendMessage(ChatColor.GREEN + LangPack.BANNED + args[2] + LangPack.FROMSTORE);
     	    			}
     	    			rs.updateEntrancesDb();
     	    			return true;
     	     		} else if(args.length == 3 && args[1].equalsIgnoreCase("unban")){
     	     			if(rs.shopMap.get(args[0]).banned.contains(args[2].toLowerCase())){
     	     				rs.shopMap.get(args[0]).banned.remove(args[2].toLowerCase());
-    	     				sender.sendMessage(args[2] + " is no longer banned from your store.");
-    	     			} else sender.sendMessage(args[2] + " was not banned from your store.");
+    	     				sender.sendMessage(ChatColor.GREEN + args[2] + LangPack.ISNOLONGERBANNEDFROMYOURSTORE);
+    	     			} else sender.sendMessage(ChatColor.RED + args[2] + LangPack.WASNTBANNEDFROMYOURSTORE);
     	     			rs.updateEntrancesDb();
     	     			return true;
     	    		}
@@ -277,14 +279,14 @@ public class RSCommandExecutor implements CommandExecutor {
 	    								for(;i < keys.length;i++){
 	    									rs.shopMap.get(args[0]).sale.put((Integer)keys[i], pcnt);
 	    								}
-	    								if(pcnt > 0) sender.sendMessage(pcnt + "% off " + i + " items.");
-	    								else sender.sendMessage("No items are sold in the store.");
+	    								if(pcnt > 0) sender.sendMessage(ChatColor.GREEN + "" + pcnt + LangPack.PCNTOFF + i + LangPack.ITEMS);
+	    								else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);
 	    								return true;
-	    							} else sender.sendMessage("No items are sold in the store.");
-	    						} else sender.sendMessage("You can't use a value of 0 or bellow."); 
-	    					} else  sender.sendMessage("You can't use a value of 100 or more.");
+	    							} else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);
+	    						} else sender.sendMessage(ChatColor.RED + LangPack.YOUCANTUSEAVALUEOF0ORLESS);
+	    					} else  sender.sendMessage(ChatColor.RED + LangPack.YOUCANTUSEAVALUEOF100ORMORE);
     					} catch(NumberFormatException e){
-    						sender.sendMessage(args[2] + " is not an integer.");
+    						sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTANINTEGER);
     					}
     	    		} else if(args.length == 4 && args[1].equalsIgnoreCase("startsale")){
     					try {
@@ -303,21 +305,21 @@ public class RSCommandExecutor implements CommandExecutor {
 	    										j++;
 	    									}
 	    								}
-	    								if(pcnt > 0) sender.sendMessage(pcnt + "% off " + j + " items.");
-	    								else sender.sendMessage("No items are sold in the store.");
+	    								if(pcnt > 0) sender.sendMessage(ChatColor.GREEN + "" + pcnt + LangPack.PCNTOFF + j + LangPack.ITEMS);
+	    								else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);
 	    								return true;
-	    							} else sender.sendMessage(args[3] + " is not a valid argument."); 
-	    						} else sender.sendMessage("You can't use a value of 0 or bellow."); 
-	    					} else  sender.sendMessage("You can't use a value of 100 or more.");
+	    							} else sender.sendMessage(ChatColor.RED + args[3] + LangPack.ISNOTAVALIDARGUMENT);
+	    						} else sender.sendMessage(ChatColor.RED + LangPack.YOUCANTUSEAVALUEOF0ORLESS); 
+	    					} else  sender.sendMessage(ChatColor.RED + LangPack.YOUCANTUSEAVALUEOF100ORMORE);
     					} catch(NumberFormatException e){
-    						sender.sendMessage(args[2] + " is not an integer.");
+    						sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTANINTEGER);
     					}
     	    		} else if(args.length == 2 && args[1].equalsIgnoreCase("endsale")){
     	    			rs.shopMap.get(args[0]).sale.clear();
-    	    			sender.sendMessage("Sale ended.");
+    	    			sender.sendMessage(ChatColor.GREEN + LangPack.SALEENDED);
     	    			return true;
     	    		}
-    			} else sender.sendMessage("You don't have permission to manage that store.");
+    			} else sender.sendMessage(ChatColor.RED + LangPack.YOUDONTHAVEPERMISSIONTOMANAGETHATSTORE);
     		}
     	} else if(cmd.getName().equalsIgnoreCase("rssetprices")){
     		String shop = "";
@@ -361,7 +363,7 @@ public class RSCommandExecutor implements CommandExecutor {
     								sender.sendMessage(ChatColor.RED + LangPack.COULDNTFINDPRICEFOR + i + " - " + Material.getMaterial(i));
     							}
     						} else {
-    							sender.sendMessage(shop + LangPack.DOESNTEXIST);
+    							sender.sendMessage(ChatColor.RED + shop + LangPack.DOESNTEXIST);
     						}
     					} catch (NumberFormatException e) {
     						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_);
@@ -532,38 +534,81 @@ public class RSCommandExecutor implements CommandExecutor {
     			if(args.length == 0){
         			if(rs.shippedToCollect.containsKey(player.getName())){
         				int toClaim = rs.shippedToCollect.get(player.getName()).size();
-        				if(toClaim != 0) sender.sendMessage(ChatColor.GREEN + "You have packages with ids from 1 to " + toClaim + " to pick up.");
-        				else sender.sendMessage(ChatColor.GREEN + "You don't have any packages to pick up.");
+        				if(toClaim != 0) sender.sendMessage(ChatColor.GREEN + LangPack.YOUHAVEPACKAGESWITHIDS_ + toClaim + LangPack.TOPICKUP);
+        				else sender.sendMessage(ChatColor.RED + LangPack.YOUDONTHAVEANYPACKAGESTOPICKUP);
         				return true;
-        			} else sender.sendMessage(ChatColor.RED + "There are no packages to pick up.");
+        			} else sender.sendMessage(ChatColor.RED + LangPack.YOUDONTHAVEANYPACKAGESTOPICKUP);
     			} else if(args.length == 1 && args[0].equalsIgnoreCase("collect")){
     				Location l = new Location(player.getWorld(), player.getLocation().getBlockX(), player.getLocation().getBlockY() - 1, player.getLocation().getBlockZ());
     				return rs.collectShipped(l, player, 1);
    				} else if(args.length == 1 && args[0].equalsIgnoreCase("inspect")){
-    				sender.sendMessage("You have to specify the id of the package you want to inspect.");
+    				sender.sendMessage(ChatColor.RED + LangPack.YOUHAVETOSPECIFYTHEID_);
     			} else if(args.length == 2 && args[0].equalsIgnoreCase("collect")){
     				Location l = new Location(player.getWorld(), player.getLocation().getBlockX(), player.getLocation().getBlockY() - 1, player.getLocation().getBlockZ());
     				try {
     					return rs.collectShipped(l, player, Integer.parseInt(args[1]));
     				} catch (NumberFormatException e){
-    					sender.sendMessage(args[1] + " is not an integer.");
+    					sender.sendMessage(ChatColor.RED + args[1] + LangPack.ISNOTANINTEGER);
     				}
     			} else if(args.length == 2 && args[0].equalsIgnoreCase("inspect")){
         			if(rs.shippedToCollect.containsKey(player.getName())){
         				try {
             				String str = rs.formatItemStackToMess(rs.shippedToCollect.get(player.getName()).get(Integer.parseInt(args[1]) - 1));
-            				sender.sendMessage("The contents of the package are: " + str);
+            				sender.sendMessage(ChatColor.GREEN + LangPack.THECONTENTSOFTHEPACKAGEARE + str);
             				return true;
         				} catch (ArrayIndexOutOfBoundsException e){
         					sender.sendMessage("ArrayIndexOutOfBoundsException");
         				} catch (IndexOutOfBoundsException e){
-        					sender.sendMessage("There's no package with the id " + args[1]);
+        					sender.sendMessage(ChatColor.RED + LangPack.THERESNOPACKAGEWITHTHEID + args[1]);
         				} catch (NumberFormatException e){
-        					sender.sendMessage(args[1] + " is not an integer.");
+        					sender.sendMessage(ChatColor.RED + args[1] + LangPack.ISNOTANINTEGER);
         				}
-        			} else sender.sendMessage(ChatColor.RED + "There are no packages to pick up.");
+        			} else sender.sendMessage(ChatColor.RED + LangPack.YOUDONTHAVEANYPACKAGESTOPICKUP);
     			}
     		} else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE);
+    	} else if(cmd.getName().equalsIgnoreCase("rstplocs")){
+    		if(player != null){
+    			if (args.length == 1){
+    				if(args[0].equalsIgnoreCase("setwhitelistmode")){
+    					if(!rs.tpLocBlacklist){
+    						player.sendMessage(ChatColor.RED + LangPack.WHITELISTMODEALREADYSET);
+    					} else {
+    						rs.tpLocBlacklist = false;
+    						player.sendMessage(ChatColor.GREEN + LangPack.SETWHITELISTMODE);
+    						return true;
+    					}
+    				} else if(args[0].equalsIgnoreCase("setblacklistmode")){
+    					if(rs.tpLocBlacklist){
+    						player.sendMessage(ChatColor.RED + LangPack.BLACKLISTMODEALREADYSET);
+    					} else {
+    						rs.tpLocBlacklist = true;
+    						player.sendMessage(ChatColor.GREEN + LangPack.SETBLACKLISTMODE);
+    						return true;
+    					}
+    				} else if(args[0].equalsIgnoreCase("remove")){
+    					if(rs.forbiddenTpLocs.containsKey(player.getLocation().getBlock().getLocation())){
+    						rs.forbiddenTpLocs.remove(player.getLocation().getBlock().getLocation());
+    						player.sendMessage(ChatColor.GREEN + LangPack.REMOVEDONEOFTHE + ((rs.tpLocBlacklist)?"FORBIDDEN":"ALLOWED") + LangPack.TELEPORTLOCATIONS);
+    						return true;
+    					} else {
+    						player.sendMessage(ChatColor.RED + LangPack.THEREISNO + ((rs.tpLocBlacklist)?"FORBIDDEN":"ALLOWED") + LangPack.TELEPORTLOCATIONWITHITSCENTERHERE);
+    					}
+    				}
+    			} else if(args.length == 2 && args[0].equalsIgnoreCase("add")){
+    				try {
+    					int radius = Integer.parseInt(args[1]);
+    					if(rs.forbiddenTpLocs.containsKey(player.getLocation().getBlock().getLocation())){
+    						player.sendMessage(ChatColor.GREEN + LangPack.OLDRADIUSVALUE + rs.forbiddenTpLocs.put(player.getLocation().getBlock().getLocation(), radius) + LangPack.REPLACEDWITH + radius);
+    					} else {
+    						rs.forbiddenTpLocs.put(player.getLocation().getBlock().getLocation(), radius);
+    						player.sendMessage(ChatColor.GREEN + LangPack.ADDED + ((rs.tpLocBlacklist)?"FORBIDDEN":"ALLOWED") + LangPack.TELEPORTLOCATIONWITHARADIUSOF + radius);
+    					}
+    					return true;
+    				} catch (NumberFormatException e){
+    					sender.sendMessage(ChatColor.RED + args[1] + LangPack.ISNOTANINTEGER);
+    				}
+    			}
+    		} else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE); 
     	} else if(cmd.getName().equalsIgnoreCase("rsunjail")){
     		if (args.length == 1){
     			if(rs.jailedPlayers.containsKey(args[0])){
