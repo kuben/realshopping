@@ -1,0 +1,8 @@
+Changes since v0.30
+
+* Added allowed and disallowed teleport locations (/rstplocs). It can allow players to teleport out of a store properly ONLY IF they have paid for their articles and the location they want to teleport to is allowed. This is kind of an experimental function and it could be hard to use. If you mess something up, the easiest thing to do is to stop the server and delete the allowedtplocs.db file.
+* It should be impossible to eat and use a couple more items in a store now. However I only have gotten this to work with food and throwing eggs. Kind of an experimental function too.
+* Added multiworld support for jail and hell (should have thought of this earlier). Check your config :)
+* Two new lines in config:
+* enable-shopping-carts-in-worlds: - You have to write the names of all the worlds (separated by commas) where you want shopping carts to work. So for example world,world2,world3. Forgot to add default "all" option, oops.
+* enable-selling-to-stores: - If you can sell to stores, default is true. 
