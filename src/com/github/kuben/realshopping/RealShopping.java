@@ -89,9 +89,9 @@ import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 
 public class RealShopping extends JavaPlugin {
 	
+	public static Map<String, RSPlayerInventory> PInvMap = new HashMap<String, RSPlayerInventory>();
+	
 	static String mandir;
-	public static Map<String, String> playerMap;
-	public static Map<String, Map<Integer, Float>> prices;//Shop name - (id - price, id - price...)
 	public static Map<Integer, Integer> maxDurMap;
 	public static Map<String, Shop> shopMap;
 	public static Map<String, String> playerEntrances;
@@ -102,19 +102,11 @@ public class RealShopping extends JavaPlugin {
 	public static Map<Location, Integer> forbiddenTpLocs;
 	
 	public static Set<Integer> forbiddenInStore;
-	public static Set<String> cartEnabledW;
 	
 	public static boolean tpLocBlacklist;
 	
     public static Economy econ;
-    static boolean keepstolen;
-    static boolean enableSelling;
-    static String punishment;
-    static String langpack;
-    static double pstorecreate;
-    static Location hellLoc;
-    static Location jailLoc;
-    static Location dropLoc;
+
     String entrance;
     String exit;
 	static Logger log;	
@@ -127,8 +119,7 @@ public class RealShopping extends JavaPlugin {
 	
     public void onEnable(){
     	mandir = "plugins/RealShopping/";
-    	playerMap = new HashMap<String, String>();
-    	prices = new HashMap<String, Map<Integer, Float>>();//Shop name - (id - price, id - price...)
+    	PInvMap = new HashMap<String, RSPlayerInventory>();
     	maxDurMap = new HashMap<Integer, Integer>();
     	shopMap = new HashMap<String, Shop>();
     	playerEntrances = new HashMap<String, String>();
@@ -139,18 +130,18 @@ public class RealShopping extends JavaPlugin {
     	forbiddenTpLocs = new HashMap<Location, Integer>();
     	
     	forbiddenInStore = new HashSet<Integer>();
-    	cartEnabledW = new HashSet<String>();
+    	Config.cartEnabledW = new HashSet<String>();
     	
     	tpLocBlacklist = false;
         econ = null;
-        keepstolen = false;
-        enableSelling = false;
-        punishment = null;
-        langpack = null;
-        hellLoc = null;
-        jailLoc = null;
-        dropLoc = null;
-        pstorecreate = 0.0;
+        Config.keepstolen = false;
+        Config.enableSelling = false;
+        Config.punishment = null;
+        Config.langpack = null;
+        Config.hellLoc = null;
+        Config.jailLoc = null;
+        Config.dropLoc = null;
+        Config.pstorecreate = 0.0;
         entrance = "";
         exit = "";
     	log = this.getLogger();
@@ -188,153 +179,14 @@ public class RealShopping extends JavaPlugin {
     			getCommand("rsunjail").setExecutor(cmdExe);
     			getCommand("rsreload").setExecutor(cmdExe);
     		}
-    		if(getServer().getWorld("world") != null){
-    			hellLoc = new Location(getServer().getWorld("world"),0,0,0);
-    			jailLoc = new Location(getServer().getWorld("world"),0,0,0);
-    			dropLoc = new Location(getServer().getWorld("world"),0,0,0);
-    		}
-
-            keepstolen = false;
-            langpack = "default";
-            punishment = "none";
-            pstorecreate = 0.0;
+    		
             tpLocBlacklist = true;
-            enableSelling = true;
-        	File f = new File(mandir);
-        	if(!f.exists()) f.mkdir();
+            
+    		Config.initialize();
+    		
+    		File f;
     		FileInputStream fstream;
     		BufferedReader br;
-    		try {
-    			f = new File(mandir + "realshopping.properties");
-    			if(!f.exists()){
-    				f.createNewFile();
-    				PrintWriter pW = new PrintWriter(f);
-    				pW.println("Properties file for RealShopping v0.31");
-    				pW.println("language-pack:default");
-    				pW.println("punishment:none");
-    				pW.println("keep-stolen-items-after-punish:false");
-    				pW.println("jail-location:world;0,0,0");
-    				pW.println("hell-location:world;0,0,0");
-    				pW.println("drop-items-at:world;0,0,0");
-    				pW.println("player-stores-create-cost:0.0");
-    				pW.println("enable-shopping-carts-in-worlds:world");
-    				pW.println("enable-selling-to-stores:true");
-    				pW.close();
-    			} else {
-    				fstream = new FileInputStream(f);
-    				br = new BufferedReader(new InputStreamReader(fstream));
-    				String s;
-    				boolean v31plus = false;
-    				int notInConfig = 2047;
-    				while ((s = br.readLine()) != null){// Read realshopping.properties
-    					if(s.split(":")[0].equals("language-pack")){
-    						langpack = s.split(":")[1];
-    						notInConfig -= 1;
-    					} else if(s.split(":")[0].equals("punishment")){
-    						punishment = s.split(":")[1];
-    						notInConfig -= 2;
-    					} else if(s.split(":")[0].equals("keep-stolen-items-after-punish")){
-    						keepstolen = Boolean.parseBoolean(s.split(":")[1]);
-    						notInConfig -= 4;
-    					} else if(s.split(":")[0].equals("jail-location")){
-    						if(v31plus){
-    							if(getServer().getWorld(s.split(":")[1].split(";")[0]) != null){
-    								jailLoc.setWorld(getServer().getWorld(s.split(":")[1].split(";")[0]));
-    								jailLoc.setX(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[0]));
-    								jailLoc.setY(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[1]));
-    								jailLoc.setZ(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[2]));
-    								notInConfig -= 8;
-    							}
-    						} else {
-								jailLoc.setWorld(getServer().getWorld("world"));
-								jailLoc.setX(Integer.parseInt(s.split(":")[1].split(",")[0]));
-								jailLoc.setY(Integer.parseInt(s.split(":")[1].split(",")[1]));
-								jailLoc.setZ(Integer.parseInt(s.split(":")[1].split(",")[2]));
-								notInConfig -= 8;
-    						}
-    					} else if(s.split(":")[0].equals("hell-location")){
-    						if(v31plus){
-    							if(getServer().getWorld(s.split(":")[1].split(";")[0]) != null){
-    								hellLoc.setWorld(getServer().getWorld(s.split(":")[1].split(";")[0]));
-    								hellLoc.setX(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[0]));
-    								hellLoc.setY(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[1]));
-    								hellLoc.setZ(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[2]));
-    								notInConfig -= 16;
-    							}
-    						} else {
-    							hellLoc.setWorld(getServer().getWorld("world"));
-    							hellLoc.setX(Integer.parseInt(s.split(":")[1].split(",")[0]));
-    							hellLoc.setY(Integer.parseInt(s.split(":")[1].split(",")[1]));
-    							hellLoc.setZ(Integer.parseInt(s.split(":")[1].split(",")[2]));
-								notInConfig -= 16;
-    						}
-    					} else if(s.split(":")[0].equals("drop-items-at")){
-    						if(v31plus){
-    							if(getServer().getWorld(s.split(":")[1].split(";")[0]) != null){
-    								dropLoc.setWorld(getServer().getWorld(s.split(":")[1].split(";")[0]));
-    								dropLoc.setX(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[0]));
-    								dropLoc.setY(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[1]));
-    								dropLoc.setZ(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[2]));
-    								notInConfig -= 32;
-    							}
-    						} else {
-    							dropLoc.setWorld(getServer().getWorld("world"));
-    							dropLoc.setX(Integer.parseInt(s.split(":")[1].split(",")[0]));
-    							dropLoc.setY(Integer.parseInt(s.split(":")[1].split(",")[1]));
-    							dropLoc.setZ(Integer.parseInt(s.split(":")[1].split(",")[2]));
-								notInConfig -= 32;
-    						}
-    					} else if(s.split(":")[0].equals("player-stores-create-cost")){
-    						pstorecreate = Double.parseDouble(s.split(":")[1]);
-    						notInConfig -= 64;
-    					} else if(s.split(":")[0].equals("enable-shopping-carts-in-worlds")){
-    						if(s.split(":").length > 1){
-    							for(String str:s.split(":")[1].split(",")){
-    								if(getServer().getWorld(str) != null) cartEnabledW.add(str);
-    							}
-    						}
-    						notInConfig -= 128;
-    					} else if(s.split(":")[0].equals("enable-selling-to-stores")){
-    						enableSelling = Boolean.parseBoolean(s.split(":")[1]);
-    						notInConfig -= 256;
-    					} else if(s.equals("Properties file for RealShopping v0.31")){
-    						notInConfig -= 512;
-    						v31plus = true;
-    					}
-    				}
-    				fstream.close();
-    				br.close();
-    				if(notInConfig > 0){
-        				PrintWriter pW = new PrintWriter(f);
-        				pW.println("Properties file for RealShopping v0.31");
-        				pW.println("language-pack:"+langpack);
-        				pW.println("punishment:"+punishment);
-        				pW.println("keep-stolen-items-after-punish:"+keepstolen);
-        				pW.println("jail-location:"+jailLoc.getWorld().getName()+";"+jailLoc.getBlockX()+","+jailLoc.getBlockY()+","+jailLoc.getBlockZ());
-        				pW.println("hell-location:"+hellLoc.getWorld().getName()+";"+hellLoc.getBlockX()+","+hellLoc.getBlockY()+","+hellLoc.getBlockZ());
-        				pW.println("drop-items-at:"+dropLoc.getWorld().getName()+";"+dropLoc.getBlockX()+","+dropLoc.getBlockY()+","+dropLoc.getBlockZ());
-        				pW.println("player-stores-create-cost:"+pstorecreate);
-        				pW.print("enable-shopping-carts-in-worlds:");
-        				boolean i = true;
-        				for(String str:cartEnabledW){
-        					if(i){
-        						pW.print(str);
-        						i = false;
-        					}
-        					else pW.print("," + str);
-        				}
-        				pW.println();
-        				pW.println("enable-selling-to-stores:"+enableSelling);
-        				pW.close();
-    				}
-    			}
-    		} catch (FileNotFoundException e) {
-    			e.printStackTrace();
-    			log.info("Failed while reading realshopping.properties. Default properties loaded.");
-			} catch(IOException e) {
-				e.printStackTrace();
-    			log.info("Failed while reading realshopping.properties. Default properties loaded.");
-			}
     		try {
     			f = new File(mandir + "shops.db");
     			if(!f.exists()){
@@ -422,8 +274,8 @@ public class RealShopping extends JavaPlugin {
     				br = new BufferedReader(new InputStreamReader(fstream));
     				String s;
     				while ((s = br.readLine()) != null){
-    					shopMap.get(s.split(";")[0].split("-")[1]).players.put(s.split(";")[0].split("-")[0],(s.split(";").length == 2)?s.split(";")[1]:"");//name - inventory
-    					playerMap.put(s.split(";")[0].split("-")[0], s.split(";")[0].split("-")[1]);// name - shop
+    					if(s.equals("Inventories database for RealShopping v0.32")) {}
+    					PInvMap.put(s.split(";")[0].split("-")[0], new RSPlayerInventory(s.split(";")[1] ,s.split(";")[0].split("-")[1]));//Name - Pinv
     				}
     				fstream.close();
     				br.close();
@@ -534,7 +386,7 @@ public class RealShopping extends JavaPlugin {
     		
     		f = new File(mandir + "langpacks/");
     		if(!f.exists()) f.mkdir();
-        	LangPack.initialize(langpack);
+        	LangPack.initialize(Config.langpack);
         	unit = LangPack.UNIT;
     		initForbiddenInStore();
     		initMaxDur();
@@ -547,24 +399,16 @@ public class RealShopping extends JavaPlugin {
      
     public void onDisable(){
 		try {
-			Object[] keys = shopMap.keySet().toArray();
+			Object[] keys = PInvMap.keySet().toArray();//Player Map
 			
-			File f = new File(mandir+"inventories.db");
+			File f = new File(mandir + "inventories.db");
 			if(!f.exists()) f.createNewFile();
 			PrintWriter pW;
 			pW = new PrintWriter(f);
 			for(int i = 0;i < keys.length;i++){
-				Map inv = shopMap.get(keys[i]).players;
-				if(!inv.isEmpty()){
-					//Write inventories to file
-					Object[] players = inv.keySet().toArray();
-					for(int j = 0;j < players.length;j++){
-						String s = players[j].toString() + "-" + shopMap.get(keys[i]).name + ";";
-						s += inv.get(players[j]);
-						pW.println(s);
-					}
-					
-				}
+				if(i == 0) pW.println("Inventories database for RealShopping v0.32");
+				String invStr = PInvMap.get(keys[i]).exportToString();
+				pW.println(keys[i] + "-" + PInvMap.get(keys[i]).getStore() + ";" + invStr);
 			}
 			pW.close();
 			
@@ -630,7 +474,6 @@ public class RealShopping extends JavaPlugin {
 			
 				//Write prices to xml
 
-				keys = prices.keySet().toArray();
 				f = new File(mandir+"prices.xml");//Reset file
 				if(f.exists()) f.delete();
 				f.createNewFile();
@@ -645,13 +488,13 @@ public class RealShopping extends JavaPlugin {
 	            doc.appendChild(doc.createComment("If you want to manually edit this file, do it when your server is down. Your changes won't be saved otherwise!"));
 	            
 	            Map tempMap;
-	            keys = prices.keySet().toArray();
+	            keys = shopMap.keySet().toArray();
 	            for(int i = 0;i < keys.length;i++){	
 	            	Element shop = doc.createElement("shop");
-	            	shop.setAttribute("name", keys[i].toString());
+	            	shop.setAttribute("name", shopMap.get(keys[i]).name);
 	            	root.appendChild(shop);
 	            	
-	            	tempMap = prices.get(keys[i]);
+	            	tempMap = shopMap.get(keys[i]).prices;
 	            	Object[] ids = tempMap.keySet().toArray();
 	            	for(int j = 0;j < ids.length;j++){
 	            		Element item = doc.createElement("item");
@@ -732,8 +575,8 @@ public class RealShopping extends JavaPlugin {
 				if(!shopMap.get(keys[i]).banned.contains(player.getName().toLowerCase())) {
 					l = shopMap.get(keys[i]).exit.get(j).clone();
 					player.teleport(l.add(0.5, 0, 0.5));
-					shopMap.get(keys[i]).players.put(player.getName(), createInv(player));
-					playerMap.put(player.getName(), shopMap.get(keys[i]).name);
+					
+					PInvMap.put(player.getName(), new RSPlayerInventory(player, (String) keys[i]));
 					player.sendMessage(ChatColor.RED + LangPack.YOUENTERED + shopMap.get(keys[i]).name);
 					
 					//Refill chests
@@ -775,17 +618,16 @@ public class RealShopping extends JavaPlugin {
     }
     
     public static boolean exit(Player player, boolean cmd){
-		if(playerMap.containsKey(player.getName())){
+		if(PInvMap.containsKey(player.getName())){
 			if(shopMap.size() > 0){
-				if(hasPaid(player) || player.getGameMode() == GameMode.CREATIVE){
-					String shopName = playerMap.get(player.getName());
+				if(PInvMap.get(player.getName()).hasPaid() || player.getGameMode() == GameMode.CREATIVE){
+					String shopName = PInvMap.get(player.getName()).getStore();
 					Location l = new Location(player.getWorld(), player.getLocation().getBlockX(), player.getLocation().getBlockY(), player.getLocation().getBlockZ());
 					if(shopMap.get(shopName).exit.contains(l)){
 						l = shopMap.get(shopName).entrance.get(shopMap.get(shopName).exit.indexOf(l)).clone();
-						if(shopMap.get(playerMap.get(player.getName())).sellToStore.containsKey(player.getName()))
-							shopMap.get(playerMap.get(player.getName())).sellToStore.remove(player.getName());
-						shopMap.get(shopName).players.remove(player.getName());
-						playerMap.remove(player.getName());
+						if(shopMap.get(shopName).sellToStore.containsKey(player.getName()))
+							shopMap.get(shopName).sellToStore.remove(player.getName());
+						PInvMap.remove(player.getName());
 						player.teleport(l.add(0.5, 0, 0.5));
 						player.sendMessage(ChatColor.RED + LangPack.YOULEFT + shopName);
 						return true;
@@ -809,24 +651,18 @@ public class RealShopping extends JavaPlugin {
     }
     
     public static boolean pay(Player player, Inventory[] invs){
-		if(playerMap.containsKey(player.getName())){
-			if(prices.containsKey(playerMap.get(player.getName())))
-			if(!prices.get(playerMap.get(player.getName())).isEmpty()){
-				float toPay = cost(player, invs);
+		if(PInvMap.containsKey(player.getName())){
+			String shopName = PInvMap.get(player.getName()).getStore();
+			if(!shopMap.get(shopName).prices.isEmpty()) {
+				float toPay = PInvMap.get(player.getName()).toPay(invs);
 				if(econ.getBalance(player.getName()) < toPay) {
 					player.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOBUYTHINGSFOR + toPay + unit);
 					return true;
 				} else {
 					econ.withdrawPlayer(player.getName(), toPay);
-					if(!shopMap.get(playerMap.get(player.getName())).owner.equals("@admin")) econ.depositPlayer(shopMap.get(playerMap.get(player.getName())).owner, toPay);//If player owned store, pay player
-					String tempInv = createInv(player);
-					String tempCInv;
-					if(invs != null)
-						for(int i = 0;i < invs.length;i++){
-							tempCInv = createInv(invs[i]);
-							tempInv += tempCInv.equals("")?"":","+tempCInv;
-						}
-					shopMap.get(playerMap.get(player.getName())).players.put(player.getName(),tempInv);
+					if(!shopMap.get(shopName).owner.equals("@admin")) econ.depositPlayer(shopMap.get(shopName).owner, toPay);//If player owned store, pay player
+					if(invs != null) PInvMap.get(player.getName()).update(invs);
+					else PInvMap.get(player.getName()).update();
 					player.sendMessage(ChatColor.RED + LangPack.YOUBOUGHTSTUFFFOR + toPay + unit);
 					return true;
 				}
@@ -836,110 +672,32 @@ public class RealShopping extends JavaPlugin {
 			}
 		} else {
 			player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
-			return false;
 		}
 		return false;
 	}
     
-    public static boolean hasPaid(Player p){
-		String[] inv = createInv(p).split(",");
-		Map<Integer, Integer> newInv = createInvOneOccur(inv);
-		
-		inv = shopMap.get(playerMap.get(p.getName())).players.get(p.getName()).split(",");
-		Map<Integer, Integer> oldInv = createInvOneOccur(inv);
-		
-		Object[] keys = newInv.keySet().toArray();
-		boolean hasPaid = true;
-		if(prices.containsKey(playerMap.get(p.getName())))//If there are prices for store.
-			for(int j = 0;j < keys.length;j++){
-				int key = Integer.parseInt(keys[j].toString());
-				if(prices.get(playerMap.get(p.getName())).containsKey(key))//If item has price
-					if(oldInv.containsKey(key)){
-						if(newInv.get(key) > oldInv.get(key))
-							hasPaid = false;
-					} else hasPaid = false;
-			}
-		return hasPaid;
-    }
-    
-    public static float cost(Player p, Inventory[] invs){
-		String[] inv = shopMap.get(playerMap.get(p.getName())).players.get(p.getName()).split(",");
-		Map<Integer, Integer> oldInv = createInvOneOccur(inv);
-		
-		inv = createInv(p).split(",");
-		String tempInv;
-		if(invs != null)
-			for(int i = 0;i < invs.length;i++){
-				tempInv = createInv(invs[i]);
-				if(!tempInv.equals("")) inv = (String[]) ArrayUtils.addAll(inv, tempInv.split(","));
-			}
-		Map<Integer, Integer> newInv = createInvOneOccur(inv);
-		
-		float toPay = 0;
-		Object[] keys = newInv.keySet().toArray();
-		for(int i = 0;i < keys.length;i++){
-			int type = (Integer) keys[i];
-			if(prices.containsKey(playerMap.get(p.getName())))
-			if(prices.get(playerMap.get(p.getName())).containsKey(type)){//Something in inventory has a price
-				int amount = newInv.get(type);
-				float cost = prices.get(playerMap.get(p.getName())).get(type);
-				if(shopMap.get(playerMap.get(p.getName())).sale.containsKey(type)){//There is a sale on that item.
-					int pcnt = 100 - shopMap.get(playerMap.get(p.getName())).sale.get(type);
-					cost *= pcnt;
-					cost = Math.round(cost);
-					cost /= 100;
-				}
-				if(oldInv.containsKey(type)) {
-					int oldAm = oldInv.get(type);
-					if(oldAm > amount){//More items before than now
-						amount = 0;
-					} else {//More items now
-						amount -= oldAm;
-					}
-				}
-				toPay += cost * (maxDurMap.containsKey(type)?Math.ceil((double)amount / (double)maxDurMap.get(type)):amount);
-			}
-		}
-
-		return toPay;
-    }
-    
     public static boolean addItemToSell(Player p, ItemStack iS){
-    	if(enableSelling && playerMap.containsKey(p.getName())){
-    		if(shopMap.get(playerMap.get(p.getName())).buyFor > 0 && prices.containsKey(playerMap.get(p.getName())) && prices.get(playerMap.get(p.getName())).size() > 0){
-    			if(prices.get(playerMap.get(p.getName())).containsKey(iS.getTypeId())){
-    				if(shopMap.get(playerMap.get(p.getName())).players.containsKey(p.getName()) && !shopMap.get(playerMap.get(p.getName())).players.get(p.getName()).equals("")){
-    					if(!shopMap.get(playerMap.get(p.getName())).players.get(p.getName()).equals("")){
-    						Map<Integer, Integer> pItems = createInvOneOccur(shopMap.get(playerMap.get(p.getName())).players.get(p.getName()).split(","));
-    						if(pItems.containsKey(iS.getTypeId())){
-    							int ownedAm = pItems.get(iS.getTypeId());
-    							int sellAm = (maxDurMap.containsKey(iS.getTypeId()))?maxDurMap.get(iS.getTypeId()) - iS.getDurability():iS.getAmount();
-    							if(sellAm < ownedAm){
-    								if(!shopMap.get(playerMap.get(p.getName())).sellToStore.containsKey(p.getName()))
-    									shopMap.get(playerMap.get(p.getName())).sellToStore.put(p.getName(), new ArrayList<ItemStack>());
-    								shopMap.get(playerMap.get(p.getName())).sellToStore.get(p.getName()).add(iS);
-    								pItems.put(iS.getTypeId(), ownedAm - sellAm);
-    							} else if(sellAm == ownedAm){
-    								if(!shopMap.get(playerMap.get(p.getName())).sellToStore.containsKey(p.getName()))
-    									shopMap.get(playerMap.get(p.getName())).sellToStore.put(p.getName(), new ArrayList<ItemStack>());
-    								shopMap.get(playerMap.get(p.getName())).sellToStore.get(p.getName()).add(iS);
-    								pItems.remove(iS.getTypeId());//Simply remove because no more items left
-    							} else {
-    								p.sendMessage(ChatColor.RED + LangPack.YOUDONTOWNTHEITEMSYOUWANTTOSELL);
-    								return false;
-    							}
-    						//	Update player inv var
-    							String pInv = "";
-    							Object[] keys = pItems.keySet().toArray();
-    							for(int i = 0;i < keys.length;i++){
-    								pInv += "," + keys[i] + ":" + pItems.get(keys[i]);
-    							}
-    							if(!pInv.equals("")) pInv = pInv.substring(1);		
-    							shopMap.get(playerMap.get(p.getName())).players.put(p.getName(), pInv);
-    							p.sendMessage(ChatColor.GREEN + RealShopping.formatItemStackToMess(new ItemStack[]{iS}) + LangPack.ADDEDTOSELLLIST);
-    							return true;
-    						} else p.sendMessage(ChatColor.RED + LangPack.YOUDONTOWNTHEITEMSYOUWANTTOSELL);
-    					} else p.sendMessage(ChatColor.RED + LangPack.YOUDONTOWNTHEITEMSYOUWANTTOSELL);
+    	if(Config.enableSelling && PInvMap.containsKey(p.getName())){//TODO will crash if store is removed while players are in it
+    		Shop tempShop = shopMap.get(PInvMap.get(p.getName()).getStore());
+    		if(tempShop.buyFor > 0 && !tempShop.prices.isEmpty()){
+    			if(tempShop.prices.containsKey(iS.getTypeId())){
+    				RSPlayerInventory tempPInv = PInvMap.get(p.getName());
+    				if(tempPInv.hasItems()){
+   						if(tempPInv.hasItem(iS)){
+   							int ownedAm = tempPInv.getAmount(iS);
+   							int sellAm = (maxDurMap.containsKey(iS.getTypeId()))?maxDurMap.get(iS.getTypeId()) - iS.getDurability():iS.getAmount();
+   							if(sellAm > ownedAm) {
+   								p.sendMessage(ChatColor.RED + LangPack.YOUDONTOWNTHEITEMSYOUWANTTOSELL);
+   								return false;
+   							}
+   							if(!tempShop.sellToStore.containsKey(p.getName()))
+   								tempShop.sellToStore.put(p.getName(), new ArrayList<ItemStack>());
+   							tempShop.sellToStore.get(p.getName()).add(iS);
+   							tempPInv.removeItem(iS, sellAm);//Update player inv
+
+   							p.sendMessage(ChatColor.GREEN + RealShopping.formatItemStackToMess(new ItemStack[]{iS}) + LangPack.ADDEDTOSELLLIST);
+   							return true;
+   						} else p.sendMessage(ChatColor.RED + LangPack.YOUDONTOWNTHEITEMSYOUWANTTOSELL);
     				} else p.sendMessage(ChatColor.RED + LangPack.YOUDONTOWNTHEITEMSYOUWANTTOSELL);
     			} else p.sendMessage(ChatColor.RED + LangPack.THISSTOREDOESNTBUY + iS.getType());
     		} else p.sendMessage(ChatColor.RED + LangPack.THISSTOREDOESNTBUYANYITEMS);
@@ -948,16 +706,16 @@ public class RealShopping extends JavaPlugin {
     }
     
     public static boolean cancelToSell(Player p){
-    	if(enableSelling && shopMap.get(playerMap.get(p.getName())).sellToStore.containsKey(p.getName())){
-			//Update player inv var
-    		List<ItemStack> pList = shopMap.get(playerMap.get(p.getName())).sellToStore.get(p.getName());
-			String pInv = shopMap.get(playerMap.get(p.getName())).players.get(p.getName());
+    	Shop tempShop = shopMap.get(PInvMap.get(p.getName()).getStore());
+    	if(Config.enableSelling && PInvMap.containsKey(p.getName()) && tempShop.sellToStore.containsKey(p.getName())){
+			//Update player inv
+    		List<ItemStack> pList = tempShop.sellToStore.get(p.getName());
 			for(int i = 0;i < pList.size();i++){
-				if(!pInv.equals("")) pInv += ",";
-				pInv += pList.get(i).getTypeId() + ":" + ((maxDurMap.containsKey(pList.get(i).getTypeId()))?maxDurMap.get(pList.get(i).getTypeId()) - pList.get(i).getDurability():pList.get(i).getAmount());
+				int amount = (maxDurMap.containsKey(pList.get(i).getTypeId()))?maxDurMap.get(pList.get(i).getTypeId()) - pList.get(i).getDurability():pList.get(i).getAmount();
+				PInvMap.get(p.getName()).addItem(pList.get(i), amount);
 			}
-			shopMap.get(playerMap.get(p.getName())).players.put(p.getName(), createStrOneOccur(pInv.split(",")));
-			shopMap.get(playerMap.get(p.getName())).sellToStore.remove(p.getName());
+			
+			tempShop.sellToStore.remove(p.getName());//Cancel selling
 			p.sendMessage(ChatColor.GREEN + LangPack.CANCELLEDSELLINGITEMS);
 			return true;
     	}
@@ -965,9 +723,10 @@ public class RealShopping extends JavaPlugin {
     }
     
     public static boolean confirmToSell(Player p){
-    	if(enableSelling && shopMap.get(playerMap.get(p.getName())).buyFor > 0){
-    		if(shopMap.get(playerMap.get(p.getName())).sellToStore.containsKey(p.getName())){
-    			List<ItemStack> sList = shopMap.get(playerMap.get(p.getName())).sellToStore.get(p.getName());
+    	Shop tempShop = shopMap.get(PInvMap.get(p.getName()).getStore());
+    	if(Config.enableSelling && PInvMap.containsKey(p.getName()) && tempShop.buyFor > 0){
+    		if(tempShop.sellToStore.containsKey(p.getName())){
+    			List<ItemStack> sList = tempShop.sellToStore.get(p.getName());
     			Object[] pInv = ArrayUtils.addAll(p.getInventory().getContents(), p.getInventory().getArmorContents());
     			for(int i = 0;i < sList.size();i++){
     				boolean cont = false;
@@ -981,7 +740,7 @@ public class RealShopping extends JavaPlugin {
     					} else cont = true;
     				}
     				if(!cont){
-    					shopMap.get(playerMap.get(p.getName())).sellToStore.remove(p.getName());
+    					tempShop.sellToStore.remove(p.getName());
     					p.sendMessage(ChatColor.RED + LangPack.YOUDONTHAVEALLTHEITEMSYOUWANTEDTOSELL);
     					return false;
     				}
@@ -989,17 +748,16 @@ public class RealShopping extends JavaPlugin {
     			float payment = 0;
     			for(int i = 0;i < sList.size();i++){
     				int type = sList.get(i).getTypeId();
-    				if(prices.containsKey(playerMap.get(p.getName())))
-    					if(prices.get(playerMap.get(p.getName())).containsKey(type)){//Something in inventory has a price
+    					if(tempShop.prices.containsKey(type)){//Something in inventory has a price
     						int amount = ((maxDurMap.containsKey(type))?maxDurMap.get(type) - sList.get(i).getDurability():sList.get(i).getAmount());
-    						float cost = prices.get(playerMap.get(p.getName())).get(type);
-    						if(shopMap.get(playerMap.get(p.getName())).sale.containsKey(type)){//There is a sale on that item.
-    							int pcnt = 100 - shopMap.get(playerMap.get(p.getName())).sale.get(type);
+    						float cost = tempShop.prices.get(type);
+    						if(tempShop.sale.containsKey(type)){//There is a sale on that item.
+    							int pcnt = 100 - tempShop.sale.get(type);
     							cost *= pcnt;
     							cost = Math.round(cost);
     							cost /= 100;
     						}
-    						cost *= shopMap.get(playerMap.get(p.getName())).buyFor;
+    						cost *= tempShop.buyFor;
 							cost = Math.round(cost);
 							cost /= 100;
 							
@@ -1007,16 +765,17 @@ public class RealShopping extends JavaPlugin {
     					}
     			}
     			boolean cont = false;
-    			if(!shopMap.get(playerMap.get(p.getName())).owner.equals("@admin")){
-    				if(econ.getBalance(shopMap.get(playerMap.get(p.getName())).owner) >= payment){
+    			String own = tempShop.owner;
+    			if(!own.equals("@admin")){
+    				if(econ.getBalance(own) >= payment){
     					econ.depositPlayer(p.getName(), payment);
-    					econ.withdrawPlayer(shopMap.get(playerMap.get(p.getName())).owner, payment);//If player owned store, pay player
+    					econ.withdrawPlayer(own, payment);//If player owned store, pay player
     					p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sList.size() + LangPack.ITEMSFOR + payment + unit);
     					cont = true;
     				}
     			} else {
 					econ.depositPlayer(p.getName(), payment);
-					shopMap.get(playerMap.get(p.getName())).sellToStore.remove(p.getName());
+					tempShop.sellToStore.remove(p.getName());
 					p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sList.size() + LangPack.ITEMSFOR + payment + unit);
 					cont = true;
     			}
@@ -1044,7 +803,7 @@ public class RealShopping extends JavaPlugin {
         			p.getInventory().setContents(newInv);
         			p.getInventory().setArmorContents(newArm);
         			
-        			String own = shopMap.get(playerMap.get(p.getName())).owner;
+        			
         			if(!own.equals("@admin")){//Return items if player store.
         				if(!stolenToClaim.containsKey(own)) stolenToClaim.put(own, new ArrayList<ItemStack>());
         				for(int i = 0;i < sList.size();i++){
@@ -1079,7 +838,7 @@ public class RealShopping extends JavaPlugin {
     								, aL[7].getBlock()
     								, aL[8].getBlock()};
     	StorageMinecart firstCart = null;//First cart found on first block
-    	if(cartEnabledW.contains(l.getWorld().getName())){
+    	if(Config.cartEnabledW.contains(l.getWorld().getName())){
         	Object[] mcArr = l.getWorld().getEntitiesByClass(StorageMinecart.class).toArray();
         	String rails = "";
         	for(int i = 0;i < b.length;i++){//Get rails in area
@@ -1111,39 +870,32 @@ public class RealShopping extends JavaPlugin {
     
 	public static boolean shipCartContents(StorageMinecart sM, Player p) {
 		//Get bought items in cart
-		String[] inv = shopMap.get(playerMap.get(p.getName())).players.get(p.getName()).split(",");//All items belonging to player
-		Map<Integer, Integer> oldInv = createInvOneOccur(inv);
 		
-		inv = createInv(sM.getInventory()).split(",");//Items in shopping cart
-		Map<Integer, Integer> newInv = createInvOneOccur(inv);
+		//Old inv = items
 		
-		Map<Integer, Integer> bought = new HashMap<Integer, Integer>();
-		Map<Integer, Integer> bought2 = new HashMap<Integer, Integer>();
+		ItemStack[] cartInv = sM.getInventory().getContents();//Items in shopping cart
 		
-		if(!oldInv.isEmpty()){
-			Object[] keys = newInv.keySet().toArray();
-			for(int i = 0;i < keys.length;i++){
-				int type = (Integer) keys[i];
-				if(prices.containsKey(playerMap.get(p.getName())))
-				if(prices.get(playerMap.get(p.getName())).containsKey(type)){//Something in inventory has a price
-					int amount = newInv.get(type);
+		Map<PItem, Integer> bought = new HashMap<PItem, Integer>();
+		
+		if(PInvMap.get(p.getName()).hasItems()){
+			for(int i = 0;i < cartInv.length;i++){
+				ItemStack x = cartInv[i];
+				int type = x.getTypeId();
+				if(shopMap.get(p.getName()).prices.containsKey(type)){//Something in inventory has a price
+					int amount = (maxDurMap.containsKey(type)?maxDurMap.get(type) - x.getDurability():x.getAmount());
 
 					if(bought.containsKey(type)){
-						bought.put(type, amount + bought.get(type));
-						bought2.put(type, amount + bought.get(type));
+						bought.put(new PItem(x), amount + bought.get(new PItem(x)));
 					} else {
-						bought.put(type, amount);
-						bought2.put(type, amount);
+						bought.put(new PItem(x), amount);
 					}
-					if(oldInv.containsKey(type)){
-						if(bought.get(type) > oldInv.get(type)){
-							bought.put(type, oldInv.get(type));
-							bought2.put(type, oldInv.get(type));
+					if(PInvMap.get(p.getName()).hasItem(x)){
+						if(bought.get(new PItem(x)) > PInvMap.get(p.getName()).getAmount(x)){
+							bought.put(new PItem(x), PInvMap.get(p.getName()).getAmount(x));
 						}
 					} else {
 						log.info("Error #803");
-						bought.remove(type);
-						bought2.remove(type);
+						bought.remove(x);
 					}
 				}
 			}
@@ -1153,36 +905,38 @@ public class RealShopping extends JavaPlugin {
 				return true;
 			}
 			
+			Map<PItem, Integer> bought2 = new HashMap<PItem, Integer>(bought);
+			
 			//Remove stolen items from carts inventory
-			ItemStack[] cartInv = sM.getInventory().getContents();
 			ItemStack[] newCartInv = new ItemStack[cartInv.length];
 			ItemStack[] boughtIS = new ItemStack[cartInv.length];
 			for(int i = 0;i < cartInv.length;i++){
 				ItemStack x = cartInv[i];
 				if(x != null)
-					if(bought.containsKey(x.getTypeId())){//Has bought item
-						int diff = bought.get(x.getTypeId()) - (maxDurMap.containsKey(x.getTypeId())?maxDurMap.get(x.getTypeId()) - x.getDurability():x.getAmount());
+					if(bought.containsKey(new PItem(x))){//Has bought item
+						int diff = bought.get(new PItem(x)) - (maxDurMap.containsKey(x.getTypeId())?maxDurMap.get(x.getTypeId()) - x.getDurability():x.getAmount());
 						if(diff >= 0){//If + then even more stolen left
-							bought.put(x.getTypeId(), diff);
+							bought.put(new PItem(x), diff);
 							boughtIS[i] = x.clone();
 							x = null;
 						} else {//If negative then no more stolen thing in inventory
 							if(maxDurMap.containsKey(x.getTypeId())){
-								x.setDurability((short)(x.getDurability() + bought.get(x.getTypeId())));
-								boughtIS[i] = new ItemStack(x.getTypeId());
-								boughtIS[i].setDurability(bought.get(x.getTypeId()).shortValue());
+								x.setDurability((short)(x.getDurability() + bought.get(new PItem(x))));
+								boughtIS[i] = new ItemStack(x);
+								boughtIS[i].setDurability(bought.get(new PItem(x)).shortValue());
 							} else {
-								x.setAmount(x.getAmount() - bought.get(x.getTypeId()));
-								boughtIS[i] = new ItemStack(x.getTypeId(), bought.get(x.getTypeId()));
+								x.setAmount(x.getAmount() - bought.get(new PItem(x)));
+								boughtIS[i] = new ItemStack(x);
+								boughtIS[i].setAmount(bought.get(new PItem(x)));
 							}
-							bought.remove(x.getTypeId());
+							bought.remove(new PItem(x));
 						}
 					}
 				newCartInv[i] = x;
 			}
 			sM.getInventory().setContents(newCartInv);
 			
-//			if(!bought.isEmpty()){ log.info("Error #802"); System.out.println(bought);}
+			if(!bought.isEmpty()){ log.info("Error #802"); System.out.println(bought);}
 			
 			//Ship
 			if(!shippedToCollect.containsKey(p.getName()))
@@ -1191,25 +945,11 @@ public class RealShopping extends JavaPlugin {
 			
 			p.sendMessage(ChatColor.GREEN + LangPack.PACKAGEWAITINGTOBEDELIVERED);
 			
-			//Update player inv var
-			keys = oldInv.keySet().toArray();
+			//Update player inv
+			Object[] keys = bought2.keySet().toArray();
 			for(int i = 0;i < keys.length;i++){
-				int type = (Integer) keys[i];
-				if(bought2.containsKey(type)){
-					if(bought2.get(type) < oldInv.get(type)){
-						oldInv.put(type, oldInv.get(type) - bought2.get(type));
-					} else {
-						oldInv.remove(type);
-					}
-				}
+				log.info(PInvMap.get(p.getName()).removeItem((PItem)keys[i], bought2.get(keys[i]))+"");//TODO remove check
 			}
-			String pInv = "";
-			keys = oldInv.keySet().toArray();
-			for(int i = 0;i < keys.length;i++){
-				pInv += "," + keys[i] + ":" + oldInv.get(keys[i]);
-			}
-			if(!pInv.equals("")) pInv = pInv.substring(1);		
-			shopMap.get(playerMap.get(p.getName())).players.put(p.getName(), pInv);
 		} else p.sendMessage(ChatColor.RED + LangPack.YOUHAVENTBOUGHTANYTHING);
 
 		return true;
@@ -1248,8 +988,8 @@ public class RealShopping extends JavaPlugin {
 	}
     
     public static boolean prices(CommandSender sender, int page, String store, boolean cmd){
-    	if(prices.containsKey(store)){
-    		Map<Integer, Float> tempMap = prices.get(store);
+    	if(!shopMap.get(store).prices.isEmpty()){
+    		Map<Integer, Float> tempMap = shopMap.get(store).prices;
  			if(!tempMap.isEmpty()){
  				Object[] keys = tempMap.keySet().toArray();
  				if(page*9 < keys.length){//If page exists
@@ -1301,22 +1041,21 @@ public class RealShopping extends JavaPlugin {
      }
     
     public static void punish(Player p){
-    	if(punishment.equalsIgnoreCase("hell")){
-    		if(!keepstolen){
+    	if(Config.punishment.equalsIgnoreCase("hell")){
+    		if(!Config.keepstolen){
     			returnStolen(p);
     		}
-    		shopMap.get(playerMap.get(p.getName())).players.remove(p.getName());
-			if(shopMap.get(playerMap.get(p.getName())).sellToStore.containsKey(p.getName()))
-				shopMap.get(playerMap.get(p.getName())).sellToStore.remove(p.getName());
-			playerMap.remove(p.getName());
+			if(shopMap.get(PInvMap.get(p.getName()).getStore()).sellToStore.containsKey(p.getName()))
+				shopMap.get(PInvMap.get(p.getName()).getStore()).sellToStore.remove(p.getName());
+			PInvMap.remove(p.getName());
         	p.sendMessage(ChatColor.RED + LangPack.TRYINGTOCHEATYOURWAYOUT);
         	log.info(p.getName() + LangPack.TRIEDTOSTEALFROMTHESTORE);
 
-        	Location dropLoc2 = dropLoc.clone().add(1, 0, 0);
-         	if(p.teleport(hellLoc.clone().add(0.5, 0, 0.5))){
+        	Location dropLoc2 = Config.dropLoc.clone().add(1, 0, 0);
+         	if(p.teleport(Config.hellLoc.clone().add(0.5, 0, 0.5))){
         		log.info(p.getName() + LangPack.WASTELEPORTEDTOHELL);
         		p.sendMessage(ChatColor.RED + LangPack.HAVEFUNINHELL);
-             	Block block = p.getWorld().getBlockAt(dropLoc);
+             	Block block = p.getWorld().getBlockAt(Config.dropLoc);
              	if(block.getType() != Material.CHEST) block.setType(Material.CHEST);
              	BlockState blockState = block.getState();
              	
@@ -1352,64 +1091,31 @@ public class RealShopping extends JavaPlugin {
         		p.getInventory().clear();
         		p.getInventory().setArmorContents(new ItemStack[]{null, null, null, null});
         	} 	
-    	} else if(punishment.equalsIgnoreCase("jail")){
-    		if(!keepstolen){
+    	} else if(Config.punishment.equalsIgnoreCase("jail")){
+    		if(!Config.keepstolen){
     			returnStolen(p);
     		}
-			jailedPlayers.put(p.getName(), shopMap.get(playerMap.get(p.getName())).entrance.get(0));
-    		shopMap.get(playerMap.get(p.getName())).players.remove(p.getName());
-			if(shopMap.get(playerMap.get(p.getName())).sellToStore.containsKey(p.getName()))
-				shopMap.get(playerMap.get(p.getName())).sellToStore.remove(p.getName());
-    		playerMap.remove(p.getName());
+			jailedPlayers.put(p.getName(), shopMap.get(PInvMap.get(p.getName()).getStore()).entrance.get(0));
+			if(shopMap.get(PInvMap.get(p.getName()).getStore()).sellToStore.containsKey(p.getName()))
+				shopMap.get(PInvMap.get(p.getName()).getStore()).sellToStore.remove(p.getName());
+    		PInvMap.remove(p.getName());
         	p.sendMessage(ChatColor.RED + LangPack.TRYINGTOCHEATYOURWAYOUT);
         	log.info(p.getName() + LangPack.TRIEDTOSTEALFROMTHESTORE);
 
-         	if(p.teleport(jailLoc.clone().add(0.5, 0, 0.5))) {
+         	if(p.teleport(Config.jailLoc.clone().add(0.5, 0, 0.5))) {
          		p.sendMessage(LangPack.YOUWEREJAILED);
          		log.info(p.getName() + LangPack.WASJAILED);
          	}
-    	} else if(punishment.equalsIgnoreCase("none")){
-    		if(!keepstolen){
+    	} else if(Config.punishment.equalsIgnoreCase("none")){
+    		if(!Config.keepstolen){
     			returnStolen(p);
     		}
     	}
     }
     
     static void returnStolen(Player p){
-		//Get stolen items
-		String[] inv = shopMap.get(playerMap.get(p.getName())).players.get(p.getName()).split(",");//Items player had in inventory when entering OR inv + items in carts
-		Map<Integer, Integer> oldInv = createInvOneOccur(inv);
-		
-		inv = createInv(p).split(",");//Items in players inventory
-		Map<Integer, Integer> newInv = createInvOneOccur(inv);
-		
-		Map<Integer, Integer> stolen = new HashMap<Integer, Integer>();
-		Map<Integer, Integer> stolen2 =  new HashMap<Integer, Integer>();
-		
-		Object[] keys = newInv.keySet().toArray();
-		for(int i = 0;i < keys.length;i++){
-			int type = (Integer) keys[i];
-			if(prices.containsKey(playerMap.get(p.getName())))
-			if(prices.get(playerMap.get(p.getName())).containsKey(type)){//Something in inventory has a price
-				int amount = newInv.get(type);
-				if(oldInv.containsKey(type)) {
-					int oldAm = oldInv.get(type);
-					if(oldAm > amount){//More items before than now
-						amount = 0;
-					} else {//More items now
-						amount -= oldAm;
-					}
-				}
-				if(stolen.containsKey(type)){
-					stolen.put(type, amount + stolen.get(type));
-					stolen2.put(type, amount + stolen.get(type));
-				}
-				else{
-					stolen.put(type, amount);
-					stolen2.put(type, amount);
-				}
-			}
-		}
+    	Map<PItem, Integer> stolen = PInvMap.get(p.getName()).getStolen();
+    	Map<PItem, Integer> stolen2 = new HashMap<PItem, Integer>(stolen);
 
 		//Remove stolen items from players inventory
 		ItemStack[][] playerInv = new ItemStack[][]{p.getInventory().getContents(), p.getInventory().getArmorContents()};
@@ -1417,48 +1123,54 @@ public class RealShopping extends JavaPlugin {
 		for(int j = 0;j < 2;j ++)
 		for(int i = 0;i < playerInv[j].length;i++){
 			ItemStack x = playerInv[j][i];
-			if(x != null)
-				if(stolen.containsKey(x.getTypeId())){//Has stolen item
-					int diff = stolen.get(x.getTypeId()) - (maxDurMap.containsKey(x.getTypeId())?maxDurMap.get(x.getTypeId()) - x.getDurability():x.getAmount());
+			if(x != null){
+				PItem tempPI = new PItem(x);
+				if(stolen.containsKey(tempPI)){//Has stolen item
+					int diff = stolen.get(tempPI) - (maxDurMap.containsKey(x.getTypeId())?maxDurMap.get(x.getTypeId()) - x.getDurability():x.getAmount());
 					if(diff > 0){//If + then even more stolen left
-						stolen.put(x.getTypeId(), diff);
+						stolen.put(tempPI, diff);
 						x = null;
 					} else {//If negative then no more stolen thing in inventory
 						if(maxDurMap.containsKey(x.getTypeId())){
-							x.setDurability((short)(x.getDurability() + stolen.get(x.getTypeId())));
+							x.setDurability((short)(x.getDurability() + stolen.get(tempPI)));
 						} else {
-							x.setAmount(x.getAmount() - stolen.get(x.getTypeId()));
+							x.setAmount(x.getAmount() - stolen.get(tempPI));
 						}
-						stolen.remove(x.getTypeId());
+						stolen.remove(tempPI);
 					}
 				}
+			}
 			newPlayerInv[j][i] = x;
 		}
 		p.getInventory().setContents(newPlayerInv[0]);
 		p.getInventory().setArmorContents(newPlayerInv[1]);
 		
-		String own = shopMap.get(playerMap.get(p.getName())).owner;
+		System.out.println(stolen2);
+		
+		String own = shopMap.get(PInvMap.get(p.getName()).getStore()).owner;
 		if(!own.equals("@admin")){//Return items if player store.
 			if(!stolenToClaim.containsKey(own)) stolenToClaim.put(own, new ArrayList<ItemStack>());
 			Object[] keyss = stolen2.keySet().toArray();
 			for(int i = 0;i < keyss.length;i++){
-				int type = (Integer) keyss[i];
-				ItemStack tempIS = new ItemStack(type);
+				int type = ((PItem) keyss[i]).type;
+				ItemStack tempIS = ((PItem) keyss[i]).toItemStack();
 				if(maxDurMap.containsKey(type)){
-					if(stolen2.get(type) > maxDurMap.get(type))
-						while(maxDurMap.get(type) < stolen2.get(type)){//If more than one stack/full tool
-							stolenToClaim.get(own).add(new ItemStack(type));
-							stolen2.put(type, stolen2.get(type) - maxDurMap.get(type));
+					if(stolen2.get(keyss[i]) > maxDurMap.get(type))
+						while(maxDurMap.get(type) < stolen2.get(keyss[i])){//If more than one stack/full tool
+							stolenToClaim.get(own).add(tempIS.clone());
+							stolen2.put((PItem) keyss[i], stolen2.get(keyss[i]) - maxDurMap.get(type));
 						}
-					tempIS.setDurability((short) (maxDurMap.get(type) - stolen2.get(type)));
+					tempIS.setDurability((short) (maxDurMap.get(type) - stolen2.get(keyss[i])));
 					stolenToClaim.get(own).add(tempIS);
 				} else {
-					if(stolen2.get(type) > Material.getMaterial(type).getMaxStackSize())
-						while(Material.getMaterial(type).getMaxStackSize() < stolen2.get(type)){//If more than one stack/full tool
-							stolenToClaim.get(own).add(new ItemStack(type, Material.getMaterial(type).getMaxStackSize()));
-							stolen2.put(type, stolen2.get(type) - Material.getMaterial(type).getMaxStackSize());
+					if(stolen2.get(keyss[i]) > Material.getMaterial(type).getMaxStackSize())
+						while(Material.getMaterial(type).getMaxStackSize() < stolen2.get(keyss[i])){//If more than one stack/full tool
+							ItemStack tempIStemp = tempIS.clone();
+							tempIStemp.setAmount(Material.getMaterial(type).getMaxStackSize());
+							stolenToClaim.get(own).add(tempIStemp);
+							stolen2.put((PItem) keyss[i], stolen2.get(keyss[i]) - Material.getMaterial(type).getMaxStackSize());
 						}
-					tempIS.setAmount(stolen.get(type));
+					tempIS.setAmount(stolen.get(keyss[i]));
 					stolenToClaim.get(own).add(tempIS);
 				}
 			}
@@ -1485,7 +1197,7 @@ public class RealShopping extends JavaPlugin {
     	return allow;
     }
     
-    static String createInv(Player player){
+/*    static String createInv(Player player){
 		ItemStack[] items = (ItemStack[]) ArrayUtils.addAll(player.getInventory().getContents(), player.getInventory().getArmorContents());
 		String str = "";
 		for(int j = 0;j < items.length;j++){
@@ -1540,7 +1252,7 @@ public class RealShopping extends JavaPlugin {
 		}
 		if(!str.equals("")) str = str.substring(1);
 		return str;
-    }
+    }*/
     
     private void initMaxDur(){
     	maxDurMap.put(256,251);//Iron tools
@@ -1707,7 +1419,11 @@ class PricesParser extends DefaultHandler {
 	public void endElement(String a, String b, String name) throws SAXException {
 		if (name.equalsIgnoreCase("prices")){
 			for(int i = 0;i<shopList.size();i++){
-				RealShopping.prices.put(shopList.get(i), mapList.get(i));
+				if(RealShopping.shopMap.containsKey(shopList.get(i))){
+					RealShopping.shopMap.get(shopList.get(i)).prices = mapList.get(i);
+				} else {
+					RealShopping.log.info("Couldn't store prices for non existing store " + shopList.get(i));
+				}
 			}
 		}
 	}

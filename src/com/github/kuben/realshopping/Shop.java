@@ -35,7 +35,8 @@ import org.bukkit.inventory.PlayerInventory;
 
 public class Shop {
 
-	public Map<String, String> players = new HashMap<String, String>();
+	public Map<Integer, Float> prices = new HashMap<Integer, Float>();
+	
 	public Map<Location,ArrayList<Integer[]>> chests = new HashMap<Location, ArrayList<Integer[]>>();
 	public Map<String,ArrayList<ItemStack>> sellToStore = new HashMap<String, ArrayList<ItemStack>>();
 	public Map<Integer, Integer> sale = new HashMap<Integer, Integer>();

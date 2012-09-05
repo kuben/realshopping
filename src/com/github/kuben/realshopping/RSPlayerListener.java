@@ -50,17 +50,16 @@ public class RSPlayerListener implements Listener {
 	@EventHandler (priority = EventPriority.HIGH)
 	public void onTeleport(PlayerTeleportEvent event){
 		Player player = event.getPlayer();
-		if(RealShopping.playerMap.containsKey(player.getName()) && event.getCause() != TeleportCause.UNKNOWN){
-			if(!RealShopping.hasPaid(player)){
+		if(RealShopping.PInvMap.containsKey(player.getName()) && event.getCause() != TeleportCause.UNKNOWN){
+			if(!RealShopping.PInvMap.get(player.getName()).hasPaid()){
 				event.setCancelled(true);
 				RealShopping.punish(player);
 			} else {
 				if(RealShopping.allowTpOutOfStore(event.getTo())){
-					String shopName = RealShopping.playerMap.get(player.getName());
+					String shopName = RealShopping.PInvMap.get(player.getName()).getStore();
 					if(RealShopping.shopMap.get(shopName).sellToStore.containsKey(player.getName()))
 						RealShopping.shopMap.get(shopName).sellToStore.remove(player.getName());
-					RealShopping.shopMap.get(shopName).players.remove(player.getName());
-					RealShopping.playerMap.remove(player.getName());
+					RealShopping.PInvMap.remove(player.getName());
 					player.sendMessage(ChatColor.RED + LangPack.YOULEFT + shopName);
 				} else {
 					event.setCancelled(true);
@@ -78,14 +77,14 @@ public class RSPlayerListener implements Listener {
 			if(event.hasBlock())
 				if(b.getType() == Material.GLASS || b.getType() == Material.THIN_GLASS) {
 					if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
-						if(RealShopping.playerMap.containsKey(player.getName())){
+						if(RealShopping.PInvMap.containsKey(player.getName())){
 							if(player.hasPermission("realshopping.rsexit")) event.setCancelled(RealShopping.exit(player, false));
 						} else {
 							if(player.hasPermission("realshopping.rsenter")) event.setCancelled(RealShopping.enter(player, false));
 						}
 					}
 				} else if(b.getType() == Material.OBSIDIAN) {
-					if(RealShopping.playerMap.containsKey(player.getName())){
+					if(RealShopping.PInvMap.containsKey(player.getName())){
 						if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.STEP){
 							if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
 								if(player.hasPermission("realshopping.rspay")){
@@ -96,13 +95,13 @@ public class RSPlayerListener implements Listener {
 									event.setCancelled(RealShopping.pay(player, carts));
 								}
 							} else if(event.getAction() == Action.LEFT_CLICK_BLOCK) if(player.hasPermission("realshopping.rscost")){
-								if(RealShopping.shopMap.get(RealShopping.playerMap.get(player.getName())).players.containsKey(player.getName())){
+								if(RealShopping.PInvMap.containsKey(player.getName())){
 									event.setCancelled(true);
 									StorageMinecart[] SM = RealShopping.checkForCarts(event.getClickedBlock().getLocation());
 									Inventory[] carts = new Inventory[SM.length];
 									for(int i = 0;i < SM.length;i++)
 										carts[i] = SM[i].getInventory();
-									player.sendMessage(LangPack.YOURARTICLESCOST + RealShopping.cost(player, carts) + RealShopping.unit);
+									player.sendMessage(LangPack.YOURARTICLESCOST + RealShopping.PInvMap.get(player.getName()).toPay(carts) + RealShopping.unit);
 								} else {
 									player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
 								}
@@ -120,7 +119,7 @@ public class RSPlayerListener implements Listener {
 								}
 							}
 						} else if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.BROWN_MUSHROOM){
-							if(RealShopping.enableSelling){
+							if(Config.enableSelling){
 								if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
 									if(event.hasItem()){
 										event.setCancelled(RealShopping.addItemToSell(player, event.getItem()));
@@ -135,7 +134,7 @@ public class RSPlayerListener implements Listener {
 							} else player.sendMessage(ChatColor.RED + LangPack.SELLINGTOSTORESISNOTENABLEDONTHISSERVER);
 						}
 						if(event.getItem() != null && RealShopping.forbiddenInStore.contains(event.getItem().getTypeId()))
-							if(RealShopping.playerMap.containsKey(player.getName()))
+							if(RealShopping.PInvMap.containsKey(player.getName()))
 								if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR)
 									event.setCancelled(true);
 					}
