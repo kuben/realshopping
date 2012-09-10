@@ -484,6 +484,7 @@ public class RSCommandExecutor implements CommandExecutor {
     			} else if (args.length == 2 && args[0].equalsIgnoreCase("delstore")){
     				if(rs.shopMap.containsKey(args[1])){
     					if(rs.shopMap.get(args[1]).owner.equals(player.getName())){
+    						//TODO if shop is empty + rsset
     						rs.shopMap.remove(args[1]);
     						player.sendMessage(ChatColor.RED + args[1] + LangPack.WASREMOVED);
     						rs.updateEntrancesDb();

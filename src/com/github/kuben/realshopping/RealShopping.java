@@ -274,8 +274,8 @@ public class RealShopping extends JavaPlugin {
     				br = new BufferedReader(new InputStreamReader(fstream));
     				String s;
     				while ((s = br.readLine()) != null){
-    					if(s.equals("Inventories database for RealShopping v0.32")) {}
-    					PInvMap.put(s.split(";")[0].split("-")[0], new RSPlayerInventory(s.split(";")[1] ,s.split(";")[0].split("-")[1]));//Name - Pinv
+    					if(!s.equals("Inventories database for RealShopping v0.32"))
+    						PInvMap.put(s.split(";")[0].split("-")[0], new RSPlayerInventory(s.split(";")[1] ,s.split(";")[0].split("-")[1]));//Name - Pinv
     				}
     				fstream.close();
     				br.close();
@@ -677,11 +677,12 @@ public class RealShopping extends JavaPlugin {
 	}
     
     public static boolean addItemToSell(Player p, ItemStack iS){
-    	if(Config.enableSelling && PInvMap.containsKey(p.getName())){//TODO will crash if store is removed while players are in it
+    	if(Config.enableSelling && PInvMap.containsKey(p.getName())){
     		Shop tempShop = shopMap.get(PInvMap.get(p.getName()).getStore());
     		if(tempShop.buyFor > 0 && !tempShop.prices.isEmpty()){
     			if(tempShop.prices.containsKey(iS.getTypeId())){
     				RSPlayerInventory tempPInv = PInvMap.get(p.getName());
+    	    		System.out.println(tempPInv.toString());
     				if(tempPInv.hasItems()){
    						if(tempPInv.hasItem(iS)){
    							int ownedAm = tempPInv.getAmount(iS);
@@ -708,11 +709,11 @@ public class RealShopping extends JavaPlugin {
     public static boolean cancelToSell(Player p){
     	Shop tempShop = shopMap.get(PInvMap.get(p.getName()).getStore());
     	if(Config.enableSelling && PInvMap.containsKey(p.getName()) && tempShop.sellToStore.containsKey(p.getName())){
-			//Update player inv
     		List<ItemStack> pList = tempShop.sellToStore.get(p.getName());
 			for(int i = 0;i < pList.size();i++){
+				System.out.println(pList.get(i));
 				int amount = (maxDurMap.containsKey(pList.get(i).getTypeId()))?maxDurMap.get(pList.get(i).getTypeId()) - pList.get(i).getDurability():pList.get(i).getAmount();
-				PInvMap.get(p.getName()).addItem(pList.get(i), amount);
+				PInvMap.get(p.getName()).addItem(pList.get(i), amount);//Update player inv
 			}
 			
 			tempShop.sellToStore.remove(p.getName());//Cancel selling
@@ -881,6 +882,7 @@ public class RealShopping extends JavaPlugin {
 			for(int i = 0;i < cartInv.length;i++){
 				ItemStack x = cartInv[i];
 				int type = x.getTypeId();
+				System.out.println(shopMap);
 				if(shopMap.get(p.getName()).prices.containsKey(type)){//Something in inventory has a price
 					int amount = (maxDurMap.containsKey(type)?maxDurMap.get(type) - x.getDurability():x.getAmount());
 

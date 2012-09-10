@@ -7,10 +7,12 @@ import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.MaterialData;
 
 public class RSPlayerInventory {
 
@@ -41,7 +43,7 @@ public class RSPlayerInventory {
 		
 		if(invs != null)
 			for(int i = 0;i < invs.length;i++)
-				items.putAll(invToPInv(invs[i]));
+				items = Utils.joinMaps(items, invToPInv(invs[i]));
 		
 		return true;	
 	}
@@ -56,7 +58,7 @@ public class RSPlayerInventory {
 		if(!RealShopping.shopMap.get(store).prices.isEmpty())//If there are prices for store.
 			for(int j = 0;j < keys.length;j++){
 				PItem key = (PItem)keys[j];
-				if(RealShopping.shopMap.get(store).prices.containsKey(key))//If item has price
+				if(RealShopping.shopMap.get(store).prices.containsKey(key.type))//If item has price
 					if(items.containsKey(key)){
 						if(newInv.get(key) > items.get(key))
 							hasPaid = false;
@@ -80,16 +82,16 @@ public class RSPlayerInventory {
 			if(invs != null){
 				for(int i = 0;i < invs.length;i++){
 					Map<PItem, Integer> tempInv = invToPInv(invs[i]);
-					newInv.putAll(tempInv);
+					newInv = Utils.joinMaps(newInv, tempInv);
 				}
 			}
 
 			Object[] keys = newInv.keySet().toArray();
 
 			for(int i = 0;i < keys.length;i++){
-				int type = (Integer) keys[i];
+				int type = ((PItem) keys[i]).type;
 				if(tempShop.prices.containsKey(type)){//Something in inventory has a price
-					int amount = newInv.get(type);
+					int amount = newInv.get(keys[i]);
 					float cost = tempShop.prices.get(type);
 					if(tempShop.sale.containsKey(type)){//There is a sale on that item.
 						int pcnt = 100 - tempShop.sale.get(type);
@@ -97,8 +99,8 @@ public class RSPlayerInventory {
 						cost = Math.round(cost);
 						cost /= 100;
 					}
-					if(items.containsKey(type)) {
-						int oldAm = items.get(type);
+					if(items.containsKey(keys[i])) {
+						int oldAm = items.get((PItem) keys[i]);
 						if(oldAm > amount){//More items before than now
 							amount = 0;
 						} else {//More items now
@@ -146,16 +148,16 @@ public class RSPlayerInventory {
 				int type = Integer.parseInt(item.split(":")[0]);//Split [ unnecessary
 				byte data = 0;
 				Map<Enchantment, Integer> enchts = new HashMap<Enchantment, Integer>();
-				if(item.split("[")[0].split(":").length > 2) data = Byte.parseByte(item.split("[")[0].split(":")[2]);
-				if(item.split("[").length > 1){
-					for(String ench:item.substring(item.indexOf("[")).split("[")){
-						String[] en = ench.split("]")[0].split(":");
+				if(item.split("\\[")[0].split(":").length > 2) data = Byte.parseByte(item.split("\\[")[0].split(":")[2]);
+				if(item.split("\\[").length > 1){
+					for(String ench:item.substring(item.indexOf("[")+1).split("\\]")){
+						String[] en = ench.substring(ench.indexOf("[")<0?0:ench.indexOf("[")+1).split(":");
 						enchts.put(Enchantment.getById(Integer.parseInt(en[0])), Integer.parseInt(en[1]));
 					}
 				}
 
 				PItem temp = new PItem(type, data, enchts);
-				int amount = Integer.parseInt(item.split("[")[0].split(":")[1]);
+				int amount = Integer.parseInt(item.split("\\[")[0].split(":")[1]);
 				if(items.containsKey(temp)) items.put(temp, items.get(temp) + amount);
 				else items.put(temp, amount);
 			}
@@ -205,12 +207,13 @@ public class RSPlayerInventory {
 	public String exportToString(){
 		String s = "";
 		Object[] keys = items.keySet().toArray();
-		for(PItem pi:(PItem[]) keys){
+		for(Object Opi:keys){
+			PItem pi = (PItem)Opi;
 			if(!s.equals("")) s += ",";
 			s += pi.type + ":" + items.get(pi) + (pi.data > 0?":"+pi.data:"");
 			Object[] ench = pi.enchantments.keySet().toArray();
-			for(Enchantment en:(Enchantment[]) ench){
-				s += "[" + en.getId() + ":" + pi.enchantments.get(en) + "]";
+			for(Object en:ench){
+				s += "[" + ((Enchantment)en).getId() + ":" + pi.enchantments.get(en) + "]";
 			}
 		}
 		return s;
@@ -230,6 +233,7 @@ public class RSPlayerInventory {
 	}
 	
 	public boolean hasItem(ItemStack iS){
+		System.out.println(items.containsKey(new PItem(iS)));
 		return items.containsKey(new PItem(iS));
 	}
 	
@@ -266,7 +270,11 @@ public class RSPlayerInventory {
 	}
 	
 	public boolean addItem(ItemStack iS, int amount){
-		return items.containsKey(new PItem(iS));
+		PItem tempP = new PItem(iS);
+		if(items.containsKey(tempP)){
+			items.put(tempP, items.get(tempP) + amount);
+		} else items.put(tempP, amount);
+		return true;
 	}
 	
 	private Player getOwner(){//Will return null if THIS is removed from PInvMap
@@ -276,6 +284,11 @@ public class RSPlayerInventory {
 			else RealShopping.log.info(RealShopping.PInvMap.get(key)+"");
 		}
 		return null;
+	}
+	
+	@Override
+	public String toString(){
+		return "PInventory Store: " + store + " Items: " + items;
 	}
 }
 
@@ -303,4 +316,66 @@ class PItem{
 		return tempIS;
 	}
 	
+	@Override
+	public String toString(){
+		return "PItem " + new MaterialData(type, data) + (enchantments.isEmpty()?"":" with " + enchantments.toString());
+	}
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + data;
+		result = prime * result
+				+ ((enchantments == null) ? 0 : enchantments.hashCode());
+		result = prime * result + type;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		PItem other = (PItem) obj;
+		if (data != other.data)
+			return false;
+		if (enchantments == null) {
+			if (other.enchantments != null)
+				return false;
+		} else if (!enchantments.equals(other.enchantments))
+			return false;
+		if (type != other.type)
+			return false;
+		return true;
+	}
+}
+
+class Utils{
+	/*public static Map joinMaps(Map<? extends Object,Integer> uno, Map<? extends Object,Integer> dos){//Preserves old values
+		if(uno.keySet().getClass().equals(dos.keySet().getClass())){
+			System.out.println(uno);
+			Object[] keys = dos.keySet().toArray();
+			for(Object o:keys){
+				if(uno.containsKey(o)) uno.put(o, uno.get(o) + dos.get(o));
+				else uno.put((uno.keySet().getClass().newInstance())o, dos.get(o));
+			}
+			System.out.println(uno);
+			return uno;
+		}
+		return false;//Cast exception too?
+	}*/
+	public static Map joinMaps(Map<PItem,Integer> uno, Map<PItem,Integer> dos){//Preserves old values
+		System.out.println(uno);
+		PItem[] keys = dos.keySet().toArray(new PItem[0]);
+		for(PItem o:keys){
+			if(uno.containsKey(o)) uno.put(o, uno.get(o) + dos.get(o));
+			else uno.put(o, dos.get(o));
+		}
+		System.out.println(uno);
+		return uno;
+	}
 }

@@ -32,6 +32,7 @@ import org.bukkit.Material;
 import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.material.MaterialData;
 
 public class Shop {
 
@@ -118,5 +119,10 @@ public class Shop {
 			}
 		}
 		return j;
+	}
+	
+	@Override
+	public String toString(){
+		return "Shop " + name + (owner.equals("@admin")?"":" owned by " + owner + " Prices: " + prices.toString());
 	}
 }

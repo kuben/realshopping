@@ -127,9 +127,7 @@ public class RSPlayerListener implements Listener {
 										event.setCancelled(RealShopping.confirmToSell(player));
 									}
 								} else if(event.getAction() == Action.LEFT_CLICK_BLOCK){
-									if(!event.hasItem()){
 										event.setCancelled(RealShopping.cancelToSell(player));
-									}
 								}
 							} else player.sendMessage(ChatColor.RED + LangPack.SELLINGTOSTORESISNOTENABLEDONTHISSERVER);
 						}
