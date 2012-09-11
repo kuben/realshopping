@@ -631,7 +631,22 @@ public class RSCommandExecutor implements CommandExecutor {
     				}
     			} else sender.sendMessage(args[0] + LangPack.ISNOTJAILED);
     		}
-    	}
+    	} else if(cmd.getName().equalsIgnoreCase("rshelp")){
+    		sender.sendMessage("rsenter");
+    		sender.sendMessage("rsexit");
+    		sender.sendMessage("rspay");
+    		sender.sendMessage("rscost");
+    		sender.sendMessage("rsprices");
+    		sender.sendMessage("rsshipped");
+    		sender.sendMessage("rsstores");
+    		sender.sendMessage("rssetstores");
+    		sender.sendMessage("rssetprices");
+    		sender.sendMessage("rsset");
+    		sender.sendMessage("rssetchests");
+    		sender.sendMessage("rsunjail");
+    		sender.sendMessage("rstplocs");
+    		sender.sendMessage("rsreload");
+    		}
     	return false;
 	}
 

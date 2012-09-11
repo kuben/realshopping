@@ -177,6 +177,7 @@ public class RealShopping extends JavaPlugin {
     			getCommand("rsshipped").setExecutor(cmdExe);
     			getCommand("rstplocs").setExecutor(cmdExe);
     			getCommand("rsunjail").setExecutor(cmdExe);
+    			getCommand("rshelp").setExecutor(cmdExe);
     			getCommand("rsreload").setExecutor(cmdExe);
     		}
     		
@@ -881,23 +882,20 @@ public class RealShopping extends JavaPlugin {
 		if(PInvMap.get(p.getName()).hasItems()){
 			for(int i = 0;i < cartInv.length;i++){
 				ItemStack x = cartInv[i];
-				int type = x.getTypeId();
-				System.out.println(shopMap);
-				if(shopMap.get(p.getName()).prices.containsKey(type)){//Something in inventory has a price
-					int amount = (maxDurMap.containsKey(type)?maxDurMap.get(type) - x.getDurability():x.getAmount());
-
-					if(bought.containsKey(type)){
-						bought.put(new PItem(x), amount + bought.get(new PItem(x)));
-					} else {
-						bought.put(new PItem(x), amount);
-					}
-					if(PInvMap.get(p.getName()).hasItem(x)){
-						if(bought.get(new PItem(x)) > PInvMap.get(p.getName()).getAmount(x)){
-							bought.put(new PItem(x), PInvMap.get(p.getName()).getAmount(x));
+				if(x != null){
+					int type = x.getTypeId();
+					if(shopMap.get(PInvMap.get(p.getName()).getStore()).prices.containsKey(type)){//Something in cart has a price
+						if(PInvMap.get(p.getName()).hasItem(x)){//Player owns item
+							int amount = (maxDurMap.containsKey(type)?maxDurMap.get(type) - x.getDurability():x.getAmount());
+							PItem tempPI = new PItem(x);
+							
+							if(bought.containsKey(type)) amount += bought.get(tempPI);
+							if(amount > PInvMap.get(p.getName()).getAmount(tempPI))
+								bought.put(new PItem(x), PInvMap.get(p.getName()).getAmount(tempPI));
+							else
+								bought.put(tempPI, amount);
+							log.info(amount + "");
 						}
-					} else {
-						log.info("Error #803");
-						bought.remove(x);
 					}
 				}
 			}
@@ -914,26 +912,32 @@ public class RealShopping extends JavaPlugin {
 			ItemStack[] boughtIS = new ItemStack[cartInv.length];
 			for(int i = 0;i < cartInv.length;i++){
 				ItemStack x = cartInv[i];
-				if(x != null)
-					if(bought.containsKey(new PItem(x))){//Has bought item
-						int diff = bought.get(new PItem(x)) - (maxDurMap.containsKey(x.getTypeId())?maxDurMap.get(x.getTypeId()) - x.getDurability():x.getAmount());
-						if(diff >= 0){//If + then even more stolen left
-							bought.put(new PItem(x), diff);
+				if(x != null){
+					PItem tempPI = new PItem(x);
+					if(bought.containsKey(tempPI)){//Has bought item
+						int diff = bought.get(tempPI) - (maxDurMap.containsKey(x.getTypeId())?maxDurMap.get(x.getTypeId()) - x.getDurability():x.getAmount());
+						if(diff >= 0){//If + then even more bought left
+							bought.put(tempPI, diff);
 							boughtIS[i] = x.clone();
 							x = null;
-						} else {//If negative then no more stolen thing in inventory
+						} else {//If negative then no more bought thing in cart
 							if(maxDurMap.containsKey(x.getTypeId())){
-								x.setDurability((short)(x.getDurability() + bought.get(new PItem(x))));
-								boughtIS[i] = new ItemStack(x);
-								boughtIS[i].setDurability(bought.get(new PItem(x)).shortValue());
+								if(x.getDurability()  - bought.get(tempPI) < maxDurMap.get(x.getTypeId())){
+									x.setDurability((short)(x.getDurability() - bought.get(tempPI)));// - ?
+									boughtIS[i] = new ItemStack(x);
+									boughtIS[i].setDurability(bought.get(tempPI).shortValue());
+								} else { log.info(x.getDurability()+"");x = null;}
 							} else {
-								x.setAmount(x.getAmount() - bought.get(new PItem(x)));
-								boughtIS[i] = new ItemStack(x);
-								boughtIS[i].setAmount(bought.get(new PItem(x)));
+								if(x.getAmount() - bought.get(tempPI) > 0){
+									x.setAmount(x.getAmount() - bought.get(tempPI));
+									boughtIS[i] = new ItemStack(x);
+									boughtIS[i].setAmount(bought.get(tempPI));
+								} else { log.info(x.getAmount()+"");x = null;}
 							}
-							bought.remove(new PItem(x));
+							bought.remove(tempPI);
 						}
 					}
+				}
 				newCartInv[i] = x;
 			}
 			sM.getInventory().setContents(newCartInv);

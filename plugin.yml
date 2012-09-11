@@ -68,6 +68,11 @@ commands:
       usage: /rsunjail PLAYER
       permission: realshopping.rsunjail
       permission-message: You don't have permission to use this command
+   rshelp:
+      description: Prints some useful info
+      usage: /rshelp
+      permission: realshopping.rshelp
+      permission-message: You don't have permission to use this command
    rsreload:
       description: Reloads the config and saves the prices.xml
       usage: /rsreload
