@@ -89,7 +89,7 @@ import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 
 public class RealShopping extends JavaPlugin {
 	
-	public static Map<String, RSPlayerInventory> PInvMap = new HashMap<String, RSPlayerInventory>();
+	public static Map<String, RSPlayerInventory> PInvMap;
 	
 	static String mandir;
 	public static Map<Integer, Integer> maxDurMap;
@@ -97,7 +97,6 @@ public class RealShopping extends JavaPlugin {
 	public static Map<String, String> playerEntrances;
 	public static Map<String, String> playerExits;
 	public static Map<String, Location> jailedPlayers;
-	public static Map<String, List<ItemStack>> stolenToClaim;
 	public static Map<String, List<ItemStack[]>> shippedToCollect;
 	public static Map<Location, Integer> forbiddenTpLocs;
 	
@@ -125,14 +124,13 @@ public class RealShopping extends JavaPlugin {
     	playerEntrances = new HashMap<String, String>();
     	playerExits = new HashMap<String, String>();
     	jailedPlayers = new HashMap<String, Location>();
-    	stolenToClaim = new HashMap<String, List<ItemStack>>();
     	shippedToCollect = new HashMap<String, List<ItemStack[]>>();
     	forbiddenTpLocs = new HashMap<Location, Integer>();
     	
     	forbiddenInStore = new HashSet<Integer>();
     	Config.cartEnabledW = new HashSet<String>();
     	
-    	tpLocBlacklist = false;
+    	tpLocBlacklist = false;//TODO highlight centre
         econ = null;
         Config.keepstolen = false;
         Config.enableSelling = false;
@@ -177,8 +175,8 @@ public class RealShopping extends JavaPlugin {
     			getCommand("rsshipped").setExecutor(cmdExe);
     			getCommand("rstplocs").setExecutor(cmdExe);
     			getCommand("rsunjail").setExecutor(cmdExe);
-    			getCommand("rshelp").setExecutor(cmdExe);
     			getCommand("rsreload").setExecutor(cmdExe);
+    			getCommand("realshopping").setExecutor(cmdExe);
     		}
     		
             tpLocBlacklist = true;
@@ -807,10 +805,10 @@ public class RealShopping extends JavaPlugin {
         			
         			
         			if(!own.equals("@admin")){//Return items if player store.
-        				if(!stolenToClaim.containsKey(own)) stolenToClaim.put(own, new ArrayList<ItemStack>());
+        				if(!tempShop.stolenToClaim.containsKey(own)) tempShop.stolenToClaim.put(own, new ArrayList<ItemStack>());
         				for(int i = 0;i < sList.size();i++){
         					ItemStack tempIS = sList.get(i);
-        					stolenToClaim.get(own).add(tempIS);
+        					tempShop.stolenToClaim.get(own).add(tempIS);
         				}
         			}
         			return true;
@@ -889,9 +887,9 @@ public class RealShopping extends JavaPlugin {
 							int amount = (maxDurMap.containsKey(type)?maxDurMap.get(type) - x.getDurability():x.getAmount());
 							PItem tempPI = new PItem(x);
 							
-							if(bought.containsKey(type)) amount += bought.get(tempPI);
+							if(bought.containsKey(tempPI)) amount += bought.get(tempPI);
 							if(amount > PInvMap.get(p.getName()).getAmount(tempPI))
-								bought.put(new PItem(x), PInvMap.get(p.getName()).getAmount(tempPI));
+								bought.put(tempPI, PInvMap.get(p.getName()).getAmount(tempPI));
 							else
 								bought.put(tempPI, amount);
 							log.info(amount + "");
@@ -904,7 +902,7 @@ public class RealShopping extends JavaPlugin {
 				p.sendMessage(ChatColor.RED + LangPack.YOUCANTSHIPANEMPTYCART);
 				return true;
 			}
-			
+			System.out.println(bought);
 			Map<PItem, Integer> bought2 = new HashMap<PItem, Integer>(bought);
 			
 			//Remove stolen items from carts inventory
@@ -917,7 +915,7 @@ public class RealShopping extends JavaPlugin {
 					if(bought.containsKey(tempPI)){//Has bought item
 						int diff = bought.get(tempPI) - (maxDurMap.containsKey(x.getTypeId())?maxDurMap.get(x.getTypeId()) - x.getDurability():x.getAmount());
 						if(diff >= 0){//If + then even more bought left
-							bought.put(tempPI, diff);
+							if(diff > 0) bought.put(tempPI, diff);
 							boughtIS[i] = x.clone();
 							x = null;
 						} else {//If negative then no more bought thing in cart
@@ -966,6 +964,7 @@ public class RealShopping extends JavaPlugin {
 			if(shippedToCollect.containsKey(p.getName())){
 				if(shippedToCollect.get(p.getName()).size() >= id){
 					((Chest)l.getBlock().getState()).getBlockInventory().setContents(shippedToCollect.get(p.getName()).get(id - 1));
+					p.sendMessage(ChatColor.GREEN + "Filled chest with: ");
 					shippedToCollect.get(p.getName()).remove(id - 1);
 					return true;
 				} else p.sendMessage(ChatColor.RED + LangPack.THERESNOPACKAGEWITHTHEID + id);
@@ -1155,7 +1154,7 @@ public class RealShopping extends JavaPlugin {
 		
 		String own = shopMap.get(PInvMap.get(p.getName()).getStore()).owner;
 		if(!own.equals("@admin")){//Return items if player store.
-			if(!stolenToClaim.containsKey(own)) stolenToClaim.put(own, new ArrayList<ItemStack>());
+			if(!shopMap.get(PInvMap.get(p.getName()).getStore()).stolenToClaim.containsKey(own)) shopMap.get(PInvMap.get(p.getName()).getStore()).stolenToClaim.put(own, new ArrayList<ItemStack>());
 			Object[] keyss = stolen2.keySet().toArray();
 			for(int i = 0;i < keyss.length;i++){
 				int type = ((PItem) keyss[i]).type;
@@ -1163,21 +1162,21 @@ public class RealShopping extends JavaPlugin {
 				if(maxDurMap.containsKey(type)){
 					if(stolen2.get(keyss[i]) > maxDurMap.get(type))
 						while(maxDurMap.get(type) < stolen2.get(keyss[i])){//If more than one stack/full tool
-							stolenToClaim.get(own).add(tempIS.clone());
+							shopMap.get(PInvMap.get(p.getName()).getStore()).stolenToClaim.get(own).add(tempIS.clone());
 							stolen2.put((PItem) keyss[i], stolen2.get(keyss[i]) - maxDurMap.get(type));
 						}
 					tempIS.setDurability((short) (maxDurMap.get(type) - stolen2.get(keyss[i])));
-					stolenToClaim.get(own).add(tempIS);
+					shopMap.get(PInvMap.get(p.getName()).getStore()).stolenToClaim.get(own).add(tempIS);
 				} else {
 					if(stolen2.get(keyss[i]) > Material.getMaterial(type).getMaxStackSize())
 						while(Material.getMaterial(type).getMaxStackSize() < stolen2.get(keyss[i])){//If more than one stack/full tool
 							ItemStack tempIStemp = tempIS.clone();
 							tempIStemp.setAmount(Material.getMaterial(type).getMaxStackSize());
-							stolenToClaim.get(own).add(tempIStemp);
+							shopMap.get(PInvMap.get(p.getName()).getStore()).stolenToClaim.get(own).add(tempIStemp);
 							stolen2.put((PItem) keyss[i], stolen2.get(keyss[i]) - Material.getMaterial(type).getMaxStackSize());
 						}
 					tempIS.setAmount(stolen.get(keyss[i]));
-					stolenToClaim.get(own).add(tempIS);
+					shopMap.get(PInvMap.get(p.getName()).getStore()).stolenToClaim.get(own).add(tempIS);
 				}
 			}
 		}
@@ -1202,63 +1201,6 @@ public class RealShopping extends JavaPlugin {
 
     	return allow;
     }
-    
-/*    static String createInv(Player player){
-		ItemStack[] items = (ItemStack[]) ArrayUtils.addAll(player.getInventory().getContents(), player.getInventory().getArmorContents());
-		String str = "";
-		for(int j = 0;j < items.length;j++){
-			if(items[j] != null){
-				int type = items[j].getTypeId();
-				if(maxDurMap.containsKey(type)) str += ","+ type + ":" + (maxDurMap.get(type) - items[j].getDurability());//If tool, id:uses left
-				else if(items[j].getTypeId() != 0) str += ","+ items[j].getTypeId() + ":"+ items[j].getAmount();
-			}
-		}
-		if(!str.equals("")) str = str.substring(1);
-		return str;
-    }
-
-    static String createInv(Inventory inv){
-		return createInv(inv.getContents());
-    }
-    
-    static String createInv(ItemStack[] items){
-		String str = "";
-		for(int j = 0;j < items.length;j++){
-			if(items[j] != null){
-				int type = items[j].getTypeId();
-				if(maxDurMap.containsKey(type)) str += ","+ type + ":" + (maxDurMap.get(type) - items[j].getDurability());//If tool, id:uses left
-				else if(items[j].getTypeId() != 0) str += ","+ items[j].getTypeId() + ":"+ items[j].getAmount();
-			}
-		}
-		if(!str.equals("")) str = str.substring(1);
-		return str;
-    }
-    
-    static Map<Integer, Integer> createInvOneOccur(String[] inv){
-    	//Creates a HashMap with each item in the players inventory occurring only once. The value is the amount of all items together.
-		Map<Integer, Integer> invOO = new HashMap<Integer, Integer>();
-		if(!inv[0].trim().equals(""))//If inv not empty
-			for(int j = 0;j < inv.length;j++){
-				int type = Integer.parseInt(inv[j].split(":")[0]);
-				int amount;
-				amount = Integer.parseInt(inv[j].split(":")[1]);
-				if(invOO.containsKey(type)) invOO.put(type, amount + invOO.get(type));
-				else invOO.put(type, amount);
-			}
-		return invOO;
-    }
-    
-    static String createStrOneOccur(String[] inv){
-    	//Creates a string with each item in the players inventory occurring only once. The value is the amount of all items together.
-		Map<Integer, Integer> invOO = createInvOneOccur(inv);
-		String str = "";
-		Object[] keys = invOO.keySet().toArray();
-		for(Object o:keys){
-			str += "," + o + ":" + invOO.get(o);
-		}
-		if(!str.equals("")) str = str.substring(1);
-		return str;
-    }*/
     
     private void initMaxDur(){
     	maxDurMap.put(256,251);//Iron tools
@@ -1348,6 +1290,15 @@ public class RealShopping extends JavaPlugin {
 	
 	public Location stringToLoc(String world, String s){
 		return new Location(getServer().getWorld(world), Double.parseDouble(s.split(",")[0].trim()), Double.parseDouble(s.split(",")[1].trim()), Double.parseDouble(s.split(",")[2].trim()));
+	}
+	
+	public String[] getPlayersInStore(String store){
+		String pString = ",";
+		String[] keys = PInvMap.keySet().toArray(new String[0]);
+		for(String player:keys){
+			if(PInvMap.get(player).getStore().toLowerCase().equals(store)) pString += player;
+		}
+		return pString.substring(1).split(",");
 	}
 	
     private boolean setupEconomy() {

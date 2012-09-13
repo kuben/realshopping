@@ -30,7 +30,7 @@ commands:
       permission-message: You don't have permission to use this command
    rsstores:
       description: Manages your stores (and admin stores if you have permission).
-      usage: /rsstores store [buyfor %_OF_SELL_PRICE|collect [-c] [AMOUNT]|ban PLAYER|unban PLAYER|startsale %_OFF [ITEMID[,ITEMID[,ITEMID...]]]|endsale]
+      usage: /rsstores store [buyfor %_OF_SELL_PRICE|collect [-c] [AMOUNT]|ban PLAYER|unban PLAYER|kick [-o] PLAYER|startsale %_OFF [ITEMID[,ITEMID[,ITEMID...]]]|endsale]
       permission: realshopping.rsstores
       permission-message: You don't have permission to use this command
    rssetprices:
@@ -68,13 +68,13 @@ commands:
       usage: /rsunjail PLAYER
       permission: realshopping.rsunjail
       permission-message: You don't have permission to use this command
-   rshelp:
-      description: Prints some useful info
-      usage: /rshelp
-      permission: realshopping.rshelp
-      permission-message: You don't have permission to use this command
    rsreload:
       description: Reloads the config and saves the prices.xml
       usage: /rsreload
       permission: realshopping.rsreload
+      permission-message: You don't have permission to use this command
+   realshopping:
+      description: Prints some info about the mod, configuration.
+      usage: /realshopping
+      permission: realshopping.realshopping
       permission-message: You don't have permission to use this command

@@ -37,6 +37,7 @@ import org.bukkit.material.MaterialData;
 public class Shop {
 
 	public Map<Integer, Float> prices = new HashMap<Integer, Float>();
+	public static Map<String, List<ItemStack>> stolenToClaim = new HashMap<String, List<ItemStack>>();
 	
 	public Map<Location,ArrayList<Integer[]>> chests = new HashMap<Location, ArrayList<Integer[]>>();
 	public Map<String,ArrayList<ItemStack>> sellToStore = new HashMap<String, ArrayList<ItemStack>>();

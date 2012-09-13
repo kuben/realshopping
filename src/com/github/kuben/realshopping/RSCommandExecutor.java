@@ -135,11 +135,11 @@ public class RSCommandExecutor implements CommandExecutor {
     	    		if(args.length == 2 && args[1].equalsIgnoreCase("collect")){
     	        		if(player != null){
     	        			if(!rs.shopMap.get(args[0]).owner.equalsIgnoreCase("@admin")){
-    	        				if(rs.stolenToClaim.containsKey(player.getName())){
-    	        					for(ItemStack iS:rs.stolenToClaim.get(player.getName())){
+    	        				if(rs.shopMap.get(args[0]).stolenToClaim.containsKey(player.getName())){
+    	        					for(ItemStack iS:rs.shopMap.get(args[0]).stolenToClaim.get(player.getName())){
     	        						player.getWorld().dropItem(player.getLocation(), iS);
     	        					}
-    	        					rs.stolenToClaim.remove(player.getName());
+    	        					rs.shopMap.get(args[0]).stolenToClaim.remove(player.getName());
     	        					return true;
     	        				} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
     	        			}
@@ -149,45 +149,45 @@ public class RSCommandExecutor implements CommandExecutor {
     	        			if(!rs.shopMap.get(args[0]).owner.equalsIgnoreCase("@admin")){
     	        				if(args[2].equalsIgnoreCase("-c")){
     	        					if(player.getLocation().subtract(0, 1, 0).getBlock().getState() instanceof Chest){
-    	    	        				if(rs.stolenToClaim.containsKey(player.getName())){
+    	    	        				if(rs.shopMap.get(args[0]).stolenToClaim.containsKey(player.getName())){
     	    	        					ItemStack[] tempIs = new ItemStack[27];
-    	    	        					ItemStack[] origIs = (ItemStack[]) rs.stolenToClaim.get(player.getName()).toArray();
+    	    	        					ItemStack[] origIs = (ItemStack[]) rs.shopMap.get(args[0]).stolenToClaim.get(player.getName()).toArray();
     	    	        					int i = 0;
     	    	        					for(;i < 27 || i < origIs.length;i++){
     	    	        						tempIs[i] = origIs[i];
     	    	        					}
-    	    	        					((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().setContents(tempIs);
+    	    	        					((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().setContents(tempIs);//TODO
     	    	        					player.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH + i + LangPack.ITEMS);
-    	    	        					if(origIs.length < 28) rs.stolenToClaim.remove(player.getName());
+    	    	        					if(origIs.length < 28) rs.shopMap.get(args[0]).stolenToClaim.remove(player.getName());
     	    	        					else {
     	    	        						List newIs = new ArrayList();
     	    	        						for(;i < origIs.length;i++){
     	    	        							newIs.add(origIs[i]);
    	    	        							}
-    	    	        						rs.stolenToClaim.put(player.getName(), newIs);
+    	    	        						rs.shopMap.get(args[0]).stolenToClaim.put(player.getName(), newIs);
     	    	        					}
     	        							return true;
     	    	        				} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
     	        					} else sender.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUARESTANDINGONISNTACHEST);
     	        				} else {
     	        					try {
-    	    	        				if(rs.stolenToClaim.containsKey(player.getName())){
+    	    	        				if(rs.shopMap.get(args[0]).stolenToClaim.containsKey(player.getName())){
     	    	        					int amount = Integer.parseInt(args[2]);
-    	    	        					ItemStack[] tempIs = (ItemStack[])rs.stolenToClaim.get(player.getName()).toArray();
+    	    	        					ItemStack[] tempIs = (ItemStack[])rs.shopMap.get(args[0]).stolenToClaim.get(player.getName()).toArray();
     	    	        					int i = 0;
     	    	        					for(;i < amount && i < tempIs.length;i++){
     	    	        						player.getWorld().dropItem(player.getLocation(), tempIs[i]);
     	    	        					}
     	    	        					player.sendMessage(ChatColor.GREEN + LangPack.DROPPED + i + LangPack.ITEMS);
-    	    	        					if(tempIs.length < 28) rs.stolenToClaim.remove(player.getName());
+    	    	        					if(tempIs.length < 28) rs.shopMap.get(args[0]).stolenToClaim.remove(player.getName());
     	    	        					else {
     	    	        						List newIs = new ArrayList();
     	    	        						for(;i < tempIs.length;i++){
     	    	        							newIs.add(tempIs[i]);
    	    	        							}
-    	    	        						rs.stolenToClaim.put(player.getName(), newIs);
+    	    	        						rs.shopMap.get(args[0]).stolenToClaim.put(player.getName(), newIs);
     	    	        					}
-    	    	        					rs.stolenToClaim.remove(player.getName());
+    	    	        					rs.shopMap.get(args[0]).stolenToClaim.remove(player.getName());
     	    	        					return true;
     	    	        				} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
     	        					} catch(NumberFormatException e){
@@ -202,23 +202,24 @@ public class RSCommandExecutor implements CommandExecutor {
     	        				if(args[2].equalsIgnoreCase("-c")){
     	        					try {
         	        					if(player.getLocation().subtract(0, 1, 0).getBlock().getState() instanceof Chest){
-        	    	        				if(rs.stolenToClaim.containsKey(player.getName())){
+        	    	        				if(rs.shopMap.get(args[0]).stolenToClaim.containsKey(player.getName())){
         	    	        					int amount = Integer.parseInt(args[2]);
-        	    	        					ItemStack[] origIs = (ItemStack[]) rs.stolenToClaim.get(player.getName()).toArray();
+        	    	        					ItemStack[] origIs = (ItemStack[]) rs.shopMap.get(args[0]).stolenToClaim.get(player.getName()).toArray();
         	    	        					ItemStack[] tempIs = new ItemStack[Math.min(Math.min(27, amount),origIs.length)];
         	    	        					int i = 0;
         	    	        					for(;i < tempIs.length;i++){
         	    	        						tempIs[i] = origIs[i];
         	    	        					}
+        	    	        					//TODO empty chest
         	    	        					((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().setContents(tempIs);
         	    	        					player.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH + i + LangPack.ITEMS);
-        	    	        					if(origIs.length <= Math.min(27, amount)) rs.stolenToClaim.remove(player.getName());
+        	    	        					if(origIs.length <= Math.min(27, amount)) rs.shopMap.get(args[0]).stolenToClaim.remove(player.getName());
         	    	        					else {
         	    	        						List newIs = new ArrayList();
         	    	        						for(;i < origIs.length;i++){
         	    	        							newIs.add(origIs[i]);
        	    	        							}
-        	    	        						rs.stolenToClaim.put(player.getName(), newIs);
+        	    	        						rs.shopMap.get(args[0]).stolenToClaim.put(player.getName(), newIs);
         	    	        					}
         	        							return true;
         	    	        				} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
@@ -263,6 +264,47 @@ public class RSCommandExecutor implements CommandExecutor {
     	     				rs.shopMap.get(args[0]).banned.remove(args[2].toLowerCase());
     	     				sender.sendMessage(ChatColor.GREEN + args[2] + LangPack.ISNOLONGERBANNEDFROMYOURSTORE);
     	     			} else sender.sendMessage(ChatColor.RED + args[2] + LangPack.WASNTBANNEDFROMYOURSTORE);
+    	     			rs.updateEntrancesDb();
+    	     			return true;
+    	    		} else if(args.length == 3 && args[1].equalsIgnoreCase("kick")){
+    	     			if(!rs.getPlayersInStore(args[0].toLowerCase())[0].equals("")){
+    	     				boolean cont = false;
+    	     				for(String tempP:rs.getPlayersInStore(args[0].toLowerCase()))
+    	     					if(tempP.toLowerCase().equals(args[0].toLowerCase())){
+    	     						cont = true;
+    	     						break;
+    	     					}
+    	     				if(cont){
+    	     					if(rs.getServer().getPlayerExact(args[2]) != null){
+    	     						rs.returnStolen(rs.getServer().getPlayerExact(args[2]));
+    	     						Location l = ((Location) rs.shopMap.get(args[0]).entrance).clone();
+    	     						if(rs.shopMap.get(args[0]).sellToStore.containsKey(rs.getServer().getPlayerExact(args[2]).getName()))
+    	     							rs.shopMap.get(args[0]).sellToStore.remove(rs.getServer().getPlayerExact(args[2]).getName());
+    	     						rs.PInvMap.remove(rs.getServer().getPlayerExact(args[2]).getName());
+    	     						rs.getServer().getPlayerExact(args[2]).teleport(l.add(0.5, 0, 0.5));
+    	     						sender.sendMessage(ChatColor.GREEN + args[2] + LangPack.WASKICKEDFROMYOURSTORE);
+    	     					} else sender.sendMessage(ChatColor.RED + "Player " + args[2] + " isn't online. You can kick an offline player by adding the -o flag, BUT THEY WON'T BE TELEPORTED OUT OF THE STORE. Only use this if you're about to delete the store or if you know what you're doing.");
+    	     				} else sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTINYOURSTORE);
+    	     			} else sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTINYOURSTORE);
+    	     			rs.updateEntrancesDb();
+    	     			return true;
+    	    		} else if(args.length == 4 && args[1].equalsIgnoreCase("kick") && args[2].equalsIgnoreCase("-o")){
+    	     			if(!rs.getPlayersInStore(args[0].toLowerCase())[0].equals("")){
+    	     				if(rs.getServer().getOfflinePlayer(args[2]) != null){
+        	     				boolean cont = false;
+        	     				for(String tempP:rs.getPlayersInStore(args[0].toLowerCase()))
+        	     					if(tempP.toLowerCase().equals(args[0].toLowerCase())){
+        	     						cont = true;
+        	     						break;
+        	     					}
+        	     				if(cont){
+        	     					if(rs.shopMap.get(args[0]).sellToStore.containsKey(rs.getServer().getPlayerExact(args[2]).getName()))
+        	     						rs.shopMap.get(args[0]).sellToStore.remove(rs.getServer().getPlayerExact(args[2]).getName());
+        	     					rs.PInvMap.remove(rs.getServer().getPlayerExact(args[2]).getName());
+    	     						sender.sendMessage(ChatColor.GREEN + args[2] + LangPack.WASKICKEDFROMYOURSTORE);
+        	     				} else sender.sendMessage(ChatColor.RED + "Player " + args[2] + " doesn't exist.");
+        	     			} else sender.sendMessage(ChatColor.RED + "Player " + args[2] + " doesn't exist.");
+    	     			} else sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTINYOURSTORE);
     	     			rs.updateEntrancesDb();
     	     			return true;
     	    		}
@@ -631,7 +673,7 @@ public class RSCommandExecutor implements CommandExecutor {
     				}
     			} else sender.sendMessage(args[0] + LangPack.ISNOTJAILED);
     		}
-    	} else if(cmd.getName().equalsIgnoreCase("rshelp")){
+    	} else if(cmd.getName().equalsIgnoreCase("realshopping")){
     		sender.sendMessage("rsenter");
     		sender.sendMessage("rsexit");
     		sender.sendMessage("rspay");
