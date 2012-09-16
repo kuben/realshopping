@@ -130,7 +130,10 @@ public class RSCommandExecutor implements CommandExecutor {
     				sender.sendMessage(ChatColor.GREEN + LangPack.STORE + args[0] + ((rs.shopMap.get(args[0]).owner.equalsIgnoreCase("@admin"))?"":LangPack.OWNEDBY + rs.shopMap.get(args[0]).owner));
     				if(rs.shopMap.get(args[0]).buyFor > 0) sender.sendMessage(ChatColor.GREEN + LangPack.BUYSFOR + rs.shopMap.get(args[0]).buyFor + LangPack.PCNTOFORIGINAL);
     				if(!rs.shopMap.get(args[0]).sale.isEmpty()) sender.sendMessage(ChatColor.GREEN + LangPack.HASA + rs.shopMap.get(args[0]).sale.values().toArray()[0] + LangPack.PCNTOFFSALERIGHTNOW);
-	    		}
+    				if(!rs.getPlayersInStore(args[0].toLowerCase())[0].equals("")){
+    					sender.sendMessage(ChatColor.DARK_GREEN + "Players in store:\n" + ChatColor.RESET + rs.formatPlayerListToMess(rs.getPlayersInStore(args[0].toLowerCase())));//TODO Langpack
+    				}
+    			}
     			
     			if(isOwner){
     	    		if(args.length == 2 && args[1].equalsIgnoreCase("collect")){
@@ -268,17 +271,18 @@ public class RSCommandExecutor implements CommandExecutor {
     	     			rs.updateEntrancesDb();
     	     			return true;
     	    		} else if(args.length == 3 && args[1].equalsIgnoreCase("kick")){
+    	    			for(String str:rs.getPlayersInStore(args[0].toLowerCase())) System.out.println(str);
     	     			if(!rs.getPlayersInStore(args[0].toLowerCase())[0].equals("")){
     	     				boolean cont = false;
     	     				for(String tempP:rs.getPlayersInStore(args[0].toLowerCase()))
-    	     					if(tempP.toLowerCase().equals(args[0].toLowerCase())){
+    	     					if(tempP.toLowerCase().equals(args[2].toLowerCase())){
     	     						cont = true;
     	     						break;
     	     					}
     	     				if(cont){
     	     					if(rs.getServer().getPlayerExact(args[2]) != null){
     	     						rs.returnStolen(rs.getServer().getPlayerExact(args[2]));
-    	     						Location l = ((Location) rs.shopMap.get(args[0]).entrance).clone();
+    	     						Location l = ((Location) rs.shopMap.get(args[0]).entrance.get(0)).clone();
     	     						if(rs.shopMap.get(args[0]).sellToStore.containsKey(rs.getServer().getPlayerExact(args[2]).getName()))
     	     							rs.shopMap.get(args[0]).sellToStore.remove(rs.getServer().getPlayerExact(args[2]).getName());
     	     						rs.PInvMap.remove(rs.getServer().getPlayerExact(args[2]).getName());
@@ -287,26 +291,24 @@ public class RSCommandExecutor implements CommandExecutor {
     	     					} else sender.sendMessage(ChatColor.RED + LangPack.PLAYER + args[2] + LangPack.ISNTONLINEKICK);
     	     				} else sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTINYOURSTORE);
     	     			} else sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTINYOURSTORE);
-    	     			rs.updateEntrancesDb();
     	     			return true;
     	    		} else if(args.length == 4 && args[1].equalsIgnoreCase("kick") && args[2].equalsIgnoreCase("-o")){
     	     			if(!rs.getPlayersInStore(args[0].toLowerCase())[0].equals("")){
-    	     				if(rs.getServer().getOfflinePlayer(args[2]) != null){
+    	     				if(rs.getServer().getOfflinePlayer(args[3]) != null){
         	     				boolean cont = false;
         	     				for(String tempP:rs.getPlayersInStore(args[0].toLowerCase()))
-        	     					if(tempP.toLowerCase().equals(args[0].toLowerCase())){
+        	     					if(tempP.toLowerCase().equals(args[3].toLowerCase())){
         	     						cont = true;
         	     						break;
         	     					}
         	     				if(cont){
-        	     					if(rs.shopMap.get(args[0]).sellToStore.containsKey(rs.getServer().getPlayerExact(args[2]).getName()))
-        	     						rs.shopMap.get(args[0]).sellToStore.remove(rs.getServer().getPlayerExact(args[2]).getName());
-        	     					rs.PInvMap.remove(rs.getServer().getPlayerExact(args[2]).getName());
-    	     						sender.sendMessage(ChatColor.GREEN + args[2] + LangPack.WASKICKEDFROMYOURSTORE);
-        	     				} else sender.sendMessage(ChatColor.RED + LangPack.PLAYER + args[2] + LangPack.DOESNTEXIST);
-        	     			} else sender.sendMessage(ChatColor.RED + LangPack.PLAYER + args[2] + LangPack.DOESNTEXIST);
+        	     					if(rs.shopMap.get(args[0]).sellToStore.containsKey(rs.getServer().getOfflinePlayer(args[3]).getName()))
+        	     						rs.shopMap.get(args[0]).sellToStore.remove(rs.getServer().getOfflinePlayer(args[3]).getName());
+        	     					rs.PInvMap.remove(rs.getServer().getOfflinePlayer(args[3]).getName());
+    	     						sender.sendMessage(ChatColor.GREEN + args[3] + LangPack.WASKICKEDFROMYOURSTORE);
+        	     				} else sender.sendMessage(ChatColor.RED + LangPack.PLAYER + args[3] + LangPack.DOESNTEXIST);
+        	     			} else sender.sendMessage(ChatColor.RED + LangPack.PLAYER + args[3] + LangPack.DOESNTEXIST);
     	     			} else sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTINYOURSTORE);
-    	     			rs.updateEntrancesDb();
     	     			return true;
     	    		}
     	    		
@@ -527,10 +529,11 @@ public class RSCommandExecutor implements CommandExecutor {
     			} else if (args.length == 2 && args[0].equalsIgnoreCase("delstore")){
     				if(rs.shopMap.containsKey(args[1])){
     					if(rs.shopMap.get(args[1]).owner.equals(player.getName())){
-    						//TODO if shop is empty + rsset
-    						rs.shopMap.remove(args[1]);
-    						player.sendMessage(ChatColor.RED + args[1] + LangPack.WASREMOVED);
-    						rs.updateEntrancesDb();
+    						if(rs.getPlayersInStore(args[1].toLowerCase())[0].equals("")){
+    							rs.shopMap.remove(args[1]);
+        						player.sendMessage(ChatColor.RED + args[1] + LangPack.WASREMOVED);
+        						rs.updateEntrancesDb();
+    						} else player.sendMessage(ChatColor.RED + "The store is not empty. You can kick players with /rsstores STORE kick PLAYER");//TODO LangPack
     					} else {
     						player.sendMessage(ChatColor.RED + LangPack.YOUARENOTTHEOWNEROFTHISSTORE);
     					}
@@ -565,9 +568,11 @@ public class RSCommandExecutor implements CommandExecutor {
     				} else player.sendMessage(ChatColor.RED + LangPack.THERESNOENTRANCESET);
     			} else if (args.length == 2 && args[0].equalsIgnoreCase("delstore")){
     				if(rs.shopMap.containsKey(args[1])){
-    					rs.shopMap.remove(args[1]);
-    					player.sendMessage(ChatColor.RED + args[1] + LangPack.WASREMOVED);
-    					rs.updateEntrancesDb();
+						if(rs.getPlayersInStore(args[1].toLowerCase())[0].equals("")){
+							rs.shopMap.remove(args[1]);
+    						player.sendMessage(ChatColor.RED + args[1] + LangPack.WASREMOVED);
+    						rs.updateEntrancesDb();
+						} else player.sendMessage(ChatColor.RED + "The store is not empty. You can kick players with /rsstores STORE kick PLAYER");//TODO LangPack
     					return true;
     				} else player.sendMessage(ChatColor.RED + args[1] + LangPack.WASNTFOUND);
     			}
@@ -640,9 +645,45 @@ public class RSCommandExecutor implements CommandExecutor {
     						Location[] toHighlight = rs.getNearestTpLocs(player.getLocation().getBlock().getLocation(), 5);
     						if(toHighlight != null){
     							for(Location l:toHighlight){
-    								player.sendBlockChange(l, Material.WOOL, (byte)5);//TODO different colors
+    								Byte dB;
+    								int radius = rs.forbiddenTpLocs.get(l);
+    								if(radius <= 1) dB = 0;
+    								else if(radius <= 5) dB = 1;
+    								else if(radius <= 10) dB = 2;
+    								else if(radius <= 15) dB = 3;
+    								else if(radius <= 25) dB = 4;
+    								else if(radius <= 35) dB = 5;
+    								else if(radius <= 50) dB = 6;
+    								else if(radius <= 75) dB = 7;
+    								else if(radius <= 100) dB = 8;
+    								else if(radius <= 125) dB = 9;
+    								else if(radius <= 150) dB = 10;
+    								else if(radius <= 175) dB = 11;
+    								else if(radius <= 200) dB = 12;
+    								else if(radius <= 250) dB = 13;
+    								else if(radius <= 500) dB = 14;
+    								else dB = 15;
+    								player.sendBlockChange(l, Material.WOOL, dB);
+    								/* White Wool		0	r=1
+    								 * Light Gray Wool 	1	1<=r<5
+    								 * Gray Wool 		2	5<=r<10
+    								 * Black Wool 		3	10<=r<15
+    								 * Red Wool 		4	15<=r<25
+    								 * Orange Wool 		5	25<=r<35
+    								 * Yellow Wool 		6	35<=r<50
+    								 * Lime Wool 		7	50<=r<75
+    								 * Green Wool 		8	75<=r<100
+    								 * Cyan Wool 		9	100<=r<125
+    								 * Light Blue 		10	125<=r<150
+    								 * Blue Wool 		11	150<=r<175
+    								 * Purple Wool 		12	175<=r<200
+    								 * Magenta Wool 	13	200<=r<250
+    								 * Pink Wool 		14	250<=r<500
+    								 * Brown Wool		15	500<=r
+    								 */
     							}
     							blockUpdater bU = new blockUpdater(toHighlight, player);
+    							bU.start();
     							
     							player.sendMessage(ChatColor.GREEN + "Highlighted 5 locations for 5 seconds.");
     						} else {
@@ -725,7 +766,6 @@ class blockUpdater extends Thread {
 				player.sendBlockChange(l, b.getType(), b.getData());
 			}
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		

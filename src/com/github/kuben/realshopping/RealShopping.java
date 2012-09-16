@@ -56,6 +56,7 @@ import net.milkbowl.vault.economy.Economy;
 import net.minecraft.server.ItemSpade;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -341,7 +342,7 @@ public class RealShopping extends JavaPlugin {
     				String s;
     				boolean v32plus = false;
     				while ((s = br.readLine()) != null){
-    					if(s.equals("Jailed players database for RealShopping v0.21")) v32plus = true;
+    					if(s.equals("Stolen items database for RealShopping v0.32")) v32plus = true;
     					else {
     						Shop tempShop;
     						if(v32plus){
@@ -980,7 +981,7 @@ public class RealShopping extends JavaPlugin {
 			//Update player inv
 			Object[] keys = bought2.keySet().toArray();
 			for(int i = 0;i < keys.length;i++){
-				log.info(PInvMap.get(p.getName()).removeItem((PItem)keys[i], bought2.get(keys[i]))+"");//TODO remove check
+				PInvMap.get(p.getName()).removeItem((PItem)keys[i], bought2.get(keys[i]));
 			}
 		} else p.sendMessage(ChatColor.RED + LangPack.YOUHAVENTBOUGHTANYTHING);
 
@@ -1016,6 +1017,25 @@ public class RealShopping extends JavaPlugin {
 					str += tempStr;
 				} else str += tempStr;
 			}
+		}
+		return str;
+	}
+
+	public static String formatPlayerListToMess(String[] formStr){
+		String str = "";
+		int newLn = 0;
+		for(String s:formStr){
+			boolean online = (Bukkit.getServer().getPlayerExact(s)==null)?false:true;
+			String tempStr = "[" + (online?ChatColor.GREEN:ChatColor.RESET) + s + ChatColor.RESET + "] ";
+			if((str + tempStr).substring(newLn).length() > 88){//84+4
+				if(str.split("\n").length < 7){
+					str += "\n";
+					newLn = str.length();
+					str += tempStr;
+				} else {
+					str += "...";
+				}
+			} else str += tempStr;
 		}
 		return str;
 	}
@@ -1321,19 +1341,22 @@ public class RealShopping extends JavaPlugin {
 	}
 	
 	public String[] getPlayersInStore(String store){
-		String pString = ",";
+		String pString = "";
 		String[] keys = PInvMap.keySet().toArray(new String[0]);
 		for(String player:keys){
-			if(PInvMap.get(player).getStore().toLowerCase().equals(store)) pString += player;
+			if(PInvMap.get(player).getStore().toLowerCase().equals(store)){
+				if(!pString.equals("")) pString += ",";
+				pString += player;
+			}
 		}
-		return pString.substring(1).split(",");
+		return pString.split(",");
 	}
 	
 	public String[] getOwnedStores(String player){
 		String sString = ",";
 		String[] keys = shopMap.keySet().toArray(new String[0]);
 		for(String store:keys){
-			if(shopMap.get(PInvMap.get(player).getStore()).owner.toLowerCase().equals(store)) sString += store;
+			if(shopMap.get(store).owner.toLowerCase().equals(player)) sString += store;
 		}
 		return sString.substring(1).split(",");
 	}
@@ -1346,12 +1369,11 @@ public class RealShopping extends JavaPlugin {
 			if(loc.getWorld().equals(l.getWorld()))
 				locDist.put(l, loc.distance(l));
 		
-		System.out.println(locDist);
 		if(!locDist.isEmpty()){
 			ValueComparator bvc =  new ValueComparator(locDist);
 			TreeMap<Location,Double> sorted_map = new TreeMap<Location,Double>(bvc);
+			sorted_map.putAll(locDist);
 			
-			System.out.println(sorted_map);
 			
 			if(sorted_map.size() < maxAmount) nearest = new Location[sorted_map.size()];
 			else nearest = new Location[maxAmount];
@@ -1362,7 +1384,6 @@ public class RealShopping extends JavaPlugin {
 			}
 		}
 		
-		System.out.println(nearest);
 		return nearest;
 	}
 	
@@ -1461,9 +1482,9 @@ class ValueComparator implements Comparator<Location> {
     // Note: this comparator imposes orderings that are inconsistent with equals.    
     public int compare(Location a, Location b) {
         if (base.get(a) >= base.get(b)) {
-            return -1;
-        } else {
             return 1;
+        } else {
+            return -1;
         } // returning 0 would merge keys
     }
 }

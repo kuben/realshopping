@@ -21,7 +21,14 @@ public class RSPlayerInventory {
 	
 	public RSPlayerInventory(Player p, String store){//Use when player is entering store
 		this.store = store;
-		items = invToPInv(p);//Item - amount/dur
+		
+		//Special Inv to PInv
+		Object[] obj = ArrayUtils.addAll(p.getInventory().getContents(), p.getInventory().getArmorContents());
+		ItemStack[] IS = new ItemStack[obj.length];
+		
+		for(int i = 0;i < obj.length;i++)
+			IS[i] = (ItemStack) obj[i];
+		items = invToPInv(IS);//Item - amount/dur
 	}
 	
 	public RSPlayerInventory(String invStr, String store){//Use to recover a PlayerInventory from string
@@ -164,17 +171,16 @@ public class RSPlayerInventory {
 		}			
 	}
 	
-	private Map<PItem, Integer> invToPInv(Player p){//TODO merge..
+	private Map<PItem, Integer> invToPInv(ItemStack[] IS){
 		Map<PItem, Integer> tempMap = new HashMap<PItem, Integer>();
-		for(Object iS:ArrayUtils.addAll(p.getInventory().getContents(), p.getInventory().getArmorContents())){
+		for(ItemStack iS:IS){
 			if(iS != null){
-				ItemStack IS = (ItemStack)iS;
-				PItem temp = new PItem(IS);
+				PItem temp = new PItem(iS);
 				int amount;
-				if(RealShopping.maxDurMap.containsKey(IS.getTypeId()))
-					amount = RealShopping.maxDurMap.get(IS.getTypeId()) - IS.getDurability();
+				if(RealShopping.maxDurMap.containsKey(iS.getTypeId()))
+					amount = RealShopping.maxDurMap.get(iS.getTypeId()) - iS.getDurability();
 				else 
-					amount = IS.getAmount();
+					amount = iS.getAmount();
 				if(tempMap.containsKey(temp)) tempMap.put(temp, tempMap.get(temp) + amount);
 				else tempMap.put(temp, amount);
 			}
@@ -183,25 +189,16 @@ public class RSPlayerInventory {
 	}
 	
 	private Map<PItem, Integer> invToPInv(){
-		return invToPInv(getOwner());
+		Object[] obj = ArrayUtils.addAll(getOwner().getInventory().getContents(), getOwner().getInventory().getArmorContents());
+		ItemStack[] IS = new ItemStack[obj.length];
+		
+		for(int i = 0;i < obj.length;i++)
+			IS[i] = (ItemStack) obj[i];
+		return invToPInv(IS);
 	}
 	
 	private Map<PItem, Integer> invToPInv(Inventory inv){
-		Map<PItem, Integer> tempMap = new HashMap<PItem, Integer>();
-		for(Object iS:inv.getContents()){
-			if(iS != null){
-				ItemStack IS = (ItemStack)iS;
-				PItem temp = new PItem(IS);
-				int amount;
-				if(RealShopping.maxDurMap.containsKey(IS.getTypeId()))
-					amount = RealShopping.maxDurMap.get(IS.getTypeId()) - IS.getDurability();
-				else 
-					amount = IS.getAmount();
-				if(tempMap.containsKey(temp)) tempMap.put(temp, tempMap.get(temp) + amount);
-				else tempMap.put(temp, amount);
-			}
-		}
-		return tempMap;
+		return invToPInv(inv.getContents());
 	}
 	
 	public String exportToString(){
@@ -281,7 +278,6 @@ public class RSPlayerInventory {
 		Object[] keys = RealShopping.PInvMap.keySet().toArray();
 		for(Object key:keys){
 			if(RealShopping.PInvMap.get(key).equals(this)) return Bukkit.getPlayer(key.toString());
-			else RealShopping.log.info(RealShopping.PInvMap.get(key)+"");
 		}
 		return null;
 	}
