@@ -27,6 +27,7 @@ import java.util.List;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -283,7 +284,7 @@ public class RSCommandExecutor implements CommandExecutor {
     	     						rs.PInvMap.remove(rs.getServer().getPlayerExact(args[2]).getName());
     	     						rs.getServer().getPlayerExact(args[2]).teleport(l.add(0.5, 0, 0.5));
     	     						sender.sendMessage(ChatColor.GREEN + args[2] + LangPack.WASKICKEDFROMYOURSTORE);
-    	     					} else sender.sendMessage(ChatColor.RED + "Player " + args[2] + " isn't online. You can kick an offline player by adding the -o flag, BUT THEY WON'T BE TELEPORTED OUT OF THE STORE. Only use this if you're about to delete the store or if you know what you're doing.");
+    	     					} else sender.sendMessage(ChatColor.RED + LangPack.PLAYER + args[2] + LangPack.ISNTONLINEKICK);
     	     				} else sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTINYOURSTORE);
     	     			} else sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTINYOURSTORE);
     	     			rs.updateEntrancesDb();
@@ -302,8 +303,8 @@ public class RSCommandExecutor implements CommandExecutor {
         	     						rs.shopMap.get(args[0]).sellToStore.remove(rs.getServer().getPlayerExact(args[2]).getName());
         	     					rs.PInvMap.remove(rs.getServer().getPlayerExact(args[2]).getName());
     	     						sender.sendMessage(ChatColor.GREEN + args[2] + LangPack.WASKICKEDFROMYOURSTORE);
-        	     				} else sender.sendMessage(ChatColor.RED + "Player " + args[2] + " doesn't exist.");
-        	     			} else sender.sendMessage(ChatColor.RED + "Player " + args[2] + " doesn't exist.");
+        	     				} else sender.sendMessage(ChatColor.RED + LangPack.PLAYER + args[2] + LangPack.DOESNTEXIST);
+        	     			} else sender.sendMessage(ChatColor.RED + LangPack.PLAYER + args[2] + LangPack.DOESNTEXIST);
     	     			} else sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTINYOURSTORE);
     	     			rs.updateEntrancesDb();
     	     			return true;
@@ -635,6 +636,20 @@ public class RSCommandExecutor implements CommandExecutor {
     					} else {
     						player.sendMessage(ChatColor.RED + LangPack.THEREISNO + ((rs.tpLocBlacklist)?"FORBIDDEN":"ALLOWED") + LangPack.TELEPORTLOCATIONWITHITSCENTERHERE);
     					}
+    				} else if(args[0].equalsIgnoreCase("highlight")){
+    						Location[] toHighlight = rs.getNearestTpLocs(player.getLocation().getBlock().getLocation(), 5);
+    						if(toHighlight != null){
+    							for(Location l:toHighlight){
+    								player.sendBlockChange(l, Material.WOOL, (byte)5);//TODO different colors
+    							}
+    							blockUpdater bU = new blockUpdater(toHighlight, player);
+    							
+    							player.sendMessage(ChatColor.GREEN + "Highlighted 5 locations for 5 seconds.");
+    						} else {
+    							player.sendMessage(ChatColor.RED + "No locations to highlight.");
+    						}
+
+    						return true;
     				}
     			} else if(args.length == 2 && args[0].equalsIgnoreCase("add")){
     				try {
@@ -691,5 +706,28 @@ public class RSCommandExecutor implements CommandExecutor {
     		}
     	return false;
 	}
+}
 
+class blockUpdater extends Thread {
+	private Location[] blocks;
+	private Player player;
+
+	public blockUpdater(Location[] blocks, Player player){
+		this.blocks = blocks;
+		this.player = player;
+	}
+	
+	public void run(){
+		try {
+			Thread.sleep(5000);
+			for(Location l:blocks){
+				Block b = l.getWorld().getBlockAt(l);
+				player.sendBlockChange(l, b.getType(), b.getData());
+			}
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
 }

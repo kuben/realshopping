@@ -60,7 +60,7 @@ commands:
       permission-message: You don't have permission to use this command
    rstplocs:
       description: Makes it possible for users to teleport to certain allowed areas from a store, if they have paid for their items.
-      usage: /rstplocs setwhitelistmode|setblacklistmode|add RADIUS|remove
+      usage: /rstplocs setwhitelistmode|setblacklistmode|add RADIUS|remove|highlight
       permission: realshopping.rsallowedtplocs
       permission-message: You don't have permission to use this command
    rsunjail:

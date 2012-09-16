@@ -154,6 +154,10 @@ public class LangPack {
 	public static String ISNOTAVALIDARGUMENT;
 	public static String YOUARENTALLOWEDTOTELEPORTTHERE;
 	public static String SELLINGTOSTORESISNOTENABLEDONTHISSERVER;
+	public static String ISNOTINYOURSTORE;
+	public static String WASKICKEDFROMYOURSTORE;
+	public static String PLAYER;
+	public static String ISNTONLINEKICK;
 	
 	public static void initialize(String lang){
 		THISCOMMANDCANNOTBEUSEDFROMCONSOLE = "This command cannot be used from console";
@@ -228,6 +232,10 @@ public class LangPack {
 		WASNTBANNEDFROMYOURSTORE = " wasn't banned from your store.";
 		BANNED = "Banned ";
 		FROMSTORE = " from store.";
+		ISNOTINYOURSTORE = " is not in your store.";
+		WASKICKEDFROMYOURSTORE = " was kicked from your store.";
+		PLAYER = "Player ";
+		ISNTONLINEKICK = " isn't online. You can kick an offline player by adding the -o flag, BUT THEY WON'T BE TELEPORTED OUT OF THE STORE. Only use this if you're about to delete the store or if you know what you're doing.";
 		YOUDONTHAVEPERMISSIONTOMANAGETHATSTORE = "You don't have permission to manage that store.";
 		NOTHINGTOCOLLECT = "Nothing to collect.";
 		FILLEDCHESTWITH = "Filled chest with ";
@@ -289,7 +297,7 @@ public class LangPack {
 			if(nl != null && nl.getLength() > 0) {
 				for(int i = 0 ; i < nl.getLength();i++) {
 					Element el = (Element)nl.item(i);
-					String name = el.getTagName();
+					String name = el.getTagName();//TODO make else if
 					if(name.equals("UNIT")) UNIT = el.getAttribute("value");
 					if(name.equals("THISCOMMANDCANNOTBEUSEDFROMCONSOLE")) THISCOMMANDCANNOTBEUSEDFROMCONSOLE = el.getAttribute("value");
 					if(name.equals("REALSHOPPINGRELOADED")) REALSHOPPINGRELOADED = el.getAttribute("value");
@@ -411,6 +419,10 @@ public class LangPack {
 					if(name.equals("ISNOTAVALIDARGUMENT")) ISNOTAVALIDARGUMENT = el.getAttribute("value");
 					if(name.equals("YOUARENTALLOWEDTOTELEPORTTHERE")) YOUARENTALLOWEDTOTELEPORTTHERE = el.getAttribute("value");
 					if(name.equals("SELLINGTOSTORESISNOTENABLEDONTHISSERVER")) SELLINGTOSTORESISNOTENABLEDONTHISSERVER = el.getAttribute("value");
+					if(name.equals("ISNOTINYOURSTORE")) ISNOTINYOURSTORE = el.getAttribute("value");
+					if(name.equals("WASKICKEDFROMYOURSTORE")) WASKICKEDFROMYOURSTORE = el.getAttribute("value");
+					if(name.equals("PLAYER")) PLAYER = el.getAttribute("value");
+					if(name.equals("ISNTONLINEKICK")) ISNTONLINEKICK = el.getAttribute("value");
 				}
 				RealShopping.log.info("Loaded " + lang + " language pack.");
 			}

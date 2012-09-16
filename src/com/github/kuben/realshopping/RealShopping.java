@@ -36,11 +36,14 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -130,7 +133,7 @@ public class RealShopping extends JavaPlugin {
     	forbiddenInStore = new HashSet<Integer>();
     	Config.cartEnabledW = new HashSet<String>();
     	
-    	tpLocBlacklist = false;//TODO highlight centre
+    	tpLocBlacklist = false;
         econ = null;
         Config.keepstolen = false;
         Config.enableSelling = false;
@@ -336,13 +339,35 @@ public class RealShopping extends JavaPlugin {
     				fstream = new FileInputStream(f);
     				br = new BufferedReader(new InputStreamReader(fstream));
     				String s;
+    				boolean v32plus = false;
     				while ((s = br.readLine()) != null){
-    					stolenToClaim.put(s.split(";")[0], new ArrayList<ItemStack>());
-    					for(int i = 1;i < s.split(";").length;i++){
-    						stolenToClaim.get(s.split(";")[0]).add(new ItemStack(Integer.parseInt(s.split(";")[i].split(",")[0]),
-    								Integer.parseInt(s.split(";")[i].split(",")[1]),
-    								Short.parseShort(s.split(";")[i].split(",")[2]),
-    								Byte.parseByte(s.split(";")[i].split(",")[3])));
+    					if(s.equals("Jailed players database for RealShopping v0.21")) v32plus = true;
+    					else {
+    						Shop tempShop;
+    						if(v32plus){
+    							tempShop = shopMap.get(s.split(";"));
+    							tempShop.stolenToClaim.put(s.split(";")[1], new ArrayList<ItemStack>());
+    	    					for(int i = 2;i < s.split(";").length;i++){
+    	    						tempShop.stolenToClaim.get(s.split(";")[1]).add(new ItemStack(Integer.parseInt(s.split(";")[i].split(",")[0]),
+    	    								Integer.parseInt(s.split(";")[i].split(",")[1]),
+    	    								Short.parseShort(s.split(";")[i].split(",")[2]),
+    	    								Byte.parseByte(s.split(";")[i].split(",")[3])));
+    	    					}
+    						} else {
+    							String[] stores = getOwnedStores(s.split(";")[0]);
+    							if(!stores[0].equals("")){
+    								tempShop = shopMap.get(stores[0]);
+    								tempShop.stolenToClaim.put(s.split(";")[0], new ArrayList<ItemStack>());
+    		    					for(int i = 1;i < s.split(";").length;i++){
+    		    						tempShop.stolenToClaim.get(s.split(";")[0]).add(new ItemStack(Integer.parseInt(s.split(";")[i].split(",")[0]),
+    		    								Integer.parseInt(s.split(";")[i].split(",")[1]),
+    		    								Short.parseShort(s.split(";")[i].split(",")[2]),
+    		    								Byte.parseByte(s.split(";")[i].split(",")[3])));
+    		    					}
+    							} else {
+    								log.info("Couldn't convert because player doesn't own any stores: " + s);
+    							}
+    						}
     					}
     				}
     				fstream.close();
@@ -410,20 +435,23 @@ public class RealShopping extends JavaPlugin {
 				pW.println(keys[i] + "-" + PInvMap.get(keys[i]).getStore() + ";" + invStr);
 			}
 			pW.close();
-			
-			keys = stolenToClaim.keySet().toArray();
+
 			f = new File(mandir+"toclaim.db");
 			if(!f.exists()) f.createNewFile();
 			pW = new PrintWriter(f);
 			for(int i = 0;i < keys.length;i++){
-				List toClaim = stolenToClaim.get(keys[i]);
-				if(!toClaim.isEmpty()){
-					Object[] iS = toClaim.toArray();
-					String s = keys[i].toString();
-					for(int j = 0;j < iS.length;j++){
-						s += ";" + ((ItemStack) iS[j]).getTypeId() + "," +  ((ItemStack) iS[j]).getAmount() + "," +  ((ItemStack) iS[j]).getDurability() + "," +  ((ItemStack) iS[j]).getData().getData();
+				if(i == 0) pW.println("Stolen items database for RealShopping v0.32");
+				String[] keys2 = shopMap.get(keys[i]).stolenToClaim.keySet().toArray(new String[0]);
+				for(int j = 0;j < keys2.length;j++){
+					List toClaim = shopMap.get(keys[i]).stolenToClaim.get(keys[j]);
+					if(!toClaim.isEmpty()){
+						Object[] iS = toClaim.toArray();
+						String s = keys[i] + keys2[j].toString();
+						for(int k = 0;k < iS.length;k++){
+							s += ";" + ((ItemStack) iS[k]).getTypeId() + "," +  ((ItemStack) iS[k]).getAmount() + "," +  ((ItemStack) iS[k]).getDurability() + "," +  ((ItemStack) iS[k]).getData().getData();
+						}
+						pW.println(s);
 					}
-					pW.println(s);
 				}
 			}
 			pW.close();
@@ -1301,6 +1329,43 @@ public class RealShopping extends JavaPlugin {
 		return pString.substring(1).split(",");
 	}
 	
+	public String[] getOwnedStores(String player){
+		String sString = ",";
+		String[] keys = shopMap.keySet().toArray(new String[0]);
+		for(String store:keys){
+			if(shopMap.get(PInvMap.get(player).getStore()).owner.toLowerCase().equals(store)) sString += store;
+		}
+		return sString.substring(1).split(",");
+	}
+	
+	public Location[] getNearestTpLocs(Location loc, int maxAmount){
+		Location[] keys = forbiddenTpLocs.keySet().toArray(new Location[0]);
+		Location[] nearest = null;
+		Map<Location, Double> locDist = new HashMap<Location, Double>();
+		for(Location l:keys)
+			if(loc.getWorld().equals(l.getWorld()))
+				locDist.put(l, loc.distance(l));
+		
+		System.out.println(locDist);
+		if(!locDist.isEmpty()){
+			ValueComparator bvc =  new ValueComparator(locDist);
+			TreeMap<Location,Double> sorted_map = new TreeMap<Location,Double>(bvc);
+			
+			System.out.println(sorted_map);
+			
+			if(sorted_map.size() < maxAmount) nearest = new Location[sorted_map.size()];
+			else nearest = new Location[maxAmount];
+			
+			keys = sorted_map.keySet().toArray(new Location[0]);
+			for(int i = 0;i < nearest.length;i++){
+				nearest[i] = keys[i];
+			}
+		}
+		
+		System.out.println(nearest);
+		return nearest;
+	}
+	
     private boolean setupEconomy() {
     	try{
             RegisteredServiceProvider<Economy> economyProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
@@ -1384,4 +1449,21 @@ class PricesParser extends DefaultHandler {
 			}
 		}
 	}
+}
+
+class ValueComparator implements Comparator<Location> {
+
+    Map<Location, Double> base;
+    public ValueComparator(Map<Location, Double> base) {
+        this.base = base;
+    }
+
+    // Note: this comparator imposes orderings that are inconsistent with equals.    
+    public int compare(Location a, Location b) {
+        if (base.get(a) >= base.get(b)) {
+            return -1;
+        } else {
+            return 1;
+        } // returning 0 would merge keys
+    }
 }
