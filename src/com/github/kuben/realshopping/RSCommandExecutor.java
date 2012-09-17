@@ -131,7 +131,7 @@ public class RSCommandExecutor implements CommandExecutor {
     				if(rs.shopMap.get(args[0]).buyFor > 0) sender.sendMessage(ChatColor.GREEN + LangPack.BUYSFOR + rs.shopMap.get(args[0]).buyFor + LangPack.PCNTOFORIGINAL);
     				if(!rs.shopMap.get(args[0]).sale.isEmpty()) sender.sendMessage(ChatColor.GREEN + LangPack.HASA + rs.shopMap.get(args[0]).sale.values().toArray()[0] + LangPack.PCNTOFFSALERIGHTNOW);
     				if(!rs.getPlayersInStore(args[0].toLowerCase())[0].equals("")){
-    					sender.sendMessage(ChatColor.DARK_GREEN + "Players in store:\n" + ChatColor.RESET + rs.formatPlayerListToMess(rs.getPlayersInStore(args[0].toLowerCase())));//TODO Langpack
+    					sender.sendMessage(ChatColor.DARK_GREEN + LangPack.PLAYERSINSTORE + "\n" + ChatColor.RESET + rs.formatPlayerListToMess(rs.getPlayersInStore(args[0].toLowerCase())));
     				}
     			}
     			
@@ -533,7 +533,7 @@ public class RSCommandExecutor implements CommandExecutor {
     							rs.shopMap.remove(args[1]);
         						player.sendMessage(ChatColor.RED + args[1] + LangPack.WASREMOVED);
         						rs.updateEntrancesDb();
-    						} else player.sendMessage(ChatColor.RED + "The store is not empty. You can kick players with /rsstores STORE kick PLAYER");//TODO LangPack
+    						} else player.sendMessage(ChatColor.RED + LangPack.STORENOTEMPTY);
     					} else {
     						player.sendMessage(ChatColor.RED + LangPack.YOUARENOTTHEOWNEROFTHISSTORE);
     					}
@@ -572,7 +572,7 @@ public class RSCommandExecutor implements CommandExecutor {
 							rs.shopMap.remove(args[1]);
     						player.sendMessage(ChatColor.RED + args[1] + LangPack.WASREMOVED);
     						rs.updateEntrancesDb();
-						} else player.sendMessage(ChatColor.RED + "The store is not empty. You can kick players with /rsstores STORE kick PLAYER");//TODO LangPack
+						} else player.sendMessage(ChatColor.RED + LangPack.STORENOTEMPTY);
     					return true;
     				} else player.sendMessage(ChatColor.RED + args[1] + LangPack.WASNTFOUND);
     			}

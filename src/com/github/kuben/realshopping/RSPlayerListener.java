@@ -26,6 +26,9 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.Chest;
+import org.bukkit.block.DoubleChest;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
@@ -35,6 +38,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -139,7 +143,22 @@ public class RSPlayerListener implements Listener {
 				}
 		}
 	}
-
+	
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onInventoryOpenEvent(InventoryOpenEvent event){
+        if (event.getInventory().getHolder() instanceof Chest){
+        	if(RealShopping.protectedChests.contains(((Chest) event.getInventory().getHolder()).getLocation()))
+        		if(!RealShopping.PInvMap.containsKey(event.getPlayer().getName()))//If player is not in store
+        			event.setCancelled(true);
+            ((CommandSender) event.getPlayer()).sendMessage(((Chest) event.getInventory().getHolder()).getLocation() + "");
+        } else if (event.getInventory().getHolder() instanceof DoubleChest){
+        	if(RealShopping.protectedChests.contains(((DoubleChest) event.getInventory().getHolder()).getLocation()))
+        		if(!RealShopping.PInvMap.containsKey(event.getPlayer().getName()))//If player is not in store
+        			event.setCancelled(true);
+            ((CommandSender) event.getPlayer()).sendMessage(((DoubleChest) event.getInventory().getHolder()).getLocation() + "");
+        }
+    }
+	
 	@EventHandler (priority = EventPriority.MONITOR)
 	public void onLogin(PlayerJoinEvent event){
 		Player player = event.getPlayer();

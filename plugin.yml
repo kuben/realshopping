@@ -73,6 +73,11 @@ commands:
       usage: /rsreload
       permission: realshopping.rsreload
       permission-message: You don't have permission to use this command
+   rsprotect:
+      description: Makes chests which you can't open from outside of the store
+      usage: /rsprotect add|remove
+      permission: realshopping.rsprotect
+      permission-message: You don't have permission to use this command
    realshopping:
       description: Prints some info about the mod, configuration.
       usage: /realshopping

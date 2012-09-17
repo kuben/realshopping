@@ -104,6 +104,7 @@ public class RealShopping extends JavaPlugin {
 	public static Map<String, List<ItemStack[]>> shippedToCollect;
 	public static Map<Location, Integer> forbiddenTpLocs;
 	
+	public static Set<Location> protectedChests;
 	public static Set<Integer> forbiddenInStore;
 	
 	public static boolean tpLocBlacklist;
@@ -1402,7 +1403,60 @@ public class RealShopping extends JavaPlugin {
     	return (econ != null);
     }
     
-    public void reload(){
+/*    private boolean saveTemporaryFile(int what){
+    	File f;
+    	Object[] keys;
+    	String header;
+    	
+    	try {
+    		if(what == 0){
+    			keys = PInvMap.keySet().toArray();//Player Map
+    			f = new File(mandir + "inventories.db");
+    			header = "Inventories database for RealShopping v0.32";
+    		} else if(what == 1){
+    			keys = jailedPlayers.keySet().toArray();
+    			f = new File(mandir + "jailed.db");
+    			header = "Jailed players database for RealShopping v0.31";
+    		} else if(what == 2){
+    			keys = forbiddenTpLocs.keySet().toArray();
+    			f = new File(mandir + "allowedtplocs.db");
+    			header = "Allowed teleport locations for RealShopping v0.31 " + (tpLocBlacklist?"Blacklist":"Whitelist");
+    		} else if(what == 0){
+    			keys = PInvMap.keySet().toArray();//Player Map
+    			f = new File(mandir + "inventories.db");
+    		} else {
+    			return false;
+    		}
+
+			if(!f.exists()) f.createNewFile();
+			PrintWriter pW;
+			pW = new PrintWriter(f);
+			for(int i = 0;i < keys.length;i++){
+				if(i == 0) pW.println(header);
+				String line;
+				switch(what){
+					case 0:
+						line = keys[i] + "-" + PInvMap.get(keys[i]).getStore() + ";" + PInvMap.get(keys[i]).exportToString();
+						break;
+					case 1:
+						line = ((String)keys[i]) + ";" + jailedPlayers.get(keys[i]).getWorld().getName() + ";" + locAsString(jailedPlayers.get(keys[i]));
+						break;
+					case 2:
+						line = ((Location)keys[i]).getWorld().getName() + ";" + locAsString((Location)keys[i]) + ";" + forbiddenTpLocs.get(keys[i]);
+					default:
+						return false;
+					}
+				pW.println(line);
+			}
+			pW.close();
+    	} catch(Exception e){
+    		log.info("Failed while saving " + f.getName());
+    		e.printStackTrace();
+    	}
+    	return false;
+    }*/
+    
+     public void reload(){
 		smallReload = true;
 		onDisable();
 		onEnable();

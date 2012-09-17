@@ -158,6 +158,8 @@ public class LangPack {
 	public static String WASKICKEDFROMYOURSTORE;
 	public static String PLAYER;
 	public static String ISNTONLINEKICK;
+	public static String PLAYERSINSTORE;
+	public static String STORENOTEMPTY;
 	
 	public static void initialize(String lang){
 		THISCOMMANDCANNOTBEUSEDFROMCONSOLE = "This command cannot be used from console";
@@ -195,6 +197,7 @@ public class LangPack {
 		WASCREATED = " was created.";
 		WASREMOVED = " was removed.";
 		WASNTFOUND = " wasn't found.";
+		STORENOTEMPTY = "The store is not empty. You can kick players with /rsstores STORE kick PLAYER";
 		YOUARENOTTHEOWNEROFTHISSTORE = "You are not the owner of this store.";
 		THERESNOENTRANCESET = "There's no entrance set.";
 		THERSNOEXITSET = "There's no exit set.";
@@ -216,6 +219,7 @@ public class LangPack {
 		STORE = "Store ";
 		OWNEDBY = " owned by ";
 		BUYSFOR = "Buys for ";
+		PLAYERSINSTORE = "Players in store:";
 		PCNTOFORIGINAL = "% of original price.";
 		NOTBUYINGFROMPLAYERS = "Not buying from players.";
 		YOUCANTUSEAVALUEBELLOW0 = "You can't use a value bellow 0.";
@@ -423,6 +427,9 @@ public class LangPack {
 					else if(name.equals("WASKICKEDFROMYOURSTORE")) WASKICKEDFROMYOURSTORE = el.getAttribute("value");
 					else if(name.equals("PLAYER")) PLAYER = el.getAttribute("value");
 					else if(name.equals("ISNTONLINEKICK")) ISNTONLINEKICK = el.getAttribute("value");
+					else if(name.equals("PLAYERSINSTORE")) PLAYERSINSTORE = el.getAttribute("value");
+					else if(name.equals("STORENOTEMPTY")) STORENOTEMPTY = el.getAttribute("value");
+					
 				}
 				RealShopping.log.info("Loaded " + lang + " language pack.");
 			}
