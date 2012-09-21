@@ -28,7 +28,9 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
+import org.bukkit.block.DoubleChest;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -160,7 +162,9 @@ public class RSCommandExecutor implements CommandExecutor {
     	    	        					for(;i < 27 || i < origIs.length;i++){
     	    	        						tempIs[i] = origIs[i];
     	    	        					}
-    	    	        					((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().setContents(tempIs);//TODO
+    	    	        					ItemStack[] oldCont = ((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().getContents();
+    	    	        					for(ItemStack tempIS:oldCont) if(tempIS != null) player.getWorld().dropItem(player.getLocation(), tempIS);
+    	    	        					((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().setContents(tempIs);
     	    	        					player.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH + i + LangPack.ITEMS);
     	    	        					if(origIs.length < 28) rs.shopMap.get(args[0]).stolenToClaim.remove(player.getName());
     	    	        					else {
@@ -214,7 +218,8 @@ public class RSCommandExecutor implements CommandExecutor {
         	    	        					for(;i < tempIs.length;i++){
         	    	        						tempIs[i] = origIs[i];
         	    	        					}
-        	    	        					//TODO empty chest
+        	    	        					ItemStack[] oldCont = ((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().getContents();
+        	    	        					for(ItemStack tempIS:oldCont) if(tempIS != null) player.getWorld().dropItem(player.getLocation(), tempIS);
         	    	        					((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().setContents(tempIs);
         	    	        					player.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH + i + LangPack.ITEMS);
         	    	        					if(origIs.length <= Math.min(27, amount)) rs.shopMap.get(args[0]).stolenToClaim.remove(player.getName());
@@ -706,6 +711,38 @@ public class RSCommandExecutor implements CommandExecutor {
     					sender.sendMessage(ChatColor.RED + args[1] + LangPack.ISNOTANINTEGER);
     				}
     			}
+    		} else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE); 
+    	} else if(cmd.getName().equalsIgnoreCase("rsprotect")){
+    		if(player != null){
+    			if(rs.PInvMap.containsKey(player.getName())){
+    				if(args.length == 1 & args[0].equalsIgnoreCase("add")){				
+   						Shop tempShop = rs.shopMap.get(rs.PInvMap.get(player.getName()).getStore());
+       					BlockState bs = player.getLocation().subtract(0, 1, 0).getBlock().getState();
+       					if(bs instanceof Chest | bs instanceof DoubleChest){
+       						if(tempShop.protectedChests.contains(bs.getLocation())){
+       							player.sendMessage(ChatColor.GREEN + "This chest is already protected.");
+       							return true;
+       						} else {
+       							tempShop.protectedChests.add(bs.getLocation());
+       							player.sendMessage(ChatColor.GREEN + "Made chest protected.");
+       							return true;
+        					}
+        				} else {
+        					player.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUARESTANDINGONISNTACHEST);
+        				}
+    				} else if(args.length == 1 & args[0].equalsIgnoreCase("remove")){
+   						Shop tempShop = rs.shopMap.get(rs.PInvMap.get(player.getName()).getStore());
+       					BlockState bs = player.getLocation().subtract(0, 1, 0).getBlock().getState();
+       					if(tempShop.protectedChests.contains(bs.getLocation())){
+       						tempShop.protectedChests.remove(bs.getLocation());
+       						player.sendMessage(ChatColor.GREEN + "Unprotected chest.");
+       						return true;
+    					} else {
+       						player.sendMessage(ChatColor.RED + "This chest isn't protected.");
+       						return true;
+    					}
+    				}
+    			} else player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
     		} else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE); 
     	} else if(cmd.getName().equalsIgnoreCase("rsunjail")){
     		if (args.length == 1){

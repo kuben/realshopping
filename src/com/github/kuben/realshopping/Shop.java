@@ -44,6 +44,7 @@ public class Shop {
 	public Map<Integer, Integer> sale = new HashMap<Integer, Integer>();
 	public List<Location> entrance = new ArrayList<Location>(), exit = new ArrayList<Location>();
 	public Set<String> banned = new HashSet<String>();
+	public Set<Location> protectedChests = new HashSet<Location>();
 	public String name, world, owner;//Admin stores: owner = @admin
 	public int buyFor = 0;
 	
@@ -76,6 +77,7 @@ public class Shop {
 	public boolean addChest(Location l){
 		if(!chests.containsKey(l)){
 			chests.put(l, new ArrayList<Integer[]>());
+			if(Config.autoprotect) protectedChests.add(l);
 			return true;
 		}
 		else return false;
@@ -83,6 +85,7 @@ public class Shop {
 	public boolean delChest(Location l){
 		if(chests.containsKey(l)) chests.remove(l);
 		else return false;
+		protectedChests.remove(l);
 		return true;
 	}
 	public int addChestItem(Location l, int[][] id){
@@ -120,6 +123,16 @@ public class Shop {
 			}
 		}
 		return j;
+	}
+
+	public String exportProtectedToString(){
+		if(!protectedChests.isEmpty()){
+			String tempS = ",";
+			for(Location tempL:protectedChests){
+				tempS += tempL.getWorld().getName() + ";" + (int)tempL.getX() + "," + (int)tempL.getY() + "," + (int)tempL.getZ() + ",";
+			}
+			return tempS.substring(1);
+		} else return "";
 	}
 	
 	@Override

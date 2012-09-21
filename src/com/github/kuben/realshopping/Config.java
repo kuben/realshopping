@@ -1,9 +1,11 @@
 package com.github.kuben.realshopping;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -17,12 +19,17 @@ public class Config {
 
 	public static boolean keepstolen;
 	public static boolean enableSelling;
+	public static boolean autoprotect;
 	public static String punishment;
 	public static String langpack;
 	public static double pstorecreate;
 	public static Location hellLoc;
 	public static Location jailLoc;
 	public static Location dropLoc;
+	
+	public static int deliveryZones;
+	public static Zone[] zoneArray;
+	public static byte autoUpdate;
 	
 	public static Set<String> cartEnabledW;
 	
@@ -41,36 +48,25 @@ public class Config {
         punishment = "none";
         pstorecreate = 0.0;
         enableSelling = true;
+        autoprotect = true;
+        deliveryZones = 0;
+        autoUpdate = 0;
     	File f = new File(RealShopping.mandir);
     	if(!f.exists()) f.mkdir();
 		FileInputStream fstream;
 		BufferedReader br;
 		try {
 			f = new File(RealShopping.mandir + "realshopping.properties");
-			if(!f.exists()){
-				f.createNewFile();
-				PrintWriter pW = new PrintWriter(f);
-				pW.println("Properties file for RealShopping v0.31");
-				pW.println("language-pack:default");
-				pW.println("punishment:none");
-				pW.println("keep-stolen-items-after-punish:false");
-				pW.println("jail-location:world;0,0,0");
-				pW.println("hell-location:world;0,0,0");
-				pW.println("drop-items-at:world;0,0,0");
-				pW.println("player-stores-create-cost:0.0");
-				pW.println("enable-shopping-carts-in-worlds:world");
-				pW.println("enable-selling-to-stores:true");
-				pW.close();
-			} else {
+			int notInConfig = 16383;
+			if(f.exists()) {
 				fstream = new FileInputStream(f);
 				br = new BufferedReader(new InputStreamReader(fstream));
 				String s;
 				boolean v31plus = false;
-				int notInConfig = 2047;
 				while ((s = br.readLine()) != null){// Read realshopping.properties
-					if(s.split(":")[0].equals("language-pack")){
-						langpack = s.split(":")[1];
+					if(s.equals("Properties file for RealShopping v0.32")){
 						notInConfig -= 1;
+						v31plus = true;
 					} else if(s.split(":")[0].equals("punishment")){
 						punishment = s.split(":")[1];
 						notInConfig -= 2;
@@ -138,35 +134,93 @@ public class Config {
 					} else if(s.split(":")[0].equals("enable-selling-to-stores")){
 						enableSelling = Boolean.parseBoolean(s.split(":")[1]);
 						notInConfig -= 256;
-					} else if(s.equals("Properties file for RealShopping v0.31")){
+					} else if(s.split(":")[0].equals("language-pack")){
+						langpack = s.split(":")[1];
 						notInConfig -= 512;
-						v31plus = true;
+					} else if(s.split(":")[0].equals("delivery-cost-zones")){
+						deliveryZones = Integer.parseInt(s.split(":")[1]);
+						zoneArray = new Zone[deliveryZones];
+						notInConfig -= 1024;
+					} else if(s.split(":")[0].equals("auto-protect-chests")){
+						autoprotect = Boolean.parseBoolean(s.split(":")[1]);
+						notInConfig -= 2048;
+					} else if(s.split(":")[0].equals("enable-automatic-updates")){
+						String tempS = s.split(":")[1];
+						if(tempS.equals("true")) autoUpdate = 3;
+						else if(tempS.equals("check")) autoUpdate = 1;
+						else if(tempS.equals("ask")) autoUpdate = 2;
+						else autoUpdate = 0;
+						notInConfig -= 4096;
+					} else if(s.length() > 8 && s.substring(0, 5).equals("zone ")){
+						String tempS = s.substring(5);
+						int nr = Integer.parseInt(tempS.split(":")[0]);
+						if(zoneArray.length > nr)
+							if(tempS.split(":")[1].equalsIgnoreCase("world")){
+								if(tempS.endsWith("%")) zoneArray[nr] = new Zone(true, Integer.parseInt(tempS.split(":")[2].split("%")[0]));
+								else zoneArray[nr] = new Zone(true, Float.parseFloat(tempS.split(":")[2]));
+							} else {
+								if(tempS.endsWith("%")) zoneArray[nr] = new Zone(Integer.parseInt(tempS.split(":")[1]), Integer.parseInt(tempS.split(":")[2].split("%")[0]));
+								else zoneArray[nr] = new Zone(Integer.parseInt(tempS.split(":")[2]), Float.parseFloat(tempS.split(":")[2]));
+							}
 					}
 				}
 				fstream.close();
 				br.close();
-				if(notInConfig > 0){
-    				PrintWriter pW = new PrintWriter(f);
-    				pW.println("Properties file for RealShopping v0.31");
-    				pW.println("language-pack:"+langpack);
-    				pW.println("punishment:"+punishment);
-    				pW.println("keep-stolen-items-after-punish:"+keepstolen);
-    				pW.println("jail-location:"+jailLoc.getWorld().getName()+";"+jailLoc.getBlockX()+","+jailLoc.getBlockY()+","+jailLoc.getBlockZ());
-    				pW.println("hell-location:"+hellLoc.getWorld().getName()+";"+hellLoc.getBlockX()+","+hellLoc.getBlockY()+","+hellLoc.getBlockZ());
-    				pW.println("drop-items-at:"+dropLoc.getWorld().getName()+";"+dropLoc.getBlockX()+","+dropLoc.getBlockY()+","+dropLoc.getBlockZ());
-    				pW.println("player-stores-create-cost:"+pstorecreate);
-    				pW.print("enable-shopping-carts-in-worlds:");
-    				boolean i = true;
-    				for(String str:cartEnabledW){
-    					if(i){
-    						pW.print(str);
-    						i = false;
-    					}
-    					else pW.print("," + str);
-    				}
-    				pW.println();
-    				pW.println("enable-selling-to-stores:"+enableSelling);
-    				pW.close();
+			}
+			if(!f.exists() | notInConfig > 0){
+				if(!f.exists()) f.createNewFile();
+				PrintWriter pW = new PrintWriter(new BufferedWriter(new FileWriter(f.getName(), true)));
+				if(notInConfig >= 4096){
+					pW.println("enable-automatic-updates:"+getAutoUpdateStr(autoUpdate));
+					notInConfig -= 4096;
+				} if(notInConfig >= 2048){
+					pW.println("auto-protect-chests:"+autoprotect);
+					notInConfig -= 2048;
+				} if(notInConfig >= 1024){
+					pW.println("delivery-cost-zones:"+deliveryZones);//TODO add actual zones
+					notInConfig -= 1024;
+				} if(notInConfig >= 512){
+					pW.println("language-pack:"+langpack);
+					notInConfig -= 512;
+				} if(notInConfig >= 256){
+					pW.println("enable-selling-to-stores:"+enableSelling);
+					notInConfig -= 256;
+				} if(notInConfig >= 128){
+	    			pW.print("enable-shopping-carts-in-worlds:");
+	    			boolean i = true;
+	    			for(String str:cartEnabledW){
+	    				if(i){
+	   						pW.print(str);
+	   						i = false;
+	   					}
+	    				else pW.print("," + str);
+	    			}
+	   				pW.println();
+					notInConfig -= 128;
+				} if(notInConfig >= 64){
+					pW.println("player-stores-create-cost:"+pstorecreate);
+					notInConfig -= 64;
+				} if(notInConfig >= 32){
+					pW.println("drop-items-at:"+dropLoc.getWorld().getName()+";"+dropLoc.getBlockX()+","+dropLoc.getBlockY()+","+dropLoc.getBlockZ());
+					notInConfig -= 32;
+				} if(notInConfig >= 16){
+					pW.println("hell-location:"+hellLoc.getWorld().getName()+";"+hellLoc.getBlockX()+","+hellLoc.getBlockY()+","+hellLoc.getBlockZ());
+					notInConfig -= 16;
+				} if(notInConfig >= 8){
+					pW.println("jail-location:"+jailLoc.getWorld().getName()+";"+jailLoc.getBlockX()+","+jailLoc.getBlockY()+","+jailLoc.getBlockZ());
+					notInConfig -= 8;
+				} if(notInConfig >= 4){
+					pW.println("keep-stolen-items-after-punish:"+keepstolen);
+					notInConfig -= 4;
+				} if(notInConfig >= 2){
+					pW.println("punishment:"+punishment);
+					notInConfig -= 2;
+				}
+				pW.close();
+				
+				if(notInConfig >= 1){
+				//	pW.println("Properties file for RealShopping v0.32");//TODO edit
+					//notInConfig -= 1;
 				}
 			}
 		} catch (FileNotFoundException e) {
@@ -178,4 +232,91 @@ public class Config {
 		}
 	}
 	
+	private static String getAutoUpdateStr(byte au){
+		if(au == 3) return "true";
+		else if(au == 2) return "ask";
+		else if(au == 1) return "check";
+		else return "false";
+	}
+}
+
+class Zone {
+	private int bounds = 0;
+	private float cost = 0.0f;
+	private int percent = -1; //Ignore cost if percent != -1
+	
+	public Zone(int bounds, float cost){
+		if(!setBounds(bounds)) RealShopping.log.info("Could not create delivery zone. Wrong bounds value: " + bounds);
+		if(!setCost(cost)) RealShopping.log.info("Could not create delivery zone. Wrong cost value: " + cost);
+	}
+	
+	public Zone(int bounds, int percent){
+		if(!setBounds(bounds)) RealShopping.log.info("Could not create delivery zone. Wrong bounds value: " + bounds);
+		if(!setPercent(percent)) RealShopping.log.info("Could not create delivery zone. Wrong percent value: " + percent);
+	}
+	
+	public Zone(boolean multiworld, float cost){
+		setMultiworld();
+		if(!setCost(cost)) RealShopping.log.info("Could not create delivery zone. Wrong cost value: " + cost);
+	}
+	
+	public Zone(boolean multiworld, int percent){
+		setMultiworld();
+		if(!setPercent(percent)) RealShopping.log.info("Could not create delivery zone. Wrong percent value: " + percent);
+	}
+
+	public int getBounds() {
+		return bounds;
+	}
+
+	public boolean setBounds(int bounds) {
+		if(bounds > 0){
+			this.bounds = bounds;
+			return true;
+		} else return false;
+	}
+
+	public void setMultiworld() {
+		bounds = -1;
+	}
+
+	public float getCost() {
+		return cost;
+	}
+
+	public boolean setCost(float cost) {
+		if(cost >= 0){
+			this.cost = ((int)(cost * 100))/100;
+			return true;
+		} else return false;
+	}
+
+	public int getPercent() {
+		return percent;
+	}
+
+	public boolean setPercent(int percent) {
+		if(percent >= 0){
+			this.percent = percent;
+			return true;
+		} else return false;
+	}
+	public void resetPercent(){
+		percent = -1;
+	}
+	
+	@Override
+	public String toString(){
+		if(bounds > -1){
+			if(percent > -1)
+				return "Zone ending at " + bounds + " with " + percent + "% delivery cost.";
+			else
+				return "Zone ending at " + bounds + " with " + cost + LangPack.UNIT + " delivery cost.";
+		} else {
+			if(percent > -1)
+				return "Multiworld zone with " + percent + "% delivery cost.";
+			else
+				return "Multiworld zone with " + cost + LangPack.UNIT + " delivery cost.";
+		}
+	}
 }

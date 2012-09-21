@@ -22,6 +22,7 @@ package com.github.kuben.realshopping;
 import java.awt.Event;
 import java.util.logging.Logger;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -76,6 +77,12 @@ public class RSPlayerListener implements Listener {
 	public void onInteract(PlayerInteractEvent event){
 		Player player = event.getPlayer();
 		Block b = event.getClickedBlock();
+		if(event.getItem() != null && RealShopping.forbiddenInStore.contains(event.getItem().getTypeId()))
+			//if(RealShopping.PInvMap.containsKey(player.getName()))
+				//if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR){
+					player.sendMessage(player.getTicksLived() + " " + event.getItem().getType());
+					//event.setCancelled(true);
+				//}
 		if(RealShopping.jailedPlayers.containsKey(player.getName())) event.setCancelled(true);
 		else {
 			if(event.hasBlock())
@@ -86,6 +93,10 @@ public class RSPlayerListener implements Listener {
 						} else {
 							if(player.hasPermission("realshopping.rsenter")) event.setCancelled(RealShopping.enter(player, false));
 						}
+					}
+				} else if(b.getType() == Material.SAND) {
+					if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
+						player.setFoodLevel(player.getFoodLevel() - 1);
 					}
 				} else if(b.getType() == Material.OBSIDIAN) {
 					if(RealShopping.PInvMap.containsKey(player.getName())){
@@ -135,27 +146,38 @@ public class RSPlayerListener implements Listener {
 								}
 							} else player.sendMessage(ChatColor.RED + LangPack.SELLINGTOSTORESISNOTENABLEDONTHISSERVER);
 						}
-						if(event.getItem() != null && RealShopping.forbiddenInStore.contains(event.getItem().getTypeId()))
-							if(RealShopping.PInvMap.containsKey(player.getName()))
-								if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR)
-									event.setCancelled(true);
 					}
 				}
+		}
+	}
+	
+	@EventHandler
+	public void onEat(FoodLevelChangeEvent event){
+		Player p = Bukkit.getServer().getPlayer(event.getEntity().getName());
+		if(event.getFoodLevel() > p.getFoodLevel()){//If player has eaten
+			p.sendMessage(p.getTicksLived() + " " + event.getFoodLevel());
 		}
 	}
 	
     @EventHandler(priority = EventPriority.HIGH)
     public void onInventoryOpenEvent(InventoryOpenEvent event){
         if (event.getInventory().getHolder() instanceof Chest){
-        	if(RealShopping.protectedChests.contains(((Chest) event.getInventory().getHolder()).getLocation()))
-        		if(!RealShopping.PInvMap.containsKey(event.getPlayer().getName()))//If player is not in store
+        	if(!RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//If player is not in store
+        		if(RealShopping.isChestProtected(((Chest) event.getInventory().getHolder()).getLocation())){
         			event.setCancelled(true);
+        			((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + "[RealShopping] " + "This chest is protected. You have to be inside a store to open it.");
+        		}
             ((CommandSender) event.getPlayer()).sendMessage(((Chest) event.getInventory().getHolder()).getLocation() + "");
+        	}
         } else if (event.getInventory().getHolder() instanceof DoubleChest){
-        	if(RealShopping.protectedChests.contains(((DoubleChest) event.getInventory().getHolder()).getLocation()))
-        		if(!RealShopping.PInvMap.containsKey(event.getPlayer().getName()))//If player is not in store
+        	if(!RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//If player is not in store
+        		if(RealShopping.isChestProtected(((Chest)((DoubleChest) event.getInventory().getHolder()).getLeftSide()).getLocation())
+        		| RealShopping.isChestProtected(((Chest)((DoubleChest) event.getInventory().getHolder()).getRightSide()).getLocation())){
         			event.setCancelled(true);
-            ((CommandSender) event.getPlayer()).sendMessage(((DoubleChest) event.getInventory().getHolder()).getLocation() + "");
+        			((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + "[RealShopping] " + "This chest is protected. You have to be inside a store to open it.");
+        		}
+            ((CommandSender) event.getPlayer()).sendMessage(((DoubleChest) event.getInventory().getHolder()).getLocation() + " dc");
+        	}
         }
     }
 	
