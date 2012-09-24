@@ -185,7 +185,7 @@ public class LangPack {
 		SOLD = "Sold ";
 		ITEMSFOR = " items for ";
 		YOUCANTSHIPANEMPTYCART = "You can't ship an empty cart.";
-		PACKAGEWAITINGTOBEDELIVERED = "Package waiting to be delivered. Use /rsshipped to pick up the package.";
+		PACKAGEWAITINGTOBEDELIVERED = "Package waiting to be delivered. Use /rsshipped to pick up the package. You may need to pay a recieving fee.";
 		YOUHAVENTBOUGHTANYTHING = "You haven't bought anything.";
 		THERESNOPACKAGEWITHTHEID = "There's no package with the id ";
 		YOUHAVENTGOTANYITEMSWAITINGTOBEDELIVERED = "You haven't got any items waiting to be delivered.";

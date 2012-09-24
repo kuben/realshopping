@@ -51,13 +51,14 @@ public class Config {
         autoprotect = true;
         deliveryZones = 0;
         autoUpdate = 0;
+        zoneArray = new Zone[0];
     	File f = new File(RealShopping.mandir);
     	if(!f.exists()) f.mkdir();
 		FileInputStream fstream;
 		BufferedReader br;
 		try {
 			f = new File(RealShopping.mandir + "realshopping.properties");
-			int notInConfig = 16383;
+			int notInConfig = 8191;
 			if(f.exists()) {
 				fstream = new FileInputStream(f);
 				br = new BufferedReader(new InputStreamReader(fstream));
@@ -66,6 +67,8 @@ public class Config {
 				while ((s = br.readLine()) != null){// Read realshopping.properties
 					if(s.equals("Properties file for RealShopping v0.32")){
 						notInConfig -= 1;
+						v31plus = true;
+					} else if(s.equals("Properties file for RealShopping v0.31")){
 						v31plus = true;
 					} else if(s.split(":")[0].equals("punishment")){
 						punishment = s.split(":")[1];
@@ -154,38 +157,43 @@ public class Config {
 					} else if(s.length() > 8 && s.substring(0, 5).equals("zone ")){
 						String tempS = s.substring(5);
 						int nr = Integer.parseInt(tempS.split(":")[0]);
-						if(zoneArray.length > nr)
+						if(zoneArray.length >= nr)
 							if(tempS.split(":")[1].equalsIgnoreCase("world")){
-								if(tempS.endsWith("%")) zoneArray[nr] = new Zone(true, Integer.parseInt(tempS.split(":")[2].split("%")[0]));
-								else zoneArray[nr] = new Zone(true, Float.parseFloat(tempS.split(":")[2]));
+								if(tempS.endsWith("%")) zoneArray[nr - 1] = new Zone(true, Integer.parseInt(tempS.split(":")[2].split("%")[0]));
+								else zoneArray[nr - 1] = new Zone(true, Double.parseDouble(tempS.split(":")[2]));
 							} else {
-								if(tempS.endsWith("%")) zoneArray[nr] = new Zone(Integer.parseInt(tempS.split(":")[1]), Integer.parseInt(tempS.split(":")[2].split("%")[0]));
-								else zoneArray[nr] = new Zone(Integer.parseInt(tempS.split(":")[2]), Float.parseFloat(tempS.split(":")[2]));
+								if(tempS.endsWith("%")) zoneArray[nr - 1] = new Zone(Integer.parseInt(tempS.split(":")[1]), Integer.parseInt(tempS.split(":")[2].split("%")[0]));
+								else zoneArray[nr - 1] = new Zone(Integer.parseInt(tempS.split(":")[1]), Double.parseDouble(tempS.split(":")[2]));
 							}
 					}
 				}
+				for(Zone tempZ:zoneArray){
+					System.out.print(tempZ + " ");
+				}
+				System.out.println();
 				fstream.close();
 				br.close();
 			}
-			if(!f.exists() | notInConfig > 0){
+			System.out.println(notInConfig);
+			if(!f.exists() || notInConfig > 0){
 				if(!f.exists()) f.createNewFile();
-				PrintWriter pW = new PrintWriter(new BufferedWriter(new FileWriter(f.getName(), true)));
+				PrintWriter pW = new PrintWriter(new BufferedWriter(new FileWriter(RealShopping.mandir + "realshopping.properties", true)));
 				if(notInConfig >= 4096){
 					pW.println("enable-automatic-updates:"+getAutoUpdateStr(autoUpdate));
 					notInConfig -= 4096;
-				} if(notInConfig >= 2048){
+				}System.out.println(notInConfig); if(notInConfig >= 2048){
 					pW.println("auto-protect-chests:"+autoprotect);
 					notInConfig -= 2048;
-				} if(notInConfig >= 1024){
-					pW.println("delivery-cost-zones:"+deliveryZones);//TODO add actual zones
+				}System.out.println(notInConfig); if(notInConfig >= 1024){
+					pW.println("delivery-cost-zones:"+deliveryZones);
 					notInConfig -= 1024;
-				} if(notInConfig >= 512){
+				}System.out.println(notInConfig);if(notInConfig >= 512){
 					pW.println("language-pack:"+langpack);
 					notInConfig -= 512;
-				} if(notInConfig >= 256){
+				}System.out.println(notInConfig); if(notInConfig >= 256){
 					pW.println("enable-selling-to-stores:"+enableSelling);
 					notInConfig -= 256;
-				} if(notInConfig >= 128){
+				} System.out.println(notInConfig);if(notInConfig >= 128){
 	    			pW.print("enable-shopping-carts-in-worlds:");
 	    			boolean i = true;
 	    			for(String str:cartEnabledW){
@@ -197,31 +205,54 @@ public class Config {
 	    			}
 	   				pW.println();
 					notInConfig -= 128;
-				} if(notInConfig >= 64){
+				}System.out.println(notInConfig); if(notInConfig >= 64){
 					pW.println("player-stores-create-cost:"+pstorecreate);
 					notInConfig -= 64;
-				} if(notInConfig >= 32){
+				} System.out.println(notInConfig);if(notInConfig >= 32){
 					pW.println("drop-items-at:"+dropLoc.getWorld().getName()+";"+dropLoc.getBlockX()+","+dropLoc.getBlockY()+","+dropLoc.getBlockZ());
 					notInConfig -= 32;
-				} if(notInConfig >= 16){
+				}System.out.println(notInConfig); if(notInConfig >= 16){
 					pW.println("hell-location:"+hellLoc.getWorld().getName()+";"+hellLoc.getBlockX()+","+hellLoc.getBlockY()+","+hellLoc.getBlockZ());
 					notInConfig -= 16;
-				} if(notInConfig >= 8){
+				}System.out.println(notInConfig); if(notInConfig >= 8){
 					pW.println("jail-location:"+jailLoc.getWorld().getName()+";"+jailLoc.getBlockX()+","+jailLoc.getBlockY()+","+jailLoc.getBlockZ());
 					notInConfig -= 8;
-				} if(notInConfig >= 4){
+				}System.out.println(notInConfig); if(notInConfig >= 4){
 					pW.println("keep-stolen-items-after-punish:"+keepstolen);
 					notInConfig -= 4;
-				} if(notInConfig >= 2){
+				}System.out.println(notInConfig); if(notInConfig >= 2){
 					pW.println("punishment:"+punishment);
 					notInConfig -= 2;
 				}
 				pW.close();
 				
-				if(notInConfig >= 1){
-				//	pW.println("Properties file for RealShopping v0.32");//TODO edit
-					//notInConfig -= 1;
+				if(notInConfig >= 1){//Read the file all over again, and save every line as reading
+					fstream = new FileInputStream(f);
+					br = new BufferedReader(new InputStreamReader(fstream));
+					File tempF = new File(RealShopping.mandir + "tempproperties");
+					tempF.createNewFile();
+					pW = new PrintWriter(tempF);
+					String s;
+					
+					while ((s = br.readLine()) != null){
+						if(s.length() > 33 && s.substring(0,33).equals("Properties file for RealShopping "))
+							pW.println("Properties file for RealShopping v0.32");
+						else
+							pW.println(s);
+					}
+					
+					pW.close();
+					fstream.close();
+					br.close();
+					if(f.delete()){
+						if(tempF.renameTo(f))
+							notInConfig -= 1;
+						else
+							RealShopping.log.info("Couldn't save tempproperties as realshopping.properties (Error #202)");
+					} else
+						RealShopping.log.info("Couldn't save tempproperties as realshopping.properties (Error #201)");
 				}
+				System.out.println(notInConfig);
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -242,10 +273,10 @@ public class Config {
 
 class Zone {
 	private int bounds = 0;
-	private float cost = 0.0f;
+	private double cost = 0.0;
 	private int percent = -1; //Ignore cost if percent != -1
 	
-	public Zone(int bounds, float cost){
+	public Zone(int bounds, double cost){
 		if(!setBounds(bounds)) RealShopping.log.info("Could not create delivery zone. Wrong bounds value: " + bounds);
 		if(!setCost(cost)) RealShopping.log.info("Could not create delivery zone. Wrong cost value: " + cost);
 	}
@@ -255,7 +286,7 @@ class Zone {
 		if(!setPercent(percent)) RealShopping.log.info("Could not create delivery zone. Wrong percent value: " + percent);
 	}
 	
-	public Zone(boolean multiworld, float cost){
+	public Zone(boolean multiworld, double cost){
 		setMultiworld();
 		if(!setCost(cost)) RealShopping.log.info("Could not create delivery zone. Wrong cost value: " + cost);
 	}
@@ -280,13 +311,14 @@ class Zone {
 		bounds = -1;
 	}
 
-	public float getCost() {
+	public double getCost() {
 		return cost;
 	}
 
-	public boolean setCost(float cost) {
+	public boolean setCost(double cost) {
 		if(cost >= 0){
-			this.cost = ((int)(cost * 100))/100;
+			this.cost = (Math.round(cost * 100));
+			this.cost /= 100;
 			return true;
 		} else return false;
 	}

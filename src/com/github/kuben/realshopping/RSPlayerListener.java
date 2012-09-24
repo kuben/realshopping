@@ -20,6 +20,8 @@
 package com.github.kuben.realshopping;
 
 import java.awt.Event;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
@@ -37,6 +39,7 @@ import org.bukkit.entity.StorageMinecart;
 import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.Event.Result;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
@@ -52,6 +55,7 @@ import org.bukkit.inventory.ItemStack;
 import com.sun.xml.internal.stream.Entity;
 
 public class RSPlayerListener implements Listener {
+	
 	@EventHandler (priority = EventPriority.HIGH)
 	public void onTeleport(PlayerTeleportEvent event){
 		Player player = event.getPlayer();
@@ -78,11 +82,11 @@ public class RSPlayerListener implements Listener {
 		Player player = event.getPlayer();
 		Block b = event.getClickedBlock();
 		if(event.getItem() != null && RealShopping.forbiddenInStore.contains(event.getItem().getTypeId()))
-			//if(RealShopping.PInvMap.containsKey(player.getName()))
-				//if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR){
-					player.sendMessage(player.getTicksLived() + " " + event.getItem().getType());
-					//event.setCancelled(true);
-				//}
+			if(RealShopping.PInvMap.containsKey(player.getName()))
+				if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR){
+					player.sendMessage(ChatColor.RED + "You can't use that item in store.");
+					event.setUseItemInHand(Result.DENY);
+				}
 		if(RealShopping.jailedPlayers.containsKey(player.getName())) event.setCancelled(true);
 		else {
 			if(event.hasBlock())
@@ -151,13 +155,14 @@ public class RSPlayerListener implements Listener {
 		}
 	}
 	
-	@EventHandler
+	/*@EventHandler
 	public void onEat(FoodLevelChangeEvent event){
 		Player p = Bukkit.getServer().getPlayer(event.getEntity().getName());
 		if(event.getFoodLevel() > p.getFoodLevel()){//If player has eaten
+			
 			p.sendMessage(p.getTicksLived() + " " + event.getFoodLevel());
 		}
-	}
+	}*/
 	
     @EventHandler(priority = EventPriority.HIGH)
     public void onInventoryOpenEvent(InventoryOpenEvent event){
@@ -167,7 +172,7 @@ public class RSPlayerListener implements Listener {
         			event.setCancelled(true);
         			((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + "[RealShopping] " + "This chest is protected. You have to be inside a store to open it.");
         		}
-            ((CommandSender) event.getPlayer()).sendMessage(((Chest) event.getInventory().getHolder()).getLocation() + "");
+            //((CommandSender) event.getPlayer()).sendMessage(((Chest) event.getInventory().getHolder()).getLocation() + "");
         	}
         } else if (event.getInventory().getHolder() instanceof DoubleChest){
         	if(!RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//If player is not in store
@@ -176,7 +181,7 @@ public class RSPlayerListener implements Listener {
         			event.setCancelled(true);
         			((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + "[RealShopping] " + "This chest is protected. You have to be inside a store to open it.");
         		}
-            ((CommandSender) event.getPlayer()).sendMessage(((DoubleChest) event.getInventory().getHolder()).getLocation() + " dc");
+            //((CommandSender) event.getPlayer()).sendMessage(((DoubleChest) event.getInventory().getHolder()).getLocation() + " dc");
         	}
         }
     }

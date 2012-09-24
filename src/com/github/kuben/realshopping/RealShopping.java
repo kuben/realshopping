@@ -94,8 +94,7 @@ import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 public class RealShopping extends JavaPlugin {//TODO alert about vault
 	//TODO update v numbers
 	//TODO read protected chests
-	//TODO add zones config, plus cost
-	//TODO food
+	//TODO add zones/shipped read write
 	//TODO updater
 	public static Map<String, RSPlayerInventory> PInvMap;
 	
@@ -105,7 +104,7 @@ public class RealShopping extends JavaPlugin {//TODO alert about vault
 	public static Map<String, String> playerEntrances;
 	public static Map<String, String> playerExits;
 	public static Map<String, Location> jailedPlayers;
-	public static Map<String, List<ItemStack[]>> shippedToCollect;
+	public static Map<String, List<ShippedPackage>> shippedToCollect;
 	public static Map<Location, Integer> forbiddenTpLocs;
 	
 	public static Set<Integer> forbiddenInStore;
@@ -132,7 +131,7 @@ public class RealShopping extends JavaPlugin {//TODO alert about vault
     	playerEntrances = new HashMap<String, String>();
     	playerExits = new HashMap<String, String>();
     	jailedPlayers = new HashMap<String, Location>();
-    	shippedToCollect = new HashMap<String, List<ItemStack[]>>();
+    	shippedToCollect = new HashMap<String, List<ShippedPackage>>();
     	forbiddenTpLocs = new HashMap<Location, Integer>();
     	
     	forbiddenInStore = new HashSet<Integer>();
@@ -194,6 +193,7 @@ public class RealShopping extends JavaPlugin {//TODO alert about vault
             tpLocBlacklist = true;
             
     		Config.initialize();
+    		System.out.println(Config.zoneArray.length);
     		
     		File f;
     		FileInputStream fstream;
@@ -265,7 +265,7 @@ public class RealShopping extends JavaPlugin {//TODO alert about vault
 			} catch(IOException e) {
 				e.printStackTrace();
     			log.info("Failed while reading shops.db");
-			}
+			}System.out.println("shops loaded");
     		try {
     			f = new File(mandir + "prices.xml");
     			if(!f.exists()){
@@ -276,7 +276,7 @@ public class RealShopping extends JavaPlugin {//TODO alert about vault
     		} catch (Exception e){
 				e.printStackTrace();
     			log.info("Failed while reading prices.xml");
-    		}
+    		}System.out.println("prices loaded");
     		
     		try {
     			f = new File(mandir + "inventories.db");
@@ -295,7 +295,7 @@ public class RealShopping extends JavaPlugin {//TODO alert about vault
     		} catch (Exception e){
 				e.printStackTrace();
     			log.info("Failed while reading inventories.db");
-    		}
+    		}System.out.println("loaded inventories");
     		
     		try {
     			f = new File(mandir + "jailed.db");
@@ -317,7 +317,7 @@ public class RealShopping extends JavaPlugin {//TODO alert about vault
     		} catch (Exception e){
 				e.printStackTrace();
     			log.info("Failed while reading jailed.db");
-    		}
+    		}System.out.println("loaded jailed");
     		
     		try {
     			f = new File(mandir + "allowedtplocs.db");
@@ -340,7 +340,7 @@ public class RealShopping extends JavaPlugin {//TODO alert about vault
     		} catch (Exception e){
 				e.printStackTrace();
     			log.info("Failed while reading allowedtplocs.db");
-    		}
+    		}System.out.println("loaded allowedtplocs");
     		
     		try {
     			f = new File(mandir + "toclaim.db");
@@ -386,7 +386,7 @@ public class RealShopping extends JavaPlugin {//TODO alert about vault
     		} catch (Exception e) {
     			e.printStackTrace();
     			log.info("Failed while reading toclaim.db");
-    		}
+    		}System.out.println("loaded toClaim");
     		
     		try {
     			f = new File(mandir + "shipped.db");
@@ -395,9 +395,12 @@ public class RealShopping extends JavaPlugin {//TODO alert about vault
     				br = new BufferedReader(new InputStreamReader(fstream));
     				String s;
     				while ((s = br.readLine()) != null){
-    					shippedToCollect.put(s.split("\\[\\]")[0], new ArrayList<ItemStack[]>());
+    					shippedToCollect.put(s.split("\\[\\]")[0], new ArrayList<ShippedPackage>());
     					for(int i = 1;i < s.split("\\[\\]").length;i++){
     						ItemStack[] iS = new ItemStack[27];
+    						Float cost = null;
+    						Location loc = null;
+    						long timeStamp = 0;//Add read ts loc
     						for(int j = 0;j < iS.length && j < 27;j++){
     							if(s.split("\\[\\]")[i].split(";")[j].equals("null")) iS[j] = null;
     							else iS[j] = new ItemStack(Integer.parseInt(s.split("\\[\\]")[i].split(";")[j].split(",")[0]),
@@ -405,7 +408,7 @@ public class RealShopping extends JavaPlugin {//TODO alert about vault
         								Short.parseShort(s.split("\\[\\]")[i].split(";")[j].split(",")[2]),
         								Byte.parseByte(s.split("\\[\\]")[i].split(";")[j].split(",")[3]));
     						}
-    						shippedToCollect.get(s.split("\\[\\]")[0]).add(iS);
+    						shippedToCollect.get(s.split("\\[\\]")[0]).add(new ShippedPackage(iS, cost, loc, timeStamp));
     					}
     				}
     				fstream.close();
@@ -415,7 +418,7 @@ public class RealShopping extends JavaPlugin {//TODO alert about vault
     		} catch (Exception e) {
     			e.printStackTrace();
     			log.info("Failed while reading shipped.db");
-    		}
+    		}System.out.println("loaded shipped");
     		
     		f = new File(mandir + "langpacks/");
     		if(!f.exists()) f.mkdir();
@@ -456,18 +459,18 @@ public class RealShopping extends JavaPlugin {//TODO alert about vault
 			}
 			pW.close();
 			
-			keys = shippedToCollect.keySet().toArray();
+/*			keys = shippedToCollect.keySet().toArray();
 			f = new File(mandir+"shipped.db");
 			if(!f.exists()) f.createNewFile();
 			pW = new PrintWriter(f);
 			for(int i = 0;i < keys.length;i++){
 				List toCollect = shippedToCollect.get(keys[i]);
 				if(!toCollect.isEmpty()){
-					Object[] IS = toCollect.toArray();
+					Object[] keys2 = toCollect.toArray();
 					String s = keys[i].toString();
-					for(int j = 0;j < IS.length;j++){
-						ItemStack[] iS = (ItemStack[])IS[j];
-						s += "[]";
+					for(int j = 0;j < keys2.length;j++){
+						ShippedPackage iS = (ShippedPackage)keys2[j];
+						s += "[]";//TODO export function
 						for(int k = 0;k < iS.length;k++){
 							if(k > 0) s += ";";
 							if(iS[k] == null) s += "null";
@@ -477,7 +480,7 @@ public class RealShopping extends JavaPlugin {//TODO alert about vault
 					pW.println(s);
 				}
 			}
-			pW.close();
+			pW.close();*/
 			
 			saveTemporaryFile(1);//Jailed
 			saveTemporaryFile(2);//TpLocs
@@ -952,17 +955,34 @@ public class RealShopping extends JavaPlugin {//TODO alert about vault
 			}
 			sM.getInventory().setContents(newCartInv);
 			
-			if(!bought.isEmpty()){ log.info("Error #802"); System.out.println(bought);}
+			if(!bought.isEmpty()){ log.info("Error #802"); System.out.println(bought);}//TODO Check occurence
+			
+			//Calculate cost
+			float toPay = 0;
+			Object[] keys = bought2.keySet().toArray();
+
+			for(int i = 0;i < keys.length;i++){
+				int type = ((PItem) keys[i]).type;
+				Shop tempShop = shopMap.get(PInvMap.get(p.getName()).getStore());
+				int amount = bought2.get(keys[i]);
+				float cost = tempShop.prices.get(type);
+				if(tempShop.sale.containsKey(type)){//There is a sale on that item.
+					int pcnt = 100 - tempShop.sale.get(type);
+					cost *= pcnt;
+					cost = Math.round(cost);
+					cost /= 100;
+				}
+				toPay += cost * (RealShopping.maxDurMap.containsKey(type)?Math.ceil((double)amount / (double)RealShopping.maxDurMap.get(type)):amount);//Convert items durability to item amount
+			}
 			
 			//Ship
 			if(!shippedToCollect.containsKey(p.getName()))
-				shippedToCollect.put(p.getName(), new ArrayList<ItemStack[]>());
-			shippedToCollect.get(p.getName()).add(boughtIS);
+				shippedToCollect.put(p.getName(), new ArrayList<ShippedPackage>());
+			shippedToCollect.get(p.getName()).add(new ShippedPackage(boughtIS, toPay, sM.getLocation()));
 			
 			p.sendMessage(ChatColor.GREEN + LangPack.PACKAGEWAITINGTOBEDELIVERED);
 			
 			//Update player inv
-			Object[] keys = bought2.keySet().toArray();
 			for(int i = 0;i < keys.length;i++){
 				PInvMap.get(p.getName()).removeItem((PItem)keys[i], bought2.get(keys[i]));
 			}
@@ -975,10 +995,46 @@ public class RealShopping extends JavaPlugin {//TODO alert about vault
 		if(l.getBlock().getState() instanceof Chest){
 			if(shippedToCollect.containsKey(p.getName())){
 				if(shippedToCollect.get(p.getName()).size() >= id){
-					((Chest)l.getBlock().getState()).getBlockInventory().setContents(shippedToCollect.get(p.getName()).get(id - 1));
-					p.sendMessage(ChatColor.GREEN + "Filled chest with: ");
-					shippedToCollect.get(p.getName()).remove(id - 1);
-					return true;
+					boolean cont = false;
+					double cost = 0;
+					if(Config.zoneArray.length > 0){
+						int i = 0;
+						if(p.getLocation().getWorld().equals(shippedToCollect.get(p.getName()).get(id - 1).getLocationSent().getWorld())){//Same world
+							double dist = p.getLocation().distance(shippedToCollect.get(p.getName()).get(id - 1).getLocationSent());
+							while(i < Config.zoneArray.length && dist > Config.zoneArray[i].getBounds() && dist != -1){
+								System.out.println(dist + " " + Config.zoneArray[i].getBounds());
+								i++;
+							}
+						} else {
+							while(i < Config.zoneArray.length && Config.zoneArray[i].getBounds() > -1){
+								System.out.println(Config.zoneArray[i].getBounds());
+								i++;
+							}
+						}
+
+						System.out.println(Config.zoneArray[i].getBounds() + " " + (Config.zoneArray[i].getPercent() > -1?Config.zoneArray[i].getPercent() + "%":Config.zoneArray[i].getCost()+LangPack.UNIT));
+						if(Config.zoneArray[i].getPercent() == -1)
+							cost = Config.zoneArray[i].getCost();
+						else {
+							cost = shippedToCollect.get(p.getName()).get(id - 1).getCost() * Config.zoneArray[i].getPercent();
+							cost = Math.round(cost);
+							cost /= 100;
+						}
+						if(econ.getBalance(p.getName()) >= cost) cont = true;
+					} else cont = true;
+					
+					if(cont){
+						econ.withdrawPlayer(p.getName(), cost);
+						p.sendMessage(ChatColor.GREEN + "" + cost + LangPack.UNIT + " withdrawn from your account.");
+						ItemStack[] contents = ((Chest)l.getBlock().getState()).getBlockInventory().getContents();
+						for(ItemStack tempIS:contents) if(tempIS != null) p.getWorld().dropItem(p.getLocation(), tempIS);
+						
+						((Chest)l.getBlock().getState()).getBlockInventory().setContents(shippedToCollect.get(p.getName()).get(id - 1).getContents());
+						p.sendMessage(ChatColor.GREEN + "Filled chest with: ");
+						p.sendMessage(formatItemStackToMess(shippedToCollect.get(p.getName()).get(id - 1).getContents()));
+						shippedToCollect.get(p.getName()).remove(id - 1);
+						return true;
+					} else p.sendMessage(ChatColor.RED + "You can't afford to pay the delivery fee of " + cost);
 				} else p.sendMessage(ChatColor.RED + LangPack.THERESNOPACKAGEWITHTHEID + id);
 			} else p.sendMessage(ChatColor.RED + LangPack.YOUHAVENTGOTANYITEMSWAITINGTOBEDELIVERED);
 		} else p.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUARESTANDINGONISNTACHEST);

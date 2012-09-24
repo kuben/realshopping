@@ -21,6 +21,7 @@ package com.github.kuben.realshopping;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -606,7 +607,11 @@ public class RSCommandExecutor implements CommandExecutor {
     			} else if(args.length == 2 && args[0].equalsIgnoreCase("inspect")){
         			if(rs.shippedToCollect.containsKey(player.getName())){
         				try {
-            				String str = rs.formatItemStackToMess(rs.shippedToCollect.get(player.getName()).get(Integer.parseInt(args[1]) - 1));
+        					ShippedPackage tempSP = rs.shippedToCollect.get(player.getName()).get(Integer.parseInt(args[1]) - 1);
+        					sender.sendMessage(ChatColor.GREEN + "Package sent " + new Date(tempSP.getDateSent()) + " from "
+        							+ tempSP.getLocationSent().getBlockX() + "," + tempSP.getLocationSent().getBlockY() + "," + tempSP.getLocationSent().getBlockZ()
+        							+ " in world " + tempSP.getLocationSent().getWorld().getName());//TODO LangPack + ev date
+            				String str = rs.formatItemStackToMess(tempSP.getContents());
             				sender.sendMessage(ChatColor.GREEN + LangPack.THECONTENTSOFTHEPACKAGEARE + str);
             				return true;
         				} catch (ArrayIndexOutOfBoundsException e){

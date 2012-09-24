@@ -1,12 +1,14 @@
 package com.github.kuben.realshopping;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -347,6 +349,55 @@ class PItem{
 		if (type != other.type)
 			return false;
 		return true;
+	}
+}
+
+class ShippedPackage{
+	
+	private ItemStack[] contents;
+	private float cost;
+	private long dateSent;
+	private Location locationSent;
+	
+	public ShippedPackage(ItemStack[] contents, float cost, Location locationSent){
+		this.contents = contents;
+		this.cost = cost;
+		this.locationSent = locationSent;
+		this.dateSent = System.currentTimeMillis();
+	}
+	
+	public ShippedPackage(ItemStack[] contents, float cost, Location locationSent, long dateSent){
+		this.contents = contents;
+		this.cost = cost;
+		this.locationSent = locationSent;
+		this.dateSent = dateSent;
+	}
+	
+	public ItemStack[] getContents(){
+		return contents;
+	}
+	
+	public long getDateSent(){
+		return dateSent;
+	}
+	
+	public float getCost(){
+		return cost;
+	}
+	
+	public Location getLocationSent(){
+		return locationSent;
+	}
+	
+	@Override
+	public String toString(){
+		String s = "Shipped Package sent " + new Date(dateSent) + " from "
+				+ locationSent.getBlockX() + "," + locationSent.getBlockY() + "," + locationSent.getBlockZ()
+				+ " in world " + locationSent.getWorld() + " with ";
+		for(ItemStack iS:contents){
+			if(iS != null) s += iS + ", ";
+		}
+		return s;
 	}
 }
 
