@@ -38,7 +38,7 @@ import org.bukkit.material.MaterialData;
 public class Shop {
 
 	public Map<Integer, Float> prices = new HashMap<Integer, Float>();
-	public static Map<String, List<ItemStack>> stolenToClaim = new HashMap<String, List<ItemStack>>();
+	public static Set<ItemStack> stolenToClaim = new HashSet<ItemStack>();
 	
 	public Map<Location,ArrayList<Integer[]>> chests = new HashMap<Location, ArrayList<Integer[]>>();
 	public Map<String,ArrayList<ItemStack>> sellToStore = new HashMap<String, ArrayList<ItemStack>>();
@@ -136,9 +136,9 @@ public class Shop {
 		} else return "";
 	}
 	
-	public String exportToClaim(String player){
+	public String exportToClaim(){
 		String s = "";
-		for(ItemStack tempIS:stolenToClaim.get(player)){
+		for(ItemStack tempIS:stolenToClaim){
 			if(tempIS != null) {
 				s += "," + tempIS.getTypeId() + ":" + tempIS.getAmount() + ":" + tempIS.getDurability() + ":" + tempIS.getData().getData();
 				Object[] ench = tempIS.getEnchantments().keySet().toArray();

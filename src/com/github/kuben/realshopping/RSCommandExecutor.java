@@ -23,7 +23,9 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -147,11 +149,11 @@ public class RSCommandExecutor implements CommandExecutor {
     	    		if(args.length == 2 && args[1].equalsIgnoreCase("collect")){
     	        		if(player != null){
     	        			if(!rs.shopMap.get(args[0]).owner.equalsIgnoreCase("@admin")){
-    	        				if(rs.shopMap.get(args[0]).stolenToClaim.containsKey(player.getName())){
-    	        					for(ItemStack iS:rs.shopMap.get(args[0]).stolenToClaim.get(player.getName())){
+    	        				if(!rs.shopMap.get(args[0]).stolenToClaim.isEmpty()){
+    	        					for(ItemStack iS:rs.shopMap.get(args[0]).stolenToClaim){
     	        						player.getWorld().dropItem(player.getLocation(), iS);
     	        					}
-    	        					rs.shopMap.get(args[0]).stolenToClaim.remove(player.getName());
+    	        					rs.shopMap.get(args[0]).stolenToClaim.clear();
     	        					return true;
     	        				} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
     	        			}
@@ -161,9 +163,9 @@ public class RSCommandExecutor implements CommandExecutor {
     	        			if(!rs.shopMap.get(args[0]).owner.equalsIgnoreCase("@admin")){
     	        				if(args[2].equalsIgnoreCase("-c")){
     	        					if(player.getLocation().subtract(0, 1, 0).getBlock().getState() instanceof Chest){
-    	    	        				if(rs.shopMap.get(args[0]).stolenToClaim.containsKey(player.getName())){
+    	    	        				if(!rs.shopMap.get(args[0]).stolenToClaim.isEmpty()){
     	    	        					ItemStack[] tempIs = new ItemStack[27];
-    	    	        					ItemStack[] origIs = rs.shopMap.get(args[0]).stolenToClaim.get(player.getName()).toArray(new ItemStack[0]);
+    	    	        					ItemStack[] origIs = rs.shopMap.get(args[0]).stolenToClaim.toArray(new ItemStack[0]);
     	    	        					int i = 0;
     	    	        					for(;i < 27 && i < origIs.length;i++){
     	    	        						tempIs[i] = origIs[i];
@@ -172,36 +174,36 @@ public class RSCommandExecutor implements CommandExecutor {
     	    	        					for(ItemStack tempIS:oldCont) if(tempIS != null) player.getWorld().dropItem(player.getLocation(), tempIS);
     	    	        					((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().setContents(tempIs);
     	    	        					player.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH + i + LangPack.ITEMS);
-    	    	        					if(origIs.length < 28) rs.shopMap.get(args[0]).stolenToClaim.remove(player.getName());
+    	    	        					if(origIs.length < 28) rs.shopMap.get(args[0]).stolenToClaim.clear();
     	    	        					else {
-    	    	        						List newIs = new ArrayList();
+    	    	        						Set<ItemStack> newIs = new HashSet<ItemStack>();
     	    	        						for(;i < origIs.length;i++){
     	    	        							newIs.add(origIs[i]);
    	    	        							}
-    	    	        						rs.shopMap.get(args[0]).stolenToClaim.put(player.getName(), newIs);
+    	    	        						rs.shopMap.get(args[0]).stolenToClaim = newIs;
     	    	        					}
     	        							return true;
     	    	        				} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
     	        					} else sender.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUARESTANDINGONISNTACHEST);
     	        				} else {
     	        					try {
-    	    	        				if(rs.shopMap.get(args[0]).stolenToClaim.containsKey(player.getName())){
+    	    	        				if(!rs.shopMap.get(args[0]).stolenToClaim.isEmpty()){
     	    	        					int amount = Integer.parseInt(args[2]);
-    	    	        					ItemStack[] tempIs = (ItemStack[])rs.shopMap.get(args[0]).stolenToClaim.get(player.getName()).toArray();
+    	    	        					ItemStack[] tempIs = (ItemStack[])rs.shopMap.get(args[0]).stolenToClaim.toArray();
     	    	        					int i = 0;
     	    	        					for(;i < amount && i < tempIs.length;i++){
     	    	        						player.getWorld().dropItem(player.getLocation(), tempIs[i]);
     	    	        					}
     	    	        					player.sendMessage(ChatColor.GREEN + LangPack.DROPPED + i + LangPack.ITEMS);
-    	    	        					if(tempIs.length < 28) rs.shopMap.get(args[0]).stolenToClaim.remove(player.getName());
+    	    	        					if(tempIs.length < 28) rs.shopMap.get(args[0]).stolenToClaim.clear();
     	    	        					else {
-    	    	        						List newIs = new ArrayList();
+    	    	        						Set<ItemStack> newIs = new HashSet<ItemStack>();
     	    	        						for(;i < tempIs.length;i++){
     	    	        							newIs.add(tempIs[i]);
    	    	        							}
-    	    	        						rs.shopMap.get(args[0]).stolenToClaim.put(player.getName(), newIs);
+    	    	        						rs.shopMap.get(args[0]).stolenToClaim = newIs;
     	    	        					}
-    	    	        					rs.shopMap.get(args[0]).stolenToClaim.remove(player.getName());
+//    	    	        					rs.shopMap.get(args[0]).stolenToClaim.clear();??????????
     	    	        					return true;
     	    	        				} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
     	        					} catch(NumberFormatException e){
@@ -216,9 +218,9 @@ public class RSCommandExecutor implements CommandExecutor {
     	        				if(args[2].equalsIgnoreCase("-c")){
     	        					try {
         	        					if(player.getLocation().subtract(0, 1, 0).getBlock().getState() instanceof Chest){
-        	    	        				if(rs.shopMap.get(args[0]).stolenToClaim.containsKey(player.getName())){
+        	    	        				if(!rs.shopMap.get(args[0]).stolenToClaim.isEmpty()){
         	    	        					int amount = Integer.parseInt(args[2]);
-        	    	        					ItemStack[] origIs = (ItemStack[]) rs.shopMap.get(args[0]).stolenToClaim.get(player.getName()).toArray();
+        	    	        					ItemStack[] origIs = (ItemStack[]) rs.shopMap.get(args[0]).stolenToClaim.toArray();
         	    	        					ItemStack[] tempIs = new ItemStack[Math.min(Math.min(27, amount),origIs.length)];
         	    	        					int i = 0;
         	    	        					for(;i < tempIs.length;i++){
@@ -228,13 +230,13 @@ public class RSCommandExecutor implements CommandExecutor {
         	    	        					for(ItemStack tempIS:oldCont) if(tempIS != null) player.getWorld().dropItem(player.getLocation(), tempIS);
         	    	        					((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().setContents(tempIs);
         	    	        					player.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH + i + LangPack.ITEMS);
-        	    	        					if(origIs.length <= Math.min(27, amount)) rs.shopMap.get(args[0]).stolenToClaim.remove(player.getName());
+        	    	        					if(origIs.length <= Math.min(27, amount)) rs.shopMap.get(args[0]).stolenToClaim.clear();
         	    	        					else {
-        	    	        						List newIs = new ArrayList();
-        	    	        						for(;i < origIs.length;i++){
-        	    	        							newIs.add(origIs[i]);
+        	    	        						Set<ItemStack> newIs = new HashSet<ItemStack>();
+        	    	        						for(;i < tempIs.length;i++){
+        	    	        							newIs.add(tempIs[i]);
        	    	        							}
-        	    	        						rs.shopMap.get(args[0]).stolenToClaim.put(player.getName(), newIs);
+        	    	        						rs.shopMap.get(args[0]).stolenToClaim = newIs;
         	    	        					}
         	        							return true;
         	    	        				} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
