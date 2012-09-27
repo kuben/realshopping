@@ -47,6 +47,11 @@ public class RSCommandExecutor implements CommandExecutor {
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
     	
+		if(!RealShopping.working.equals("")){
+			sender.sendMessage(ChatColor.RED + RealShopping.working);
+			return false;
+		}
+		
     	Player player = null;
     	if (sender instanceof Player) {
     		player = (Player) sender;
@@ -158,9 +163,9 @@ public class RSCommandExecutor implements CommandExecutor {
     	        					if(player.getLocation().subtract(0, 1, 0).getBlock().getState() instanceof Chest){
     	    	        				if(rs.shopMap.get(args[0]).stolenToClaim.containsKey(player.getName())){
     	    	        					ItemStack[] tempIs = new ItemStack[27];
-    	    	        					ItemStack[] origIs = (ItemStack[]) rs.shopMap.get(args[0]).stolenToClaim.get(player.getName()).toArray();
+    	    	        					ItemStack[] origIs = rs.shopMap.get(args[0]).stolenToClaim.get(player.getName()).toArray(new ItemStack[0]);
     	    	        					int i = 0;
-    	    	        					for(;i < 27 || i < origIs.length;i++){
+    	    	        					for(;i < 27 && i < origIs.length;i++){
     	    	        						tempIs[i] = origIs[i];
     	    	        					}
     	    	        					ItemStack[] oldCont = ((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().getContents();
@@ -608,9 +613,9 @@ public class RSCommandExecutor implements CommandExecutor {
         			if(rs.shippedToCollect.containsKey(player.getName())){
         				try {
         					ShippedPackage tempSP = rs.shippedToCollect.get(player.getName()).get(Integer.parseInt(args[1]) - 1);
-        					sender.sendMessage(ChatColor.GREEN + "Package sent " + new Date(tempSP.getDateSent()) + " from "
+        					sender.sendMessage(ChatColor.GREEN + LangPack.PACKAGESENT + new Date(tempSP.getDateSent()) + LangPack.FROM
         							+ tempSP.getLocationSent().getBlockX() + "," + tempSP.getLocationSent().getBlockY() + "," + tempSP.getLocationSent().getBlockZ()
-        							+ " in world " + tempSP.getLocationSent().getWorld().getName());//TODO LangPack + ev date
+        							+ LangPack.INWORLD + tempSP.getLocationSent().getWorld().getName());
             				String str = rs.formatItemStackToMess(tempSP.getContents());
             				sender.sendMessage(ChatColor.GREEN + LangPack.THECONTENTSOFTHEPACKAGEARE + str);
             				return true;

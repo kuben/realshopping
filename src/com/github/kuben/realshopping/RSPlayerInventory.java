@@ -389,6 +389,21 @@ class ShippedPackage{
 		return locationSent;
 	}
 	
+	public String exportContents(){
+		String s = "";
+		for(ItemStack tempIS:contents){
+			if(tempIS == null) s += ",null";
+			else {
+				s += "," + tempIS.getTypeId() + ":" + tempIS.getAmount() + ":" + tempIS.getDurability() + ":" + tempIS.getData().getData();
+				Object[] ench = tempIS.getEnchantments().keySet().toArray();
+				for(Object en:ench){
+					s += ":" + ((Enchantment)en).getId() + ";" + tempIS.getEnchantments().get(en);
+				}
+			}
+		}
+		return (s.length() > 0)?s.substring(1):"";
+	}
+	
 	@Override
 	public String toString(){
 		String s = "Shipped Package sent " + new Date(dateSent) + " from "
@@ -402,19 +417,6 @@ class ShippedPackage{
 }
 
 class Utils{
-	/*public static Map joinMaps(Map<? extends Object,Integer> uno, Map<? extends Object,Integer> dos){//Preserves old values
-		if(uno.keySet().getClass().equals(dos.keySet().getClass())){
-			System.out.println(uno);
-			Object[] keys = dos.keySet().toArray();
-			for(Object o:keys){
-				if(uno.containsKey(o)) uno.put(o, uno.get(o) + dos.get(o));
-				else uno.put((uno.keySet().getClass().newInstance())o, dos.get(o));
-			}
-			System.out.println(uno);
-			return uno;
-		}
-		return false;//Cast exception too?
-	}*/
 	public static Map joinMaps(Map<PItem,Integer> uno, Map<PItem,Integer> dos){//Preserves old values
 		System.out.println(uno);
 		PItem[] keys = dos.keySet().toArray(new PItem[0]);

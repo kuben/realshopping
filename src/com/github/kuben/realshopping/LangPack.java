@@ -160,6 +160,9 @@ public class LangPack {
 	public static String ISNTONLINEKICK;
 	public static String PLAYERSINSTORE;
 	public static String STORENOTEMPTY;
+	public static String PACKAGESENT;
+	public static String FROM;
+	public static String INWORLD;
 	
 	public static void initialize(String lang){
 		THISCOMMANDCANNOTBEUSEDFROMCONSOLE = "This command cannot be used from console";
@@ -248,6 +251,9 @@ public class LangPack {
 		YOUDONTHAVEANYPACKAGESTOPICKUP = "You don't have any packages to pick up.";
 		TOPICKUP = " to pick up.";
 		YOUHAVETOSPECIFYTHEID_ = "You have to specify the id of the package you want to inspect.";
+		PACKAGESENT = "Package sent ";
+		FROM = " from ";
+		INWORLD = " in world ";
 		THECONTENTSOFTHEPACKAGEARE = "The contents of the package are: ";
 		YOUARENTPERMITTEDTOEMANAGETHISSTORE = "You aren't permitted to manage this store.";
 		DOESNTEXIST = " doesn't exist.";
@@ -429,6 +435,9 @@ public class LangPack {
 					else if(name.equals("ISNTONLINEKICK")) ISNTONLINEKICK = el.getAttribute("value");
 					else if(name.equals("PLAYERSINSTORE")) PLAYERSINSTORE = el.getAttribute("value");
 					else if(name.equals("STORENOTEMPTY")) STORENOTEMPTY = el.getAttribute("value");
+					else if(name.equals("PACKAGESENT")) PACKAGESENT = el.getAttribute("value");
+					else if(name.equals("FROM")) FROM = el.getAttribute("value");
+					else if(name.equals("INWORLD")) INWORLD = el.getAttribute("value");
 					
 				}
 				RealShopping.log.info("Loaded " + lang + " language pack.");

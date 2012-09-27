@@ -84,7 +84,7 @@ public class RSPlayerListener implements Listener {
 		if(event.getItem() != null && RealShopping.forbiddenInStore.contains(event.getItem().getTypeId()))
 			if(RealShopping.PInvMap.containsKey(player.getName()))
 				if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR){
-					player.sendMessage(ChatColor.RED + "You can't use that item in store.");
+					player.sendMessage(ChatColor.RED + "You can't use that item in store.");//TODO lang
 					event.setUseItemInHand(Result.DENY);
 				}
 		if(RealShopping.jailedPlayers.containsKey(player.getName())) event.setCancelled(true);
@@ -98,11 +98,11 @@ public class RSPlayerListener implements Listener {
 							if(player.hasPermission("realshopping.rsenter")) event.setCancelled(RealShopping.enter(player, false));
 						}
 					}
-				} else if(b.getType() == Material.SAND) {
+				}/* else if(b.getType() == Material.SAND) {
 					if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
 						player.setFoodLevel(player.getFoodLevel() - 1);
 					}
-				} else if(b.getType() == Material.OBSIDIAN) {
+				}*/ else if(b.getType() == Material.OBSIDIAN) {
 					if(RealShopping.PInvMap.containsKey(player.getName())){
 						if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.STEP){
 							if(event.getAction() == Action.RIGHT_CLICK_BLOCK){

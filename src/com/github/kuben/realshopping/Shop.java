@@ -30,6 +30,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.bukkit.Material;
 
 import org.bukkit.Location;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.material.MaterialData;
@@ -127,12 +128,26 @@ public class Shop {
 
 	public String exportProtectedToString(){
 		if(!protectedChests.isEmpty()){
-			String tempS = ",";
+			String tempS = "";
 			for(Location tempL:protectedChests){
-				tempS += tempL.getWorld().getName() + ";" + (int)tempL.getX() + "," + (int)tempL.getY() + "," + (int)tempL.getZ() + ",";
+				if(!chests.containsKey(tempL)) tempS += ";" + tempL.getWorld().getName() + "," + (int)tempL.getX() + "," + (int)tempL.getY() + "," + (int)tempL.getZ();
 			}
-			return tempS.substring(1);
+			return (tempS.length() > 0)?tempS.substring(1):"";
 		} else return "";
+	}
+	
+	public String exportToClaim(String player){
+		String s = "";
+		for(ItemStack tempIS:stolenToClaim.get(player)){
+			if(tempIS != null) {
+				s += "," + tempIS.getTypeId() + ":" + tempIS.getAmount() + ":" + tempIS.getDurability() + ":" + tempIS.getData().getData();
+				Object[] ench = tempIS.getEnchantments().keySet().toArray();
+				for(Object en:ench){
+					s += ":" + ((Enchantment)en).getId() + ";" + tempIS.getEnchantments().get(en);
+				}
+			}
+		}
+		return (s.length() > 0)?s.substring(1):"";
 	}
 	
 	@Override
