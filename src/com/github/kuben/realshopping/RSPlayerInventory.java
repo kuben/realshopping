@@ -232,7 +232,6 @@ public class RSPlayerInventory {
 	}
 	
 	public boolean hasItem(ItemStack iS){
-		System.out.println(items.containsKey(new PItem(iS)));
 		return items.containsKey(new PItem(iS));
 	}
 	
@@ -418,13 +417,11 @@ class ShippedPackage{
 
 class Utils{
 	public static Map joinMaps(Map<PItem,Integer> uno, Map<PItem,Integer> dos){//Preserves old values
-		System.out.println(uno);
 		PItem[] keys = dos.keySet().toArray(new PItem[0]);
 		for(PItem o:keys){
 			if(uno.containsKey(o)) uno.put(o, uno.get(o) + dos.get(o));
 			else uno.put(o, dos.get(o));
 		}
-		System.out.println(uno);
 		return uno;
 	}
 }

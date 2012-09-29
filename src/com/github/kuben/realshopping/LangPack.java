@@ -163,10 +163,14 @@ public class LangPack {
 	public static String PACKAGESENT;
 	public static String FROM;
 	public static String INWORLD;
+	public static String YOUCANTUSETHATITEMINSTORE;
+	public static String THISCHESTISPROTECTED;
 	
 	public static void initialize(String lang){
 		THISCOMMANDCANNOTBEUSEDFROMCONSOLE = "This command cannot be used from console";
 		REALSHOPPINGRELOADED = "RealShopping reloaded.";
+		YOUCANTUSETHATITEMINSTORE = "You can't use that item in store.";
+		THISCHESTISPROTECTED = "This chest is protected. You have to be inside a store to open it.";
 		YOUENTERED = "You entered ";
 		YOULEFT = "You left ";
 		YOUAREBANNEDFROM = "You are banned from ";
@@ -438,6 +442,8 @@ public class LangPack {
 					else if(name.equals("PACKAGESENT")) PACKAGESENT = el.getAttribute("value");
 					else if(name.equals("FROM")) FROM = el.getAttribute("value");
 					else if(name.equals("INWORLD")) INWORLD = el.getAttribute("value");
+					else if(name.equals("YOUCANTUSETHATITEMINSTORE")) YOUCANTUSETHATITEMINSTORE = el.getAttribute("value");
+					else if(name.equals("THISCHESTISPROTECTED")) THISCHESTISPROTECTED = el.getAttribute("value");
 					
 				}
 				RealShopping.log.info("Loaded " + lang + " language pack.");

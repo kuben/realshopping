@@ -84,7 +84,7 @@ public class RSPlayerListener implements Listener {
 		if(event.getItem() != null && RealShopping.forbiddenInStore.contains(event.getItem().getTypeId()))
 			if(RealShopping.PInvMap.containsKey(player.getName()))
 				if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR){
-					player.sendMessage(ChatColor.RED + "You can't use that item in store.");//TODO lang
+					player.sendMessage(ChatColor.RED + LangPack.YOUCANTUSETHATITEMINSTORE);
 					event.setUseItemInHand(Result.DENY);
 				}
 		if(RealShopping.jailedPlayers.containsKey(player.getName())) event.setCancelled(true);
@@ -92,17 +92,14 @@ public class RSPlayerListener implements Listener {
 			if(event.hasBlock())
 				if(b.getType() == Material.GLASS || b.getType() == Material.THIN_GLASS) {
 					if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
+						RealShopping.log.info("yes");
 						if(RealShopping.PInvMap.containsKey(player.getName())){
 							if(player.hasPermission("realshopping.rsexit")) event.setCancelled(RealShopping.exit(player, false));
 						} else {
 							if(player.hasPermission("realshopping.rsenter")) event.setCancelled(RealShopping.enter(player, false));
 						}
 					}
-				}/* else if(b.getType() == Material.SAND) {
-					if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
-						player.setFoodLevel(player.getFoodLevel() - 1);
-					}
-				}*/ else if(b.getType() == Material.OBSIDIAN) {
+				} else if(b.getType() == Material.OBSIDIAN) {
 					if(RealShopping.PInvMap.containsKey(player.getName())){
 						if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.STEP){
 							if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
@@ -155,33 +152,24 @@ public class RSPlayerListener implements Listener {
 		}
 	}
 	
-	/*@EventHandler
-	public void onEat(FoodLevelChangeEvent event){
-		Player p = Bukkit.getServer().getPlayer(event.getEntity().getName());
-		if(event.getFoodLevel() > p.getFoodLevel()){//If player has eaten
-			
-			p.sendMessage(p.getTicksLived() + " " + event.getFoodLevel());
-		}
-	}*/
-	
     @EventHandler(priority = EventPriority.HIGH)
     public void onInventoryOpenEvent(InventoryOpenEvent event){
         if (event.getInventory().getHolder() instanceof Chest){
         	if(!RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//If player is not in store
         		if(RealShopping.isChestProtected(((Chest) event.getInventory().getHolder()).getLocation())){
         			event.setCancelled(true);
-        			((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + "[RealShopping] " + "This chest is protected. You have to be inside a store to open it.");
+        			((Chest) event.getInventory().getHolder()).getInventory().getViewers().remove(event.getPlayer());
+        			((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + "[RealShopping] " + LangPack.THISCHESTISPROTECTED);
         		}
-            //((CommandSender) event.getPlayer()).sendMessage(((Chest) event.getInventory().getHolder()).getLocation() + "");
         	}
         } else if (event.getInventory().getHolder() instanceof DoubleChest){
         	if(!RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//If player is not in store
         		if(RealShopping.isChestProtected(((Chest)((DoubleChest) event.getInventory().getHolder()).getLeftSide()).getLocation())
         		| RealShopping.isChestProtected(((Chest)((DoubleChest) event.getInventory().getHolder()).getRightSide()).getLocation())){
         			event.setCancelled(true);
-        			((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + "[RealShopping] " + "This chest is protected. You have to be inside a store to open it.");
+        			((DoubleChest) event.getInventory().getHolder()).getInventory().getViewers().remove(event.getPlayer());
+        			((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + "[RealShopping] " + LangPack.THISCHESTISPROTECTED);
         		}
-            //((CommandSender) event.getPlayer()).sendMessage(((DoubleChest) event.getInventory().getHolder()).getLocation() + " dc");
         	}
         }
     }

@@ -176,11 +176,9 @@ public class RSCommandExecutor implements CommandExecutor {
     	    	        					player.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH + i + LangPack.ITEMS);
     	    	        					if(origIs.length < 28) rs.shopMap.get(args[0]).stolenToClaim.clear();
     	    	        					else {
-    	    	        						Set<ItemStack> newIs = new HashSet<ItemStack>();
-    	    	        						for(;i < origIs.length;i++){
-    	    	        							newIs.add(origIs[i]);
+    	    	        						for(;i < tempIs.length;i++){
+    	    	        							rs.shopMap.get(args[0]).stolenToClaim.remove(tempIs[i]);
    	    	        							}
-    	    	        						rs.shopMap.get(args[0]).stolenToClaim = newIs;
     	    	        					}
     	        							return true;
     	    	        				} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
@@ -189,7 +187,7 @@ public class RSCommandExecutor implements CommandExecutor {
     	        					try {
     	    	        				if(!rs.shopMap.get(args[0]).stolenToClaim.isEmpty()){
     	    	        					int amount = Integer.parseInt(args[2]);
-    	    	        					ItemStack[] tempIs = (ItemStack[])rs.shopMap.get(args[0]).stolenToClaim.toArray();
+    	    	        					ItemStack[] tempIs = rs.shopMap.get(args[0]).stolenToClaim.toArray(new ItemStack[0]);
     	    	        					int i = 0;
     	    	        					for(;i < amount && i < tempIs.length;i++){
     	    	        						player.getWorld().dropItem(player.getLocation(), tempIs[i]);
@@ -197,13 +195,10 @@ public class RSCommandExecutor implements CommandExecutor {
     	    	        					player.sendMessage(ChatColor.GREEN + LangPack.DROPPED + i + LangPack.ITEMS);
     	    	        					if(tempIs.length < 28) rs.shopMap.get(args[0]).stolenToClaim.clear();
     	    	        					else {
-    	    	        						Set<ItemStack> newIs = new HashSet<ItemStack>();
-    	    	        						for(;i < tempIs.length;i++){
-    	    	        							newIs.add(tempIs[i]);
+    	    	        						for(;i < amount && i < tempIs.length;i++){
+    	    	        							rs.shopMap.get(args[0]).stolenToClaim.remove(tempIs[i]);
    	    	        							}
-    	    	        						rs.shopMap.get(args[0]).stolenToClaim = newIs;
     	    	        					}
-//    	    	        					rs.shopMap.get(args[0]).stolenToClaim.clear();??????????
     	    	        					return true;
     	    	        				} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
     	        					} catch(NumberFormatException e){
@@ -219,8 +214,8 @@ public class RSCommandExecutor implements CommandExecutor {
     	        					try {
         	        					if(player.getLocation().subtract(0, 1, 0).getBlock().getState() instanceof Chest){
         	    	        				if(!rs.shopMap.get(args[0]).stolenToClaim.isEmpty()){
-        	    	        					int amount = Integer.parseInt(args[2]);
-        	    	        					ItemStack[] origIs = (ItemStack[]) rs.shopMap.get(args[0]).stolenToClaim.toArray();
+        	    	        					int amount = Integer.parseInt(args[3]);
+        	    	        					ItemStack[] origIs = rs.shopMap.get(args[0]).stolenToClaim.toArray(new ItemStack[0]);
         	    	        					ItemStack[] tempIs = new ItemStack[Math.min(Math.min(27, amount),origIs.length)];
         	    	        					int i = 0;
         	    	        					for(;i < tempIs.length;i++){
@@ -232,17 +227,15 @@ public class RSCommandExecutor implements CommandExecutor {
         	    	        					player.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH + i + LangPack.ITEMS);
         	    	        					if(origIs.length <= Math.min(27, amount)) rs.shopMap.get(args[0]).stolenToClaim.clear();
         	    	        					else {
-        	    	        						Set<ItemStack> newIs = new HashSet<ItemStack>();
         	    	        						for(;i < tempIs.length;i++){
-        	    	        							newIs.add(tempIs[i]);
+        	    	        							rs.shopMap.get(args[0]).stolenToClaim.remove(tempIs[i]);
        	    	        							}
-        	    	        						rs.shopMap.get(args[0]).stolenToClaim = newIs;
         	    	        					}
         	        							return true;
         	    	        				} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
         	        					} else sender.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUARESTANDINGONISNTACHEST);
     	        					} catch(NumberFormatException e){
-    	        						sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTANINTEGER);
+    	        						sender.sendMessage(ChatColor.RED + args[3] + LangPack.ISNOTANINTEGER);
     	        					}
     	        				}
     	        			}
