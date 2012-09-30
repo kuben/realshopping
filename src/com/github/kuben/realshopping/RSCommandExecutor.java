@@ -277,7 +277,6 @@ public class RSCommandExecutor implements CommandExecutor {
     	     			rs.updateEntrancesDb();
     	     			return true;
     	    		} else if(args.length == 3 && args[1].equalsIgnoreCase("kick")){
-    	    			for(String str:rs.getPlayersInStore(args[0].toLowerCase())) System.out.println(str);
     	     			if(!rs.getPlayersInStore(args[0].toLowerCase())[0].equals("")){
     	     				boolean cont = false;
     	     				for(String tempP:rs.getPlayersInStore(args[0].toLowerCase()))

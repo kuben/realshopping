@@ -93,8 +93,7 @@ import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 
 public class RealShopping extends JavaPlugin {
-	//TODO update v numbers
-	//TODO fix lag thingy
+	//TODO update v numbers, remove prints
 	//TODO updater
 	public static Map<String, RSPlayerInventory> PInvMap;
 	
@@ -197,7 +196,6 @@ public class RealShopping extends JavaPlugin {
        		tpLocBlacklist = true;
             
     		Config.initialize();
-    		System.out.println(Config.zoneArray.length);
     		
     		File f;
     		FileInputStream fstream;
@@ -269,7 +267,7 @@ public class RealShopping extends JavaPlugin {
 			} catch(IOException e) {
 				e.printStackTrace();
     			log.info("Failed while reading shops.db");
-			}System.out.println("shops loaded");
+			}
     		try {
     			f = new File(mandir + "prices.xml");
     			if(!f.exists()){
@@ -280,7 +278,7 @@ public class RealShopping extends JavaPlugin {
     		} catch (Exception e){
 				e.printStackTrace();
     			log.info("Failed while reading prices.xml");
-    		}System.out.println("prices loaded");
+    		}
     		
     		try {
     			f = new File(mandir + "inventories.db");
@@ -299,7 +297,7 @@ public class RealShopping extends JavaPlugin {
     		} catch (Exception e){
 				e.printStackTrace();
     			log.info("Failed while reading inventories.db");
-    		}System.out.println("loaded inventories");
+    		}
     		
     		try {
     			f = new File(mandir + "protectedchests.db");
@@ -324,7 +322,7 @@ public class RealShopping extends JavaPlugin {
     		} catch (Exception e){
 				e.printStackTrace();
     			log.info("Failed while reading protectedchests.db");
-    		}System.out.println("loaded protectedchests");
+    		}
     		
     		try {
     			f = new File(mandir + "jailed.db");
@@ -346,7 +344,7 @@ public class RealShopping extends JavaPlugin {
     		} catch (Exception e){
 				e.printStackTrace();
     			log.info("Failed while reading jailed.db");
-    		}System.out.println("loaded jailed");
+    		}
     		
     		try {
     			f = new File(mandir + "allowedtplocs.db");
@@ -369,7 +367,7 @@ public class RealShopping extends JavaPlugin {
     		} catch (Exception e){
 				e.printStackTrace();
     			log.info("Failed while reading allowedtplocs.db");
-    		}System.out.println("loaded allowedtplocs");
+    		}
     		
     		try {
     			f = new File(mandir + "toclaim.db");
@@ -417,7 +415,7 @@ public class RealShopping extends JavaPlugin {
     		} catch (Exception e) {
     			e.printStackTrace();
     			log.info("Failed while reading toclaim.db");
-    		}System.out.println("loaded toClaim");
+    		}
     		
     		try {
     			f = new File(mandir + "shipped.db");
@@ -486,7 +484,7 @@ public class RealShopping extends JavaPlugin {
     		} catch (Exception e) {
     			e.printStackTrace();
     			log.info("Failed while reading shipped.db");
-    		}System.out.println("loaded shipped");
+    		}
     		
     		f = new File(mandir + "langpacks/");
     		if(!f.exists()) f.mkdir();
@@ -694,14 +692,14 @@ public class RealShopping extends JavaPlugin {
 		if(PInvMap.containsKey(player.getName())){
 			String shopName = PInvMap.get(player.getName()).getStore();
 			if(!shopMap.get(shopName).prices.isEmpty()) {
+				if(shopMap.get(shopName).sellToStore.containsKey(player.getName())){
+					cancelToSell(player);
+				}
 				float toPay = PInvMap.get(player.getName()).toPay(invs);
 				if(econ.getBalance(player.getName()) < toPay) {
 					player.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOBUYTHINGSFOR + toPay + unit);
 					return true;
 				} else {
-					if(shopMap.get(shopName).sellToStore.containsKey(player.getName())){
-						cancelToSell(player);
-					}
 					econ.withdrawPlayer(player.getName(), toPay);
 					if(!shopMap.get(shopName).owner.equals("@admin")) econ.depositPlayer(shopMap.get(shopName).owner, toPay);//If player owned store, pay player
 					if(invs != null) PInvMap.get(player.getName()).update(invs);
@@ -725,7 +723,6 @@ public class RealShopping extends JavaPlugin {
     		if(tempShop.buyFor > 0 && !tempShop.prices.isEmpty()){
     			if(tempShop.prices.containsKey(iS.getTypeId())){
     				RSPlayerInventory tempPInv = PInvMap.get(p.getName());
-    	    		System.out.println(tempPInv.toString());
     				if(tempPInv.hasItems()){
    						if(tempPInv.hasItem(iS)){
    							int ownedAm = tempPInv.getAmount(iS);
@@ -754,7 +751,6 @@ public class RealShopping extends JavaPlugin {
     	if(Config.enableSelling && PInvMap.containsKey(p.getName()) && tempShop.sellToStore.containsKey(p.getName())){
     		List<ItemStack> pList = tempShop.sellToStore.get(p.getName());
 			for(int i = 0;i < pList.size();i++){
-				System.out.println(pList.get(i));
 				int amount = (maxDurMap.containsKey(pList.get(i).getTypeId()))?maxDurMap.get(pList.get(i).getTypeId()) - pList.get(i).getDurability():pList.get(i).getAmount();
 				PInvMap.get(p.getName()).addItem(pList.get(i), amount);//Update player inv
 			}
@@ -781,9 +777,15 @@ public class RealShopping extends JavaPlugin {
     							cont = true;
     							break;
     						}
-    					} else cont = true;
+    					}
     				}
     				if(!cont){
+    		    		List<ItemStack> pList = tempShop.sellToStore.get(p.getName());
+    					for(int j = 0;j < pList.size();j++){
+    						int amount = (maxDurMap.containsKey(pList.get(j).getTypeId()))?maxDurMap.get(pList.get(j).getTypeId()) - pList.get(j).getDurability():pList.get(j).getAmount();
+    						PInvMap.get(p.getName()).addItem(pList.get(j), amount);//Update player inv
+    					}
+    					
     					tempShop.sellToStore.remove(p.getName());
     					p.sendMessage(ChatColor.RED + LangPack.YOUDONTHAVEALLTHEITEMSYOUWANTEDTOSELL);
     					return false;
@@ -808,7 +810,6 @@ public class RealShopping extends JavaPlugin {
     						payment += cost * (maxDurMap.containsKey(type)?Math.ceil((double)amount / (double)maxDurMap.get(type)):amount);//Convert items durability to item amount
     					}
     			}
-    			log.info("test " + payment);
     			boolean cont = false;
     			String own = tempShop.owner;
     			if(!own.equals("@admin")){
@@ -829,7 +830,7 @@ public class RealShopping extends JavaPlugin {
     				ItemStack[][] newInv = new ItemStack[][]{p.getInventory().getContents(), p.getInventory().getArmorContents()};
         			for(int i = 0;i < sList.size();i++){
         				for(int j = 0;j < 2;j++){
-        					for(int k = 0;k < newInv.length;k++){
+        					for(int k = 0;k < newInv[j].length;k++){
             					if(newInv[j][k] != null){
             						if(sList.get(i).equals(newInv[j][k])){
             							newInv[j][k] = null;
@@ -1022,17 +1023,14 @@ public class RealShopping extends JavaPlugin {
 						if(p.getLocation().getWorld().equals(shippedToCollect.get(p.getName()).get(id - 1).getLocationSent().getWorld())){//Same world
 							double dist = p.getLocation().distance(shippedToCollect.get(p.getName()).get(id - 1).getLocationSent());
 							while(i < Config.zoneArray.length && dist > Config.zoneArray[i].getBounds() && dist != -1){
-								System.out.println(dist + " " + Config.zoneArray[i].getBounds());
 								i++;
 							}
 						} else {
 							while(i < Config.zoneArray.length && Config.zoneArray[i].getBounds() > -1){
-								System.out.println(Config.zoneArray[i].getBounds());
 								i++;
 							}
 						}
 
-						System.out.println(Config.zoneArray[i].getBounds() + " " + (Config.zoneArray[i].getPercent() > -1?Config.zoneArray[i].getPercent() + "%":Config.zoneArray[i].getCost()+LangPack.UNIT));
 						if(Config.zoneArray[i].getPercent() == -1)
 							cost = Config.zoneArray[i].getCost();
 						else {
@@ -1223,7 +1221,7 @@ public class RealShopping extends JavaPlugin {
     	}
     }
     
-    static void returnStolen(Player p){//TODO fix one hit left bug
+    static void returnStolen(Player p){
     	Map<PItem, Integer> stolen = PInvMap.get(p.getName()).getStolen();
     	Map<PItem, Integer> stolen2 = new HashMap<PItem, Integer>(stolen);
 
@@ -1237,7 +1235,7 @@ public class RealShopping extends JavaPlugin {
 				PItem tempPI = new PItem(x);
 				if(stolen.containsKey(tempPI)){//Has stolen item
 					int diff = stolen.get(tempPI) - (maxDurMap.containsKey(x.getTypeId())?maxDurMap.get(x.getTypeId()) - x.getDurability():x.getAmount());
-					if(diff > 0){//If + then even more stolen left
+					if(diff >= 0){//If + then even more stolen left
 						stolen.put(tempPI, diff);
 						x = null;
 					} else {//If negative then no more stolen thing in inventory

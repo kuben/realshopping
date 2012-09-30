@@ -92,7 +92,6 @@ public class RSPlayerListener implements Listener {
 			if(event.hasBlock())
 				if(b.getType() == Material.GLASS || b.getType() == Material.THIN_GLASS) {
 					if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
-						RealShopping.log.info("yes");
 						if(RealShopping.PInvMap.containsKey(player.getName())){
 							if(player.hasPermission("realshopping.rsexit")) event.setCancelled(RealShopping.exit(player, false));
 						} else {

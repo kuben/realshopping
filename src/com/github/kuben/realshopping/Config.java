@@ -167,33 +167,29 @@ public class Config {
 							}
 					}
 				}
-				for(Zone tempZ:zoneArray){
-					System.out.print(tempZ + " ");
-				}
-				System.out.println();
 				fstream.close();
 				br.close();
 			}
-			System.out.println(notInConfig);
+			
 			if(!f.exists() || notInConfig > 0){
 				if(!f.exists()) f.createNewFile();
 				PrintWriter pW = new PrintWriter(new BufferedWriter(new FileWriter(RealShopping.mandir + "realshopping.properties", true)));
 				if(notInConfig >= 4096){
 					pW.println("enable-automatic-updates:"+getAutoUpdateStr(autoUpdate));
 					notInConfig -= 4096;
-				}System.out.println(notInConfig); if(notInConfig >= 2048){
+				} if(notInConfig >= 2048){
 					pW.println("auto-protect-chests:"+autoprotect);
 					notInConfig -= 2048;
-				}System.out.println(notInConfig); if(notInConfig >= 1024){
+				} if(notInConfig >= 1024){
 					pW.println("delivery-cost-zones:"+deliveryZones);
 					notInConfig -= 1024;
-				}System.out.println(notInConfig);if(notInConfig >= 512){
+				} if(notInConfig >= 512){
 					pW.println("language-pack:"+langpack);
 					notInConfig -= 512;
-				}System.out.println(notInConfig); if(notInConfig >= 256){
+				} if(notInConfig >= 256){
 					pW.println("enable-selling-to-stores:"+enableSelling);
 					notInConfig -= 256;
-				} System.out.println(notInConfig);if(notInConfig >= 128){
+				} if(notInConfig >= 128){
 	    			pW.print("enable-shopping-carts-in-worlds:");
 	    			boolean i = true;
 	    			for(String str:cartEnabledW){
@@ -205,22 +201,22 @@ public class Config {
 	    			}
 	   				pW.println();
 					notInConfig -= 128;
-				}System.out.println(notInConfig); if(notInConfig >= 64){
+				} if(notInConfig >= 64){
 					pW.println("player-stores-create-cost:"+pstorecreate);
 					notInConfig -= 64;
-				} System.out.println(notInConfig);if(notInConfig >= 32){
+				} if(notInConfig >= 32){
 					pW.println("drop-items-at:"+dropLoc.getWorld().getName()+";"+dropLoc.getBlockX()+","+dropLoc.getBlockY()+","+dropLoc.getBlockZ());
 					notInConfig -= 32;
-				}System.out.println(notInConfig); if(notInConfig >= 16){
+				} if(notInConfig >= 16){
 					pW.println("hell-location:"+hellLoc.getWorld().getName()+";"+hellLoc.getBlockX()+","+hellLoc.getBlockY()+","+hellLoc.getBlockZ());
 					notInConfig -= 16;
-				}System.out.println(notInConfig); if(notInConfig >= 8){
+				} if(notInConfig >= 8){
 					pW.println("jail-location:"+jailLoc.getWorld().getName()+";"+jailLoc.getBlockX()+","+jailLoc.getBlockY()+","+jailLoc.getBlockZ());
 					notInConfig -= 8;
-				}System.out.println(notInConfig); if(notInConfig >= 4){
+				} if(notInConfig >= 4){
 					pW.println("keep-stolen-items-after-punish:"+keepstolen);
 					notInConfig -= 4;
-				}System.out.println(notInConfig); if(notInConfig >= 2){
+				} if(notInConfig >= 2){
 					pW.println("punishment:"+punishment);
 					notInConfig -= 2;
 				}
@@ -252,7 +248,6 @@ public class Config {
 					} else
 						RealShopping.log.info("Couldn't save tempproperties as realshopping.properties (Error #201)");
 				}
-				System.out.println(notInConfig);
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
