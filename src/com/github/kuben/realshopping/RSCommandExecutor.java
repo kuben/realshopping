@@ -27,6 +27,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import net.h31ix.updater.Updater;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -770,22 +772,89 @@ public class RSCommandExecutor implements CommandExecutor {
     				}
     			} else sender.sendMessage(args[0] + LangPack.ISNOTJAILED);
     		}
-    	} else if(cmd.getName().equalsIgnoreCase("realshopping")){
-    		sender.sendMessage("rsenter");
-    		sender.sendMessage("rsexit");
-    		sender.sendMessage("rspay");
-    		sender.sendMessage("rscost");
-    		sender.sendMessage("rsprices");
-    		sender.sendMessage("rsshipped");
-    		sender.sendMessage("rsstores");
-    		sender.sendMessage("rssetstores");
-    		sender.sendMessage("rssetprices");
-    		sender.sendMessage("rsset");
-    		sender.sendMessage("rssetchests");
-    		sender.sendMessage("rsunjail");
-    		sender.sendMessage("rstplocs");
-    		sender.sendMessage("rsreload");
+    	} else if(cmd.getName().equalsIgnoreCase("rsupdate")){
+    		if(Config.autoUpdate > 0){
+    			if(args.length == 1 && args[0].equals("info")){
+    				if(!rs.newUpdate.equals("")){
+        				if((player != null && Config.autoUpdate > 1) || player == null){//Permission to get info
+        					String mess = rs.updater.getLatestVersionDescription();
+        					mess = mess.replace("<li>", "• ");
+        					mess = mess.replace("</li>", "\n");
+        					mess = mess.replace("<p>", "");
+        					mess = mess.replace("</p>", "\n"); 
+        					mess = mess.replace("<ul>", "");
+        					mess = mess.replace("</ul>", "");
+        					mess = mess.replace("<em>", "");
+        					mess = mess.replace("</em>", "");
+        					mess = mess.replace("<strong>", "");
+        					mess = mess.replace("</strong>", "");
+        					mess = mess.replace("</span>", "");
+        					mess = mess.replace("</a>", "");
+        					while(mess.contains("<span") && mess.contains(">")){
+        						String temp1 = mess.substring(0, mess.indexOf("<span"));
+        						String temp2 = mess.substring(mess.indexOf(">") + 1, mess.length());
+        						mess = temp1 + temp2;
+        					}
+        					while(mess.contains("<a") && mess.contains(">")){
+        						String temp1 = mess.substring(0, mess.indexOf("<a"));
+        						String temp2 = mess.substring(mess.indexOf(">") + 1, mess.length());
+        						mess = temp1 + temp2;
+        					}
+        					if(player == null) sender.sendMessage(mess);
+        					else {
+        						player.sendMessage(ChatColor.GREEN + "Reading description...");
+    							messageSender mS = new messageSender(player, mess.split("\\n"), 2000);
+    							mS.start();
+        					}
+        					return true;
+        				}
+    				} else {
+    					sender.sendMessage(ChatColor.RED + "This is the newest version.");
+    					return true;
+    				}
+    			} else if(args.length == 1 && args[0].equals("update")){
+    				if(!rs.newUpdate.equals("")){
+        				if((player != null && Config.autoUpdate == 4) || ( player == null && Config.autoUpdate > 2)){//Permission to update
+        					rs.updater = new Updater(rs, "realshopping", rs.getPFile(), Updater.UpdateType.DEFAULT, true);
+        					if(rs.updater.getResult() == Updater.UpdateResult.SUCCESS)
+        						sender.sendMessage(ChatColor.GREEN + "Successful update!");
+        					else
+        						sender.sendMessage(ChatColor.RED + "Update failed.");
+        					return true;
+        				}
+    				} else{
+    					sender.sendMessage(ChatColor.RED + "This is the newest version.");
+    					return true;
+    				}
+    			} else return false;
     		}
+    		sender.sendMessage(ChatColor.RED + "You aren't permitted to use this command.");
+    	} else if(cmd.getName().equalsIgnoreCase("realshopping")){
+    		sender.sendMessage(ChatColor.GREEN + "RealShopping [v0.32] - A shop plugin for Bukkit made by kuben0");
+    		sender.sendMessage(ChatColor.GREEN + "Loaded config settings:");
+    		sender.sendMessage(ChatColor.GREEN + "enable-automatic-updates:"+Config.getAutoUpdateStr(Config.autoUpdate));
+    		sender.sendMessage(ChatColor.GREEN + "auto-protect-chests:"+Config.autoprotect);
+    		sender.sendMessage(ChatColor.GREEN + "delivery-cost-zones:"+Config.deliveryZones);
+    		sender.sendMessage(ChatColor.GREEN + "language-pack:"+Config.langpack);
+    		sender.sendMessage(ChatColor.GREEN + "enable-selling-to-stores:"+Config.enableSelling);
+    		String tempStr = "";
+    			boolean i = true;
+    			for(String str:Config.cartEnabledW){
+    				if(i){
+   						tempStr += str;
+   						i = false;
+   					}
+    				else tempStr += "," + str;
+    			}
+        	sender.sendMessage(ChatColor.GREEN + "enable-shopping-carts-in-worlds:" + tempStr);
+        	sender.sendMessage(ChatColor.GREEN + "player-stores-create-cost:"+Config.pstorecreate);
+        	sender.sendMessage(ChatColor.GREEN + "drop-items-at:"+Config.dropLoc.getWorld().getName()+";"+Config.dropLoc.getBlockX()+","+Config.dropLoc.getBlockY()+","+Config.dropLoc.getBlockZ());
+       		sender.sendMessage(ChatColor.GREEN + "hell-location:"+Config.hellLoc.getWorld().getName()+";"+Config.hellLoc.getBlockX()+","+Config.hellLoc.getBlockY()+","+Config.hellLoc.getBlockZ());
+       		sender.sendMessage(ChatColor.GREEN + "jail-location:"+Config.jailLoc.getWorld().getName()+";"+Config.jailLoc.getBlockX()+","+Config.jailLoc.getBlockY()+","+Config.jailLoc.getBlockZ());
+       		sender.sendMessage(ChatColor.GREEN + "keep-stolen-items-after-punish:"+Config.keepstolen);
+       		sender.sendMessage(ChatColor.GREEN + "punishment:"+Config.punishment);
+       		return true;
+    	}
     	return false;
 	}
 }
@@ -806,6 +875,31 @@ class blockUpdater extends Thread {
 				Block b = l.getWorld().getBlockAt(l);
 				player.sendBlockChange(l, b.getType(), b.getData());
 			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+	}
+}
+
+class messageSender extends Thread {
+	private Player player;
+	private String[] message;
+	private int millis;
+
+	public messageSender(Player player, String[] message, int millis){
+		this.player = player;
+		this.message = message;
+		this.millis = millis;
+	}
+	
+	public void run(){
+		try {
+			for(String s:message){
+				Thread.sleep(millis);
+				player.sendMessage(s);
+			}
+			player.sendMessage(ChatColor.GREEN + "Done!");
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}

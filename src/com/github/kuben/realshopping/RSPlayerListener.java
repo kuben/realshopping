@@ -176,9 +176,10 @@ public class RSPlayerListener implements Listener {
 	@EventHandler (priority = EventPriority.MONITOR)
 	public void onLogin(PlayerJoinEvent event){
 		Player player = event.getPlayer();
-		if(!RealShopping.newUpdate.equals(""))
-			if(player.isOp()){
-				player.sendMessage(ChatColor.LIGHT_PURPLE + RealShopping.newUpdate);
-			}
-	}
+		if(Config.autoUpdate == 2 || Config.autoUpdate == 4)
+			if(!RealShopping.newUpdate.equals(""))
+				if(player.isOp() || player.hasPermission("realshopping.rsupdate")){
+					player.sendMessage(ChatColor.LIGHT_PURPLE + RealShopping.newUpdate);
+				}
+		}
 }

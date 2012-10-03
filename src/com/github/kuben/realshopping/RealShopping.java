@@ -52,6 +52,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import net.h31ix.updater.Updater;
 import net.milkbowl.vault.economy.Economy;
 import net.minecraft.server.ItemSpade;
 
@@ -93,8 +94,8 @@ import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 
 public class RealShopping extends JavaPlugin {
-	//TODO update v numbers, remove prints
-	//TODO updater
+	Updater updater;
+	
 	public static Map<String, RSPlayerInventory> PInvMap;
 	
 	static String mandir;
@@ -126,6 +127,7 @@ public class RealShopping extends JavaPlugin {
 	
     public void onEnable(){
     	mandir = "plugins/RealShopping/";
+    	updater = null;
     	PInvMap = new HashMap<String, RSPlayerInventory>();
     	maxDurMap = new HashMap<Integer, Integer>();
     	shopMap = new HashMap<String, Shop>();
@@ -159,16 +161,6 @@ public class RealShopping extends JavaPlugin {
     	newUpdate = "";
     	
     	unit = "$";
-    	
-    	try {
-    		double newest = updateCheck(0.31);
-    		if(newest > 0.31){
-    			newUpdate = "v" + newest + " of RealShopping is available for download. Update for new features and/or bugfixes.";
-    			log.info(newUpdate);
-    		}
-		} catch (Exception e1) {
-			e1.printStackTrace();
-		}
 
     	if(!smallReload){
     		getServer().getPluginManager().registerEvents(new RSPlayerListener(), this);
@@ -188,6 +180,7 @@ public class RealShopping extends JavaPlugin {
     		getCommand("rsunjail").setExecutor(cmdExe);
     		getCommand("rsreload").setExecutor(cmdExe);
     		getCommand("rsprotect").setExecutor(cmdExe);
+    		getCommand("rsupdate").setExecutor(cmdExe);
     		getCommand("realshopping").setExecutor(cmdExe);
     	}
 
@@ -196,6 +189,24 @@ public class RealShopping extends JavaPlugin {
        		tpLocBlacklist = true;
             
     		Config.initialize();
+    		if(Config.autoUpdate > 0){
+    			if(Config.autoUpdate == 5){
+    				updater = new Updater(this, "realshopping", this.getFile(), Updater.UpdateType.DEFAULT, true);
+    				if(updater.getResult() == Updater.UpdateResult.SUCCESS){
+    					log.info("RealShopping updated to " + updater.getLatestVersionString() + ". Restart the server to load the new version.");
+    				}
+    			} else {
+    				updater = new Updater(this, "realshopping", this.getFile(), Updater.UpdateType.NO_DOWNLOAD, true);
+    				if(updater.getResult() == Updater.UpdateResult.UPDATE_AVAILABLE){
+    	    			if(Config.autoUpdate > 2)
+	    						newUpdate = updater.getLatestVersionString() + " of RealShopping is available for download. Update for new features and/or bugfixes with the rsupdate command.";
+    	    			else
+	    						newUpdate = updater.getLatestVersionString()
+	    						+ " of RealShopping is available for download. Update for new features and/or bugfixes. You can get information about the new version with 'rsupdate info'";
+    	    			log.info(newUpdate);
+    				}
+    			}
+    		}
     		
     		File f;
     		FileInputStream fstream;
@@ -214,7 +225,7 @@ public class RealShopping extends JavaPlugin {
     				while ((s = br.readLine()) != null){// Read shops.db
     					if(s.equals("Shops database for RealShopping v0.20") || s.equals("Shops database for RealShopping v0.21")){
     						v2plus = true;
-    					} else if(s.equals("Shops database for RealShopping v0.30") || s.equals("Shops database for RealShopping v0.31")) { 
+    					} else if(s.equals("Shops database for RealShopping v0.30") || s.equals("Shops database for RealShopping v0.31") || s.equals("Shops database for RealShopping v0.32")) { 
     						v2plus = true;
     						v3plus = true;
     					} else {
@@ -261,6 +272,7 @@ public class RealShopping extends JavaPlugin {
     				if(!v3plus)//Needs updating
     					updateEntrancesDb();
     			}
+    			f.delete();
     		} catch (FileNotFoundException e) {
     			e.printStackTrace();
     			log.info("Failed while reading shops.db");
@@ -268,6 +280,8 @@ public class RealShopping extends JavaPlugin {
 				e.printStackTrace();
     			log.info("Failed while reading shops.db");
 			}
+    		
+    		
     		try {
     			f = new File(mandir + "prices.xml");
     			if(!f.exists()){
@@ -287,7 +301,7 @@ public class RealShopping extends JavaPlugin {
     				br = new BufferedReader(new InputStreamReader(fstream));
     				String s;
     				while ((s = br.readLine()) != null){
-    					if(!s.equals("Inventories database for RealShopping v0.32"))
+    					if(!s.equals("Inventories database for RealShopping v0.32") && !s.equals("Inventories database for RealShopping v0.31"))
     						PInvMap.put(s.split(";")[0].split("-")[0], new RSPlayerInventory(s.split(";")[1] ,s.split(";")[0].split("-")[1]));//Name - Pinv
     				}
     				fstream.close();
@@ -331,7 +345,8 @@ public class RealShopping extends JavaPlugin {
     				br = new BufferedReader(new InputStreamReader(fstream));
     				String s;
     				while ((s = br.readLine()) != null){
-    					if(s.equals("Jailed players database for RealShopping v0.21") || s.equals("Jailed players database for RealShopping v0.30") || s.equals("Jailed players database for RealShopping v0.31")){
+    					if(s.equals("Jailed players database for RealShopping v0.21") || s.equals("Jailed players database for RealShopping v0.30")
+    							|| s.equals("Jailed players database for RealShopping v0.31")){
 
     					} else {
     						jailedPlayers.put(s.split(";")[0], stringToLoc(s.split(";")[1], s.split(";")[2]));
@@ -353,7 +368,8 @@ public class RealShopping extends JavaPlugin {
     				br = new BufferedReader(new InputStreamReader(fstream));
     				String s;
     				while ((s = br.readLine()) != null){
-    					if(s.length() > 50 && s.substring(0, 49).equals("Allowed teleport locations for RealShopping v0.31")){
+    					if(s.length() > 50 && (s.substring(0, 49).equals("Allowed teleport locations for RealShopping v0.31")
+    							|| s.substring(0, 49).equals("Allowed teleport locations for RealShopping v0.32"))){
     						if(s.substring(51).equals("Blacklist")) tpLocBlacklist = true;
     						else tpLocBlacklist = false;
     					} else {
@@ -378,6 +394,7 @@ public class RealShopping extends JavaPlugin {
     				boolean v32plus = false;
     				while ((s = br.readLine()) != null){
     					if(s.equals("Stolen items database for RealShopping v0.32")) v32plus = true;
+    					else if(s.equals("Stolen items database for RealShopping v0.31")) {}
     					else {
     						Shop tempShop;
     						if(v32plus){
@@ -426,6 +443,7 @@ public class RealShopping extends JavaPlugin {
     				boolean v32plus = false;
     				while ((s = br.readLine()) != null){
     				    if(s.equals("Shipped Packages database for RealShopping v0.32")) v32plus = true;
+    				    else if(s.equals("Shipped Packages database for RealShopping v0.31")) {}
     					else {
     						if(v32plus){
     							shippedToCollect.put(s.split("\\[")[0], new ArrayList<ShippedPackage>());
@@ -1477,11 +1495,11 @@ public class RealShopping extends JavaPlugin {
     		} else if(what == 1){
     			keys = jailedPlayers.keySet().toArray();
     			f = new File(mandir + "jailed.db");
-    			header = "Jailed players database for RealShopping v0.31";
+    			header = "Jailed players database for RealShopping v0.32";
     		} else if(what == 2){
     			keys = forbiddenTpLocs.keySet().toArray();
     			f = new File(mandir + "allowedtplocs.db");
-    			header = "Allowed teleport locations for RealShopping v0.31 " + (tpLocBlacklist?"Blacklist":"Whitelist");
+    			header = "Allowed teleport locations for RealShopping v0.32 " + (tpLocBlacklist?"Blacklist":"Whitelist");
     		} else if(what == 3){
     			keys = shopMap.keySet().toArray();
     			f = new File(mandir + "protectedchests.db");
@@ -1547,31 +1565,16 @@ public class RealShopping extends JavaPlugin {
     	return false;
     }
     
+    File getPFile(){
+    	return this.getFile();
+    }
+    
      public void reload(){
 		smallReload = true;
 		onDisable();
 		onEnable();
     }
-    
-    public double updateCheck(double currentVersion) throws Exception {
-        try {
-            URL url = new URL("http://dev.bukkit.org/server-mods/realshopping/files.rss");
-            Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(url.openConnection().getInputStream());
-            doc.getDocumentElement().normalize();
-            NodeList nodes = doc.getElementsByTagName("item");
-            Node firstNode = nodes.item(0);
-            if (firstNode.getNodeType() == 1) {
-                Element firstElement = (Element)firstNode;
-                NodeList firstElementTagName = firstElement.getElementsByTagName("title");
-                Element firstNameElement = (Element) firstElementTagName.item(0);
-                NodeList firstNodes = firstNameElement.getChildNodes();
-                return Double.valueOf(firstNodes.item(0).getNodeValue().replace("v", "").trim());
-            }
-        }
-        catch (Exception localException) {
-        }
-        return currentVersion;
-    }
+
 }
 
 class PricesParser extends DefaultHandler {

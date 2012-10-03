@@ -149,9 +149,11 @@ public class Config {
 						notInConfig -= 2048;
 					} else if(s.split(":")[0].equals("enable-automatic-updates")){
 						String tempS = s.split(":")[1];
-						if(tempS.equals("true")) autoUpdate = 3;
-						else if(tempS.equals("check")) autoUpdate = 1;
-						else if(tempS.equals("ask")) autoUpdate = 2;
+						if(tempS.equals("true")) autoUpdate = 5;
+						else if(tempS.equals("ask")) autoUpdate = 4;
+						else if(tempS.equals("ask-console")) autoUpdate = 3;
+						else if(tempS.equals("check")) autoUpdate = 2;
+						else if(tempS.equals("check-console")) autoUpdate = 1;
 						else autoUpdate = 0;
 						notInConfig -= 4096;
 					} else if(s.length() > 8 && s.substring(0, 5).equals("zone ")){
@@ -258,11 +260,13 @@ public class Config {
 		}
 	}
 	
-	private static String getAutoUpdateStr(byte au){
-		if(au == 3) return "true";
-		else if(au == 2) return "ask";
-		else if(au == 1) return "check";
-		else return "false";
+	static String getAutoUpdateStr(byte au){
+		if(au == 5) return "true";//Download the new version as soon as there is one. Prints info in console
+		else if(au == 4) return "ask";//Check for updates, alert all with rsupdate permission/OP. Update with rsupdate
+		else if(au == 3) return "ask-console";//Check for updates, alert in console and be able to update via console with rsupdate
+		else if(au == 2) return "check";//Check for updates and alert all with rsupdate permission
+		else if(au == 1) return "check-console";//Check for updates, alert about new version in console
+		else return "false";//No automatic updates at all
 	}
 }
 

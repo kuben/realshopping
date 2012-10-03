@@ -78,8 +78,13 @@ commands:
       usage: /rsprotect add|remove
       permission: realshopping.rsprotect
       permission-message: You don't have permission to use this command
+   rsupdate:
+      description: Lets you update RealShopping to the latest version.
+      usage: /rsupdate info|update
+      permission: realshopping.rsupdate
+      permission-message: You don't have permission to use this command
    realshopping:
-      description: Prints some info about the mod, configuration.
+      description: Prints some info about the mod and configuration.
       usage: /realshopping
       permission: realshopping.realshopping
       permission-message: You don't have permission to use this command
