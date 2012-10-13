@@ -1,8 +1,17 @@
-Changes since v0.30
+Changes since v0.31
 
-* Added allowed and disallowed teleport locations (/rstplocs). It can allow players to teleport out of a store properly ONLY IF they have paid for their articles and the location they want to teleport to is allowed. This is kind of an experimental function and it could be hard to use. If you mess something up, the easiest thing to do is to stop the server and delete the allowedtplocs.db file.
-* It should be impossible to eat and use a couple more items in a store now. However I only have gotten this to work with food and throwing eggs. Kind of an experimental function too.
-* Added multiworld support for jail and hell (should have thought of this earlier). Check your config :)
-* Two new lines in config:
-* enable-shopping-carts-in-worlds: - You have to write the names of all the worlds (separated by commas) where you want shopping carts to work. So for example world,world2,world3. Forgot to add default "all" option, oops.
-* enable-selling-to-stores: - If you can sell to stores, default is true. 
+This version contains major changes in the code which will make it easier for me to add new features in the future. It will also be more stable. While writing it I've added a couple of requested changes and my own ideas, and also I've fixed all bugs encountered on the way (quite many). So here you are, enjoy!
+
+* Added an automatic updater! Next time you won't need to visit this page when you want to update the mod :)
+* Added a kick command for your stores.
+* Added a highlight option for allowed/forbidden teleport locations. Color coded depending on how big the radius is.
+* Added a chest protection command (more about this on the main page).
+* Added a realshopping command, which shows information about the mod and config.
+* Made certain commands more informative and easier to use. I don't remember all of them ;)
+* Made players unable to eat food while in a store.
+* Made tools' enchantments "visible" to the mod.
+
+New in config:
+* A cost for shipping items. Configurable delivery zones (//delivery-cost-zones// and //zone X//)
+* //auto-protect-chests//
+* //enable-automatic-updates//

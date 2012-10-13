@@ -121,4 +121,15 @@
 	<ISNOTAVALIDARGUMENT value=" är inte ett godkänt argument."/>
 	<YOUARENTALLOWEDTOTELEPORTTHERE value="Du kan inte teleportera dig dit."/>
 	<SELLINGTOSTORESISNOTENABLEDONTHISSERVER value="Denna server tillåter inte försäljning till affärer."/>
+	<ISNOTINYOURSTORE value=" är inte i din affär."/>
+	<WASKICKEDFROMYOURSTORE value=" kastades ut från din affär."/>
+	<PLAYER value="Spelare "/>
+	<ISNTONLINEKICK value=" är inte online. Du kan kasta ut en spelare som är offline genom att lägga till -o till kommandot, MEN SPELAREN KOMMER INTE TELEPORTERAS UT UR AFFÄREN. Använd bara det om du ska ta bort affären eller om du vet vad du håller på med."/>
+	<PLAYERSINSTORE value="Spelare i affären: "/>
+	<STORENOTEMPTY value="Affären är inte tom."/>
+	<PACKAGESENT value="Paketet sänt "/>
+	<FROM value=" från "/>
+	<INWORLD value=" i värld "/>
+	<YOUCANTUSETHATITEMINSTORE value="Du kan inte använda detta föremål i affären."/>
+	<THISCHESTISPROTECTED value="Denna kista är skyddad."/>
 </lang>
