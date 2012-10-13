@@ -65,8 +65,10 @@ public class Config {
 				String s;
 				boolean v31plus = false;
 				while ((s = br.readLine()) != null){// Read realshopping.properties
-					if(s.equals("Properties file for RealShopping v0.32")){
+					if(s.equals("Properties file for RealShopping v0.33")){
 						notInConfig -= 1;
+						v31plus = true;
+					} else if(s.equals("Properties file for RealShopping v0.32")){
 						v31plus = true;
 					} else if(s.equals("Properties file for RealShopping v0.31")){
 						v31plus = true;
@@ -232,11 +234,13 @@ public class Config {
 					pW = new PrintWriter(tempF);
 					String s;
 					
+					int i = 0;
 					while ((s = br.readLine()) != null){
-						if(s.length() > 33 && s.substring(0,33).equals("Properties file for RealShopping "))
-							pW.println("Properties file for RealShopping v0.32");
+						if(i==0) pW.println("Properties file for RealShopping v0.33");
+						if(s.length() > 33 && s.substring(0,33).equals("Properties file for RealShopping ")){}
 						else
 							pW.println(s);
+						i++;
 					}
 					
 					pW.close();
@@ -247,8 +251,9 @@ public class Config {
 							notInConfig -= 1;
 						else
 							RealShopping.log.info("Couldn't save tempproperties as realshopping.properties (Error #202)");
-					} else
+					} else {
 						RealShopping.log.info("Couldn't save tempproperties as realshopping.properties (Error #201)");
+					}
 				}
 			}
 		} catch (FileNotFoundException e) {

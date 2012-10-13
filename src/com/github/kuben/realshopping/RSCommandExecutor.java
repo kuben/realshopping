@@ -830,7 +830,7 @@ public class RSCommandExecutor implements CommandExecutor {
     		}
     		sender.sendMessage(ChatColor.RED + "You aren't permitted to use this command.");
     	} else if(cmd.getName().equalsIgnoreCase("realshopping")){
-    		sender.sendMessage(ChatColor.GREEN + "RealShopping [v0.32] - A shop plugin for Bukkit made by kuben0");
+    		sender.sendMessage(ChatColor.GREEN + "RealShopping [v0.33] - A shop plugin for Bukkit made by kuben0");
     		sender.sendMessage(ChatColor.GREEN + "Loaded config settings:");
     		sender.sendMessage(ChatColor.GREEN + "enable-automatic-updates:"+Config.getAutoUpdateStr(Config.autoUpdate));
     		sender.sendMessage(ChatColor.GREEN + "auto-protect-chests:"+Config.autoprotect);

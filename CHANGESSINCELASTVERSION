@@ -1,17 +1,5 @@
-Changes since v0.31
+Changes since v0.32
 
-This version contains major changes in the code which will make it easier for me to add new features in the future. It will also be more stable. While writing it I've added a couple of requested changes and my own ideas, and also I've fixed all bugs encountered on the way (quite many). So here you are, enjoy!
+Two critical bug-fixes, one causing a crash for first-time installers, and one wiping out all shops, and then prices, sometimes at restarts.
 
-* Added an automatic updater! Next time you won't need to visit this page when you want to update the mod :)
-* Added a kick command for your stores.
-* Added a highlight option for allowed/forbidden teleport locations. Color coded depending on how big the radius is.
-* Added a chest protection command (more about this on the main page).
-* Added a realshopping command, which shows information about the mod and config.
-* Made certain commands more informative and easier to use. I don't remember all of them ;)
-* Made players unable to eat food while in a store.
-* Made tools' enchantments "visible" to the mod.
-
-New in config:
-* A cost for shipping items. Configurable delivery zones (//delivery-cost-zones// and //zone X//)
-* //auto-protect-chests//
-* //enable-automatic-updates//
+Important that you update.

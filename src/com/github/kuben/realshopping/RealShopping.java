@@ -222,12 +222,18 @@ public class RealShopping extends JavaPlugin {
     				String ss = "";
     				boolean v2plus = false;
     				boolean v3plus = false;
+    				boolean latest = false;
     				while ((s = br.readLine()) != null){// Read shops.db
     					if(s.equals("Shops database for RealShopping v0.20") || s.equals("Shops database for RealShopping v0.21")){
     						v2plus = true;
-    					} else if(s.equals("Shops database for RealShopping v0.30") || s.equals("Shops database for RealShopping v0.31") || s.equals("Shops database for RealShopping v0.32")) { 
+    					} else if(s.equals("Shops database for RealShopping v0.30") || s.equals("Shops database for RealShopping v0.31")
+    							|| s.equals("Shops database for RealShopping v0.32")) { 
     						v2plus = true;
     						v3plus = true;
+    					} else if(s.equals("Shops database for RealShopping v0.33")){
+    						v2plus = true;
+    						v3plus = true;
+    						latest = true;
     					} else {
         					String[] tS = s.split(";")[0].split(":");
         		    		shopMap.put(tS[0], new Shop(tS[0], tS[1], v2plus?tS[2]:"@admin"));
@@ -269,10 +275,9 @@ public class RealShopping extends JavaPlugin {
     				}
     				fstream.close();
     				br.close();
-    				if(!v3plus)//Needs updating
+    				if(!latest)//Needs updating
     					updateEntrancesDb();
     			}
-    			f.delete();
     		} catch (FileNotFoundException e) {
     			e.printStackTrace();
     			log.info("Failed while reading shops.db");
@@ -301,7 +306,7 @@ public class RealShopping extends JavaPlugin {
     				br = new BufferedReader(new InputStreamReader(fstream));
     				String s;
     				while ((s = br.readLine()) != null){
-    					if(!s.equals("Inventories database for RealShopping v0.32") && !s.equals("Inventories database for RealShopping v0.31"))
+    					if(!s.equals("Inventories database for RealShopping v0.33") && !s.equals("Inventories database for RealShopping v0.32") && !s.equals("Inventories database for RealShopping v0.31"))
     						PInvMap.put(s.split(";")[0].split("-")[0], new RSPlayerInventory(s.split(";")[1] ,s.split(";")[0].split("-")[1]));//Name - Pinv
     				}
     				fstream.close();
@@ -320,7 +325,7 @@ public class RealShopping extends JavaPlugin {
     				br = new BufferedReader(new InputStreamReader(fstream));
     				String s;
     				while ((s = br.readLine()) != null){
-    					if(s.equals("Protected chests for RealShopping v0.32")){
+    					if(s.equals("Protected chests for RealShopping v0.32") || s.equals("Protected chests for RealShopping v0.33")){
 
     					} else {
     						shopMap.get(s.split(";")[0]).protectedChests.add(new Location(getServer().getWorld(s.split(";")[1].split(",")[0])
@@ -368,8 +373,7 @@ public class RealShopping extends JavaPlugin {
     				br = new BufferedReader(new InputStreamReader(fstream));
     				String s;
     				while ((s = br.readLine()) != null){
-    					if(s.length() > 50 && (s.substring(0, 49).equals("Allowed teleport locations for RealShopping v0.31")
-    							|| s.substring(0, 49).equals("Allowed teleport locations for RealShopping v0.32"))){
+    					if(s.length() > 50 && (s.substring(0, 43).equals("Allowed teleport locations for RealShopping"))){
     						if(s.substring(51).equals("Blacklist")) tpLocBlacklist = true;
     						else tpLocBlacklist = false;
     					} else {
@@ -393,7 +397,7 @@ public class RealShopping extends JavaPlugin {
     				String s;
     				boolean v32plus = false;
     				while ((s = br.readLine()) != null){
-    					if(s.equals("Stolen items database for RealShopping v0.32")) v32plus = true;
+    					if(s.equals("Stolen items database for RealShopping v0.32") || s.equals("Stolen items database for RealShopping v0.33")) v32plus = true;
     					else if(s.equals("Stolen items database for RealShopping v0.31")) {}
     					else {
     						Shop tempShop;
@@ -442,7 +446,7 @@ public class RealShopping extends JavaPlugin {
     				String s;
     				boolean v32plus = false;
     				while ((s = br.readLine()) != null){
-    				    if(s.equals("Shipped Packages database for RealShopping v0.32")) v32plus = true;
+    				    if(s.equals("Shipped Packages database for RealShopping v0.32") || s.equals("Shipped Packages database for RealShopping v0.33")) v32plus = true;
     				    else if(s.equals("Shipped Packages database for RealShopping v0.31")) {}
     					else {
     						if(v32plus){
@@ -1491,27 +1495,27 @@ public class RealShopping extends JavaPlugin {
     		if(what == 0){
     			keys = PInvMap.keySet().toArray();//Player Map
     			f = new File(mandir + "inventories.db");
-    			header = "Inventories database for RealShopping v0.32";
+    			header = "Inventories database for RealShopping v0.33";
     		} else if(what == 1){
     			keys = jailedPlayers.keySet().toArray();
     			f = new File(mandir + "jailed.db");
-    			header = "Jailed players database for RealShopping v0.32";
+    			header = "Jailed players database for RealShopping v0.33";
     		} else if(what == 2){
     			keys = forbiddenTpLocs.keySet().toArray();
     			f = new File(mandir + "allowedtplocs.db");
-    			header = "Allowed teleport locations for RealShopping v0.32 " + (tpLocBlacklist?"Blacklist":"Whitelist");
+    			header = "Allowed teleport locations for RealShopping v0.33 " + (tpLocBlacklist?"Blacklist":"Whitelist");
     		} else if(what == 3){
     			keys = shopMap.keySet().toArray();
     			f = new File(mandir + "protectedchests.db");
-    			header = "Protected chests for RealShopping v0.32";
+    			header = "Protected chests for RealShopping v0.33";
     		} else if(what == 4){
     			keys = shippedToCollect.keySet().toArray();//Map of players having shipped items
     			f = new File(mandir + "shipped.db");
-    			header = "Shipped Packages database for RealShopping v0.32";
+    			header = "Shipped Packages database for RealShopping v0.33";
     		} else if(what == 5){
     			keys = shopMap.keySet().toArray();
     			f = new File(mandir + "toclaim.db");
-    			header = "Stolen items database for RealShopping v0.32";
+    			header = "Stolen items database for RealShopping v0.33";
     		} else {
     			return false;
     		}
