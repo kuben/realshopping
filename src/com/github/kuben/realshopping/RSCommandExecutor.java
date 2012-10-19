@@ -508,11 +508,11 @@ public class RSCommandExecutor implements CommandExecutor {
     				if(rs.playerEntrances.containsKey(player.getName())){
         				if(rs.playerExits.containsKey(player.getName())){
         			    	if(!rs.shopMap.containsKey(args[1])){//Create
-            					if(rs.econ.getBalance(player.getName()) < Config.pstorecreate) {
+            					if(RSEconomy.getBalance(player.getName()) < Config.pstorecreate) {
             						player.sendMessage(ChatColor.RED + LangPack.CREATINGASTORECOSTS + Config.pstorecreate + rs.unit);
             						return true;
             					} else {
-            						rs.econ.withdrawPlayer(player.getName(), Config.pstorecreate);
+            						RSEconomy.withdraw(player.getName(), Config.pstorecreate);
             						rs.shopMap.put(args[1], new Shop(args[1], player.getWorld().getName(), player.getName()));
             					}
         			    	}

@@ -110,12 +110,10 @@ public class RealShopping extends JavaPlugin {
 	public static Set<Integer> forbiddenInStore;
 	
 	public static boolean tpLocBlacklist;
-	
-    public static Economy econ;
 
     String entrance;
     String exit;
-	static Logger log;	
+	static Logger log;
 	
 	public static String working;
 	
@@ -141,7 +139,6 @@ public class RealShopping extends JavaPlugin {
     	Config.cartEnabledW = new HashSet<String>();
     	
     	tpLocBlacklist = false;
-        econ = null;
         Config.keepstolen = false;
         Config.enableSelling = false;
         Config.autoprotect = false;
@@ -184,7 +181,7 @@ public class RealShopping extends JavaPlugin {
     		getCommand("realshopping").setExecutor(cmdExe);
     	}
 
-       	if(setupEconomy()){
+       	if(RSEconomy.setupEconomy()){
        		working = "";
        		tpLocBlacklist = true;
             
@@ -718,12 +715,12 @@ public class RealShopping extends JavaPlugin {
 					cancelToSell(player);
 				}
 				float toPay = PInvMap.get(player.getName()).toPay(invs);
-				if(econ.getBalance(player.getName()) < toPay) {
+				if(RSEconomy.getBalance(player.getName()) < toPay) {
 					player.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOBUYTHINGSFOR + toPay + unit);
 					return true;
 				} else {
-					econ.withdrawPlayer(player.getName(), toPay);
-					if(!shopMap.get(shopName).owner.equals("@admin")) econ.depositPlayer(shopMap.get(shopName).owner, toPay);//If player owned store, pay player
+					RSEconomy.withdraw(player.getName(), toPay);
+					if(!shopMap.get(shopName).owner.equals("@admin")) RSEconomy.deposit(shopMap.get(shopName).owner, toPay);//If player owned store, pay player
 					if(invs != null) PInvMap.get(player.getName()).update(invs);
 					else PInvMap.get(player.getName()).update();
 					player.sendMessage(ChatColor.RED + LangPack.YOUBOUGHTSTUFFFOR + toPay + unit);
@@ -835,15 +832,15 @@ public class RealShopping extends JavaPlugin {
     			boolean cont = false;
     			String own = tempShop.owner;
     			if(!own.equals("@admin")){
-    				if(econ.getBalance(own) >= payment){
-    					econ.depositPlayer(p.getName(), payment);
-    					econ.withdrawPlayer(own, payment);//If player owned store, pay player
+    				if(RSEconomy.getBalance(own) >= payment){
+    					RSEconomy.deposit(p.getName(), payment);
+    					RSEconomy.withdraw(own, payment);//If player owned store, withdraw from owner
     					tempShop.sellToStore.remove(p.getName());
     					p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sList.size() + LangPack.ITEMSFOR + payment + unit);
     					cont = true;
     				}
     			} else {
-					econ.depositPlayer(p.getName(), payment);
+					RSEconomy.deposit(p.getName(), payment);
 					tempShop.sellToStore.remove(p.getName());
 					p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sList.size() + LangPack.ITEMSFOR + payment + unit);
 					cont = true;
@@ -1060,11 +1057,11 @@ public class RealShopping extends JavaPlugin {
 							cost = Math.round(cost);
 							cost /= 100;
 						}
-						if(econ.getBalance(p.getName()) >= cost) cont = true;
+						if(RSEconomy.getBalance(p.getName()) >= cost) cont = true;
 					} else cont = true;
 					
 					if(cont){
-						econ.withdrawPlayer(p.getName(), cost);
+						RSEconomy.withdraw(p.getName(), cost);
 						p.sendMessage(ChatColor.GREEN + "" + cost + LangPack.UNIT + " withdrawn from your account.");
 						ItemStack[] contents = ((Chest)l.getBlock().getState()).getBlockInventory().getContents();
 						for(ItemStack tempIS:contents) if(tempIS != null) p.getWorld().dropItem(p.getLocation(), tempIS);
@@ -1469,22 +1466,6 @@ public class RealShopping extends JavaPlugin {
 		
 		return nearest;
 	}
-	
-    private boolean setupEconomy() {
-    	try{
-            RegisteredServiceProvider<Economy> economyProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
-            if (economyProvider != null) {
-                econ = economyProvider.getProvider();
-            }
-
-            
-    	} catch (NoClassDefFoundError e) {
-    		log.info("You need vault for this plugin to work.");
-    		working = "You need vault for this plugin to work.";
-    		return false;
-    	}
-    	return (econ != null);
-    }
     
     private boolean saveTemporaryFile(int what){
     	File f = null;

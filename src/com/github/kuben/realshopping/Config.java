@@ -41,6 +41,10 @@ public class Config {
 			hellLoc = new Location(server.getWorld("world"),0,0,0);
 			jailLoc = new Location(server.getWorld("world"),0,0,0);
 			dropLoc = new Location(server.getWorld("world"),0,0,0);
+		} else {
+			hellLoc = new Location(server.getWorlds().get(0),0,0,0);
+			jailLoc = new Location(server.getWorlds().get(0),0,0,0);
+			dropLoc = new Location(server.getWorlds().get(0),0,0,0);
 		}
 
         keepstolen = false;
@@ -209,6 +213,7 @@ public class Config {
 					pW.println("player-stores-create-cost:"+pstorecreate);
 					notInConfig -= 64;
 				} if(notInConfig >= 32){
+					System.out.println(dropLoc);
 					pW.println("drop-items-at:"+dropLoc.getWorld().getName()+";"+dropLoc.getBlockX()+","+dropLoc.getBlockY()+","+dropLoc.getBlockZ());
 					notInConfig -= 32;
 				} if(notInConfig >= 16){
