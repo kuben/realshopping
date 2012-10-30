@@ -22,6 +22,7 @@ package com.github.kuben.realshopping;
 import java.awt.Event;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
@@ -42,6 +43,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Event.Result;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -55,6 +57,8 @@ import org.bukkit.inventory.ItemStack;
 import com.sun.xml.internal.stream.Entity;
 
 public class RSPlayerListener implements Listener {
+	
+	public static Map<Integer, TreeMap<String, Integer>> statsMap = new HashMap<Integer, TreeMap<String, Integer>>();//TODO change integer to PItem?, move to separate class with updateStats
 	
 	@EventHandler (priority = EventPriority.HIGH)
 	public void onTeleport(PlayerTeleportEvent event){
@@ -98,6 +102,10 @@ public class RSPlayerListener implements Listener {
 							if(player.hasPermission("realshopping.rsenter")) event.setCancelled(RealShopping.enter(player, false));
 						}
 					}
+				/*} else if(b.getType() == Material.SAND) {
+					if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
+						updateStats();
+					}*/
 				} else if(b.getType() == Material.OBSIDIAN) {
 					if(RealShopping.PInvMap.containsKey(player.getName())){
 						if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.STEP){
@@ -173,6 +181,16 @@ public class RSPlayerListener implements Listener {
         }
     }
 	
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onInventoryCloseEvent(InventoryCloseEvent event){
+        if (event.getInventory().getTitle().equals("Sell to store")){
+        	if(RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//If player is in store
+        		RealShopping.sellToStore((Player) event.getPlayer(), event.getInventory().getContents());
+        	}
+        }
+    }
+	
+    
 	@EventHandler (priority = EventPriority.MONITOR)
 	public void onLogin(PlayerJoinEvent event){
 		Player player = event.getPlayer();
@@ -182,4 +200,31 @@ public class RSPlayerListener implements Listener {
 					player.sendMessage(ChatColor.LIGHT_PURPLE + RealShopping.newUpdate);
 				}
 		}
+
+	public static void updateStats(){
+		Map<Integer, TreeMap<String, Integer>> oldStats = statsMap;
+		
+		statsMap.clear();
+		String[] keys = RealShopping.shopMap.keySet().toArray(new String[0]);
+		for(String s:keys){
+			Statistic[] sKeys = RealShopping.shopMap.get(s).stats.toArray(new Statistic[0]);
+			for(Statistic stat:sKeys){
+				if(System.currentTimeMillis() - 3600000 < stat.getTime() && stat.isBought()){//Only past hour and only bought
+					if(!statsMap.containsKey(stat.getItem().type)) statsMap.put(stat.getItem().type, new TreeMap<String, Integer>());
+					if(!statsMap.get(stat.getItem().type).containsKey(s)) statsMap.get(stat.getItem().type).put(s, 0);
+					statsMap.get(stat.getItem().type).put(s, statsMap.get(stat.getItem().type).get(s) + stat.getAmount());
+				}
+			}
+		}
+		Object[] keys2 = statsMap.keySet().toArray();
+		for(int i = 0;i < keys2.length;i++){//Sort
+			StatComparator bvc = new StatComparator(statsMap.get(keys2[i]));
+			TreeMap<String, Integer> sorted_map = new TreeMap<String, Integer>(bvc);
+			sorted_map.putAll(statsMap.get(keys2[i]));
+			statsMap.put((Integer)keys2[i], sorted_map);
+		}
+		
+	System.out.println(statsMap);
+	}
+	
 }

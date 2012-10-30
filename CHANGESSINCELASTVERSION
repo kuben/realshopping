@@ -1,5 +1,14 @@
-Changes since v0.32
+Changes since v0.33
 
-Two critical bug-fixes, one causing a crash for first-time installers, and one wiping out all shops, and then prices, sometimes at restarts.
+First Alpha:
+* Added /rssell - a new method for players to sell stuff to stores. Will replace 
+the old one by 0.40, I'm not sure it's ready to use now but it seems to work. 
+Simply type /rssell and a window pops up. Place the items you want to sell there 
+and close the window.
+* Added some notifications. When a player buys or sells to your store you are 
+notified within 10 sec, or when you log in. To be extended and improved.
+* Begun working on internal economy and an AI-system which (if you want it to) 
+can lower or higher your prices based on demand of items in your and others' stores.
 
-Important that you update.
+Note that this alpha version should not be used on larger servers.
+(The config files are not changed by the way, they still say it's version 0.33)

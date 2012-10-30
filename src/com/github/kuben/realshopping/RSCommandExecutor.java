@@ -29,6 +29,7 @@ import java.util.Set;
 
 import net.h31ix.updater.Updater;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -40,6 +41,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 public class RSCommandExecutor implements CommandExecutor {
@@ -116,6 +118,15 @@ public class RSCommandExecutor implements CommandExecutor {
 					sender.sendMessage(ChatColor.RED + "" + args[1] + LangPack.ISNOTAVALIDPAGENUMBER);
 				}
 			}
+    	} else if(cmd.getName().equalsIgnoreCase("rssell")){
+    		if(player != null){
+    			if(rs.PInvMap.containsKey(player.getName())){
+    				Inventory tempInv = Bukkit.createInventory(null, 36, "Sell to store");
+					player.openInventory(tempInv);
+					return true;
+    			} else sender.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
+    		}
+    		else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE);
     	} else if(cmd.getName().equalsIgnoreCase("rsstores")) {
     		if(args.length > 0){
     			boolean isOwner = false;
@@ -125,7 +136,7 @@ public class RSCommandExecutor implements CommandExecutor {
     						isOwner = true;
     					} else if(player.hasPermission("realshopping.rsset")){
     						isOwner = true;
-    					}
+    				}
     				} else {
     					if(player != null){
     						if(rs.shopMap.get(args[0]).owner.equalsIgnoreCase(player.getName())){

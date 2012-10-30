@@ -36,6 +36,8 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.material.MaterialData;
 
 public class Shop {
+	
+	public Set<Statistic> stats = new HashSet<Statistic>();
 
 	public Map<Integer, Float> prices = new HashMap<Integer, Float>();
 	public List<ItemStack> stolenToClaim = new ArrayList<ItemStack>();
@@ -153,5 +155,40 @@ public class Shop {
 	@Override
 	public String toString(){
 		return "Shop " + name + (owner.equals("@admin")?"":" owned by " + owner + " Prices: " + prices.toString());
+	}
+}
+
+final class Statistic {
+	
+	private PItem item;
+	private int amount;
+	private long timestamp;
+	private boolean bought;
+	
+	public Statistic(PItem item, int amount, boolean bought){
+		this.item = item;
+		this.amount = amount;
+		this.timestamp = System.currentTimeMillis();
+		this.bought = bought;
+	}
+
+	public PItem getItem() {
+		return item;
+	}
+
+	public int getAmount() {
+		return amount;
+	}
+	
+	public long getTime() {
+		return timestamp;
+	}
+	
+	public boolean isBought() {
+		return bought;
+	}
+	
+	public String toString(){
+		return (bought?"bought":"sold") + item.toString() + " x" + amount;
 	}
 }

@@ -10,7 +10,7 @@ import net.milkbowl.vault.economy.Economy;
 
 public class RSEconomy {
 
-    private static Economy econ;
+    private static Economy econ;//Vault economy
 	private static Map<String, Long> accounts = new HashMap<String, Long>();//Stores pennies
 	//Simple and lightweight economy
 

@@ -28,6 +28,11 @@ commands:
       usage: /rsprices [STORE] [PAGE]
       permission: realshopping.rsprices
       permission-message: You don't have permission to use this command
+   rssell:
+      description: Sell items to stores.
+      usage: /rssell OR right click =======.
+      permission: realshopping.rssell
+      permission-message: You don't have permission to use this command
    rsstores:
       description: Manages your stores (and admin stores if you have permission).
       usage: /rsstores store [buyfor %_OF_SELL_PRICE|collect [-c] [AMOUNT]|ban PLAYER|unban PLAYER|kick [-o] PLAYER|startsale %_OFF [ITEMID[,ITEMID[,ITEMID...]]]|endsale]

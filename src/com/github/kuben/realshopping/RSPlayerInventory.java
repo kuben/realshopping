@@ -123,6 +123,44 @@ public class RSPlayerInventory {
 		
 		return toPay;
     }
+    
+    public Map<PItem, Integer> getBought(Inventory[] invs){
+    	Map<PItem, Integer> bought = new HashMap<PItem, Integer>();
+    	Shop tempShop = RealShopping.shopMap.get(store);
+		if(!tempShop.prices.isEmpty()){//If shop has prices
+			Map<PItem, Integer> newInv = invToPInv();
+			
+			//Old inv = items
+			
+			if(invs != null){
+				for(int i = 0;i < invs.length;i++){
+					Map<PItem, Integer> tempInv = invToPInv(invs[i]);
+					newInv = Utils.joinMaps(newInv, tempInv);
+				}
+			}
+
+			Object[] keys = newInv.keySet().toArray();
+
+			for(int i = 0;i < keys.length;i++){
+				int type = ((PItem) keys[i]).type;
+				if(tempShop.prices.containsKey(type)){//Something in inventory has a price
+					int amount = newInv.get(keys[i]);
+					if(items.containsKey(keys[i])) {
+						int oldAm = items.get((PItem) keys[i]);
+						if(oldAm > amount){//More items before than now
+							amount = 0;
+						} else {//More items now
+							amount -= oldAm;
+						}
+					}
+					if(bought.containsKey(keys[i])) bought.put((PItem)keys[i], amount + bought.get(keys[i]));
+					else bought.put((PItem)keys[i], amount);
+				}
+			}
+		}
+		
+		return bought;
+    }
 	
     public Map<PItem, Integer> getStolen(){
 		//Get stolen items

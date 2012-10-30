@@ -213,7 +213,6 @@ public class Config {
 					pW.println("player-stores-create-cost:"+pstorecreate);
 					notInConfig -= 64;
 				} if(notInConfig >= 32){
-					System.out.println(dropLoc);
 					pW.println("drop-items-at:"+dropLoc.getWorld().getName()+";"+dropLoc.getBlockX()+","+dropLoc.getBlockY()+","+dropLoc.getBlockZ());
 					notInConfig -= 32;
 				} if(notInConfig >= 16){
