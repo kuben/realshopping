@@ -50,6 +50,7 @@ public class RSCommandExecutor implements CommandExecutor {
 	public RSCommandExecutor(RealShopping rs){
 		this.rs = rs;
 	}
+	@SuppressWarnings("static-access")
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
     	
@@ -337,10 +338,10 @@ public class RSCommandExecutor implements CommandExecutor {
 	    						if(pcnt > 0){
 	    							if(rs.shopMap.containsKey(args[0]) && !rs.shopMap.get(args[0]).prices.isEmpty()){
 	    								rs.shopMap.get(args[0]).sale.clear();
-	    								Object[] keys = rs.shopMap.get(args[0]).prices.keySet().toArray();
+	    								Price[] keys = rs.shopMap.get(args[0]).prices.keySet().toArray(new Price[0]);
 	    								int i = 0;
 	    								for(;i < keys.length;i++){
-	    									rs.shopMap.get(args[0]).sale.put((Integer)keys[i], pcnt);
+	    									rs.shopMap.get(args[0]).sale.put(keys[i], pcnt);
 	    								}
 	    								if(pcnt > 0) sender.sendMessage(ChatColor.GREEN + "" + pcnt + LangPack.PCNTOFF + i + LangPack.ITEMS);
 	    								else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);
@@ -362,9 +363,9 @@ public class RSCommandExecutor implements CommandExecutor {
 	    								int i = 0;
 	    								int j = 0;
 	    								for(;i < keys.length;i++){
-	    									int type = Integer.parseInt(keys[i]);
-	    									if(rs.shopMap.get(args[0]).prices.containsKey(type)){
-	    										rs.shopMap.get(args[0]).sale.put(type, pcnt);
+	    									Price tempP = new Price(keys[i]);
+	    									if(rs.shopMap.get(args[0]).prices.containsKey(tempP) || rs.shopMap.get(args[0]).prices.containsKey(new Price(keys[i].split(":")[0]))){
+	    										rs.shopMap.get(args[0]).sale.put(tempP, pcnt);
 	    										j++;
 	    									}
 	    								}
@@ -402,11 +403,14 @@ public class RSCommandExecutor implements CommandExecutor {
     				if(args[0].equalsIgnoreCase("add")){
     					try {
     						int i = Integer.parseInt(args[ii].split(":")[0]);
-    						float k = Float.parseFloat(args[ii].split(":")[1]);
+    						int d = -1;
+    						if(args[ii].split(":").length > 2) d = Integer.parseInt(args[ii].split(":")[1]);
+    						float price = Float.parseFloat(d>-1?args[ii].split(":")[2]:args[ii].split(":")[1]);
     						DecimalFormat twoDForm = new DecimalFormat("#.##");
-    						float j = Float.parseFloat(twoDForm.format(k));
-    						rs.shopMap.get(shop).prices.put(i, j);
-    						sender.sendMessage(ChatColor.RED + LangPack.PRICEFOR + Material.getMaterial(i) + LangPack.SETTO + j + rs.unit);
+    						float j = Float.parseFloat(twoDForm.format(price));
+    						if(d == -1) rs.shopMap.get(shop).prices.put(new Price(i), j);
+    						else rs.shopMap.get(shop).prices.put(new Price(i, d), j);
+    						sender.sendMessage(ChatColor.RED + LangPack.PRICEFOR + Material.getMaterial(i) + (d>-1?"("+d+") ":"") + LangPack.SETTO + j + rs.unit);
     						return true;
     					} catch (NumberFormatException e) {
     						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_FOLLOWEDBYTHEPRICE_ + rs.unit);
@@ -415,14 +419,14 @@ public class RSCommandExecutor implements CommandExecutor {
     					}
     				} else if(args[0].equalsIgnoreCase("del")){
     					try {
-    						int i = Integer.parseInt(args[ii]);
     						if(rs.shopMap.containsKey(shop)){
-    							if(rs.shopMap.get(shop).prices.containsKey(i)){
-    								rs.shopMap.get(shop).prices.remove(i);
-    								sender.sendMessage(ChatColor.RED + LangPack.REMOVEDPRICEFOR + Material.getMaterial(i));
+    							Price tempP = new Price(args[ii]);
+    							if(rs.shopMap.get(shop).prices.containsKey(tempP)){
+    								rs.shopMap.get(shop).prices.remove(tempP);
+    								sender.sendMessage(ChatColor.RED + LangPack.REMOVEDPRICEFOR + Material.getMaterial(tempP.getType()) + (tempP.getData()>-1?"("+tempP.getData()+") ":""));
     								return true;
     							} else {
-    								sender.sendMessage(ChatColor.RED + LangPack.COULDNTFINDPRICEFOR + i + " - " + Material.getMaterial(i));
+    								sender.sendMessage(ChatColor.RED + LangPack.COULDNTFINDPRICEFOR + Material.getMaterial(tempP.getType()) + (tempP.getData()>-1?"("+tempP.getData()+") ":""));
     							}
     						} else {
     							sender.sendMessage(ChatColor.RED + shop + LangPack.DOESNTEXIST);

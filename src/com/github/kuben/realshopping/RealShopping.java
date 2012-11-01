@@ -190,344 +190,339 @@ public class RealShopping extends JavaPlugin {
     		getCommand("realshopping").setExecutor(cmdExe);
     	}
 
-       	if(RSEconomy.setupEconomy()){
-       		working = "";
-       		tpLocBlacklist = true;
-            
-    		Config.initialize();
-    		if(Config.autoUpdate > 0){
-    			if(Config.autoUpdate == 5){
-    				updater = new Updater(this, "realshopping", this.getFile(), Updater.UpdateType.DEFAULT, true);
-    				if(updater.getResult() == Updater.UpdateResult.SUCCESS){
-    					log.info("RealShopping updated to " + updater.getLatestVersionString() + ". Restart the server to load the new version.");
-    				}
-    			} else {
-    				updater = new Updater(this, "realshopping", this.getFile(), Updater.UpdateType.NO_DOWNLOAD, true);
-    				if(updater.getResult() == Updater.UpdateResult.UPDATE_AVAILABLE){
-    	    			if(Config.autoUpdate > 2)
-	    						newUpdate = updater.getLatestVersionString() + " of RealShopping is available for download. Update for new features and/or bugfixes with the rsupdate command.";
-    	    			else
-	    						newUpdate = updater.getLatestVersionString()
-	    						+ " of RealShopping is available for download. Update for new features and/or bugfixes. You can get information about the new version with 'rsupdate info'";
-    	    			log.info(newUpdate);
-    				}
-    			}
-    		}
-    		
-    		File f;
-    		FileInputStream fstream;
-    		BufferedReader br;
-    		try {
-    			f = new File(mandir + "shops.db");
-    			if(!f.exists()){
-    				f.createNewFile();
-    			} else {
-    				fstream = new FileInputStream(f);
-    				br = new BufferedReader(new InputStreamReader(fstream));
-    				String s;
-    				String ss = "";
-    				boolean v2plus = false;
-    				boolean v3plus = false;
-    				boolean latest = false;
-    				while ((s = br.readLine()) != null){// Read shops.db
-    					if(s.equals("Shops database for RealShopping v0.20") || s.equals("Shops database for RealShopping v0.21")){
-    						v2plus = true;
-    					} else if(s.equals("Shops database for RealShopping v0.30") || s.equals("Shops database for RealShopping v0.31")
-    							|| s.equals("Shops database for RealShopping v0.32")) { 
-    						v2plus = true;
-    						v3plus = true;
-    					} else if(s.equals("Shops database for RealShopping v0.33")){
-    						v2plus = true;
-    						v3plus = true;
-    						latest = true;
-    					} else {
-        					String[] tS = s.split(";")[0].split(":");
-        		    		shopMap.put(tS[0], new Shop(tS[0], tS[1], v2plus?tS[2]:"@admin"));
-        		    		shopMap.get(tS[0]).buyFor = (v3plus)?Integer.parseInt(tS[3]):0;
-        					for(int i = v3plus?4:v2plus?3:2;i < tS.length;i++){//The entrances + exits
-        						String[] tSS = tS[i].split(",");
-        			    		Location en = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[0]),Integer.parseInt(tSS[1]), Integer.parseInt(tSS[2]));
-        			    		Location ex = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[3]),Integer.parseInt(tSS[4]), Integer.parseInt(tSS[5]));
-        			    		shopMap.get(tS[0]).addE(en, ex);
-        					}
-        					for(int i = 1;i < s.split(";").length;i++){//There are chests
-        						Location l = new Location(getServer().getWorld(tS[1]), Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[0])
-        														, Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[1])
-        														, Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[2]));
-        						shopMap.get(tS[0]).addChest(l);
-        						String idS = s.split(";")[i].split("\\[")[1].split("\\]")[0];
-        						if(!idS.split(",")[0].trim().equals("")){
-        							int[][] ids = new int[idS.split(",").length][2];
-        							for(int j = 0;j < ids.length;j++){//The chests
-        								if(idS.split(",")[j].contains(":")){
-        									ids[j][0] = Integer.parseInt(idS.split(",")[j].split(":")[0].trim());
-        									ids[j][1] = Integer.parseInt(idS.split(",")[j].split(":")[1].trim());
-        								} else {
-        									ids[j][0] = Integer.parseInt(idS.split(",")[j].trim());
-        									ids[j][1] = 0;
-        								}
-        							}
-        							shopMap.get(tS[0]).addChestItem(l, ids);
-        						}
-        					}
-        					int bIdx = s.indexOf("BANNED_");
-        					if(bIdx > -1){//There are banned players
-        						String[] banned = s.substring(bIdx + 7).split(",");
-        						for(int i = 0;i < banned.length;i++){
-        							shopMap.get(tS[0]).banned.add(banned[i]);
-        						}
-        					}
-    					}
-    				}
-    				fstream.close();
-    				br.close();
-    				if(!latest)//Needs updating
-    					updateEntrancesDb();
-    			}
-    		} catch (FileNotFoundException e) {
-    			e.printStackTrace();
-    			log.info("Failed while reading shops.db");
-			} catch(IOException e) {
-				e.printStackTrace();
-    			log.info("Failed while reading shops.db");
-			}
-    		
-    		
-    		try {
-    			f = new File(mandir + "prices.xml");
-    			if(!f.exists()){
-    				f.createNewFile();
-    			} else {
-    				new PricesParser().parseDocument(f);
-    			}
-    		} catch (Exception e){
-				e.printStackTrace();
-    			log.info("Failed while reading prices.xml");
-    		}
-    		
-    		try {
-    			f = new File(mandir + "inventories.db");
-    			if(f.exists()){
-    				fstream = new FileInputStream(f);
-    				br = new BufferedReader(new InputStreamReader(fstream));
-    				String s;
-    				while ((s = br.readLine()) != null){
-    					if(!s.equals("Inventories database for RealShopping v0.33") && !s.equals("Inventories database for RealShopping v0.32") && !s.equals("Inventories database for RealShopping v0.31"))
-    						PInvMap.put(s.split(";")[0].split("-")[0], new RSPlayerInventory(s.split(";")[1] ,s.split(";")[0].split("-")[1]));//Name - Pinv
-    				}
-    				fstream.close();
-    				br.close();
-    			}
-    			f.delete();
-    		} catch (Exception e){
-				e.printStackTrace();
-    			log.info("Failed while reading inventories.db");
-    		}
-    		
-    		try {
-    			f = new File(mandir + "protectedchests.db");
-    			if(f.exists()){
-    				fstream = new FileInputStream(f);
-    				br = new BufferedReader(new InputStreamReader(fstream));
-    				String s;
-    				while ((s = br.readLine()) != null){
-    					if(s.equals("Protected chests for RealShopping v0.32") || s.equals("Protected chests for RealShopping v0.33")){
-
-    					} else {
-    						shopMap.get(s.split(";")[0]).protectedChests.add(new Location(getServer().getWorld(s.split(";")[1].split(",")[0])
-    								,Double.parseDouble(s.split(";")[1].split(",")[1])
-    								,Double.parseDouble(s.split(";")[1].split(",")[2])
-    								,Double.parseDouble(s.split(";")[1].split(",")[3])));
-    					}
-    				}
-    				fstream.close();
-    				br.close();
-    			}
-    			f.delete();
-    		} catch (Exception e){
-				e.printStackTrace();
-    			log.info("Failed while reading protectedchests.db");
-    		}
-    		
-    		try {
-    			f = new File(mandir + "jailed.db");
-    			if(f.exists()){
-    				fstream = new FileInputStream(f);
-    				br = new BufferedReader(new InputStreamReader(fstream));
-    				String s;
-    				while ((s = br.readLine()) != null){
-    					if(s.equals("Jailed players database for RealShopping v0.21") || s.equals("Jailed players database for RealShopping v0.30")
-    							|| s.equals("Jailed players database for RealShopping v0.31")){
-
-    					} else {
-    						jailedPlayers.put(s.split(";")[0], stringToLoc(s.split(";")[1], s.split(";")[2]));
-    					}
-    				}
-    				fstream.close();
-    				br.close();
-    			}
-    			f.delete();
-    		} catch (Exception e){
-				e.printStackTrace();
-    			log.info("Failed while reading jailed.db");
-    		}
-    		
-    		try {
-    			f = new File(mandir + "allowedtplocs.db");
-    			if(f.exists()){
-    				fstream = new FileInputStream(f);
-    				br = new BufferedReader(new InputStreamReader(fstream));
-    				String s;
-    				while ((s = br.readLine()) != null){
-    					if(s.length() > 50 && (s.substring(0, 43).equals("Allowed teleport locations for RealShopping"))){
-    						if(s.substring(51).equals("Blacklist")) tpLocBlacklist = true;
-    						else tpLocBlacklist = false;
-    					} else {
-    						forbiddenTpLocs.put(stringToLoc(s.split(";")[0], s.split(";")[1]), Integer.parseInt(s.split(";")[2]));
-    					}
-    				}
-    				fstream.close();
-    				br.close();
-    			}
-    			f.delete();
-    		} catch (Exception e){
-				e.printStackTrace();
-    			log.info("Failed while reading allowedtplocs.db");
-    		}
-    		
-    		try {
-    			f = new File(mandir + "toclaim.db");
-    			if(f.exists()){
-    				fstream = new FileInputStream(f);
-    				br = new BufferedReader(new InputStreamReader(fstream));
-    				String s;
-    				boolean v32plus = false;
-    				while ((s = br.readLine()) != null){
-    					if(s.equals("Stolen items database for RealShopping v0.32") || s.equals("Stolen items database for RealShopping v0.33")) v32plus = true;
-    					else if(s.equals("Stolen items database for RealShopping v0.31")) {}
-    					else {
-    						Shop tempShop;
-    						if(v32plus){
-    							tempShop = shopMap.get(s.split(",")[0]);
-    	    					for(int i = 2;i < s.split(",").length;i++){
-    	    						ItemStack tempIS = new ItemStack(Integer.parseInt(s.split(",")[2].split(":")[0]),
-    	    								Integer.parseInt(s.split(",")[2].split(":")[1]),
-    	    								Short.parseShort(s.split(",")[2].split(":")[2]),
-    	    								Byte.parseByte(s.split(",")[2].split(":")[3]));
-    	    						for(int j = 4;j < s.split(",")[2].split(":").length;j++){
-    	    							tempIS.addEnchantment(Enchantment.getById(Integer.parseInt(s.split(",")[2].split(":")[j].split(";")[0])), Integer.parseInt(s.split(",")[2].split(":")[j].split(";")[1]));
-    	    						}
-    	    						tempShop.stolenToClaim.add(tempIS);
-    	    					}
-    						} else {
-    							String[] stores = getOwnedStores(s.split(";")[0]);
-    							if(!stores[0].equals("")){
-    								tempShop = shopMap.get(stores[0]);
-    		    					for(int i = 1;i < s.split(";").length;i++){
-    		    						tempShop.stolenToClaim.add(new ItemStack(Integer.parseInt(s.split(";")[i].split(",")[0]),
-    		    								Integer.parseInt(s.split(";")[i].split(",")[1]),
-    		    								Short.parseShort(s.split(";")[i].split(",")[2]),
-    		    								Byte.parseByte(s.split(";")[i].split(",")[3])));
-    		    					}
-    							} else {
-    								log.info("Couldn't convert because player doesn't own any stores: " + s);
-    							}
-    						}
-    					}
-    				}
-    				fstream.close();
-    				br.close();
-    			}
-    			f.delete();
-    		} catch (Exception e) {
-    			e.printStackTrace();
-    			log.info("Failed while reading toclaim.db");
-    		}
-    		
-    		try {
-    			f = new File(mandir + "shipped.db");
-    			if(f.exists()){
-    				fstream = new FileInputStream(f);
-    				br = new BufferedReader(new InputStreamReader(fstream));
-    				String s;
-    				boolean v32plus = false;
-    				while ((s = br.readLine()) != null){
-    				    if(s.equals("Shipped Packages database for RealShopping v0.32") || s.equals("Shipped Packages database for RealShopping v0.33")) v32plus = true;
-    				    else if(s.equals("Shipped Packages database for RealShopping v0.31")) {}
-    					else {
-    						if(v32plus){
-    							shippedToCollect.put(s.split("\\[")[0], new ArrayList<ShippedPackage>());
-    	    					for(int i = 1;i < s.split("\\[").length;i++){
-    	    						String[] parts = s.split("\\[")[i].split("\\]");
-    	    						ItemStack[] iS = new ItemStack[27];
-    	    						
-    	    						//Metainfo
-    	    						Float cost = Float.parseFloat(parts[0].split(":")[0]);
-    	    						Location loc = new Location(getServer().getWorld(parts[0].split(":")[1].split(";")[0])
-    	    								,Integer.parseInt(parts[0].split(":")[1].split(";")[1].split(",")[0])
-    	    								,Integer.parseInt(parts[0].split(":")[1].split(";")[1].split(",")[1])
-    	    								,Integer.parseInt(parts[0].split(":")[1].split(";")[1].split(",")[2]));
-    	    						long timeStamp = Long.parseLong(parts[0].split(":")[2]);
-    	    						
-    	    						//Contents
-    	    						for(int j = 0;j < parts[1].split(",").length;j++){
-    	    							ItemStack tempIS;
-    	    							if(parts[1].split(",")[j].equals("null")) tempIS = null;
-    	    							else {
-    	    								tempIS = new ItemStack(Integer.parseInt(parts[1].split(",")[j].split(":")[0]),
-    	    										Integer.parseInt(parts[1].split(",")[j].split(":")[1]),
-            	    								Short.parseShort(parts[1].split(",")[j].split(":")[2]),
-            	    								Byte.parseByte(parts[1].split(",")[j].split(":")[3]));
-            	    						for(int k = 4;k < parts[1].split(",")[j].split(":").length;k++){
-            	    							tempIS.addEnchantment(Enchantment.getById(Integer.parseInt(parts[1].split(",")[j].split(":")[k].split(";")[0])), Integer.parseInt(parts[1].split(",")[j].split(":")[k].split(";")[1]));
-            	    						}
-            	    						iS[j] = tempIS;
-    	    							}
-    	    						}
-    	    						shippedToCollect.get(s.split("\\[")[0]).add(new ShippedPackage(iS, cost, loc, timeStamp));
-    	    					}
-    						} else {
-    	    					shippedToCollect.put(s.split("\\[\\]")[0], new ArrayList<ShippedPackage>());
-    	    					for(int i = 1;i < s.split("\\[\\]").length;i++){
-    	    						ItemStack[] iS = new ItemStack[27];
-    	    						Float cost = 0.0f;
-    	    						Location loc = getServer().getWorlds().get(0).getSpawnLocation();
-    	    						long timeStamp = System.currentTimeMillis();
-    	    						for(int j = 0;j < iS.length && j < 27;j++){
-    	    							if(s.split("\\[\\]")[i].split(";")[j].equals("null")) iS[j] = null;
-    	    							else iS[j] = new ItemStack(Integer.parseInt(s.split("\\[\\]")[i].split(";")[j].split(",")[0]),
-    	        								Integer.parseInt(s.split("\\[\\]")[i].split(";")[j].split(",")[1]),
-    	        								Short.parseShort(s.split("\\[\\]")[i].split(";")[j].split(",")[2]),
-    	        								Byte.parseByte(s.split("\\[\\]")[i].split(";")[j].split(",")[3]));
-    	    						}
-    	    						shippedToCollect.get(s.split("\\[\\]")[0]).add(new ShippedPackage(iS, cost, loc, timeStamp));
-    	    					}
-    						}
-    					}
-    				}
-    				fstream.close();
-    				br.close();
-    			}
-    			f.delete();
-    		} catch (Exception e) {
-    			e.printStackTrace();
-    			log.info("Failed while reading shipped.db");
-    		}
-    		
-    		f = new File(mandir + "langpacks/");
-    		if(!f.exists()) f.mkdir();
-        	LangPack.initialize(Config.langpack);
-        	unit = LangPack.UNIT;
-    		initForbiddenInStore();
-    		initMaxDur();
-    		new Notificator(10000).start();
-    		RSPlayerListener.updateStats();
-    		log.info("RealShopping initialized");
-    	} else {
-    		log.info("Couldn't initialize RealShopping.");
-    		working = "Couldn't initialize RealShopping. Have you installed a Vault-compatible economy plugin?";
-    	}
+   		working = "";
+   		tpLocBlacklist = true;
         
+   		RSEconomy.setupEconomy();
+		Config.initialize();
+		if(Config.autoUpdate > 0){
+			if(Config.autoUpdate == 5){
+				updater = new Updater(this, "realshopping", this.getFile(), Updater.UpdateType.DEFAULT, true);
+				if(updater.getResult() == Updater.UpdateResult.SUCCESS){
+					log.info("RealShopping updated to " + updater.getLatestVersionString() + ". Restart the server to load the new version.");
+				}
+			} else {
+				updater = new Updater(this, "realshopping", this.getFile(), Updater.UpdateType.NO_DOWNLOAD, true);
+				if(updater.getResult() == Updater.UpdateResult.UPDATE_AVAILABLE){
+	    			if(Config.autoUpdate > 2)
+    						newUpdate = updater.getLatestVersionString() + " of RealShopping is available for download. Update for new features and/or bugfixes with the rsupdate command.";
+	    			else
+    						newUpdate = updater.getLatestVersionString()
+    						+ " of RealShopping is available for download. Update for new features and/or bugfixes. You can get information about the new version with 'rsupdate info'";
+	    			log.info(newUpdate);
+				}
+			}
+		}
+		
+		File f;
+		FileInputStream fstream;
+		BufferedReader br;
+		try {
+			f = new File(mandir + "shops.db");
+			if(!f.exists()){
+				f.createNewFile();
+			} else {
+				fstream = new FileInputStream(f);
+				br = new BufferedReader(new InputStreamReader(fstream));
+				String s;
+				String ss = "";
+				boolean v2plus = false;
+				boolean v3plus = false;
+				boolean latest = false;
+				while ((s = br.readLine()) != null){// Read shops.db
+					if(s.equals("Shops database for RealShopping v0.20") || s.equals("Shops database for RealShopping v0.21")){
+						v2plus = true;
+					} else if(s.equals("Shops database for RealShopping v0.30") || s.equals("Shops database for RealShopping v0.31")
+							|| s.equals("Shops database for RealShopping v0.32")) { 
+						v2plus = true;
+						v3plus = true;
+					} else if(s.equals("Shops database for RealShopping v0.33")){
+						v2plus = true;
+						v3plus = true;
+						latest = true;
+					} else {
+    					String[] tS = s.split(";")[0].split(":");
+    		    		shopMap.put(tS[0], new Shop(tS[0], tS[1], v2plus?tS[2]:"@admin"));
+    		    		shopMap.get(tS[0]).buyFor = (v3plus)?Integer.parseInt(tS[3]):0;
+    					for(int i = v3plus?4:v2plus?3:2;i < tS.length;i++){//The entrances + exits
+    						String[] tSS = tS[i].split(",");
+    			    		Location en = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[0]),Integer.parseInt(tSS[1]), Integer.parseInt(tSS[2]));
+    			    		Location ex = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[3]),Integer.parseInt(tSS[4]), Integer.parseInt(tSS[5]));
+    			    		shopMap.get(tS[0]).addE(en, ex);
+    					}
+    					for(int i = 1;i < s.split(";").length;i++){//There are chests
+    						Location l = new Location(getServer().getWorld(tS[1]), Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[0])
+    														, Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[1])
+    														, Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[2]));
+    						shopMap.get(tS[0]).addChest(l);
+    						String idS = s.split(";")[i].split("\\[")[1].split("\\]")[0];
+    						if(!idS.split(",")[0].trim().equals("")){
+    							int[][] ids = new int[idS.split(",").length][2];
+    							for(int j = 0;j < ids.length;j++){//The chests
+    								if(idS.split(",")[j].contains(":")){
+    									ids[j][0] = Integer.parseInt(idS.split(",")[j].split(":")[0].trim());
+    									ids[j][1] = Integer.parseInt(idS.split(",")[j].split(":")[1].trim());
+    								} else {
+    									ids[j][0] = Integer.parseInt(idS.split(",")[j].trim());
+    									ids[j][1] = 0;
+    								}
+    							}
+    							shopMap.get(tS[0]).addChestItem(l, ids);
+    						}
+    					}
+    					int bIdx = s.indexOf("BANNED_");
+    					if(bIdx > -1){//There are banned players
+    						String[] banned = s.substring(bIdx + 7).split(",");
+    						for(int i = 0;i < banned.length;i++){
+    							shopMap.get(tS[0]).banned.add(banned[i]);
+    						}
+    					}
+					}
+				}
+				fstream.close();
+				br.close();
+				if(!latest)//Needs updating
+					updateEntrancesDb();
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			log.info("Failed while reading shops.db");
+		} catch(IOException e) {
+			e.printStackTrace();
+			log.info("Failed while reading shops.db");
+		}
+		
+		
+		try {
+			f = new File(mandir + "prices.xml");
+			if(!f.exists()){
+				f.createNewFile();
+			} else {
+				new PricesParser().parseDocument(f);
+			}
+		} catch (Exception e){
+			e.printStackTrace();
+			log.info("Failed while reading prices.xml");
+		}
+		
+		try {
+			f = new File(mandir + "inventories.db");
+			if(f.exists()){
+				fstream = new FileInputStream(f);
+				br = new BufferedReader(new InputStreamReader(fstream));
+				String s;
+				while ((s = br.readLine()) != null){
+					if(!s.equals("Inventories database for RealShopping v0.33") && !s.equals("Inventories database for RealShopping v0.32") && !s.equals("Inventories database for RealShopping v0.31"))
+						PInvMap.put(s.split(";")[0].split("-")[0], new RSPlayerInventory(s.split(";")[1] ,s.split(";")[0].split("-")[1]));//Name - Pinv
+				}
+				fstream.close();
+				br.close();
+			}
+			f.delete();
+		} catch (Exception e){
+			e.printStackTrace();
+			log.info("Failed while reading inventories.db");
+		}
+		
+		try {
+			f = new File(mandir + "protectedchests.db");
+			if(f.exists()){
+				fstream = new FileInputStream(f);
+				br = new BufferedReader(new InputStreamReader(fstream));
+				String s;
+				while ((s = br.readLine()) != null){
+					if(s.equals("Protected chests for RealShopping v0.32") || s.equals("Protected chests for RealShopping v0.33")){
+
+					} else {
+						shopMap.get(s.split(";")[0]).protectedChests.add(new Location(getServer().getWorld(s.split(";")[1].split(",")[0])
+								,Double.parseDouble(s.split(";")[1].split(",")[1])
+								,Double.parseDouble(s.split(";")[1].split(",")[2])
+								,Double.parseDouble(s.split(";")[1].split(",")[3])));
+					}
+				}
+				fstream.close();
+				br.close();
+			}
+			f.delete();
+		} catch (Exception e){
+			e.printStackTrace();
+			log.info("Failed while reading protectedchests.db");
+		}
+		
+		try {
+			f = new File(mandir + "jailed.db");
+			if(f.exists()){
+				fstream = new FileInputStream(f);
+				br = new BufferedReader(new InputStreamReader(fstream));
+				String s;
+				while ((s = br.readLine()) != null){
+					if(s.equals("Jailed players database for RealShopping v0.21") || s.equals("Jailed players database for RealShopping v0.30")
+							|| s.equals("Jailed players database for RealShopping v0.31")){
+
+					} else {
+						jailedPlayers.put(s.split(";")[0], stringToLoc(s.split(";")[1], s.split(";")[2]));
+					}
+				}
+				fstream.close();
+				br.close();
+			}
+			f.delete();
+		} catch (Exception e){
+			e.printStackTrace();
+			log.info("Failed while reading jailed.db");
+		}
+		
+		try {
+			f = new File(mandir + "allowedtplocs.db");
+			if(f.exists()){
+				fstream = new FileInputStream(f);
+				br = new BufferedReader(new InputStreamReader(fstream));
+				String s;
+				while ((s = br.readLine()) != null){
+					if(s.length() > 50 && (s.substring(0, 43).equals("Allowed teleport locations for RealShopping"))){
+						if(s.substring(51).equals("Blacklist")) tpLocBlacklist = true;
+						else tpLocBlacklist = false;
+					} else {
+						forbiddenTpLocs.put(stringToLoc(s.split(";")[0], s.split(";")[1]), Integer.parseInt(s.split(";")[2]));
+					}
+				}
+				fstream.close();
+				br.close();
+			}
+			f.delete();
+		} catch (Exception e){
+			e.printStackTrace();
+			log.info("Failed while reading allowedtplocs.db");
+		}
+		
+		try {
+			f = new File(mandir + "toclaim.db");
+			if(f.exists()){
+				fstream = new FileInputStream(f);
+				br = new BufferedReader(new InputStreamReader(fstream));
+				String s;
+				boolean v32plus = false;
+				while ((s = br.readLine()) != null){
+					if(s.equals("Stolen items database for RealShopping v0.32") || s.equals("Stolen items database for RealShopping v0.33")) v32plus = true;
+					else if(s.equals("Stolen items database for RealShopping v0.31")) {}
+					else {
+						Shop tempShop;
+						if(v32plus){
+							tempShop = shopMap.get(s.split(",")[0]);
+	    					for(int i = 2;i < s.split(",").length;i++){
+	    						ItemStack tempIS = new ItemStack(Integer.parseInt(s.split(",")[2].split(":")[0]),
+	    								Integer.parseInt(s.split(",")[2].split(":")[1]),
+	    								Short.parseShort(s.split(",")[2].split(":")[2]),
+	    								Byte.parseByte(s.split(",")[2].split(":")[3]));
+	    						for(int j = 4;j < s.split(",")[2].split(":").length;j++){
+	    							tempIS.addEnchantment(Enchantment.getById(Integer.parseInt(s.split(",")[2].split(":")[j].split(";")[0])), Integer.parseInt(s.split(",")[2].split(":")[j].split(";")[1]));
+	    						}
+	    						tempShop.stolenToClaim.add(tempIS);
+	    					}
+						} else {
+							String[] stores = getOwnedStores(s.split(";")[0]);
+							if(!stores[0].equals("")){
+								tempShop = shopMap.get(stores[0]);
+		    					for(int i = 1;i < s.split(";").length;i++){
+		    						tempShop.stolenToClaim.add(new ItemStack(Integer.parseInt(s.split(";")[i].split(",")[0]),
+		    								Integer.parseInt(s.split(";")[i].split(",")[1]),
+		    								Short.parseShort(s.split(";")[i].split(",")[2]),
+		    								Byte.parseByte(s.split(";")[i].split(",")[3])));
+		    					}
+							} else {
+								log.info("Couldn't convert because player doesn't own any stores: " + s);
+							}
+						}
+					}
+				}
+				fstream.close();
+				br.close();
+			}
+			f.delete();
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.info("Failed while reading toclaim.db");
+		}
+		
+		try {
+			f = new File(mandir + "shipped.db");
+			if(f.exists()){
+				fstream = new FileInputStream(f);
+				br = new BufferedReader(new InputStreamReader(fstream));
+				String s;
+				boolean v32plus = false;
+				while ((s = br.readLine()) != null){
+				    if(s.equals("Shipped Packages database for RealShopping v0.32") || s.equals("Shipped Packages database for RealShopping v0.33")) v32plus = true;
+				    else if(s.equals("Shipped Packages database for RealShopping v0.31")) {}
+					else {
+						if(v32plus){
+							shippedToCollect.put(s.split("\\[")[0], new ArrayList<ShippedPackage>());
+	    					for(int i = 1;i < s.split("\\[").length;i++){
+	    						String[] parts = s.split("\\[")[i].split("\\]");
+	    						ItemStack[] iS = new ItemStack[27];
+	    						
+	    						//Metainfo
+	    						Float cost = Float.parseFloat(parts[0].split(":")[0]);
+	    						Location loc = new Location(getServer().getWorld(parts[0].split(":")[1].split(";")[0])
+	    								,Integer.parseInt(parts[0].split(":")[1].split(";")[1].split(",")[0])
+	    								,Integer.parseInt(parts[0].split(":")[1].split(";")[1].split(",")[1])
+	    								,Integer.parseInt(parts[0].split(":")[1].split(";")[1].split(",")[2]));
+	    						long timeStamp = Long.parseLong(parts[0].split(":")[2]);
+	    						
+	    						//Contents
+	    						for(int j = 0;j < parts[1].split(",").length;j++){
+	    							ItemStack tempIS;
+	    							if(parts[1].split(",")[j].equals("null")) tempIS = null;
+	    							else {
+	    								tempIS = new ItemStack(Integer.parseInt(parts[1].split(",")[j].split(":")[0]),
+	    										Integer.parseInt(parts[1].split(",")[j].split(":")[1]),
+        	    								Short.parseShort(parts[1].split(",")[j].split(":")[2]),
+        	    								Byte.parseByte(parts[1].split(",")[j].split(":")[3]));
+        	    						for(int k = 4;k < parts[1].split(",")[j].split(":").length;k++){
+        	    							tempIS.addEnchantment(Enchantment.getById(Integer.parseInt(parts[1].split(",")[j].split(":")[k].split(";")[0])), Integer.parseInt(parts[1].split(",")[j].split(":")[k].split(";")[1]));
+        	    						}
+        	    						iS[j] = tempIS;
+	    							}
+	    						}
+	    						shippedToCollect.get(s.split("\\[")[0]).add(new ShippedPackage(iS, cost, loc, timeStamp));
+	    					}
+						} else {
+	    					shippedToCollect.put(s.split("\\[\\]")[0], new ArrayList<ShippedPackage>());
+	    					for(int i = 1;i < s.split("\\[\\]").length;i++){
+	    						ItemStack[] iS = new ItemStack[27];
+	    						Float cost = 0.0f;
+	    						Location loc = getServer().getWorlds().get(0).getSpawnLocation();
+	    						long timeStamp = System.currentTimeMillis();
+	    						for(int j = 0;j < iS.length && j < 27;j++){
+	    							if(s.split("\\[\\]")[i].split(";")[j].equals("null")) iS[j] = null;
+	    							else iS[j] = new ItemStack(Integer.parseInt(s.split("\\[\\]")[i].split(";")[j].split(",")[0]),
+	        								Integer.parseInt(s.split("\\[\\]")[i].split(";")[j].split(",")[1]),
+	        								Short.parseShort(s.split("\\[\\]")[i].split(";")[j].split(",")[2]),
+	        								Byte.parseByte(s.split("\\[\\]")[i].split(";")[j].split(",")[3]));
+	    						}
+	    						shippedToCollect.get(s.split("\\[\\]")[0]).add(new ShippedPackage(iS, cost, loc, timeStamp));
+	    					}
+						}
+					}
+				}
+				fstream.close();
+				br.close();
+			}
+			f.delete();
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.info("Failed while reading shipped.db");
+		}
+		
+		f = new File(mandir + "langpacks/");
+		if(!f.exists()) f.mkdir();
+    	LangPack.initialize(Config.langpack);
+    	unit = LangPack.UNIT;
+		initForbiddenInStore();
+		initMaxDur();
+		new Notificator(10000).start();
+		RSPlayerListener.updateStats();
+		log.info("RealShopping initialized");
     }
      
     public void onDisable(){
@@ -539,6 +534,7 @@ public class RealShopping extends JavaPlugin {
 			saveTemporaryFile(3);//Protected chests
 			saveTemporaryFile(4);//Shipped Packages
 			saveTemporaryFile(5);//toClaim
+			RSEconomy.export();//If econ is null
 			
 			//Write prices to xml
 
@@ -811,10 +807,8 @@ public class RealShopping extends JavaPlugin {
 		if(PInvMap.containsKey(player.getName())){
 			String shopName = PInvMap.get(player.getName()).getStore();
 			if(!shopMap.get(shopName).prices.isEmpty()) {
-				if(shopMap.get(shopName).sellToStore.containsKey(player.getName())){
-					cancelToSell(player);
-				}
 				float toPay = PInvMap.get(player.getName()).toPay(invs);
+				if(toPay==0f) return false;
 				if(RSEconomy.getBalance(player.getName()) < toPay) {
 					player.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOBUYTHINGSFOR + toPay + unit);
 					return true;
@@ -848,9 +842,9 @@ public class RealShopping extends JavaPlugin {
 	
     public static boolean prices(CommandSender sender, int page, String store, boolean cmd){//TODO move to executor
     	if(!shopMap.get(store).prices.isEmpty()){
-    		Map<Integer, Float> tempMap = shopMap.get(store).prices;
+    		Map<Price, Float> tempMap = shopMap.get(store).prices;
  			if(!tempMap.isEmpty()){
- 				Object[] keys = tempMap.keySet().toArray();
+ 				Price[] keys = tempMap.keySet().toArray(new Price[0]);
  				if(page*9 < keys.length){//If page exists
  					boolean SL = false;
  					if(!shopMap.get(store).sale.isEmpty()){
@@ -868,7 +862,7 @@ public class RealShopping extends JavaPlugin {
  		 						cost /= 100;
  		 						onSlStr = ChatColor.GREEN + LangPack.ONSALE;
  		 					}
- 		 					sender.sendMessage(ChatColor.BLUE + "" + keys[i] + " " + Material.getMaterial(Integer.parseInt(keys[i] + "")) + ChatColor.BLACK + " - " + ChatColor.RED + cost + unit + onSlStr);
+ 		 					sender.sendMessage(ChatColor.BLUE + "" + keys[i] + " " + Material.getMaterial(keys[i].getType()) + ChatColor.BLACK + " - " + ChatColor.RED + cost + unit + onSlStr);
  		 				}
  		 				sender.sendMessage(ChatColor.RED + LangPack.MOREITEMSONPAGE + (page + 2));
  					} else {//Last page
@@ -882,7 +876,7 @@ public class RealShopping extends JavaPlugin {
  		 						cost /= 100;
  		 						onSlStr = ChatColor.GREEN + LangPack.ONSALE;
  		 					}
- 		 					sender.sendMessage(ChatColor.BLUE + "" + keys[i] + " " + Material.getMaterial(Integer.parseInt(keys[i] + "")) + ChatColor.BLACK + " - " + ChatColor.RED + cost + unit + onSlStr);
+ 		 					sender.sendMessage(ChatColor.BLUE + "" + keys[i] + " " + Material.getMaterial(keys[i].getType()) + ChatColor.BLACK + " - " + ChatColor.RED + cost + unit + onSlStr);
  		 				}
  					}
  				} else {
@@ -904,7 +898,7 @@ public class RealShopping extends JavaPlugin {
 	 * Selling to stores functions (to be replaced)
 	 * 
 	 */
-    
+    /*
     public static boolean addItemToSell(Player p, ItemStack iS){
     	if(Config.enableSelling && PInvMap.containsKey(p.getName())){
     		Shop tempShop = shopMap.get(PInvMap.get(p.getName()).getStore());
@@ -1043,7 +1037,7 @@ public class RealShopping extends JavaPlugin {
     	}
     	return false;
     }
-    
+    */
     public static boolean sellToStore(Player p, ItemStack[] iS){
     	Shop tempShop = shopMap.get(PInvMap.get(p.getName()).getStore());
     	if(Config.enableSelling && PInvMap.containsKey(p.getName()) && tempShop.buyFor > 0){
@@ -1052,11 +1046,16 @@ public class RealShopping extends JavaPlugin {
     		for(int i = 0;i < iS.length;i++){//Calculate cost
     			if(iS[i] != null){
         			int type = iS[i].getTypeId();
-        			if(tempShop.prices.containsKey(type)){//Something in inventory has a price
+        			int data = iS[i].getData().getData();
+        			if(tempShop.prices.containsKey(new Price(type)) || tempShop.prices.containsKey(new Price(type, data))){//Something in inventory has a price
         				int amount = ((maxDurMap.containsKey(type))?maxDurMap.get(type) - iS[i].getDurability():iS[i].getAmount());
-        				float cost = tempShop.prices.get(type);
-        				if(tempShop.sale.containsKey(type)){//There is a sale on that item.
-        					int pcnt = 100 - tempShop.sale.get(type);
+    					float cost = -1;
+    					if(tempShop.prices.containsKey(new Price(type))) cost = tempShop.prices.get(new Price(type));
+    					if(tempShop.prices.containsKey(new Price(type, data))) cost = tempShop.prices.get(new Price(type, data));
+    					if(tempShop.sale.containsKey(new Price(type)) || tempShop.sale.containsKey(new Price(type, data))){//There is a sale on that item.
+    						int pcnt = -1;
+    						if(tempShop.sale.containsKey(new Price(type))) pcnt = 100 - tempShop.sale.get(new Price(type));
+    						if(tempShop.sale.containsKey(new Price(type, data)))  pcnt = 100 - tempShop.sale.get(new Price(type, data));
         					cost *= pcnt;
         					cost = Math.round(cost);
         					cost /= 100;
@@ -1082,6 +1081,7 @@ public class RealShopping extends JavaPlugin {
 					notificator.get(own).add("Your store " + tempShop.name + " bought stuff for " + payment + LangPack.UNIT + " from " + p.getName());
 					for(ItemStack key:sold){
 						tempShop.stats.add(new Statistic(new PItem(key), key.getAmount(), false));
+						PInvMap.get(p.getName()).removeItem(key, key.getAmount());
 					}
     				cont = true;
     			}
@@ -1089,6 +1089,9 @@ public class RealShopping extends JavaPlugin {
 				RSEconomy.deposit(p.getName(), payment);
 				tempShop.sellToStore.remove(p.getName());
 				p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sold.size() + LangPack.ITEMSFOR + payment + unit);
+				for(ItemStack key:sold){
+					PInvMap.get(p.getName()).removeItem(key, key.getAmount());
+				}
 				cont = true;
    			}
    			if(cont){
@@ -1193,7 +1196,8 @@ public class RealShopping extends JavaPlugin {
 				ItemStack x = cartInv[i];
 				if(x != null){
 					int type = x.getTypeId();
-					if(shopMap.get(PInvMap.get(p.getName()).getStore()).prices.containsKey(type)){//Something in cart has a price
+					if(shopMap.get(PInvMap.get(p.getName()).getStore()).prices.containsKey(new Price(type))
+							|| shopMap.get(PInvMap.get(p.getName()).getStore()).prices.containsKey(new Price(type, x.getData().getData()))){//Something in cart has a price
 						if(PInvMap.get(p.getName()).hasItem(x)){//Player owns item
 							int amount = (maxDurMap.containsKey(type)?maxDurMap.get(type) - x.getDurability():x.getAmount());
 							PItem tempPI = new PItem(x);
@@ -1214,7 +1218,7 @@ public class RealShopping extends JavaPlugin {
 			}
 			Map<PItem, Integer> bought2 = new HashMap<PItem, Integer>(bought);
 			
-			//Remove stolen items from carts inventory
+			//Remove bought items from carts inventory
 			ItemStack[] newCartInv = new ItemStack[cartInv.length];
 			ItemStack[] boughtIS = new ItemStack[cartInv.length];
 			for(int i = 0;i < cartInv.length;i++){
@@ -1227,7 +1231,7 @@ public class RealShopping extends JavaPlugin {
 							if(diff > 0) bought.put(tempPI, diff);
 							boughtIS[i] = x.clone();
 							x = null;
-						} if(diff == 0) {//If zero
+						} else if(diff == 0) {//If zero
 							if(maxDurMap.containsKey(x.getTypeId())){
 								if(x.getDurability()  - bought.get(tempPI) < maxDurMap.get(x.getTypeId())){
 									x.setDurability((short)(x.getDurability() - bought.get(tempPI)));// - ?
@@ -1235,11 +1239,9 @@ public class RealShopping extends JavaPlugin {
 									boughtIS[i].setDurability(bought.get(tempPI).shortValue());
 								} else x = null;
 							} else {
-								if(x.getAmount() - bought.get(tempPI) > 0){
-									x.setAmount(x.getAmount() - bought.get(tempPI));
-									boughtIS[i] = new ItemStack(x);
-									boughtIS[i].setAmount(bought.get(tempPI));
-								} else x = null;
+								boughtIS[i] = new ItemStack(x);
+								boughtIS[i].setAmount(bought.get(tempPI));
+								x = null;
 							}
 							bought.remove(tempPI);
 						}
@@ -1256,17 +1258,21 @@ public class RealShopping extends JavaPlugin {
 			Object[] keys = bought2.keySet().toArray();
 
 			for(int i = 0;i < keys.length;i++){
-				int type = ((PItem) keys[i]).type;
+				PItem key = (PItem) keys[i];
 				Shop tempShop = shopMap.get(PInvMap.get(p.getName()).getStore());
-				int amount = bought2.get(keys[i]);
-				float cost = tempShop.prices.get(type);
-				if(tempShop.sale.containsKey(type)){//There is a sale on that item.
-					int pcnt = 100 - tempShop.sale.get(type);
+				int amount = bought2.get(key);
+				float cost = -1;
+				if(tempShop.prices.containsKey(new Price(key.type))) cost = tempShop.prices.get(new Price(key.type));
+				if(tempShop.prices.containsKey(new Price(key.type, key.data))) cost = tempShop.prices.get(new Price(key.type, key.data));
+				if(tempShop.sale.containsKey(new Price(key.type)) || tempShop.sale.containsKey(new Price(key.type, key.data))){//There is a sale on that item.
+					int pcnt = -1;
+					if(tempShop.sale.containsKey(new Price(key.type))) pcnt = 100 - tempShop.sale.get(new Price(key.type));
+					if(tempShop.sale.containsKey(new Price(key.type, key.data))) pcnt = 100 - tempShop.sale.get(new Price(key.type, key.data));
 					cost *= pcnt;
 					cost = Math.round(cost);
 					cost /= 100;
 				}
-				toPay += cost * (RealShopping.maxDurMap.containsKey(type)?Math.ceil((double)amount / (double)RealShopping.maxDurMap.get(type)):amount);//Convert items durability to item amount
+				toPay += cost * (RealShopping.maxDurMap.containsKey(key.type)?Math.ceil((double)amount / (double)RealShopping.maxDurMap.get(key.type)):amount);//Convert items durability to item amount
 			}
 			
 			//Ship
@@ -1733,7 +1739,7 @@ class Notificator extends Thread {
 
 class PricesParser extends DefaultHandler {
 	int index = -1;
-	List<Map<Integer, Float>> mapList = new ArrayList<Map<Integer, Float>>();
+	List<Map<Price, Float>> mapList = new ArrayList<Map<Price, Float>>();
 	List<String> shopList = new ArrayList<String>();
 	
 	 void parseDocument(File f) {
@@ -1757,7 +1763,7 @@ class PricesParser extends DefaultHandler {
 			mapList.add(new HashMap());
 			index ++;
 		} else if(name.equalsIgnoreCase("item")){
-			mapList.get(index).put(Integer.parseInt(attr.getValue("id")), Float.parseFloat(attr.getValue("cost")));
+			mapList.get(index).put(new Price(attr.getValue("id")), Float.parseFloat(attr.getValue("cost")));
 		}
 	}
 

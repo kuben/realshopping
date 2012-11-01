@@ -1,5 +1,11 @@
 package com.github.kuben.realshopping;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,8 +58,52 @@ public class RSEconomy {
     	
     	if(econ == null) {
     		RealShopping.log.info("Vault/Economy plugin not found. Initializing internal economy.");
+    		
+    		File f;
+    		FileInputStream fstream;
+    		BufferedReader br;
+    		try {
+    			f = new File(RealShopping.mandir + "econ.db");
+    			if(f.exists()){
+    				fstream = new FileInputStream(f);
+    				br = new BufferedReader(new InputStreamReader(fstream));
+    				String s;
+    				while ((s = br.readLine()) != null){
+    					if(!s.equals("Internal Economy for RealShopping"))
+    						accounts.put(s.split(":")[0], Long.parseLong(s.split(":")[1]));//Name - Pinv
+    				}
+    				fstream.close();
+    				br.close();
+    			}
+    			f.delete();
+    		} catch (Exception e){
+				e.printStackTrace();
+    			RealShopping.log.info("Failed while reading econ.db");
+    		}
     		return false;
     	} else return true;
+    }
+    
+    public static void export(){
+    	if(econ == null && !accounts.isEmpty()){
+        	String[] keys = accounts.keySet().toArray(new String[0]);
+        	File f = new File(RealShopping.mandir + "econ.db");
+        	
+			if(!f.exists())
+				try {
+					f.createNewFile();
+					PrintWriter pW;
+					pW = new PrintWriter(f);
+					pW.println("Internal Economy for RealShopping");
+		        	for(String s:keys){
+		        		pW.println(s + ":" + accounts.get(s));
+		        	}
+		        	pW.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+    	}
     }
 }
 

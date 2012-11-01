@@ -10,5 +10,12 @@ notified within 10 sec, or when you log in. To be extended and improved.
 * Begun working on internal economy and an AI-system which (if you want it to) 
 can lower or higher your prices based on demand of items in your and others' stores.
 
+Second Alpha:
+* Removed the old way of selling items to the store. Replaced by /rssell
+* Added support for item damage/data value in prices. You can set the price for all 
+items with a certain id as usual, but you can also override that price like this: 
+ID:DATA:COST
+
+
 Note that this alpha version should not be used on larger servers.
 (The config files are not changed by the way, they still say it's version 0.33)

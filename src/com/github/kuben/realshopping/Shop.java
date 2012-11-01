@@ -39,12 +39,12 @@ public class Shop {
 	
 	public Set<Statistic> stats = new HashSet<Statistic>();
 
-	public Map<Integer, Float> prices = new HashMap<Integer, Float>();
+	public Map<Price, Float> prices = new HashMap<Price, Float>();//number after decimal is data value
 	public List<ItemStack> stolenToClaim = new ArrayList<ItemStack>();
 	
 	public Map<Location,ArrayList<Integer[]>> chests = new HashMap<Location, ArrayList<Integer[]>>();
 	public Map<String,ArrayList<ItemStack>> sellToStore = new HashMap<String, ArrayList<ItemStack>>();
-	public Map<Integer, Integer> sale = new HashMap<Integer, Integer>();
+	public Map<Price, Integer> sale = new HashMap<Price, Integer>();
 	public List<Location> entrance = new ArrayList<Location>(), exit = new ArrayList<Location>();
 	public Set<String> banned = new HashSet<String>();
 	public Set<Location> protectedChests = new HashSet<Location>();
@@ -190,5 +190,63 @@ final class Statistic {
 	
 	public String toString(){
 		return (bought?"bought":"sold") + item.toString() + " x" + amount;
+	}
+}
+
+final class Price {
+	private int type;
+	private int data;
+	
+	public Price(int type){
+		this.type = type;
+		this.data = -1;
+	}
+	
+	public Price(int type, int data){
+		this.type = type;
+		this.data = data;
+	}
+	
+	public Price(String s){
+		this.type = Integer.parseInt(s.split(":")[0]);
+		this.data = s.split(":").length==1?-1:Integer.parseInt(s.split(":")[1]);
+	}
+
+	public int getType() {
+		return type;
+	}
+
+	public int getData() {
+		return data;
+	}
+	
+	@Override
+	public String toString() {
+		return type + (data > -1?":"+data:"");
+	}
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + data;
+		result = prime * result + type;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Price other = (Price) obj;
+		if (data != other.data)
+			return false;
+		if (type != other.type)
+			return false;
+		return true;
 	}
 }

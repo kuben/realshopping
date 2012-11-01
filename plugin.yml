@@ -35,17 +35,17 @@ commands:
       permission-message: You don't have permission to use this command
    rsstores:
       description: Manages your stores (and admin stores if you have permission).
-      usage: /rsstores store [buyfor %_OF_SELL_PRICE|collect [-c] [AMOUNT]|ban PLAYER|unban PLAYER|kick [-o] PLAYER|startsale %_OFF [ITEMID[,ITEMID[,ITEMID...]]]|endsale]
+      usage: /rsstores store [buyfor %_OF_SELL_PRICE|collect [-c] [AMOUNT]|ban PLAYER|unban PLAYER|kick [-o] PLAYER|startsale %_OFF [ITEMID[:DATA][,ITEMID[:DATA][,ITEMID[:DATA]...]]]|endsale]
       permission: realshopping.rsstores
       permission-message: You don't have permission to use this command
    rssetprices:
       description: Add/remove prices.
-      usage: /rssetprices add|del [STORE] ITEM_ID[:COST]
+      usage: /rssetprices add|del [STORE] ITEM_ID[:DATA][:COST]
       permission: realshopping.rssetprices
       permission-message: You don't have permission to use this command
    rssetchests:
       description: Manage self-refilling chests.
-      usage: /rssetchests create|del|additems|delitems [ITEMID[,ITEMID[,ITEMID...]]]
+      usage: /rssetchests create|del|additems|delitems [ITEMID[:DATA][,ITEMID[:DATA][,ITEMID[:DATA]...]]]
       permission: realshopping.rssetchests
       permission-message: You don't have permission to use this command
    rssetstores:

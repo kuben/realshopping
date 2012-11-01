@@ -141,7 +141,7 @@ public class RSPlayerListener implements Listener {
 										event.setCancelled(RealShopping.shipCartContents(sM, player));
 								}
 							}
-						} else if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.BROWN_MUSHROOM){
+						}/* else if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.BROWN_MUSHROOM){
 							if(Config.enableSelling){
 								if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
 									if(event.hasItem()){
@@ -153,7 +153,7 @@ public class RSPlayerListener implements Listener {
 										event.setCancelled(RealShopping.cancelToSell(player));
 								}
 							} else player.sendMessage(ChatColor.RED + LangPack.SELLINGTOSTORESISNOTENABLEDONTHISSERVER);
-						}
+						}*/
 					}
 				}
 		}
