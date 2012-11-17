@@ -127,6 +127,7 @@ public class RealShopping extends JavaPlugin {
     	Config.cartEnabledW = new HashSet<String>();
     	
     	tpLocBlacklist = false;
+    	Config.debug = false;
         Config.keepstolen = false;
         Config.enableSelling = false;
         Config.autoprotect = false;
@@ -231,8 +232,9 @@ public class RealShopping extends JavaPlugin {
     		    			shopMap.get(tS[0]).notifyChanges = notifyByte;
     		    			shopMap.get(tS[0]).changeTreshold = Integer.parseInt(tS[5]);
     		    			shopMap.get(tS[0]).changePercent = Integer.parseInt(tS[6]);
+    		    			shopMap.get(tS[0]).allowNotifications = Boolean.parseBoolean(tS[7]);
     		    		}
-    					for(int i = (version >= 0.40)?7:(version >= 0.30)?4:(version >= 0.20)?3:2;i < tS.length;i++){//The entrances + exits
+    					for(int i = (version >= 0.40)?8:(version >= 0.30)?4:(version >= 0.20)?3:2;i < tS.length;i++){//The entrances + exits
     						String[] tSS = tS[i].split(",");
     			    		Location en = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[0]),Integer.parseInt(tSS[1]), Integer.parseInt(tSS[2]));
     			    		Location ex = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[3]),Integer.parseInt(tSS[4]), Integer.parseInt(tSS[5]));
@@ -312,8 +314,10 @@ public class RealShopping extends JavaPlugin {
 			notificatorThread = new Notificator();
 			notificatorThread.start();
 		}
-		statUpdater = new StatUpdater();
-		statUpdater.start();
+		if(Config.enableAI){
+			statUpdater = new StatUpdater();
+			statUpdater.start();
+		}
 		log.info("RealShopping initialized");
     }
      
@@ -330,8 +334,8 @@ public class RealShopping extends JavaPlugin {
 			saveTemporaryFile(7);//Notifications
 			RSEconomy.export();//If econ is null
 			
-			notificatorThread.running = false;
-			statUpdater.running = false;
+			if(notificatorThread != null) notificatorThread.running = false;
+			if(statUpdater != null) statUpdater.running = false;
 			
 			//Write prices to xml
 
@@ -390,7 +394,7 @@ public class RealShopping extends JavaPlugin {
 			for(int i = 0;i<keys.length;i++){
 				Shop tempShop = shopMap.get(keys[i]);
 				pW.print(keys[i] + ":" + tempShop.world + ":" + tempShop.owner + ":" + tempShop.buyFor + ":" + (tempShop.notifyChanges==2?"change":(tempShop.notifyChanges==1?"notify":"nothing"))
-						+ ":" + tempShop.changeTreshold + ":" + tempShop.changePercent);
+						+ ":" + tempShop.changeTreshold + ":" + tempShop.changePercent + ":" + tempShop.allowNotifications);
 				for(int j = 0;j < tempShop.entrance.size();j++){
 					pW.print(":" + locAsString(tempShop.entrance.get(j)) + "," + locAsString(tempShop.exit.get(j)));
 				}
@@ -877,14 +881,17 @@ public class RealShopping extends JavaPlugin {
 					RSEconomy.withdraw(player.getName(), toPay);
 					if(!shopMap.get(shopName).owner.equals("@admin")){
 						RSEconomy.deposit(shopMap.get(shopName).owner, toPay);//If player owned store, pay player
-						sendNotification(shopMap.get(shopName).owner, player.getName() + " bought stuff for " + toPay + LangPack.UNIT + " from your store " + shopName + ".");
+						if(shopMap.get(shopName).allowNotifications) sendNotification(shopMap.get(shopName).owner, player.getName() + " bought stuff for " + toPay + LangPack.UNIT + " from your store " + shopName + ".");
 					}
 					Map<PItem, Integer> bought = PInvMap.get(player.getName()).getBought(invs);
 					
-					PItem[] keys = bought.keySet().toArray(new PItem[0]);
-					for(PItem key:keys){
-						shopMap.get(shopName).stats.add(new Statistic(key, bought.get(key), true));
+					if(Config.enableAI){
+						PItem[] keys = bought.keySet().toArray(new PItem[0]);
+						for(PItem key:keys){
+							shopMap.get(shopName).stats.add(new Statistic(key, bought.get(key), true));
+						}
 					}
+					
 					if(invs != null) PInvMap.get(player.getName()).update(invs);
 					else PInvMap.get(player.getName()).update();
 					player.sendMessage(ChatColor.RED + LangPack.YOUBOUGHTSTUFFFOR + toPay + unit);
@@ -955,7 +962,7 @@ public class RealShopping extends JavaPlugin {
     
 	/*
 	 * 
-	 * Selling to stores functions (to be replaced)
+	 * Selling to stores functions
 	 * 
 	 */
  
@@ -998,9 +1005,9 @@ public class RealShopping extends JavaPlugin {
     				RSEconomy.withdraw(own, payment);//If player owned store, withdraw from owner
     				tempShop.sellToStore.remove(p.getName());
     				p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sold.size() + LangPack.ITEMSFOR + payment + unit);
-					sendNotification(own, "Your store " + tempShop.name + " bought stuff for " + payment + LangPack.UNIT + " from " + p.getName());
+					if(tempShop.allowNotifications) sendNotification(own, "Your store " + tempShop.name + " bought stuff for " + payment + LangPack.UNIT + " from " + p.getName());
 					for(ItemStack key:sold){
-						tempShop.stats.add(new Statistic(new PItem(key), key.getAmount(), false));
+						if(Config.enableAI) tempShop.stats.add(new Statistic(new PItem(key), key.getAmount(), false));
 						PInvMap.get(p.getName()).removeItem(key, key.getAmount());
 					}
     				cont = true;
@@ -1530,8 +1537,10 @@ public class RealShopping extends JavaPlugin {
 	}
     
 	public static void sendNotification(String who, String what){
-		if(!notificator.containsKey(who)) notificator.put(who, new ArrayList<String>());
-		notificator.get(who).add(what);
+		if(Config.notTimespan >= 500){
+			if(!notificator.containsKey(who)) notificator.put(who, new ArrayList<String>());
+			notificator.get(who).add(what);
+		}
 	}
 	
     File getPFile(){
@@ -1564,7 +1573,6 @@ class Notificator extends Thread {
 	public void run(){
 		try {
 			while(running){
-				if(!RealShopping.notificator.isEmpty()) System.out.println(RealShopping.notificator);
 				for(String s:RealShopping.notificator.keySet()){
 					if(Bukkit.getPlayerExact(s) != null){
 						for(int i = 0;i < 10 && 0 < RealShopping.notificator.get(s).size();i ++){

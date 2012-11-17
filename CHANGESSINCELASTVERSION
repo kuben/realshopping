@@ -1,21 +1,33 @@
 Changes since v0.33
 
-First Alpha:
-* Added /rssell - a new method for players to sell stuff to stores. Will replace 
-the old one by 0.40, I'm not sure it's ready to use now but it seems to work. 
-Simply type /rssell and a window pops up. Place the items you want to sell there 
-and close the window.
-* Added some notifications. When a player buys or sells to your store you are 
-notified within 10 sec, or when you log in. To be extended and improved.
-* Begun working on internal economy and an AI-system which (if you want it to) 
-can lower or higher your prices based on demand of items in your and others' stores.
+Commands:
+* Added /rssell - a new method for players to sell stuff to stores, replacing the 
+old one.
+* Added a 'help' argument to /rsstores.
+* Added 'notifications' argument to /rsstores.
+* Added 'onchange' argument to /rsstores.
+* Added 'clear' and 'copy' arguments to /rssetprices.
 
-Second Alpha:
-* Removed the old way of selling items to the store. Replaced by /rssell
-* Added support for item damage/data value in prices. You can set the price for all 
+Misc:
+* Added some notifications.
+* Added internal economy which is used when Vault can't find an economy plugin 
+(or when Vault isn't found).
+* Added support for item data value in prices. You can set the price for all 
 items with a certain id as usual, but you can also override that price like this: 
 ID:DATA:COST
 
+Added 6 lines in config:
+* notificatior-update-frequency - in milliseconds how often the notifications thread 
+should be ran. Anything bellow 500 disables notifications.
+* enable-automatic-store-management - if the server allows stores to monitor statistics 
+from itself and other stores, and also if the stores may automaticly change prices.
+* statistics-timespan - how old statistics are "remembered". On servers where things 
+happen fast, use a shorter timespan. On "slow" servers, a larger one.
+* stat-updater-frequency - how often the statistics thread should be ran.
+* clean-stats-older-than - how old statistics can be before they are removed from the database.
+* allow-filling-chests - if users are allowed to use commands that fill chests. Set 
+this to false if you have some kind of chest protection plugin. Also disables shopping 
+carts and shipping.
 
-Note that this alpha version should not be used on larger servers.
-(The config files are not changed by the way, they still say it's version 0.33)
+Altered in config:
+* enable-shopping-carts-in-worlds - you can use @all to enable carts in all worlds.

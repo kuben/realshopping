@@ -36,6 +36,8 @@ import org.bukkit.Server;
 
 public class Config {
 
+	public static boolean debug;
+	
 	public static boolean keepstolen;
 	public static boolean enableSelling;
 	public static boolean autoprotect;
@@ -80,6 +82,7 @@ public class Config {
 			dropLoc = new Location(server.getWorlds().get(0),0,0,0);
 		}
 
+		debug = false;
         keepstolen = false;
         langpack = "default";
         punishment = "none";
@@ -87,7 +90,7 @@ public class Config {
         enableSelling = true;
         autoprotect = true;
     	allowFillChests = true;
-    	enableAI = true;
+    	enableAI = false;
         deliveryZones = 0;
         autoUpdate = 0;
         zoneArray = new Zone[0];
@@ -117,6 +120,8 @@ public class Config {
 						v31plus = true;
 					} else if(s.equals("Properties file for RealShopping v0.31")){
 						v31plus = true;
+					} else if(s.equals("debug")){
+						debug = true;
 					} else if(s.split(":")[0].equals("punishment")){
 						punishment = s.split(":")[1];
 						notInConfig -= 2;

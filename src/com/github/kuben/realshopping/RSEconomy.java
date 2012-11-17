@@ -151,7 +151,7 @@ class StatUpdater extends Thread {
 	
 	public void run(){
 		try {
-			while(running){
+			while(running && Config.enableAI){
 				updateStats();
 				Thread.sleep(Math.max(Config.updateFreq * 1000, 60000));
 			}
@@ -167,12 +167,12 @@ class StatUpdater extends Thread {
 		for(String s:keys){
 			Statistic[] sKeys = RealShopping.shopMap.get(s).stats.toArray(new Statistic[0]);
 			for(Statistic stat:sKeys){
-				if((System.currentTimeMillis()/1000) - Config.statTimespan * 1000< stat.getTime()/1000 && stat.isBought()){//Only past <timespan> and only bought
+				if((System.currentTimeMillis()/1000) - Config.statTimespan< stat.getTime()/1000 && stat.isBought()){//Only past <timespan> and only bought TODO test
 					if(!statsMap.containsKey(stat.getItem().type)) statsMap.put(stat.getItem().type, new TreeMap<String, Integer>());
 					if(!statsMap.get(stat.getItem().type).containsKey(s)) statsMap.get(stat.getItem().type).put(s, 0);
 					statsMap.get(stat.getItem().type).put(s, statsMap.get(stat.getItem().type).get(s) + stat.getAmount());
 				} else
-				if((System.currentTimeMillis()/1000) - Config.cleanStatsOld > stat.getTime()/1000){
+				if((System.currentTimeMillis()/1000) - Math.max(Config.cleanStatsOld, Math.max(Config.statTimespan, Config.updateFreq)) > stat.getTime()/1000){
 					RealShopping.shopMap.get(s).stats.remove(stat);	
 				}
 			}
@@ -184,8 +184,6 @@ class StatUpdater extends Thread {
 			sorted_map.putAll(statsMap.get(keys2[i]));
 			statsMap.put((Integer)keys2[i], sorted_map);
 		}
-		
-		System.out.println(statsMap);
 	
 		Map<String, Map<Integer, Integer>> oldProvMap = new HashMap<String, Map<Integer, Integer>>(provMap);
 		provMap.clear();
@@ -208,9 +206,6 @@ class StatUpdater extends Thread {
 			}
 		}
 		if(oldProvMap != null){
-			System.out.println(oldProvMap);
-			System.out.println(provMap);
-			
 			keys = oldProvMap.keySet().toArray(new String[0]);
 			for(String s:keys){
 				if(RealShopping.shopMap.containsKey(s) && !RealShopping.shopMap.get(s).owner.equals("@admin")){
@@ -256,7 +251,7 @@ class StatUpdater extends Thread {
 			}
 		}
 		
-		System.out.println(System.nanoTime() - tStamp + "ns");
+		if(Config.debug) System.out.println(System.nanoTime() - tStamp + "ns");
 	}
 	
 }

@@ -50,6 +50,7 @@ public class Shop {
 	public byte notifyChanges = 0;
 	public int changeTreshold = 1;
 	public int changePercent = 5;
+	public boolean allowNotifications = true;
 	
 	public Shop(String name, String world, String owner){
 		super();

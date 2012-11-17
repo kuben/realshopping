@@ -132,7 +132,7 @@ public class RSCommandExecutor implements CommandExecutor {
     			if(args[0].equals("help")){
     				if(args.length == 1){
     					sender.sendMessage(ChatColor.GREEN + "Use rsstores with only the name of the store as argument to get some information about the store. "
-    							+ " For help, type any of these arguments: " + ChatColor.DARK_PURPLE + "buyfor, collect, ban, unban, kick, startsale, endsale");
+    							+ " For help, type any of these arguments: " + ChatColor.DARK_PURPLE + "buyfor, collect, ban, unban, kick, startsale, endsale, notifications, onchange");
     				} else {
     					if(args[1].equals("buyfor")) sender.sendMessage("Usage: " + ChatColor.DARK_PURPLE + "buyfor %_OF_SELL_PRICE" + ChatColor.RESET
     							+ ". Sets if and for how much of the sell price your store will buy items from players. 0 is default and means selling to your store is disabled.");
@@ -151,6 +151,10 @@ public class RSCommandExecutor implements CommandExecutor {
     							"ITEMID[:DATA]" + ChatColor.RESET + " and separate multiple items with commas. The percent argument can be any integer between 1 and 99");
     					else if(args[1].equals("endsale")) sender.sendMessage("Usage: " + ChatColor.DARK_PURPLE + "endsale" + ChatColor.RESET
     							+ ". Ends all sales.");
+    					else if(args[1].equals("notifications")) sender.sendMessage("Usage: " + ChatColor.DARK_PURPLE + "notifications [on|off]" + ChatColor.RESET
+    	    							+ ". Sets if notifications are enabled or disabled for this store. Use without arguments to check current status.");
+    					else if(args[1].equals("onchange")) sender.sendMessage("Usage: " + ChatColor.DARK_PURPLE + "onchange [nothing|notify TRESHOLD|changeprices TRESHOLD PERCENT]"
+    	    							+ ChatColor.RESET + ". Sets if this store should notify you about changes in how well this store sells compared to others.");
     				}
     				return true;
     			}
@@ -338,67 +342,91 @@ public class RSCommandExecutor implements CommandExecutor {
     	    			rs.shopMap.get(args[0]).sale.clear();
     	    			sender.sendMessage(ChatColor.GREEN + LangPack.SALEENDED);
     	    			return true;
-    	    		} else if(args[1].equals("onchange")){
-    	    			if(args.length == 2){
-    	    				if(rs.shopMap.get(args[0]).notifyChanges == 1) sender.sendMessage(ChatColor.GREEN + "You will be notified if " + args[0] + " loses/gains "
-    	    						+ rs.shopMap.get(args[0]).changeTreshold + " place(s).");
-    	    				else if(rs.shopMap.get(args[0]).notifyChanges == 2) sender.sendMessage(ChatColor.GREEN + "The price will be lowered/increased by" + rs.shopMap.get(args[0]).changePercent
-    	    						+ "% if " + args[0] + " loses/gains " + rs.shopMap.get(args[0]).changeTreshold + " place(s).");
-    	    				else sender.sendMessage(ChatColor.GREEN + args[0] + " won't notify you about changes.");
+    	    		} else if(args[1].equals("notifications")){
+    	    			if(args.length > 2){
+    	    				if(args[2].equals("on")){
+    	    					rs.shopMap.get(args[0]).allowNotifications = true;
+    	    					sender.sendMessage(ChatColor.GREEN + "Enabled notifications for " + args[0]);
+    	    				} else if(args[2].equals("off")){
+    	    					rs.shopMap.get(args[0]).allowNotifications = false;
+    	    					sender.sendMessage(ChatColor.GREEN + "Disabled notifications for " + args[0]);
+    	    				} else {
+    	    					sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTAVALIDARGUMENT);
+    	    					sender.sendMessage("Usage:" + ChatColor.DARK_PURPLE + "[...] notifications [on|off]");
+    	    				}
+    	    				return true;
+    	    			} else {
+    	    				sender.sendMessage(ChatColor.GREEN + "Notifications are " + (rs.shopMap.get(args[0]).allowNotifications?"on":"off") + ".");
     	    				return true;
     	    			}
-    					if(args.length > 2){
-    						int tresh = -1;
-    						int pcnt = -1;
-        					if(args.length > 3) try {
-        						tresh = Integer.parseInt(args[3]);
-        					} catch(NumberFormatException e){
-        					sender.sendMessage(ChatColor.RED + args[3] + LangPack.ISNOTANINTEGER);
-        					} if(args.length > 4) try {
-        						pcnt = Integer.parseInt(args[4]);
-        					} catch(NumberFormatException e) {
-        						sender.sendMessage(ChatColor.RED + args[4] + LangPack.ISNOTANINTEGER);
-        						if(args[4].contains("%")) sender.sendMessage("(Skip the %-sign)");
-        					}
-        					if(args[2].equals("nothing")){
-        						rs.shopMap.get(args[0]).notifyChanges = 0;
-        						sender.sendMessage(ChatColor.GREEN + "You won't get notified when your store " + args[0] + " becomes more or less popular.");
-        						rs.updateEntrancesDb();
-        						return true;
-        					} else if(args[2].equals("notify")){
-        						if(tresh > -1){
-        							rs.shopMap.get(args[0]).notifyChanges = 1;
-        							rs.shopMap.get(args[0]).changeTreshold = tresh;
-            						sender.sendMessage(ChatColor.GREEN + "You will get notified when your store " + args[0] + " becomes at least " + tresh + " places more or less popular.");
-            						rs.updateEntrancesDb();
-        						} else
-        							sender.sendMessage("Usage:" + ChatColor.DARK_PURPLE + "[...] onchange notify TRESHOLD " + ChatColor.RESET
-        									+ " where TRESHOLD is how many places your store needs to lose or gain for you to be notified.");
-        						return true;
-    						} else if(args[2].equals("changeprices")){
-    							if(tresh > -1 && pcnt > -1){
-    								rs.shopMap.get(args[0]).notifyChanges = 2;
-    								rs.shopMap.get(args[0]).changeTreshold = tresh;
-    								rs.shopMap.get(args[0]).changePercent = pcnt;
-            						sender.sendMessage(ChatColor.GREEN + "You will get notified when your store " + args[0] + " becomes at least " + ChatColor.DARK_PURPLE + tresh
-            								+ " places more or less popular. And the prices will be lowered or increased by " + ChatColor.DARK_PURPLE + pcnt + "%.");
+    	    		} else if(args[1].equals("onchange")){
+    	    			if(Config.enableAI){
+    	    				if(args.length == 2){
+        	    				if(rs.shopMap.get(args[0]).notifyChanges == 1) sender.sendMessage(ChatColor.GREEN + "You will be notified if " + args[0] + " loses/gains "
+        	    						+ rs.shopMap.get(args[0]).changeTreshold + " place(s).");
+        	    				else if(rs.shopMap.get(args[0]).notifyChanges == 2) sender.sendMessage(ChatColor.GREEN + "The price will be lowered/increased by" + rs.shopMap.get(args[0]).changePercent
+        	    						+ "% if " + args[0] + " loses/gains " + rs.shopMap.get(args[0]).changeTreshold + " place(s).");
+        	    				else sender.sendMessage(ChatColor.GREEN + args[0] + " won't notify you about changes.");
+        	    				return true;
+        	    			}
+        					if(args.length > 2){
+        						int tresh = -1;
+        						int pcnt = -1;
+            					if(args.length > 3) try {
+            						tresh = Integer.parseInt(args[3]);
+            					} catch(NumberFormatException e){
+            					sender.sendMessage(ChatColor.RED + args[3] + LangPack.ISNOTANINTEGER);
+            					} if(args.length > 4) try {
+            						pcnt = Integer.parseInt(args[4]);
+            					} catch(NumberFormatException e) {
+            						sender.sendMessage(ChatColor.RED + args[4] + LangPack.ISNOTANINTEGER);
+            						if(args[4].contains("%")) sender.sendMessage("(Skip the %-sign)");
+            					}
+            					if(args[2].equals("nothing")){
+            						rs.shopMap.get(args[0]).notifyChanges = 0;
+            						sender.sendMessage(ChatColor.GREEN + "You won't get notified when your store " + args[0] + " becomes more or less popular.");
             						rs.updateEntrancesDb();
             						return true;
-    							} else
-        							sender.sendMessage("Usage:" + ChatColor.DARK_PURPLE + "[...] onchange changepries TRESHOLD PERCENT" + ChatColor.RESET
-        									+ " where TRESHOLD is how many places your store needs to lose or gain for you to be for the changes to happen, "
-        									+ "and PERCENT is how many percent the prices will be lowered or increased.");
-        						return true;
-    						}
-        					
-    					}
-    				}
+            					} else if(args[2].equals("notify")){
+            						if(tresh > -1){
+            							rs.shopMap.get(args[0]).notifyChanges = 1;
+            							rs.shopMap.get(args[0]).changeTreshold = tresh;
+                						sender.sendMessage(ChatColor.GREEN + "You will get notified when your store " + args[0] + " becomes at least " + tresh + " places more or less popular.");
+                						rs.updateEntrancesDb();
+            						} else
+            							sender.sendMessage("Usage:" + ChatColor.DARK_PURPLE + "[...] onchange notify TRESHOLD " + ChatColor.RESET
+            									+ " where TRESHOLD is how many places your store needs to lose or gain for you to be notified.");
+            						return true;
+        						} else if(args[2].equals("changeprices")){
+        							if(tresh > -1 && pcnt > -1){
+        								rs.shopMap.get(args[0]).notifyChanges = 2;
+        								rs.shopMap.get(args[0]).changeTreshold = tresh;
+        								rs.shopMap.get(args[0]).changePercent = pcnt;
+                						sender.sendMessage(ChatColor.GREEN + "You will get notified when your store " + args[0] + " becomes at least " + ChatColor.DARK_PURPLE + tresh
+                								+ " places more or less popular. And the prices will be lowered or increased by " + ChatColor.DARK_PURPLE + pcnt + "%.");
+                						rs.updateEntrancesDb();
+                						return true;
+        							} else
+            							sender.sendMessage("Usage:" + ChatColor.DARK_PURPLE + "[...] onchange changepries TRESHOLD PERCENT" + ChatColor.RESET
+            									+ " where TRESHOLD is how many places your store needs to lose or gain for you to be for the changes to happen, "
+            									+ "and PERCENT is how many percent the prices will be lowered or increased.");
+            						return true;
+        						}
+            				}
+    	    			} else {
+    	    				sender.sendMessage(ChatColor.RED + "Automatic store management is not enabled on this server.");
+    	    			}     					
+    	    		}
     			} else sender.sendMessage(ChatColor.RED + LangPack.YOUDONTHAVEPERMISSIONTOMANAGETHATSTORE);
     		}
     	} else if(cmd.getName().equalsIgnoreCase("rssetprices")){
     		String shop = "";
     		int ii = 1;
-    		if(args.length == 2){//TODO copy all
+    		if(args.length == 1 && player != null && rs.PInvMap.containsKey(player.getName())){
+    			if(args[0].equals("copy") || args[0].equals("clear")){
+    				shop = rs.PInvMap.get(player.getName()).getStore();
+    			}
+    		} else if(args.length == 2){
     			if(player != null){
     				if(rs.PInvMap.containsKey(player.getName())){
     					shop = rs.PInvMap.get(player.getName()).getStore();
