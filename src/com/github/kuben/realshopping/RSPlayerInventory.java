@@ -1,15 +1,31 @@
+/*
+ * RealShopping Bukkit plugin for Minecraft
+ * Copyright 2012 Jakub Fojt
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *     
+ */
+
 package com.github.kuben.realshopping;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -46,6 +62,7 @@ public class RSPlayerInventory {
 		return true;	
 	}
 	
+
 	public boolean update(Inventory[] invs){
 		items.clear();
 		items = invToPInv();
@@ -333,7 +350,7 @@ public class RSPlayerInventory {
 	}
 }
 
-class PItem{
+final class PItem{
 	
 	int type;
 	byte data;
@@ -345,7 +362,7 @@ class PItem{
 		data = is.getData().getData();
 	}
 	
-	public PItem(int type, byte data, Map enchantments){
+	public PItem(int type, byte data, Map<Enchantment, Integer> enchantments){
 		this.enchantments = enchantments;
 		this.type = type;
 		this.data = data;
@@ -460,7 +477,7 @@ class ShippedPackage{
 }
 
 class Utils{
-	public static Map joinMaps(Map<PItem,Integer> uno, Map<PItem,Integer> dos){//Preserves old values
+	public static Map<PItem, Integer> joinMaps(Map<PItem,Integer> uno, Map<PItem,Integer> dos){//Preserves old values
 		PItem[] keys = dos.keySet().toArray(new PItem[0]);
 		for(PItem o:keys){
 			if(uno.containsKey(o)) uno.put(o, uno.get(o) + dos.get(o));
@@ -468,4 +485,23 @@ class Utils{
 		}
 		return uno;
 	}
+	
+    public static String formatNum(int value) {
+        int hunRem = value % 100;
+        int tenRem = value % 10;
+        if (hunRem - tenRem == 10) {
+                return value + "th";
+        }
+        switch (tenRem) {
+        case 1:
+                return value + "st";
+        case 2:
+                return value + "nd";
+        case 3:
+                return value + "rd";
+        default:
+                return value + "th";
+        }
+}
+
 }

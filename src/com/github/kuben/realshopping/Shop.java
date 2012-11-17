@@ -27,13 +27,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.bukkit.Material;
-
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.material.MaterialData;
 
 public class Shop {
 	
@@ -50,6 +47,9 @@ public class Shop {
 	public Set<Location> protectedChests = new HashSet<Location>();
 	public String name, world, owner;//Admin stores: owner = @admin
 	public int buyFor = 0;
+	public byte notifyChanges = 0;
+	public int changeTreshold = 1;
+	public int changePercent = 5;
 	
 	public Shop(String name, String world, String owner){
 		super();
@@ -152,6 +152,19 @@ public class Shop {
 		return (s.length() > 0)?s.substring(1):"";
 	}
 	
+	public String exportStats(){
+		String s = "";
+		for(Statistic stat:stats){
+			s += ";"+stat.getTime()+":"+stat.isBought()+":";
+			s += stat.getItem().type + ":" + stat.getAmount() + (stat.getItem().data > 0?":"+stat.getItem().data:"");
+			Object[] ench = stat.getItem().enchantments.keySet().toArray();
+			for(Object en:ench){
+				s += "[" + ((Enchantment)en).getId() + ":" + stat.getItem().enchantments.get(en) + "]";
+			}
+		}
+		return s;
+	}
+	
 	@Override
 	public String toString(){
 		return "Shop " + name + (owner.equals("@admin")?"":" owned by " + owner + " Prices: " + prices.toString());
@@ -171,6 +184,19 @@ final class Statistic {
 		this.timestamp = System.currentTimeMillis();
 		this.bought = bought;
 	}
+	
+	public Statistic(String imp){
+		this.timestamp = Long.parseLong(imp.split("\\[")[0].split(":")[0]);
+		this.bought = Boolean.parseBoolean(imp.split("\\[")[0].split(":")[1]);
+		Byte data = 0;
+		Map<Enchantment, Integer> enchs = new HashMap<Enchantment, Integer>();
+		if(imp.split("\\[")[0].split(":").length > 4) data = Byte.parseByte(imp.split("\\[")[0].split(":")[4]);
+		for(int i = 1;i < imp.split("\\[").length;i++){
+			enchs.put(Enchantment.getById(Integer.parseInt(imp.split("\\[")[i].split("\\]")[0].split(":")[0])), Integer.parseInt(imp.split("\\[")[i].split("\\]")[0].split(":")[1]));
+		}
+		this.item = new PItem(Integer.parseInt(imp.split(":")[2]), data, enchs);
+		this.amount = Integer.parseInt(imp.split("\\[")[0].split(":")[3]);
+	}
 
 	public PItem getItem() {
 		return item;
@@ -189,7 +215,7 @@ final class Statistic {
 	}
 	
 	public String toString(){
-		return (bought?"bought":"sold") + item.toString() + " x" + amount;
+		return (bought?"bought ":"sold ") + item.toString() + " x" + amount;
 	}
 }
 

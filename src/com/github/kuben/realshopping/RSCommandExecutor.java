@@ -20,12 +20,9 @@
 package com.github.kuben.realshopping;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import net.h31ix.updater.Updater;
 
@@ -122,14 +119,41 @@ public class RSCommandExecutor implements CommandExecutor {
     	} else if(cmd.getName().equalsIgnoreCase("rssell")){
     		if(player != null){
     			if(rs.PInvMap.containsKey(player.getName())){
-    				Inventory tempInv = Bukkit.createInventory(null, 36, "Sell to store");
-					player.openInventory(tempInv);
-					return true;
+					if(Config.enableSelling){
+	    				Inventory tempInv = Bukkit.createInventory(null, 36, "Sell to store");
+						player.openInventory(tempInv);
+						return true;
+					} else player.sendMessage(ChatColor.RED + LangPack.SELLINGTOSTORESISNOTENABLEDONTHISSERVER);
     			} else sender.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
     		}
     		else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE);
     	} else if(cmd.getName().equalsIgnoreCase("rsstores")) {
     		if(args.length > 0){
+    			if(args[0].equals("help")){
+    				if(args.length == 1){
+    					sender.sendMessage(ChatColor.GREEN + "Use rsstores with only the name of the store as argument to get some information about the store. "
+    							+ " For help, type any of these arguments: " + ChatColor.DARK_PURPLE + "buyfor, collect, ban, unban, kick, startsale, endsale");
+    				} else {
+    					if(args[1].equals("buyfor")) sender.sendMessage("Usage: " + ChatColor.DARK_PURPLE + "buyfor %_OF_SELL_PRICE" + ChatColor.RESET
+    							+ ". Sets if and for how much of the sell price your store will buy items from players. 0 is default and means selling to your store is disabled.");
+    					else if(args[1].equals("collect")) sender.sendMessage("Usage: " + ChatColor.DARK_PURPLE + "collect [-c] [AMOUNT]" + ChatColor.RESET
+    							+ ". Collects items that have been stolen from (and then returned to) or sold to your store. If using the -c flag the items " + 
+    							"will spawn in a chast which you are standing on. You can limit the number of items returned by writing an number.");
+    					else if(args[1].equals("ban")) sender.sendMessage("Usage: " + ChatColor.DARK_PURPLE + "ban PLAYER" + ChatColor.RESET
+    							+ ". Banishes a player from your store forever. ");
+    					else if(args[1].equals("unban")) sender.sendMessage("Usage: " + ChatColor.DARK_PURPLE + "unban PLAYER" + ChatColor.RESET
+    							+ ". Unbanishes a previously banned player. ");
+    					else if(args[1].equals("kick")) sender.sendMessage("Usage: " + ChatColor.DARK_PURPLE + "kick [-o] PLAYER" + ChatColor.RESET
+    							+ ". Kicks a player out of your store. You can use the -o flag to kick an offline player but do ONLY use it if you're " +
+    							"about to remove the store, as the player won't be teleported out.");
+    					else if(args[1].equals("startsale")) sender.sendMessage("Usage: " + ChatColor.DARK_PURPLE + "startsale %_OFF [ITEM(S)]" + ChatColor.RESET
+    							+ ". Starts a sale on the all or given items. Also cancels the last sale. Write items in this format: " + ChatColor.DARK_PURPLE + 
+    							"ITEMID[:DATA]" + ChatColor.RESET + " and separate multiple items with commas. The percent argument can be any integer between 1 and 99");
+    					else if(args[1].equals("endsale")) sender.sendMessage("Usage: " + ChatColor.DARK_PURPLE + "endsale" + ChatColor.RESET
+    							+ ". Ends all sales.");
+    				}
+    				return true;
+    			}
     			boolean isOwner = false;
     			if(rs.shopMap.containsKey(args[0]))
     				if(rs.shopMap.get(args[0]).owner.equalsIgnoreCase("@admin")){
@@ -157,105 +181,37 @@ public class RSCommandExecutor implements CommandExecutor {
     				if(!rs.getPlayersInStore(args[0].toLowerCase())[0].equals("")){
     					sender.sendMessage(ChatColor.DARK_GREEN + LangPack.PLAYERSINSTORE + "\n" + ChatColor.RESET + rs.formatPlayerListToMess(rs.getPlayersInStore(args[0].toLowerCase())));
     				}
-    			}
+    				sender.sendMessage(ChatColor.GREEN + "For help, type " + ChatColor.DARK_PURPLE + "/rsstores help");
+    				return true;
+    			} else
     			
-    			if(isOwner){
-    	    		if(args.length == 2 && args[1].equalsIgnoreCase("collect")){
-    	        		if(player != null){
-    	        			if(!rs.shopMap.get(args[0]).owner.equalsIgnoreCase("@admin")){
-    	        				if(!rs.shopMap.get(args[0]).stolenToClaim.isEmpty()){
-    	        					for(ItemStack iS:rs.shopMap.get(args[0]).stolenToClaim){
-    	        						player.getWorld().dropItem(player.getLocation(), iS);
-    	        					}
-    	        					rs.shopMap.get(args[0]).stolenToClaim.clear();
-    	        					return true;
-    	        				} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
-    	        			}
-    	        		} else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE); 
-    	    		} else if(args.length == 3 && args[1].equalsIgnoreCase("collect")){
-    	        		if(player != null){
-    	        			if(!rs.shopMap.get(args[0]).owner.equalsIgnoreCase("@admin")){
-    	        				if(args[2].equalsIgnoreCase("-c")){
-    	        					if(player.getLocation().subtract(0, 1, 0).getBlock().getState() instanceof Chest){
-    	    	        				if(!rs.shopMap.get(args[0]).stolenToClaim.isEmpty()){
-    	    	        					ItemStack[] tempIs = new ItemStack[27];
-    	    	        					ItemStack[] origIs = rs.shopMap.get(args[0]).stolenToClaim.toArray(new ItemStack[0]);
-    	    	        					int i = 0;
-    	    	        					for(;i < 27 && i < origIs.length;i++){
-    	    	        						tempIs[i] = origIs[i];
-    	    	        					}
-    	    	        					ItemStack[] oldCont = ((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().getContents();
-    	    	        					for(ItemStack tempIS:oldCont) if(tempIS != null) player.getWorld().dropItem(player.getLocation(), tempIS);
-    	    	        					((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().setContents(tempIs);
-    	    	        					player.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH + i + LangPack.ITEMS);
-    	    	        					if(origIs.length < 28) rs.shopMap.get(args[0]).stolenToClaim.clear();
-    	    	        					else {
-    	    	        						for(;i < tempIs.length;i++){
-    	    	        							rs.shopMap.get(args[0]).stolenToClaim.remove(tempIs[i]);
-   	    	        							}
-    	    	        					}
-    	        							return true;
-    	    	        				} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
-    	        					} else sender.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUARESTANDINGONISNTACHEST);
-    	        				} else {
-    	        					try {
-    	    	        				if(!rs.shopMap.get(args[0]).stolenToClaim.isEmpty()){
-    	    	        					int amount = Integer.parseInt(args[2]);
-    	    	        					ItemStack[] tempIs = rs.shopMap.get(args[0]).stolenToClaim.toArray(new ItemStack[0]);
-    	    	        					int i = 0;
-    	    	        					for(;i < amount && i < tempIs.length;i++){
-    	    	        						player.getWorld().dropItem(player.getLocation(), tempIs[i]);
-    	    	        					}
-    	    	        					player.sendMessage(ChatColor.GREEN + LangPack.DROPPED + i + LangPack.ITEMS);
-    	    	        					if(tempIs.length < 28) rs.shopMap.get(args[0]).stolenToClaim.clear();
-    	    	        					else {
-    	    	        						for(;i < amount && i < tempIs.length;i++){
-    	    	        							rs.shopMap.get(args[0]).stolenToClaim.remove(tempIs[i]);
-   	    	        							}
-    	    	        					}
-    	    	        					return true;
-    	    	        				} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
-    	        					} catch(NumberFormatException e){
-    	        						sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTANINTEGER);
-    	        					}
-    	        				}
-    	        			}
-    	        		} else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE); 
-    	    		} else if(args.length == 4 && args[1].equalsIgnoreCase("collect")){
-    	        		if(player != null){
-    	        			if(!rs.shopMap.get(args[0]).owner.equalsIgnoreCase("@admin")){
-    	        				if(args[2].equalsIgnoreCase("-c")){
-    	        					try {
-        	        					if(player.getLocation().subtract(0, 1, 0).getBlock().getState() instanceof Chest){
-        	    	        				if(!rs.shopMap.get(args[0]).stolenToClaim.isEmpty()){
-        	    	        					int amount = Integer.parseInt(args[3]);
-        	    	        					ItemStack[] origIs = rs.shopMap.get(args[0]).stolenToClaim.toArray(new ItemStack[0]);
-        	    	        					ItemStack[] tempIs = new ItemStack[Math.min(Math.min(27, amount),origIs.length)];
-        	    	        					int i = 0;
-        	    	        					for(;i < tempIs.length;i++){
-        	    	        						tempIs[i] = origIs[i];
-        	    	        					}
-        	    	        					ItemStack[] oldCont = ((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().getContents();
-        	    	        					for(ItemStack tempIS:oldCont) if(tempIS != null) player.getWorld().dropItem(player.getLocation(), tempIS);
-        	    	        					((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().setContents(tempIs);
-        	    	        					player.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH + i + LangPack.ITEMS);
-        	    	        					if(origIs.length <= Math.min(27, amount)) rs.shopMap.get(args[0]).stolenToClaim.clear();
-        	    	        					else {
-        	    	        						for(;i < tempIs.length;i++){
-        	    	        							rs.shopMap.get(args[0]).stolenToClaim.remove(tempIs[i]);
-       	    	        							}
-        	    	        					}
-        	        							return true;
-        	    	        				} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
-        	        					} else sender.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUARESTANDINGONISNTACHEST);
-    	        					} catch(NumberFormatException e){
-    	        						sender.sendMessage(ChatColor.RED + args[3] + LangPack.ISNOTANINTEGER);
-    	        					}
-    	        				}
-    	        			}
-    	        		} else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE); 
-    	    		}
-    	    		
+    			if(isOwner || player == null){
+    				if(args[1].equalsIgnoreCase("collect") && player != null){
+        				int amount = 0;
+        				boolean cFlag = false;
+        				
+        				if(args.length == 3){
+	        				if(args[2].equalsIgnoreCase("-c")){
+	        					cFlag = true;
+	        				} else {
+	        					try {
+	    	        				amount = Integer.parseInt(args[2]);
+	        					} catch(NumberFormatException e){
+	        						sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTANINTEGER);
+	        					}
+	        				}
+        				} else if(args.length == 4){
+	        				if(!args[2].equalsIgnoreCase("-c")) return false;
+	        					try {
+    	    	        					amount = Integer.parseInt(args[3]);
+    	    	        					cFlag = true;
+	        					} catch(NumberFormatException e){
+	        						sender.sendMessage(ChatColor.RED + args[3] + LangPack.ISNOTANINTEGER);
+	        					}
+        				}
+        				return collect(sender, player, rs.shopMap.get(args[0]), cFlag, amount);
+    				}
+    				
     	    		else if(args.length == 3 && args[1].equalsIgnoreCase("buyfor")){
     	    			if(Config.enableSelling){
     	    				try {
@@ -382,60 +338,139 @@ public class RSCommandExecutor implements CommandExecutor {
     	    			rs.shopMap.get(args[0]).sale.clear();
     	    			sender.sendMessage(ChatColor.GREEN + LangPack.SALEENDED);
     	    			return true;
-    	    		}
+    	    		} else if(args[1].equals("onchange")){
+    	    			if(args.length == 2){
+    	    				if(rs.shopMap.get(args[0]).notifyChanges == 1) sender.sendMessage(ChatColor.GREEN + "You will be notified if " + args[0] + " loses/gains "
+    	    						+ rs.shopMap.get(args[0]).changeTreshold + " place(s).");
+    	    				else if(rs.shopMap.get(args[0]).notifyChanges == 2) sender.sendMessage(ChatColor.GREEN + "The price will be lowered/increased by" + rs.shopMap.get(args[0]).changePercent
+    	    						+ "% if " + args[0] + " loses/gains " + rs.shopMap.get(args[0]).changeTreshold + " place(s).");
+    	    				else sender.sendMessage(ChatColor.GREEN + args[0] + " won't notify you about changes.");
+    	    				return true;
+    	    			}
+    					if(args.length > 2){
+    						int tresh = -1;
+    						int pcnt = -1;
+        					if(args.length > 3) try {
+        						tresh = Integer.parseInt(args[3]);
+        					} catch(NumberFormatException e){
+        					sender.sendMessage(ChatColor.RED + args[3] + LangPack.ISNOTANINTEGER);
+        					} if(args.length > 4) try {
+        						pcnt = Integer.parseInt(args[4]);
+        					} catch(NumberFormatException e) {
+        						sender.sendMessage(ChatColor.RED + args[4] + LangPack.ISNOTANINTEGER);
+        						if(args[4].contains("%")) sender.sendMessage("(Skip the %-sign)");
+        					}
+        					if(args[2].equals("nothing")){
+        						rs.shopMap.get(args[0]).notifyChanges = 0;
+        						sender.sendMessage(ChatColor.GREEN + "You won't get notified when your store " + args[0] + " becomes more or less popular.");
+        						rs.updateEntrancesDb();
+        						return true;
+        					} else if(args[2].equals("notify")){
+        						if(tresh > -1){
+        							rs.shopMap.get(args[0]).notifyChanges = 1;
+        							rs.shopMap.get(args[0]).changeTreshold = tresh;
+            						sender.sendMessage(ChatColor.GREEN + "You will get notified when your store " + args[0] + " becomes at least " + tresh + " places more or less popular.");
+            						rs.updateEntrancesDb();
+        						} else
+        							sender.sendMessage("Usage:" + ChatColor.DARK_PURPLE + "[...] onchange notify TRESHOLD " + ChatColor.RESET
+        									+ " where TRESHOLD is how many places your store needs to lose or gain for you to be notified.");
+        						return true;
+    						} else if(args[2].equals("changeprices")){
+    							if(tresh > -1 && pcnt > -1){
+    								rs.shopMap.get(args[0]).notifyChanges = 2;
+    								rs.shopMap.get(args[0]).changeTreshold = tresh;
+    								rs.shopMap.get(args[0]).changePercent = pcnt;
+            						sender.sendMessage(ChatColor.GREEN + "You will get notified when your store " + args[0] + " becomes at least " + ChatColor.DARK_PURPLE + tresh
+            								+ " places more or less popular. And the prices will be lowered or increased by " + ChatColor.DARK_PURPLE + pcnt + "%.");
+            						rs.updateEntrancesDb();
+            						return true;
+    							} else
+        							sender.sendMessage("Usage:" + ChatColor.DARK_PURPLE + "[...] onchange changepries TRESHOLD PERCENT" + ChatColor.RESET
+        									+ " where TRESHOLD is how many places your store needs to lose or gain for you to be for the changes to happen, "
+        									+ "and PERCENT is how many percent the prices will be lowered or increased.");
+        						return true;
+    						}
+        					
+    					}
+    				}
     			} else sender.sendMessage(ChatColor.RED + LangPack.YOUDONTHAVEPERMISSIONTOMANAGETHATSTORE);
     		}
     	} else if(cmd.getName().equalsIgnoreCase("rssetprices")){
     		String shop = "";
     		int ii = 1;
-    		if(args.length == 2){
+    		if(args.length == 2){//TODO copy all
     			if(player != null){
     				if(rs.PInvMap.containsKey(player.getName())){
     					shop = rs.PInvMap.get(player.getName()).getStore();
     				} else sender.sendMessage(ChatColor.RED + LangPack.YOUHAVETOBEINASTORETOUSETHISCOMMANDWITHTWOARGUENTS);
-    			} else sender.sendMessage(ChatColor.RED + LangPack.YOUHAVETOUSEALLTHREEARGUMENTSWHENEXECUTINGTHISCOMMANDFROMCONSOLE);
+    			} else {
+    				if(args[0].equals("copy") || args[0].equals("clear")){
+    					shop = args[1];
+    				} else sender.sendMessage(ChatColor.RED + LangPack.YOUHAVETOUSEALLTHREEARGUMENTSWHENEXECUTINGTHISCOMMANDFROMCONSOLE);//TODO
+    			}
     		} else if(args.length == 3){
     			shop = args[1];
     			ii = 2;
     		}
     		if(!shop.equals("")){
-    			if(rs.shopMap.get(shop).owner.equals(player.getName()) || player.hasPermission("realshopping.rsset")){//If player is owner OR has admin perms
-    				if(args[0].equalsIgnoreCase("add")){
-    					try {
-    						int i = Integer.parseInt(args[ii].split(":")[0]);
-    						int d = -1;
-    						if(args[ii].split(":").length > 2) d = Integer.parseInt(args[ii].split(":")[1]);
-    						float price = Float.parseFloat(d>-1?args[ii].split(":")[2]:args[ii].split(":")[1]);
-    						DecimalFormat twoDForm = new DecimalFormat("#.##");
-    						float j = Float.parseFloat(twoDForm.format(price));
-    						if(d == -1) rs.shopMap.get(shop).prices.put(new Price(i), j);
-    						else rs.shopMap.get(shop).prices.put(new Price(i, d), j);
-    						sender.sendMessage(ChatColor.RED + LangPack.PRICEFOR + Material.getMaterial(i) + (d>-1?"("+d+") ":"") + LangPack.SETTO + j + rs.unit);
-    						return true;
-    					} catch (NumberFormatException e) {
-    						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_FOLLOWEDBYTHEPRICE_ + rs.unit);
-    					} catch (ArrayIndexOutOfBoundsException e){
-    						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_FOLLOWEDBYTHEPRICE_ + rs.unit);
-    					}
-    				} else if(args[0].equalsIgnoreCase("del")){
-    					try {
-    						if(rs.shopMap.containsKey(shop)){
-    							Price tempP = new Price(args[ii]);
-    							if(rs.shopMap.get(shop).prices.containsKey(tempP)){
-    								rs.shopMap.get(shop).prices.remove(tempP);
-    								sender.sendMessage(ChatColor.RED + LangPack.REMOVEDPRICEFOR + Material.getMaterial(tempP.getType()) + (tempP.getData()>-1?"("+tempP.getData()+") ":""));
+    			if(rs.shopMap.containsKey(shop)){
+        			if(player == null || (rs.shopMap.get(shop).owner.equals(player.getName()) || player.hasPermission("realshopping.rsset"))){//If player is owner OR has admin perms
+        				if(args[0].equalsIgnoreCase("add")){
+        					try {
+        						int i = Integer.parseInt(args[ii].split(":")[0]);
+        						int d = -1;
+        						if(args[ii].split(":").length > 2) d = Integer.parseInt(args[ii].split(":")[1]);
+        						float price = Float.parseFloat(d>-1?args[ii].split(":")[2]:args[ii].split(":")[1]);
+        						DecimalFormat twoDForm = new DecimalFormat("#.##");
+        						float j = Float.parseFloat(twoDForm.format(price));
+        						if(d == -1) rs.shopMap.get(shop).prices.put(new Price(i), j);
+        						else rs.shopMap.get(shop).prices.put(new Price(i, d), j);
+        						sender.sendMessage(ChatColor.RED + LangPack.PRICEFOR + Material.getMaterial(i) + (d>-1?"("+d+") ":"") + LangPack.SETTO + j + rs.unit);
+        						return true;
+        					} catch (NumberFormatException e) {
+        						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_FOLLOWEDBYTHEPRICE_ + rs.unit);
+        					} catch (ArrayIndexOutOfBoundsException e){
+        						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_FOLLOWEDBYTHEPRICE_ + rs.unit);
+        					}
+        				} else if(args[0].equalsIgnoreCase("del")){
+        					try {
+        						Price tempP = new Price(args[ii]);
+        						if(rs.shopMap.get(shop).prices.containsKey(tempP)){
+        							rs.shopMap.get(shop).prices.remove(tempP);
+        							sender.sendMessage(ChatColor.RED + LangPack.REMOVEDPRICEFOR + Material.getMaterial(tempP.getType()) + (tempP.getData()>-1?"("+tempP.getData()+") ":""));
+        							return true;
+        						} else {
+       								sender.sendMessage(ChatColor.RED + LangPack.COULDNTFINDPRICEFOR + Material.getMaterial(tempP.getType()) + (tempP.getData()>-1?"("+tempP.getData()+") ":""));
+       							}
+        					} catch (NumberFormatException e) {
+        						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_);
+        					}
+        				} else if(args[0].equalsIgnoreCase("copy")){
+        					try {
+        						if((args.length == 3 && shop.equals(args[1])) || (args.length == 2 && !shop.equals(args[1]))){//If copy from store
+        							if(rs.shopMap.containsKey(args[args.length - 1])){
+        								rs.shopMap.get(shop).prices = new HashMap<Price, Float>(rs.shopMap.get(args[args.length - 1]).prices);
+        								sender.sendMessage(ChatColor.GREEN + "Old prices replaced with prices from " + args[args.length - 1]);
+        								return true;
+        							}
+        						} else {
+        							rs.shopMap.get(shop).prices = getLowestPrices(shop);
+    								sender.sendMessage(ChatColor.GREEN + "Old prices replaced with the lowest price of every item in every store.");
     								return true;
-    							} else {
-    								sender.sendMessage(ChatColor.RED + LangPack.COULDNTFINDPRICEFOR + Material.getMaterial(tempP.getType()) + (tempP.getData()>-1?"("+tempP.getData()+") ":""));
-    							}
-    						} else {
-    							sender.sendMessage(ChatColor.RED + shop + LangPack.DOESNTEXIST);
-    						}
-    					} catch (NumberFormatException e) {
-    						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_);
-    					}
-    				}
-    			} else sender.sendMessage(ChatColor.RED + LangPack.YOUARENTPERMITTEDTOEMANAGETHISSTORE);
+        						}
+        					} catch (NumberFormatException e) {
+        						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_);
+        					}
+        				} else if(args[0].equalsIgnoreCase("clear")){
+        					rs.shopMap.get(shop).prices.clear();
+        					sender.sendMessage(ChatColor.GREEN + "Cleared all prices for " + shop);
+        					return true;
+        				}
+        				
+        			} else sender.sendMessage(ChatColor.RED + LangPack.YOUARENTPERMITTEDTOEMANAGETHISSTORE);
+				} else {
+					sender.sendMessage(ChatColor.RED + shop + LangPack.DOESNTEXIST);
+				}
     		}
     	} else if(cmd.getName().equalsIgnoreCase("rssetchests")){
     		if(player != null){
@@ -522,6 +557,10 @@ public class RSCommandExecutor implements CommandExecutor {
     			} else if (args.length == 2 && args[0].equalsIgnoreCase("createstore")){
     				if(rs.playerEntrances.containsKey(player.getName())){
         				if(rs.playerExits.containsKey(player.getName())){
+        					if(args[1].equals("help")){
+        						sender.sendMessage(ChatColor.RED + "You can't name a store that.");
+        						return true;
+        					}
         			    	if(!rs.shopMap.containsKey(args[1])){//Create
             					if(RSEconomy.getBalance(player.getName()) < Config.pstorecreate) {
             						player.sendMessage(ChatColor.RED + LangPack.CREATINGASTORECOSTS + Config.pstorecreate + rs.unit);
@@ -574,6 +613,10 @@ public class RSCommandExecutor implements CommandExecutor {
     				player.sendMessage(ChatColor.RED + LangPack.EXITVARIABLESETTO + rs.exit);
     				return true;
     			} else if (args.length == 2 && args[0].equalsIgnoreCase("createstore")){
+					if(args[1].equals("help")){
+						sender.sendMessage(ChatColor.RED + "You can't name a store that.");
+						return true;
+					}
     				if(!rs.entrance.equals("")){
         				if(!rs.exit.equals("")){
         			    	if(!rs.shopMap.containsKey(args[1])){//Create
@@ -845,32 +888,125 @@ public class RSCommandExecutor implements CommandExecutor {
     		}
     		sender.sendMessage(ChatColor.RED + "You aren't permitted to use this command.");
     	} else if(cmd.getName().equalsIgnoreCase("realshopping")){
-    		sender.sendMessage(ChatColor.GREEN + "RealShopping [v0.33] - A shop plugin for Bukkit made by kuben0");
-    		sender.sendMessage(ChatColor.GREEN + "Loaded config settings:");
-    		sender.sendMessage(ChatColor.GREEN + "enable-automatic-updates:"+Config.getAutoUpdateStr(Config.autoUpdate));
-    		sender.sendMessage(ChatColor.GREEN + "auto-protect-chests:"+Config.autoprotect);
-    		sender.sendMessage(ChatColor.GREEN + "delivery-cost-zones:"+Config.deliveryZones);
-    		sender.sendMessage(ChatColor.GREEN + "language-pack:"+Config.langpack);
-    		sender.sendMessage(ChatColor.GREEN + "enable-selling-to-stores:"+Config.enableSelling);
-    		String tempStr = "";
-    			boolean i = true;
-    			for(String str:Config.cartEnabledW){
-    				if(i){
-   						tempStr += str;
-   						i = false;
-   					}
-    				else tempStr += "," + str;
+    		byte pg = 1;
+    		if(args.length > 0) try {
+    			pg = Byte.parseByte(args[0]);
+    			if(pg < 1 || pg > 2){
+    				sender.sendMessage(ChatColor.RED + LangPack.THEREARENTTHATMANYPAGES);
+    				return false;
     			}
-        	sender.sendMessage(ChatColor.GREEN + "enable-shopping-carts-in-worlds:" + tempStr);
-        	sender.sendMessage(ChatColor.GREEN + "player-stores-create-cost:"+Config.pstorecreate);
-        	sender.sendMessage(ChatColor.GREEN + "drop-items-at:"+Config.dropLoc.getWorld().getName()+";"+Config.dropLoc.getBlockX()+","+Config.dropLoc.getBlockY()+","+Config.dropLoc.getBlockZ());
-       		sender.sendMessage(ChatColor.GREEN + "hell-location:"+Config.hellLoc.getWorld().getName()+";"+Config.hellLoc.getBlockX()+","+Config.hellLoc.getBlockY()+","+Config.hellLoc.getBlockZ());
-       		sender.sendMessage(ChatColor.GREEN + "jail-location:"+Config.jailLoc.getWorld().getName()+";"+Config.jailLoc.getBlockX()+","+Config.jailLoc.getBlockY()+","+Config.jailLoc.getBlockZ());
-       		sender.sendMessage(ChatColor.GREEN + "keep-stolen-items-after-punish:"+Config.keepstolen);
-       		sender.sendMessage(ChatColor.GREEN + "punishment:"+Config.punishment);
+			} catch (NumberFormatException e){
+				sender.sendMessage(ChatColor.RED + args[1] + LangPack.ISNOTANINTEGER);
+				return false;
+			}
+    		int i = 0;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "RealShopping [v0.40] - A shop plugin for Bukkit made by kuben0");i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "Loaded config settings:");i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "enable-automatic-updates:"+Config.getAutoUpdateStr(Config.autoUpdate));i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "auto-protect-chests:"+Config.autoprotect);i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "delivery-cost-zones:"+Config.deliveryZones);i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "language-pack:"+Config.langpack);i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "enable-selling-to-stores:"+Config.enableSelling);i++;
+    		if(i >= (pg-1)*10 && i < pg*10) {
+    			String tempStr = "";
+    			if(Config.cartEnabledW.contains("@all")) tempStr = "Enabled in all worlds";
+    			else {
+        			boolean j = true;
+        			for(String str:Config.cartEnabledW){
+        				if(j){
+       						tempStr += str;
+       						j = false;
+       					}
+        				else tempStr += "," + str;
+        			}
+    			}
+    			sender.sendMessage(ChatColor.GREEN + "enable-shopping-carts-in-worlds:" + tempStr);i++;
+    		}
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "player-stores-create-cost:"+Config.pstorecreate);i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "drop-items-at:"+Config.dropLoc.getWorld().getName()+";"+Config.dropLoc.getBlockX()+","+Config.dropLoc.getBlockY()+","+Config.dropLoc.getBlockZ());i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "hell-location:"+Config.hellLoc.getWorld().getName()+";"+Config.hellLoc.getBlockX()+","+Config.hellLoc.getBlockY()+","+Config.hellLoc.getBlockZ());i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "jail-location:"+Config.jailLoc.getWorld().getName()+";"+Config.jailLoc.getBlockX()+","+Config.jailLoc.getBlockY()+","+Config.jailLoc.getBlockZ());i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "keep-stolen-items-after-punish:"+Config.keepstolen);i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "punishment:"+Config.punishment);i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "enable-automatic-store-management:"+Config.enableAI);i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "stat-updater-frequency:"+Config.getTimeString(Config.updateFreq));i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "statistics-timespan:"+Config.getTimeString(Config.statTimespan));i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "clean-stats-older-than:"+Config.getTimeString(Config.cleanStatsOld));i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "allow-filling-chests:"+Config.allowFillChests);i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "notificatior-update-frequency:"+Config.notTimespan);i++;
+    		if(pg < 2) sender.sendMessage(ChatColor.DARK_PURPLE + "realshopping " + (pg + 1) + " for more.");
        		return true;
     	}
     	return false;
+	}
+	
+	private boolean collect(CommandSender sender, Player player, Shop tempShop, boolean cFlag, int amount){
+		if(player != null){
+			if(!tempShop.owner.equalsIgnoreCase("@admin")){
+				if(cFlag){
+					if(Config.cartEnabledW.contains(player.getWorld().toString())){
+						if(player.getLocation().subtract(0, 1, 0).getBlock().getState() instanceof Chest){
+							if(!tempShop.stolenToClaim.isEmpty()){
+								if(amount == 0) amount = 27;
+								ItemStack[] origIs = tempShop.stolenToClaim.toArray(new ItemStack[0]);
+								ItemStack[] tempIs = new ItemStack[Math.min(Math.min(27, amount),origIs.length)];
+								int i = 0;
+								for(;i < 27 && i < origIs.length && i < amount;i++){
+									tempIs[i] = origIs[i];
+								}
+								ItemStack[] oldCont = ((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().getContents();
+								for(ItemStack tempIS:oldCont) if(tempIS != null) player.getWorld().dropItem(player.getLocation(), tempIS);
+								((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().setContents(tempIs);
+								player.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH + i + LangPack.ITEMS);
+								if(origIs.length <= Math.min(27, amount)) tempShop.stolenToClaim.clear();
+								else {
+									for(i = 0;i < 27 && i < origIs.length && i < amount;i++){
+										tempShop.stolenToClaim.remove(tempIs[i]);
+									}
+								}
+								return true;
+							} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
+						} else sender.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUARESTANDINGONISNTACHEST);
+					} else {
+						sender.sendMessage(ChatColor.RED + "You can't collect your items to a chest on this server.");
+						return true;
+					}
+				} else {
+					ItemStack[] tempIs = tempShop.stolenToClaim.toArray(new ItemStack[0]);
+					int i = 0;
+					for(;(i>0)?i < amount:true && i < tempIs.length;i++){
+						player.getWorld().dropItem(player.getLocation(), tempIs[i]);
+					}
+					player.sendMessage(ChatColor.GREEN + LangPack.DROPPED + i + LangPack.ITEMS);
+					if(amount == 0 || tempIs.length <= amount) tempShop.stolenToClaim.clear();
+					else {
+						for(i = 0;(i>0)?i < amount:true && i < tempIs.length;i++){
+							tempShop.stolenToClaim.remove(tempIs[i]);
+						}
+					}
+					return true;
+				}
+			}
+		} else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE);
+		return false; 
+	}
+	
+	@SuppressWarnings("static-access")
+	private Map<Price, Float> getLowestPrices(String shop){
+		Map<Price, Float> tempMap = new HashMap<Price, Float>();
+		String[] keys = rs.shopMap.keySet().toArray(new String[0]);
+		for(String s:keys){
+			if(!s.equals(shop)){
+				Price[] keys2 = rs.shopMap.get(s).prices.keySet().toArray(new Price[0]);
+				for(Price p:keys2){
+					if(tempMap.containsKey(p)){
+						if(tempMap.get(p) > rs.shopMap.get(s).prices.get(p)) tempMap.put(p, rs.shopMap.get(s).prices.get(p));
+					} else
+						tempMap.put(p, rs.shopMap.get(s).prices.get(p));
+				}
+			}
+		}
+		return tempMap;
 	}
 }
 

@@ -19,46 +19,29 @@
 
 package com.github.kuben.realshopping;
 
-import java.awt.Event;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.logging.Logger;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.block.DoubleChest;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.HumanEntity;
-import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.StorageMinecart;
-import org.bukkit.event.Listener;
+import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.Event.Result;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-
-import com.sun.xml.internal.stream.Entity;
 
 public class RSPlayerListener implements Listener {
-	
-	public static Map<Integer, TreeMap<String, Integer>> statsMap = new HashMap<Integer, TreeMap<String, Integer>>();//TODO change integer to PItem?, move to separate class with updateStats
 	
 	@EventHandler (priority = EventPriority.HIGH)
 	public void onTeleport(PlayerTeleportEvent event){
@@ -102,28 +85,30 @@ public class RSPlayerListener implements Listener {
 							if(player.hasPermission("realshopping.rsenter")) event.setCancelled(RealShopping.enter(player, false));
 						}
 					}
-				/*} else if(b.getType() == Material.SAND) {
-					if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
-						updateStats();
-					}*/
 				} else if(b.getType() == Material.OBSIDIAN) {
 					if(RealShopping.PInvMap.containsKey(player.getName())){
 						if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.STEP){
 							if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
 								if(player.hasPermission("realshopping.rspay")){
-									StorageMinecart[] SM = RealShopping.checkForCarts(event.getClickedBlock().getLocation());
-									Inventory[] carts = new Inventory[SM.length];
-									for(int i = 0;i < SM.length;i++)
-										carts[i] = SM[i].getInventory();
+									Inventory[] carts = null;
+									if(Config.allowFillChests && (Config.cartEnabledW.contains("@all") || Config.cartEnabledW.contains(player.getWorld().getName()))){
+										StorageMinecart[] SM = RealShopping.checkForCarts(event.getClickedBlock().getLocation());
+										carts = new Inventory[SM.length];
+										for(int i = 0;i < SM.length;i++)
+											carts[i] = SM[i].getInventory();
+									}
 									event.setCancelled(RealShopping.pay(player, carts));
 								}
 							} else if(event.getAction() == Action.LEFT_CLICK_BLOCK) if(player.hasPermission("realshopping.rscost")){
 								if(RealShopping.PInvMap.containsKey(player.getName())){
 									event.setCancelled(true);
-									StorageMinecart[] SM = RealShopping.checkForCarts(event.getClickedBlock().getLocation());
-									Inventory[] carts = new Inventory[SM.length];
-									for(int i = 0;i < SM.length;i++)
-										carts[i] = SM[i].getInventory();
+									Inventory[] carts = null;
+									if(Config.allowFillChests && Config.cartEnabledW.contains(player.getWorld().toString())){
+										StorageMinecart[] SM = RealShopping.checkForCarts(event.getClickedBlock().getLocation());
+										carts = new Inventory[SM.length];
+										for(int i = 0;i < SM.length;i++)
+											carts[i] = SM[i].getInventory();
+									}
 									player.sendMessage(LangPack.YOURARTICLESCOST + RealShopping.PInvMap.get(player.getName()).toPay(carts) + RealShopping.unit);
 								} else {
 									player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
@@ -132,28 +117,27 @@ public class RSPlayerListener implements Listener {
 						} else if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.RED_MUSHROOM){
 							if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
 								if(player.hasPermission("realshopping.rspay")){
-									Object[] mcArr = player.getWorld().getEntitiesByClass(StorageMinecart.class).toArray();
-									StorageMinecart sM = null;
-									for(Object o:mcArr)
-										if(((StorageMinecart)o).getLocation().getBlock().getLocation().equals(b.getLocation().subtract(0,1,0)))
-											sM = (StorageMinecart)o;
-									if(sM != null)
-										event.setCancelled(RealShopping.shipCartContents(sM, player));
+									if(Config.allowFillChests){
+										if(Config.cartEnabledW.contains(player.getWorld().toString())){
+											Object[] mcArr = player.getWorld().getEntitiesByClass(StorageMinecart.class).toArray();
+											StorageMinecart sM = null;
+											for(Object o:mcArr)
+												if(((StorageMinecart)o).getLocation().getBlock().getLocation().equals(b.getLocation().subtract(0,1,0)))
+													sM = (StorageMinecart)o;
+											if(sM != null)
+												event.setCancelled(RealShopping.shipCartContents(sM, player));
+										} else player.sendMessage(ChatColor.RED + "Shopping carts are not enabled in this world.");
+									} else player.sendMessage(ChatColor.RED + "Shipping is not enabled on this server.");
 								}
 							}
-						}/* else if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.BROWN_MUSHROOM){
+						} else if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.BROWN_MUSHROOM){
 							if(Config.enableSelling){
 								if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
-									if(event.hasItem()){
-										event.setCancelled(RealShopping.addItemToSell(player, event.getItem()));
-									} else {
-										event.setCancelled(RealShopping.confirmToSell(player));
-									}
-								} else if(event.getAction() == Action.LEFT_CLICK_BLOCK){
-										event.setCancelled(RealShopping.cancelToSell(player));
+				    				Inventory tempInv = Bukkit.createInventory(null, 36, "Sell to store");
+									player.openInventory(tempInv);
 								}
 							} else player.sendMessage(ChatColor.RED + LangPack.SELLINGTOSTORESISNOTENABLEDONTHISSERVER);
-						}*/
+						}
 					}
 				}
 		}
@@ -199,32 +183,5 @@ public class RSPlayerListener implements Listener {
 				if(player.isOp() || player.hasPermission("realshopping.rsupdate")){
 					player.sendMessage(ChatColor.LIGHT_PURPLE + RealShopping.newUpdate);
 				}
-		}
-
-	public static void updateStats(){
-		Map<Integer, TreeMap<String, Integer>> oldStats = statsMap;
-		
-		statsMap.clear();
-		String[] keys = RealShopping.shopMap.keySet().toArray(new String[0]);
-		for(String s:keys){
-			Statistic[] sKeys = RealShopping.shopMap.get(s).stats.toArray(new Statistic[0]);
-			for(Statistic stat:sKeys){
-				if(System.currentTimeMillis() - 3600000 < stat.getTime() && stat.isBought()){//Only past hour and only bought
-					if(!statsMap.containsKey(stat.getItem().type)) statsMap.put(stat.getItem().type, new TreeMap<String, Integer>());
-					if(!statsMap.get(stat.getItem().type).containsKey(s)) statsMap.get(stat.getItem().type).put(s, 0);
-					statsMap.get(stat.getItem().type).put(s, statsMap.get(stat.getItem().type).get(s) + stat.getAmount());
-				}
-			}
-		}
-		Object[] keys2 = statsMap.keySet().toArray();
-		for(int i = 0;i < keys2.length;i++){//Sort
-			StatComparator bvc = new StatComparator(statsMap.get(keys2[i]));
-			TreeMap<String, Integer> sorted_map = new TreeMap<String, Integer>(bvc);
-			sorted_map.putAll(statsMap.get(keys2[i]));
-			statsMap.put((Integer)keys2[i], sorted_map);
-		}
-		
-	System.out.println(statsMap);
 	}
-	
 }

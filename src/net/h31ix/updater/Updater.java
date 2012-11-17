@@ -334,7 +334,8 @@ public class Updater
     /**
      * Part of Zip-File-Extractor, modified by H31IX for use with Bukkit
      */      
-    private void unzip(String file) 
+    @SuppressWarnings("rawtypes")
+	private void unzip(String file) 
     {
         try
         {
@@ -540,8 +541,7 @@ public class Updater
     
     /**
      * Part of RSS Reader by Vogella, modified by H31IX for use with Bukkit
-     */     
-    @SuppressWarnings("null")
+     */
     private void readFeed() 
     {
         try 

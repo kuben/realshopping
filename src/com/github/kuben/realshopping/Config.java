@@ -1,3 +1,22 @@
+/*
+ * RealShopping Bukkit plugin for Minecraft
+ * Copyright 2012 Jakub Fojt
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *     
+ */
+
 package com.github.kuben.realshopping;
 
 import java.io.BufferedReader;
@@ -20,6 +39,8 @@ public class Config {
 	public static boolean keepstolen;
 	public static boolean enableSelling;
 	public static boolean autoprotect;
+	public static boolean allowFillChests;
+	public static boolean enableAI;
 	public static String punishment;
 	public static String langpack;
 	public static double pstorecreate;
@@ -31,9 +52,21 @@ public class Config {
 	public static Zone[] zoneArray;
 	public static byte autoUpdate;
 	
+	public static int notTimespan;//[millis] anything bellow 500 means disabled
+	public static int statTimespan;//[secs]
+	public static int cleanStatsOld;//Clean stats older than [secs]
+	public static int updateFreq;//How often the statupdater should be run [secs]
+	
 	public static Set<String> cartEnabledW;
 	
 	static Server server;
+	
+	/*
+	 * Hour - 3600 seconds
+	 * Day - 86,400 seconds
+	 * Week - 604,800 seconds
+	 * Month (30 days) - 2,592,000 seconds
+	 */
 	
 	public static void initialize(){
 		server = Bukkit.getServer();
@@ -53,24 +86,32 @@ public class Config {
         pstorecreate = 0.0;
         enableSelling = true;
         autoprotect = true;
+    	allowFillChests = true;
+    	enableAI = true;
         deliveryZones = 0;
         autoUpdate = 0;
         zoneArray = new Zone[0];
+        notTimespan = 10000;
+        statTimespan = 604800;
+        cleanStatsOld = 2592000;
+        updateFreq = 3600;
     	File f = new File(RealShopping.mandir);
     	if(!f.exists()) f.mkdir();
 		FileInputStream fstream;
 		BufferedReader br;
 		try {
 			f = new File(RealShopping.mandir + "realshopping.properties");
-			int notInConfig = 8191;
+			int notInConfig = 524287;
 			if(f.exists()) {
 				fstream = new FileInputStream(f);
 				br = new BufferedReader(new InputStreamReader(fstream));
 				String s;
 				boolean v31plus = false;
 				while ((s = br.readLine()) != null){// Read realshopping.properties
-					if(s.equals("Properties file for RealShopping v0.33")){
+					if(s.equals("Properties file for RealShopping v0.40")){
 						notInConfig -= 1;
+						v31plus = true;
+					} else if(s.equals("Properties file for RealShopping v0.33")){
 						v31plus = true;
 					} else if(s.equals("Properties file for RealShopping v0.32")){
 						v31plus = true;
@@ -136,7 +177,11 @@ public class Config {
 					} else if(s.split(":")[0].equals("enable-shopping-carts-in-worlds")){
 						if(s.split(":").length > 1){
 							for(String str:s.split(":")[1].split(",")){
-								if(server.getWorld(str) != null) cartEnabledW.add(str);
+								if(str.equals("@all")){
+									cartEnabledW.clear();
+									cartEnabledW.add("@all");
+									break;
+								} else if(server.getWorld(str) != null) cartEnabledW.add(str);
 							}
 						}
 						notInConfig -= 128;
@@ -173,7 +218,26 @@ public class Config {
 								if(tempS.endsWith("%")) zoneArray[nr - 1] = new Zone(Integer.parseInt(tempS.split(":")[1]), Integer.parseInt(tempS.split(":")[2].split("%")[0]));
 								else zoneArray[nr - 1] = new Zone(Integer.parseInt(tempS.split(":")[1]), Double.parseDouble(tempS.split(":")[2]));
 							}
+					} else if(s.split(":")[0].equals("allow-filling-chests")){
+						allowFillChests = Boolean.parseBoolean(s.split(":")[1]);
+						notInConfig -= 8192;
+					} else if(s.split(":")[0].equals("enable-automatic-store-management")){
+						enableAI = Boolean.parseBoolean(s.split(":")[1]);
+						notInConfig -= 131072;
+					} else if(s.split(":")[0].equals("stat-updater-frequency")){
+						updateFreq = getTimeInt(s.split(":")[1]);
+						notInConfig -= 65536;
+					} else if(s.split(":")[0].equals("statistics-timespan")){
+						statTimespan = getTimeInt(s.split(":")[1]);
+						notInConfig -= 32768;
+					} else if(s.split(":")[0].equals("clean-stats-older-than")){
+						cleanStatsOld = getTimeInt(s.split(":")[1]);
+						notInConfig -= 16384;
+					} else if(s.split(":")[0].equals("notificatior-update-frequency")){
+						notTimespan = Integer.parseInt(s.split(":")[1]);
+						notInConfig -= 262144;
 					}
+					
 				}
 				fstream.close();
 				br.close();
@@ -182,7 +246,26 @@ public class Config {
 			if(!f.exists() || notInConfig > 0){
 				if(!f.exists()) f.createNewFile();
 				PrintWriter pW = new PrintWriter(new BufferedWriter(new FileWriter(RealShopping.mandir + "realshopping.properties", true)));
-				if(notInConfig >= 4096){
+				
+				if(notInConfig >= 262144){
+					pW.println("notificatior-update-frequency:"+notTimespan);
+					notInConfig -= 262144;
+				} if(notInConfig >= 131072){
+					pW.println("enable-automatic-store-management:"+enableAI);
+					notInConfig -= 131072;
+				} if(notInConfig >= 65536){
+					pW.println("stat-updater-frequency:"+getTimeString(updateFreq));
+					notInConfig -= 65536;
+				} if(notInConfig >= 32768){
+					pW.println("statistics-timespan:"+getTimeString(statTimespan));
+					notInConfig -= 32768;
+				} if(notInConfig >= 16384){
+					pW.println("clean-stats-older-than:"+getTimeString(cleanStatsOld));
+					notInConfig -= 16384;
+				} if(notInConfig >= 8192){
+					pW.println("allow-filling-chests:"+allowFillChests);
+					notInConfig -= 8192;
+				} if(notInConfig >= 4096){
 					pW.println("enable-automatic-updates:"+getAutoUpdateStr(autoUpdate));
 					notInConfig -= 4096;
 				} if(notInConfig >= 2048){
@@ -240,7 +323,7 @@ public class Config {
 					
 					int i = 0;
 					while ((s = br.readLine()) != null){
-						if(i==0) pW.println("Properties file for RealShopping v0.33");
+						if(i==0) pW.println("Properties file for RealShopping v0.40");
 						if(s.length() > 33 && s.substring(0,33).equals("Properties file for RealShopping ")){}
 						else
 							pW.println(s);
@@ -276,6 +359,22 @@ public class Config {
 		else if(au == 2) return "check";//Check for updates and alert all with rsupdate permission
 		else if(au == 1) return "check-console";//Check for updates, alert about new version in console
 		else return "false";//No automatic updates at all
+	}
+	
+	static String getTimeString(int t){
+		if(t == 3600) return "hour";
+		else if(t == 86400) return "day";
+		else if(t == 604800) return "week";
+		else if(t == 2592000) return "month";
+		else return t + "";
+	}
+	
+	static int getTimeInt(String s){
+		if(s.equals("hour")) return 3600;
+		else if(s.equals("day")) return 86400;
+		else if(s.equals("week")) return 604800;
+		else if(s.equals("month")) return 2592000;
+		else return Integer.parseInt(s);
 	}
 }
 
