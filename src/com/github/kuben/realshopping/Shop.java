@@ -31,26 +31,9 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import com.github.kuben.realshopping.*;
 
-public class Shop {
-	
-	public Set<Statistic> stats = new HashSet<Statistic>();
-
-	public Map<Price, Float> prices = new HashMap<Price, Float>();//number after decimal is data value
-	public List<ItemStack> stolenToClaim = new ArrayList<ItemStack>();
-	
-	public Map<Location,ArrayList<Integer[]>> chests = new HashMap<Location, ArrayList<Integer[]>>();
-	public Map<String,ArrayList<ItemStack>> sellToStore = new HashMap<String, ArrayList<ItemStack>>();
-	public Map<Price, Integer> sale = new HashMap<Price, Integer>();
-	public List<Location> entrance = new ArrayList<Location>(), exit = new ArrayList<Location>();
-	public Set<String> banned = new HashSet<String>();
-	public Set<Location> protectedChests = new HashSet<Location>();
-	public String name, world, owner;//Admin stores: owner = @admin
-	public int buyFor = 0;
-	public byte notifyChanges = 0;
-	public int changeTreshold = 1;
-	public int changePercent = 5;
-	public boolean allowNotifications = true;
+public class Shop {//TODO add load/save interface
 	
 	public Shop(String name, String world, String owner){
 		super();
@@ -58,6 +41,56 @@ public class Shop {
 		this.world = world;
 		this.owner = owner;
 	}
+
+	/*
+	 * 
+	 * Vars
+	 * 
+	 */
+	private String name, world, owner;//Admin stores: owner = @admin
+	private int buyFor = 0;
+	private byte notifyChanges = 0;
+	private int changeTreshold = 1;
+	private int changePercent = 5;
+	private boolean allowNotifications = true;
+	
+	public String getName(){ return name; }
+	public String getWorld(){ return world; }
+	public String getOwner(){ return owner; }
+
+	public int getBuyFor(){ return buyFor; }
+	public void setBuyFor(int buyFor){ this.buyFor = buyFor; }
+	public byte getNotifyChanges(){ return notifyChanges; }
+	public void setNotifyChanges(byte notifyChanges){ this.notifyChanges = notifyChanges; }
+	public int getChangeTreshold(){ return changeTreshold; }
+	public void setChangeTreshold(int changeTreshold){ this.changeTreshold = changeTreshold; }
+	public int getChangePercent(){ return changePercent; }
+	public void setChangePercent(int changePercent){ this.changePercent = changePercent; }
+	public boolean allowsNotifications(){ return allowNotifications; }
+	public void setAllowNotifications(boolean allowNotifications){ this.allowNotifications = allowNotifications; }
+	
+	/*
+	 * 
+	 * Entrance/Exit
+	 * 
+	 */
+	
+	private List<Location> entrance = new ArrayList<Location>(), exit = new ArrayList<Location>();
+	
+	public boolean hasEntrance(Location en){ return entrance.contains(en); }
+	public boolean hasExit(Location ex){ return exit.contains(ex); }
+	public Location getFirstE(){ return entrance.get(0); }
+	public List<Location> getEntrance(){ return entrance; }
+	public List<Location> getExit() { return exit; }
+	public Location getCorrEntrance(Location ex) {
+		if(exit.contains(ex)) return entrance.get(exit.indexOf(ex));
+		return null;
+	}
+	public Location geCorrExit(Location en) {
+		if(entrance.contains(en)) return exit.get(entrance.indexOf(en));
+		return null;
+	}
+	public int eLen(){ return entrance.size(); }
 	public boolean addE(Location en, Location ex){
 		if(entrance.contains(en) && exit.contains(ex)){//duplicates
 			return false;
@@ -78,6 +111,19 @@ public class Shop {
 		}
 		return false;
 	}
+	
+	/*
+	 * 
+	 * Chest functions
+	 * 
+	 */
+	
+	private Map<Location,ArrayList<Integer[]>> chests = new HashMap<Location, ArrayList<Integer[]>>();
+	//TODO
+	public Map<Location, ArrayList<Integer[]>> getChests() {
+		return chests;
+	}
+	
 	public boolean addChest(Location l){
 		if(!chests.containsKey(l)){
 			chests.put(l, new ArrayList<Integer[]>());
@@ -129,6 +175,116 @@ public class Shop {
 		return j;
 	}
 
+	/*
+	 * 
+	 * Prices
+	 * 
+	 */
+	private Map<Price, Float> prices = new HashMap<Price, Float>();//Price array [0] is price, [1] is min and [2] is maxprice
+	
+	public boolean hasPrices(){ return !prices.isEmpty(); }
+	public boolean hasPrice(Price p) { return prices.containsKey(p); }
+	public Float getPrice(Price p) { return prices.get(p); }
+	public Map<Price, Float> getPrices() { return prices; }
+	public Float setPrice(Price p, Float f) { return prices.put(p, f); }
+	public boolean removePrice(Price p) { return prices.remove(p) != null; }
+	public void clearPrices() { prices.clear(); }
+	public boolean clonePrices(String store) {
+		if(store == null){
+			prices = getLowestPrices();
+			return true;
+		}
+		if(!RealShopping.shopMap.containsKey(store)) return false;
+		prices = new HashMap<Price, Float>(RealShopping.shopMap.get(store).prices);
+		return true;
+	}
+	public void setPrices(Map<Price, Float> prices) { this.prices = prices; }
+	
+	/*
+	 * 
+	 * Sales
+	 * 
+	 */
+	
+	private Map<Price, Integer> sale = new HashMap<Price, Integer>();
+	public boolean hasSales(){ return !sale.isEmpty(); }
+	public boolean hasSale(Price p){ return sale.containsKey(p); }
+	public void clearSales() { sale.clear(); }
+	public Integer getFirstSale(){ return (Integer) sale.values().toArray()[0]; }
+	public Integer getSale(Price p) { return sale.get(p); }
+	public void addSale(Price p, int pcnt) { sale.put(p, pcnt); }
+	public void setSale(Map<Price, Integer> sale) { this.sale = sale; }
+	
+	/*
+	 * 
+	 * Statistics
+	 * 
+	 */
+	private Set<Statistic> stats = new HashSet<Statistic>();
+	
+	public Set<Statistic> getStats() {
+		return stats;
+	}
+	public void addStat(Statistic stat) {
+		stats.add(stat);
+	}
+	public void removeStat(Statistic stat) {
+		stats.remove(stat);
+	}
+//	public void setStats(Set<Statistic> stats) { TODO rem propably
+//		this.stats = stats;
+//	}
+	
+	/*
+	 * 
+	 * Stolen, banned, and protected
+	 * 
+	 */
+	private List<ItemStack> stolenToClaim = new ArrayList<ItemStack>();
+	private Set<String> banned = new HashSet<String>();
+	private Set<Location> protectedChests = new HashSet<Location>();
+	
+	public List<ItemStack> getStolenToClaim() { return stolenToClaim; }
+	public boolean hasStolenToClaim() { return !stolenToClaim.isEmpty(); }
+	public void clearStolenToClaim() { stolenToClaim.clear(); }
+	public void addStolenToClaim(ItemStack stolenItem) { stolenToClaim.add(stolenItem); }
+	public void removeStolenToClaim(ItemStack stolenItem) { stolenToClaim.remove(stolenItem); }
+	
+	public Set<String> getBanned() { return banned; }
+	public boolean isBanned(String p) { return banned.contains(p); }
+	public void addBanned(String p) { banned.add(p); }
+	public void removeBanned(String p) { banned.remove(p); }
+	
+	public Set<Location> getProtectedChests() {//TODO if correct, needed
+		return protectedChests;
+	}
+	public boolean isProtectedChest(Location chest){ return protectedChests.contains(chest);}
+	public boolean addProtectedChest(Location chest){ return protectedChests.add(chest); }
+	public boolean removeProtectedChest(Location chest){ return protectedChests.remove(chest); }
+	
+	/*
+	 * 
+	 * Misc
+	 * TODO WTF?
+	 
+	private Map<String,ArrayList<ItemStack>> sellToStore = new HashMap<String, ArrayList<ItemStack>>();
+	
+	public List<ItemStack> getSellToStore(String p) {
+		return sellToStore.get(p);
+	}
+	public boolean hasSellToStore(String p){
+		return sellToStore.containsKey(p);
+	}
+	public void setSellToStore(Map<String, ArrayList<ItemStack>> sellToStore) {
+		this.sellToStore = sellToStore;
+	}
+	public void removeSellToStore(String p, ItemStack item) {
+		sellToStore.get(p).remove(item);
+	}
+	public void removeAllSellToStore(String p) {
+		sellToStore.remove(p);
+	}*/
+
 	public String exportProtectedToString(){
 		if(!protectedChests.isEmpty()){
 			String tempS = "";
@@ -169,6 +325,24 @@ public class Shop {
 	@Override
 	public String toString(){
 		return "Shop " + name + (owner.equals("@admin")?"":" owned by " + owner + " Prices: " + prices.toString());
+	}
+
+//	@SuppressWarnings("static-access")
+	private Map<Price, Float> getLowestPrices(){
+		Map<Price, Float> tempMap = new HashMap<Price, Float>();
+		String[] keys = RealShopping.shopMap.keySet().toArray(new String[0]);
+		for(String s:keys){
+			if(!s.equals(name)){
+				Price[] keys2 = RealShopping.shopMap.get(s).getPrices().keySet().toArray(new Price[0]);
+				for(Price p:keys2){
+					if(tempMap.containsKey(p)){
+						if(tempMap.get(p) > RealShopping.shopMap.get(s).getPrice(p)) tempMap.put(p, RealShopping.shopMap.get(s).getPrice(p));
+					} else
+						tempMap.put(p, RealShopping.shopMap.get(s).getPrice(p));
+				}
+			}
+		}
+		return tempMap;
 	}
 }
 

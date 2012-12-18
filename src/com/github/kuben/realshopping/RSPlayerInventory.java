@@ -81,10 +81,10 @@ public class RSPlayerInventory {
 		
 		Object[] keys = newInv.keySet().toArray();
 		boolean hasPaid = true;
-		if(!RealShopping.shopMap.get(store).prices.isEmpty())//If there are prices for store.
+		if(!RealShopping.shopMap.get(store).hasPrices())//If there are prices for store.
 			for(int j = 0;j < keys.length;j++){
 				PItem key = (PItem)keys[j];
-				if(RealShopping.shopMap.get(store).prices.containsKey(new Price(key.type)) || RealShopping.shopMap.get(store).prices.containsKey(new Price(key.type, key.data)))//If item has price
+				if(RealShopping.shopMap.get(store).hasPrice(new Price(key.type)) || RealShopping.shopMap.get(store).hasPrice(new Price(key.type, key.data)))//If item has price
 					if(items.containsKey(key)){
 						if(newInv.get(key) > items.get(key))
 							hasPaid = false;
@@ -100,7 +100,7 @@ public class RSPlayerInventory {
     public float toPay(Inventory[] invs){
     	float toPay = 0;
     	Shop tempShop = RealShopping.shopMap.get(store);
-		if(!tempShop.prices.isEmpty()){//If shop has prices
+		if(!tempShop.hasPrices()){//If shop has prices
 			Map<PItem, Integer> newInv = invToPInv();
 			
 			//Old inv = items
@@ -116,15 +116,15 @@ public class RSPlayerInventory {
 
 			for(int i = 0;i < keys.length;i++){
 				PItem key = (PItem) keys[i];
-				if(tempShop.prices.containsKey(new Price(key.type)) || tempShop.prices.containsKey(new Price(key.type, key.data))) {//Something in inventory has a price
+				if(tempShop.hasPrice(new Price(key.type)) || tempShop.hasPrice(new Price(key.type, key.data))) {//Something in inventory has a price
 					int amount = newInv.get(keys[i]);
 					float cost = -1;
-					if(tempShop.prices.containsKey(new Price(key.type))) cost = tempShop.prices.get(new Price(key.type));
-					if(tempShop.prices.containsKey(new Price(key.type, key.data))) cost = tempShop.prices.get(new Price(key.type, key.data));
-					if(tempShop.sale.containsKey(new Price(key.type)) || tempShop.sale.containsKey(new Price(key.type, key.data))){//There is a sale on that item.
+					if(tempShop.hasPrice(new Price(key.type))) cost = tempShop.getPrice(new Price(key.type));
+					if(tempShop.hasPrice(new Price(key.type, key.data))) cost = tempShop.getPrice(new Price(key.type, key.data));
+					if(tempShop.hasSale(new Price(key.type)) || tempShop.hasSale(new Price(key.type, key.data))){//There is a sale on that item.
 						int pcnt = -1;
-						if(tempShop.sale.containsKey(new Price(key.type))) pcnt = 100 - tempShop.sale.get(new Price(key.type));
-						if(tempShop.sale.containsKey(new Price(key.type, key.data)))  pcnt = 100 - tempShop.sale.get(new Price(key.type, key.data));
+						if(tempShop.hasSale(new Price(key.type))) pcnt = 100 - tempShop.getSale(new Price(key.type));
+						if(tempShop.hasSale(new Price(key.type, key.data)))  pcnt = 100 - tempShop.getSale(new Price(key.type, key.data));
 						cost *= pcnt;
 						cost = Math.round(cost);
 						cost /= 100;
@@ -148,7 +148,7 @@ public class RSPlayerInventory {
     public Map<PItem, Integer> getBought(Inventory[] invs){
     	Map<PItem, Integer> bought = new HashMap<PItem, Integer>();
     	Shop tempShop = RealShopping.shopMap.get(store);
-		if(!tempShop.prices.isEmpty()){//If shop has prices
+		if(!tempShop.hasPrices()){//If shop has prices
 			Map<PItem, Integer> newInv = invToPInv();
 			
 			//Old inv = items
@@ -164,7 +164,7 @@ public class RSPlayerInventory {
 
 			for(int i = 0;i < keys.length;i++){
 				PItem key = (PItem) keys[i];
-				if(tempShop.prices.containsKey(new Price(key.type)) || tempShop.prices.containsKey(new Price(key.type, key.data))) {//Something in inventory has a price
+				if(tempShop.hasPrice(new Price(key.type)) || tempShop.hasPrice(new Price(key.type, key.data))) {//Something in inventory has a price
 					int amount = newInv.get(key);
 					if(items.containsKey(key)) {
 						int oldAm = items.get(key);
@@ -194,8 +194,8 @@ public class RSPlayerInventory {
 		Object[] keys = newInv.keySet().toArray();
 		for(int i = 0;i < keys.length;i++){
 			PItem key = (PItem) keys[i];
-			if(RealShopping.shopMap.get(store).prices.containsKey(new Price(key.type))
-			|| RealShopping.shopMap.get(store).prices.containsKey(new Price(key.type, key.data))) {//Something in inventory has a price
+			if(RealShopping.shopMap.get(store).hasPrice(new Price(key.type))
+			|| RealShopping.shopMap.get(store).hasPrice(new Price(key.type, key.data))) {//Something in inventory has a price
 				int amount = newInv.get(key);
 				if(hasItem(key)) {
 					int oldAm = getAmount(key);

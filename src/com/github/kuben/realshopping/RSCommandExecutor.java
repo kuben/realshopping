@@ -89,7 +89,7 @@ public class RSCommandExecutor implements CommandExecutor {
 			if(args.length == 0){
 				if(player != null){
 					if(rs.PInvMap.get(player.getName()) != null) {
-						return rs.prices(sender, 0, rs.PInvMap.get(player.getName()).getStore(), true);
+						return prices(sender, 0, rs.PInvMap.get(player.getName()).getStore(), true);
 					} else {
 						sender.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
 					}
@@ -99,7 +99,7 @@ public class RSCommandExecutor implements CommandExecutor {
 					if(player != null){
 						if(rs.PInvMap.containsKey(player.getName())){
 							int i = Integer.parseInt(args[0]);
-							if(i > 0) return rs.prices(sender, i - 1, rs.PInvMap.get(player.getName()).getStore(), true);
+							if(i > 0) return prices(sender, i - 1, rs.PInvMap.get(player.getName()).getStore(), true);
 							else sender.sendMessage(ChatColor.RED + LangPack.THEPAGENUMBERMUSTBE1ORHIGHER);
 						} else {
 							sender.sendMessage(ChatColor.RED + LangPack.YOUHAVETOBEINASTOREIFNOTUSINGTHESTOREARGUMENT);
@@ -107,11 +107,11 @@ public class RSCommandExecutor implements CommandExecutor {
 						}
 					} else sender.sendMessage(ChatColor.RED + LangPack.YOUHAVETOUSETHESTOREARGUMENTWHENEXECUTINGTHISCOMMANDFROMCONSOLE);
 				} else {
-					return rs.prices(sender, 0, args[0], true);
+					return prices(sender, 0, args[0], true);
 				}
 			} else if(args.length == 2){
 				if(args[1].matches("[0-9]+")){
-					return rs.prices(sender, Integer.parseInt(args[1]), args[0], true);
+					return prices(sender, Integer.parseInt(args[1]), args[0], true);
 				} else {
 					sender.sendMessage(ChatColor.RED + "" + args[1] + LangPack.ISNOTAVALIDPAGENUMBER);
 				}
@@ -160,7 +160,7 @@ public class RSCommandExecutor implements CommandExecutor {
     			}
     			boolean isOwner = false;
     			if(rs.shopMap.containsKey(args[0]))
-    				if(rs.shopMap.get(args[0]).owner.equalsIgnoreCase("@admin")){
+    				if(rs.shopMap.get(args[0]).getOwner().equalsIgnoreCase("@admin")){
     					if(player == null){
     						isOwner = true;
     					} else if(player.hasPermission("realshopping.rsset")){
@@ -168,7 +168,7 @@ public class RSCommandExecutor implements CommandExecutor {
     				}
     				} else {
     					if(player != null){
-    						if(rs.shopMap.get(args[0]).owner.equalsIgnoreCase(player.getName())){
+    						if(rs.shopMap.get(args[0]).getOwner().equalsIgnoreCase(player.getName())){
     							isOwner = true;
     						}
     					}
@@ -179,9 +179,9 @@ public class RSCommandExecutor implements CommandExecutor {
     			}
     			
     			if(args.length == 1){
-    				sender.sendMessage(ChatColor.GREEN + LangPack.STORE + args[0] + ((rs.shopMap.get(args[0]).owner.equalsIgnoreCase("@admin"))?"":LangPack.OWNEDBY + rs.shopMap.get(args[0]).owner));
-    				if(rs.shopMap.get(args[0]).buyFor > 0) sender.sendMessage(ChatColor.GREEN + LangPack.BUYSFOR + rs.shopMap.get(args[0]).buyFor + LangPack.PCNTOFORIGINAL);
-    				if(!rs.shopMap.get(args[0]).sale.isEmpty()) sender.sendMessage(ChatColor.GREEN + LangPack.HASA + rs.shopMap.get(args[0]).sale.values().toArray()[0] + LangPack.PCNTOFFSALERIGHTNOW);
+    				sender.sendMessage(ChatColor.GREEN + LangPack.STORE + args[0] + ((rs.shopMap.get(args[0]).getOwner().equalsIgnoreCase("@admin"))?"":LangPack.OWNEDBY + rs.shopMap.get(args[0]).getOwner()));
+    				if(rs.shopMap.get(args[0]).getBuyFor() > 0) sender.sendMessage(ChatColor.GREEN + LangPack.BUYSFOR + rs.shopMap.get(args[0]).getBuyFor() + LangPack.PCNTOFORIGINAL);
+    				if(!rs.shopMap.get(args[0]).hasSales()) sender.sendMessage(ChatColor.GREEN + LangPack.HASA + rs.shopMap.get(args[0]).getFirstSale() + LangPack.PCNTOFFSALERIGHTNOW);
     				if(!rs.getPlayersInStore(args[0].toLowerCase())[0].equals("")){
     					sender.sendMessage(ChatColor.DARK_GREEN + LangPack.PLAYERSINSTORE + "\n" + ChatColor.RESET + rs.formatPlayerListToMess(rs.getPlayersInStore(args[0].toLowerCase())));
     				}
@@ -222,7 +222,7 @@ public class RSCommandExecutor implements CommandExecutor {
     	    					int pcnt = Integer.parseInt(args[2]);
     	    					if(pcnt <= 100){
     	    						if(pcnt >= 0){
-    	    							rs.shopMap.get(args[0]).buyFor = pcnt;
+    	    							rs.shopMap.get(args[0]).setBuyFor(pcnt);
     	    							if(pcnt > 0) sender.sendMessage(ChatColor.GREEN + LangPack.BUYSFOR + pcnt + LangPack.PCNTOFORIGINAL);
     	    							else sender.sendMessage(ChatColor.RED + LangPack.NOTBUYINGFROMPLAYERS);
     	    							rs.updateEntrancesDb();
@@ -236,16 +236,16 @@ public class RSCommandExecutor implements CommandExecutor {
     	     		}
     	    		
     	    		else if(args.length == 3 && args[1].equalsIgnoreCase("ban")){
-    	    			if(rs.shopMap.get(args[0]).banned.contains(args[2].toLowerCase())) sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISALREADYBANNEDFROMYOURSTORE);
+    	    			if(rs.shopMap.get(args[0]).isBanned(args[2].toLowerCase())) sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISALREADYBANNEDFROMYOURSTORE);
     	    			else {
-    	    				rs.shopMap.get(args[0]).banned.add(args[2].toLowerCase());
+    	    				rs.shopMap.get(args[0]).addBanned(args[2].toLowerCase());
     	    				sender.sendMessage(ChatColor.GREEN + LangPack.BANNED + args[2] + LangPack.FROMSTORE);
     	    			}
     	    			rs.updateEntrancesDb();
     	    			return true;
     	     		} else if(args.length == 3 && args[1].equalsIgnoreCase("unban")){
-    	     			if(rs.shopMap.get(args[0]).banned.contains(args[2].toLowerCase())){
-    	     				rs.shopMap.get(args[0]).banned.remove(args[2].toLowerCase());
+    	     			if(rs.shopMap.get(args[0]).isBanned(args[2].toLowerCase())){
+    	     				rs.shopMap.get(args[0]).removeBanned(args[2].toLowerCase());
     	     				sender.sendMessage(ChatColor.GREEN + args[2] + LangPack.ISNOLONGERBANNEDFROMYOURSTORE);
     	     			} else sender.sendMessage(ChatColor.RED + args[2] + LangPack.WASNTBANNEDFROMYOURSTORE);
     	     			rs.updateEntrancesDb();
@@ -261,9 +261,9 @@ public class RSCommandExecutor implements CommandExecutor {
     	     				if(cont){
     	     					if(rs.getServer().getPlayerExact(args[2]) != null){
     	     						rs.returnStolen(rs.getServer().getPlayerExact(args[2]));
-    	     						Location l = ((Location) rs.shopMap.get(args[0]).entrance.get(0)).clone();
-    	     						if(rs.shopMap.get(args[0]).sellToStore.containsKey(rs.getServer().getPlayerExact(args[2]).getName()))
-    	     							rs.shopMap.get(args[0]).sellToStore.remove(rs.getServer().getPlayerExact(args[2]).getName());
+    	     						Location l = rs.shopMap.get(args[0]).getFirstE();
+//TODO rem    	     						if(rs.shopMap.get(args[0]).sellToStore.containsKey(rs.getServer().getPlayerExact(args[2]).getName()))
+  //  	     							rs.shopMap.get(args[0]).sellToStore.remove(rs.getServer().getPlayerExact(args[2]).getName());
     	     						rs.PInvMap.remove(rs.getServer().getPlayerExact(args[2]).getName());
     	     						rs.getServer().getPlayerExact(args[2]).teleport(l.add(0.5, 0, 0.5));
     	     						sender.sendMessage(ChatColor.GREEN + args[2] + LangPack.WASKICKEDFROMYOURSTORE);
@@ -281,8 +281,8 @@ public class RSCommandExecutor implements CommandExecutor {
         	     						break;
         	     					}
         	     				if(cont){
-        	     					if(rs.shopMap.get(args[0]).sellToStore.containsKey(rs.getServer().getOfflinePlayer(args[3]).getName()))
-        	     						rs.shopMap.get(args[0]).sellToStore.remove(rs.getServer().getOfflinePlayer(args[3]).getName());
+ //TODO rem       	     					if(rs.shopMap.get(args[0]).sellToStore.containsKey(rs.getServer().getOfflinePlayer(args[3]).getName()))
+      //  	     						rs.shopMap.get(args[0]).sellToStore.remove(rs.getServer().getOfflinePlayer(args[3]).getName());
         	     					rs.PInvMap.remove(rs.getServer().getOfflinePlayer(args[3]).getName());
     	     						sender.sendMessage(ChatColor.GREEN + args[3] + LangPack.WASKICKEDFROMYOURSTORE);
         	     				} else sender.sendMessage(ChatColor.RED + LangPack.PLAYER + args[3] + LangPack.DOESNTEXIST);
@@ -296,12 +296,12 @@ public class RSCommandExecutor implements CommandExecutor {
 	    					int pcnt = Integer.parseInt(args[2]);
 	    					if(pcnt < 100){
 	    						if(pcnt > 0){
-	    							if(rs.shopMap.containsKey(args[0]) && !rs.shopMap.get(args[0]).prices.isEmpty()){
-	    								rs.shopMap.get(args[0]).sale.clear();
-	    								Price[] keys = rs.shopMap.get(args[0]).prices.keySet().toArray(new Price[0]);
+	    							if(rs.shopMap.containsKey(args[0]) && rs.shopMap.get(args[0]).hasPrices()){
+	    								rs.shopMap.get(args[0]).clearSales();
+	    								Price[] keys = rs.shopMap.get(args[0]).getPrices().keySet().toArray(new Price[0]);
 	    								int i = 0;
 	    								for(;i < keys.length;i++){
-	    									rs.shopMap.get(args[0]).sale.put(keys[i], pcnt);
+	    									rs.shopMap.get(args[0]).addSale(keys[i], pcnt);
 	    								}
 	    								if(pcnt > 0) sender.sendMessage(ChatColor.GREEN + "" + pcnt + LangPack.PCNTOFF + i + LangPack.ITEMS);
 	    								else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);
@@ -319,13 +319,13 @@ public class RSCommandExecutor implements CommandExecutor {
 	    						if(pcnt > 0){
 	    							String[] keys = args[3].split(",");
 	    							if(keys.length > 0){
-	    								rs.shopMap.get(args[0]).sale.clear();
+	    								rs.shopMap.get(args[0]).clearSales();
 	    								int i = 0;
 	    								int j = 0;
 	    								for(;i < keys.length;i++){
 	    									Price tempP = new Price(keys[i]);
-	    									if(rs.shopMap.get(args[0]).prices.containsKey(tempP) || rs.shopMap.get(args[0]).prices.containsKey(new Price(keys[i].split(":")[0]))){
-	    										rs.shopMap.get(args[0]).sale.put(tempP, pcnt);
+	    									if(rs.shopMap.get(args[0]).hasPrice(tempP) || rs.shopMap.get(args[0]).hasPrice(new Price(keys[i].split(":")[0]))){
+	    										rs.shopMap.get(args[0]).addSale(tempP, pcnt);
 	    										j++;
 	    									}
 	    								}
@@ -339,16 +339,16 @@ public class RSCommandExecutor implements CommandExecutor {
     						sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTANINTEGER);
     					}
     	    		} else if(args.length == 2 && args[1].equalsIgnoreCase("endsale")){
-    	    			rs.shopMap.get(args[0]).sale.clear();
+    	    			rs.shopMap.get(args[0]).clearSales();
     	    			sender.sendMessage(ChatColor.GREEN + LangPack.SALEENDED);
     	    			return true;
     	    		} else if(args[1].equals("notifications")){
     	    			if(args.length > 2){
     	    				if(args[2].equals("on")){
-    	    					rs.shopMap.get(args[0]).allowNotifications = true;
+    	    					rs.shopMap.get(args[0]).setAllowNotifications(true);
     	    					sender.sendMessage(ChatColor.GREEN + "Enabled notifications for " + args[0]);
     	    				} else if(args[2].equals("off")){
-    	    					rs.shopMap.get(args[0]).allowNotifications = false;
+    	    					rs.shopMap.get(args[0]).setAllowNotifications(false);
     	    					sender.sendMessage(ChatColor.GREEN + "Disabled notifications for " + args[0]);
     	    				} else {
     	    					sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTAVALIDARGUMENT);
@@ -356,16 +356,16 @@ public class RSCommandExecutor implements CommandExecutor {
     	    				}
     	    				return true;
     	    			} else {
-    	    				sender.sendMessage(ChatColor.GREEN + "Notifications are " + (rs.shopMap.get(args[0]).allowNotifications?"on":"off") + ".");
+    	    				sender.sendMessage(ChatColor.GREEN + "Notifications are " + (rs.shopMap.get(args[0]).allowsNotifications()?"on":"off") + ".");
     	    				return true;
     	    			}
     	    		} else if(args[1].equals("onchange")){
     	    			if(Config.enableAI){
     	    				if(args.length == 2){
-        	    				if(rs.shopMap.get(args[0]).notifyChanges == 1) sender.sendMessage(ChatColor.GREEN + "You will be notified if " + args[0] + " loses/gains "
-        	    						+ rs.shopMap.get(args[0]).changeTreshold + " place(s).");
-        	    				else if(rs.shopMap.get(args[0]).notifyChanges == 2) sender.sendMessage(ChatColor.GREEN + "The price will be lowered/increased by" + rs.shopMap.get(args[0]).changePercent
-        	    						+ "% if " + args[0] + " loses/gains " + rs.shopMap.get(args[0]).changeTreshold + " place(s).");
+        	    				if(rs.shopMap.get(args[0]).getNotifyChanges() == 1) sender.sendMessage(ChatColor.GREEN + "You will be notified if " + args[0] + " loses/gains "
+        	    						+ rs.shopMap.get(args[0]).getChangeTreshold() + " place(s).");
+        	    				else if(rs.shopMap.get(args[0]).getNotifyChanges() == 2) sender.sendMessage(ChatColor.GREEN + "The price will be lowered/increased by" + rs.shopMap.get(args[0]).getChangePercent()
+        	    						+ "% if " + args[0] + " loses/gains " + rs.shopMap.get(args[0]).getChangeTreshold() + " place(s).");
         	    				else sender.sendMessage(ChatColor.GREEN + args[0] + " won't notify you about changes.");
         	    				return true;
         	    			}
@@ -383,14 +383,14 @@ public class RSCommandExecutor implements CommandExecutor {
             						if(args[4].contains("%")) sender.sendMessage("(Skip the %-sign)");
             					}
             					if(args[2].equals("nothing")){
-            						rs.shopMap.get(args[0]).notifyChanges = 0;
+            						rs.shopMap.get(args[0]).setNotifyChanges((byte)0);
             						sender.sendMessage(ChatColor.GREEN + "You won't get notified when your store " + args[0] + " becomes more or less popular.");
             						rs.updateEntrancesDb();
             						return true;
             					} else if(args[2].equals("notify")){
             						if(tresh > -1){
-            							rs.shopMap.get(args[0]).notifyChanges = 1;
-            							rs.shopMap.get(args[0]).changeTreshold = tresh;
+            							rs.shopMap.get(args[0]).setNotifyChanges((byte)1);
+            							rs.shopMap.get(args[0]).setChangeTreshold(tresh);
                 						sender.sendMessage(ChatColor.GREEN + "You will get notified when your store " + args[0] + " becomes at least " + tresh + " places more or less popular.");
                 						rs.updateEntrancesDb();
             						} else
@@ -399,9 +399,9 @@ public class RSCommandExecutor implements CommandExecutor {
             						return true;
         						} else if(args[2].equals("changeprices")){
         							if(tresh > -1 && pcnt > -1){
-        								rs.shopMap.get(args[0]).notifyChanges = 2;
-        								rs.shopMap.get(args[0]).changeTreshold = tresh;
-        								rs.shopMap.get(args[0]).changePercent = pcnt;
+        								rs.shopMap.get(args[0]).setNotifyChanges((byte)2);
+        								rs.shopMap.get(args[0]).setChangeTreshold(tresh);
+        								rs.shopMap.get(args[0]).setChangePercent(pcnt);
                 						sender.sendMessage(ChatColor.GREEN + "You will get notified when your store " + args[0] + " becomes at least " + ChatColor.DARK_PURPLE + tresh
                 								+ " places more or less popular. And the prices will be lowered or increased by " + ChatColor.DARK_PURPLE + pcnt + "%.");
                 						rs.updateEntrancesDb();
@@ -442,7 +442,7 @@ public class RSCommandExecutor implements CommandExecutor {
     		}
     		if(!shop.equals("")){
     			if(rs.shopMap.containsKey(shop)){
-        			if(player == null || (rs.shopMap.get(shop).owner.equals(player.getName()) || player.hasPermission("realshopping.rsset"))){//If player is owner OR has admin perms
+        			if(player == null || (rs.shopMap.get(shop).getOwner().equals(player.getName()) || player.hasPermission("realshopping.rsset"))){//If player is owner OR has admin perms
         				if(args[0].equalsIgnoreCase("add")){
         					try {
         						int i = Integer.parseInt(args[ii].split(":")[0]);
@@ -451,8 +451,8 @@ public class RSCommandExecutor implements CommandExecutor {
         						float price = Float.parseFloat(d>-1?args[ii].split(":")[2]:args[ii].split(":")[1]);
         						DecimalFormat twoDForm = new DecimalFormat("#.##");
         						float j = Float.parseFloat(twoDForm.format(price));
-        						if(d == -1) rs.shopMap.get(shop).prices.put(new Price(i), j);
-        						else rs.shopMap.get(shop).prices.put(new Price(i, d), j);
+        						if(d == -1) rs.shopMap.get(shop).setPrice(new Price(i), j);
+        						else rs.shopMap.get(shop).setPrice(new Price(i, d), j);
         						sender.sendMessage(ChatColor.RED + LangPack.PRICEFOR + Material.getMaterial(i) + (d>-1?"("+d+") ":"") + LangPack.SETTO + j + rs.unit);
         						return true;
         					} catch (NumberFormatException e) {
@@ -463,8 +463,8 @@ public class RSCommandExecutor implements CommandExecutor {
         				} else if(args[0].equalsIgnoreCase("del")){
         					try {
         						Price tempP = new Price(args[ii]);
-        						if(rs.shopMap.get(shop).prices.containsKey(tempP)){
-        							rs.shopMap.get(shop).prices.remove(tempP);
+        						if(rs.shopMap.get(shop).hasPrice(tempP)){
+        							rs.shopMap.get(shop).removePrice(tempP);
         							sender.sendMessage(ChatColor.RED + LangPack.REMOVEDPRICEFOR + Material.getMaterial(tempP.getType()) + (tempP.getData()>-1?"("+tempP.getData()+") ":""));
         							return true;
         						} else {
@@ -477,12 +477,12 @@ public class RSCommandExecutor implements CommandExecutor {
         					try {
         						if((args.length == 3 && shop.equals(args[1])) || (args.length == 2 && !shop.equals(args[1]))){//If copy from store
         							if(rs.shopMap.containsKey(args[args.length - 1])){
-        								rs.shopMap.get(shop).prices = new HashMap<Price, Float>(rs.shopMap.get(args[args.length - 1]).prices);
+        								rs.shopMap.get(shop).clonePrices(args[args.length - 1]);
         								sender.sendMessage(ChatColor.GREEN + "Old prices replaced with prices from " + args[args.length - 1]);
         								return true;
         							}
         						} else {
-        							rs.shopMap.get(shop).prices = getLowestPrices(shop);
+        							rs.shopMap.get(shop).clonePrices(null);
     								sender.sendMessage(ChatColor.GREEN + "Old prices replaced with the lowest price of every item in every store.");
     								return true;
         						}
@@ -490,7 +490,7 @@ public class RSCommandExecutor implements CommandExecutor {
         						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_);
         					}
         				} else if(args[0].equalsIgnoreCase("clear")){
-        					rs.shopMap.get(shop).prices.clear();
+        					rs.shopMap.get(shop).clearPrices();
         					sender.sendMessage(ChatColor.GREEN + "Cleared all prices for " + shop);
         					return true;
         				}
@@ -505,7 +505,7 @@ public class RSCommandExecutor implements CommandExecutor {
     			if(rs.PInvMap.containsKey(player.getName())){
     				Location l = new Location(player.getWorld(), player.getLocation().getBlockX(), player.getLocation().getBlockY() - 1, player.getLocation().getBlockZ());
     				Shop tempShop = rs.shopMap.get(rs.PInvMap.get(player.getName()).getStore());
-    				if(tempShop.owner.equals("@admin")){
+    				if(tempShop.getOwner().equals("@admin")){
             			if (args.length == 1 && args[0].equalsIgnoreCase("create")){
             				if(tempShop.addChest(l)){
             					player.sendMessage(ChatColor.RED + LangPack.CHESTCREATED);
@@ -598,12 +598,12 @@ public class RSCommandExecutor implements CommandExecutor {
             						rs.shopMap.put(args[1], new Shop(args[1], player.getWorld().getName(), player.getName()));
             					}
         			    	}
-        			    	if(rs.shopMap.get(args[1]).owner.equals(player.getName())){
+        			    	if(rs.shopMap.get(args[1]).getOwner().equals(player.getName())){
         			    		//Add entrance
         			    		String[] entr = rs.playerEntrances.get(player.getName()).split(",");
         			    		String[] ext = rs.playerExits.get(player.getName()).split(",");
-        			    		Location en = new Location(rs.getServer().getWorld(rs.shopMap.get(args[1]).world), Integer.parseInt(entr[0]),Integer.parseInt(entr[1]), Integer.parseInt(entr[2]));
-        			    		Location ex = new Location(rs.getServer().getWorld(rs.shopMap.get(args[1]).world), Integer.parseInt(ext[0]),Integer.parseInt(ext[1]), Integer.parseInt(ext[2]));
+        			    		Location en = new Location(rs.getServer().getWorld(rs.shopMap.get(args[1]).getWorld()), Integer.parseInt(entr[0]),Integer.parseInt(entr[1]), Integer.parseInt(entr[2]));
+        			    		Location ex = new Location(rs.getServer().getWorld(rs.shopMap.get(args[1]).getWorld()), Integer.parseInt(ext[0]),Integer.parseInt(ext[1]), Integer.parseInt(ext[2]));
         			    		rs.shopMap.get(args[1]).addE(en, ex);
         			    		rs.updateEntrancesDb();
         			    		player.sendMessage(ChatColor.RED + args[1] + LangPack.WASCREATED);
@@ -617,7 +617,7 @@ public class RSCommandExecutor implements CommandExecutor {
     				} else player.sendMessage(ChatColor.RED + LangPack.THERESNOENTRANCESET);
     			} else if (args.length == 2 && args[0].equalsIgnoreCase("delstore")){
     				if(rs.shopMap.containsKey(args[1])){
-    					if(rs.shopMap.get(args[1]).owner.equals(player.getName())){
+    					if(rs.shopMap.get(args[1]).getOwner().equals(player.getName())){
     						if(rs.getPlayersInStore(args[1].toLowerCase())[0].equals("")){
     							rs.shopMap.remove(args[1]);
         						player.sendMessage(ChatColor.RED + args[1] + LangPack.WASREMOVED);
@@ -651,8 +651,8 @@ public class RSCommandExecutor implements CommandExecutor {
         			    		rs.shopMap.put(args[1], new Shop(args[1], player.getWorld().getName(), "@admin"));
         			    	}
         			    	//Add entrance
-        			    	Location en = new Location(rs.getServer().getWorld(rs.shopMap.get(args[1]).world), Integer.parseInt(rs.entrance.split(",")[0]),Integer.parseInt(rs.entrance.split(",")[1]), Integer.parseInt(rs.entrance.split(",")[2]));
-        			    	Location ex = new Location(rs.getServer().getWorld(rs.shopMap.get(args[1]).world), Integer.parseInt(rs.exit.split(",")[0]),Integer.parseInt(rs.exit.split(",")[1]), Integer.parseInt(rs.exit.split(",")[2]));
+        			    	Location en = new Location(rs.getServer().getWorld(rs.shopMap.get(args[1]).getWorld()), Integer.parseInt(rs.entrance.split(",")[0]),Integer.parseInt(rs.entrance.split(",")[1]), Integer.parseInt(rs.entrance.split(",")[2]));
+        			    	Location ex = new Location(rs.getServer().getWorld(rs.shopMap.get(args[1]).getWorld()), Integer.parseInt(rs.exit.split(",")[0]),Integer.parseInt(rs.exit.split(",")[1]), Integer.parseInt(rs.exit.split(",")[2]));
         			    	rs.shopMap.get(args[1]).addE(en, ex);
         			    	rs.updateEntrancesDb();
         					player.sendMessage(ChatColor.RED + args[1] + LangPack.WASCREATED);
@@ -811,11 +811,11 @@ public class RSCommandExecutor implements CommandExecutor {
    						Shop tempShop = rs.shopMap.get(rs.PInvMap.get(player.getName()).getStore());
        					BlockState bs = player.getLocation().subtract(0, 1, 0).getBlock().getState();
        					if(bs instanceof Chest | bs instanceof DoubleChest){
-       						if(tempShop.protectedChests.contains(bs.getLocation())){
+       						if(tempShop.isProtectedChest(bs.getLocation())){
        							player.sendMessage(ChatColor.GREEN + "This chest is already protected.");
        							return true;
        						} else {
-       							tempShop.protectedChests.add(bs.getLocation());
+       							tempShop.addProtectedChest(bs.getLocation());
        							player.sendMessage(ChatColor.GREEN + "Made chest protected.");
        							return true;
         					}
@@ -825,8 +825,8 @@ public class RSCommandExecutor implements CommandExecutor {
     				} else if(args.length == 1 & args[0].equalsIgnoreCase("remove")){
    						Shop tempShop = rs.shopMap.get(rs.PInvMap.get(player.getName()).getStore());
        					BlockState bs = player.getLocation().subtract(0, 1, 0).getBlock().getState();
-       					if(tempShop.protectedChests.contains(bs.getLocation())){
-       						tempShop.protectedChests.remove(bs.getLocation());
+       					if(tempShop.isProtectedChest(bs.getLocation())){
+       						tempShop.removeProtectedChest(bs.getLocation());
        						player.sendMessage(ChatColor.GREEN + "Unprotected chest.");
        						return true;
     					} else {
@@ -968,15 +968,68 @@ public class RSCommandExecutor implements CommandExecutor {
     	return false;
 	}
 	
+    private static boolean prices(CommandSender sender, int page, String store, boolean cmd){
+    	if(!RealShopping.shopMap.get(store).hasPrices()){
+    		Map<Price, Float> tempMap = RealShopping.shopMap.get(store).getPrices();
+ 			if(!tempMap.isEmpty()){
+ 				Price[] keys = tempMap.keySet().toArray(new Price[0]);
+ 				if(page*9 < keys.length){//If page exists
+// 					boolean SL = false;
+ 					if(RealShopping.shopMap.get(store).hasSales()){
+ 						sender.sendMessage(ChatColor.GREEN + LangPack.THEREISA + RealShopping.shopMap.get(store).getFirstSale() + LangPack.PCNTOFFSALEAT + store);
+// 						SL = true;
+ 					}
+ 					if((page+1)*9 < keys.length){//Not last
+ 		 				for(int i = 9*page;i < 9*(page+1);i++){
+ 		 					float cost = tempMap.get(keys[i]);
+ 		 					String onSlStr = "";
+ 		 					if(RealShopping.shopMap.get(store).hasSale(keys[i])){//There is a sale on that item.
+ 		 						int pcnt = 100 - RealShopping.shopMap.get(store).getSale(keys[i]);
+ 		 						cost *= pcnt;
+ 		 						cost = Math.round(cost);
+ 		 						cost /= 100;
+ 		 						onSlStr = ChatColor.GREEN + LangPack.ONSALE;
+ 		 					}
+ 		 					sender.sendMessage(ChatColor.BLUE + "" + keys[i] + " " + Material.getMaterial(keys[i].getType()) + ChatColor.BLACK + " - " + ChatColor.RED + cost + LangPack.UNIT + onSlStr);
+ 		 				}
+ 		 				sender.sendMessage(ChatColor.RED + LangPack.MOREITEMSONPAGE + (page + 2));
+ 					} else {//Last page
+ 		 				for(int i = 9*page;i < keys.length;i++){
+ 		 					float cost = tempMap.get(keys[i]);
+ 		 					String onSlStr = "";
+ 		 					if(RealShopping.shopMap.get(store).hasSale(keys[i])){//There is a sale on that item.
+ 		 						int pcnt = 100 - RealShopping.shopMap.get(store).getSale(keys[i]);
+ 		 						cost *= pcnt;
+ 		 						cost = Math.round(cost);
+ 		 						cost /= 100;
+ 		 						onSlStr = ChatColor.GREEN + LangPack.ONSALE;
+ 		 					}
+ 		 					sender.sendMessage(ChatColor.BLUE + "" + keys[i] + " " + Material.getMaterial(keys[i].getType()) + ChatColor.BLACK + " - " + ChatColor.RED + cost + LangPack.UNIT + onSlStr);
+ 		 				}
+ 					}
+ 				} else {
+ 					sender.sendMessage(ChatColor.RED + LangPack.THEREARENTTHATMANYPAGES);
+ 				}
+ 			} else {
+ 				sender.sendMessage(ChatColor.RED + LangPack.THEREARENOPRICESSETFORTHISSTORE);
+ 				return true;
+ 			}
+    	} else {
+				sender.sendMessage(ChatColor.RED + LangPack.THEREARENOPRICESSETFORTHISSTORE);
+				return true;
+    	}
+ 		return true;
+     }
+	
 	private boolean collect(CommandSender sender, Player player, Shop tempShop, boolean cFlag, int amount){
 		if(player != null){
-			if(!tempShop.owner.equalsIgnoreCase("@admin")){
+			if(!tempShop.getOwner().equalsIgnoreCase("@admin")){
 				if(cFlag){
 					if(Config.cartEnabledW.contains(player.getWorld().toString())){
 						if(player.getLocation().subtract(0, 1, 0).getBlock().getState() instanceof Chest){
-							if(!tempShop.stolenToClaim.isEmpty()){
+							if(tempShop.hasStolenToClaim()){
 								if(amount == 0) amount = 27;
-								ItemStack[] origIs = tempShop.stolenToClaim.toArray(new ItemStack[0]);
+								ItemStack[] origIs = tempShop.getStolenToClaim().toArray(new ItemStack[0]);
 								ItemStack[] tempIs = new ItemStack[Math.min(Math.min(27, amount),origIs.length)];
 								int i = 0;
 								for(;i < 27 && i < origIs.length && i < amount;i++){
@@ -986,10 +1039,10 @@ public class RSCommandExecutor implements CommandExecutor {
 								for(ItemStack tempIS:oldCont) if(tempIS != null) player.getWorld().dropItem(player.getLocation(), tempIS);
 								((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().setContents(tempIs);
 								player.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH + i + LangPack.ITEMS);
-								if(origIs.length <= Math.min(27, amount)) tempShop.stolenToClaim.clear();
+								if(origIs.length <= Math.min(27, amount)) tempShop.clearStolenToClaim();
 								else {
 									for(i = 0;i < 27 && i < origIs.length && i < amount;i++){
-										tempShop.stolenToClaim.remove(tempIs[i]);
+										tempShop.removeStolenToClaim(tempIs[i]);
 									}
 								}
 								return true;
@@ -1000,16 +1053,16 @@ public class RSCommandExecutor implements CommandExecutor {
 						return true;
 					}
 				} else {
-					ItemStack[] tempIs = tempShop.stolenToClaim.toArray(new ItemStack[0]);
+					ItemStack[] tempIs = tempShop.getStolenToClaim().toArray(new ItemStack[0]);
 					int i = 0;
 					for(;(i>0)?i < amount:true && i < tempIs.length;i++){
 						player.getWorld().dropItem(player.getLocation(), tempIs[i]);
 					}
 					player.sendMessage(ChatColor.GREEN + LangPack.DROPPED + i + LangPack.ITEMS);
-					if(amount == 0 || tempIs.length <= amount) tempShop.stolenToClaim.clear();
+					if(amount == 0 || tempIs.length <= amount) tempShop.clearStolenToClaim();
 					else {
 						for(i = 0;(i>0)?i < amount:true && i < tempIs.length;i++){
-							tempShop.stolenToClaim.remove(tempIs[i]);
+							tempShop.removeStolenToClaim(tempIs[i]);
 						}
 					}
 					return true;
@@ -1017,24 +1070,6 @@ public class RSCommandExecutor implements CommandExecutor {
 			}
 		} else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE);
 		return false; 
-	}
-	
-	@SuppressWarnings("static-access")
-	private Map<Price, Float> getLowestPrices(String shop){
-		Map<Price, Float> tempMap = new HashMap<Price, Float>();
-		String[] keys = rs.shopMap.keySet().toArray(new String[0]);
-		for(String s:keys){
-			if(!s.equals(shop)){
-				Price[] keys2 = rs.shopMap.get(s).prices.keySet().toArray(new Price[0]);
-				for(Price p:keys2){
-					if(tempMap.containsKey(p)){
-						if(tempMap.get(p) > rs.shopMap.get(s).prices.get(p)) tempMap.put(p, rs.shopMap.get(s).prices.get(p));
-					} else
-						tempMap.put(p, rs.shopMap.get(s).prices.get(p));
-				}
-			}
-		}
-		return tempMap;
 	}
 }
 

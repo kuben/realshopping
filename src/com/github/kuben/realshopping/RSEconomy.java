@@ -165,7 +165,7 @@ class StatUpdater extends Thread {
 		Map<Integer, TreeMap<String, Integer>> statsMap = new HashMap<Integer, TreeMap<String, Integer>>();
 		String[] keys = RealShopping.shopMap.keySet().toArray(new String[0]);
 		for(String s:keys){
-			Statistic[] sKeys = RealShopping.shopMap.get(s).stats.toArray(new Statistic[0]);
+			Statistic[] sKeys = RealShopping.shopMap.get(s).getStats().toArray(new Statistic[0]);
 			for(Statistic stat:sKeys){
 				if((System.currentTimeMillis()/1000) - Config.statTimespan< stat.getTime()/1000 && stat.isBought()){//Only past <timespan> and only bought TODO test
 					if(!statsMap.containsKey(stat.getItem().type)) statsMap.put(stat.getItem().type, new TreeMap<String, Integer>());
@@ -173,7 +173,7 @@ class StatUpdater extends Thread {
 					statsMap.get(stat.getItem().type).put(s, statsMap.get(stat.getItem().type).get(s) + stat.getAmount());
 				} else
 				if((System.currentTimeMillis()/1000) - Math.max(Config.cleanStatsOld, Math.max(Config.statTimespan, Config.updateFreq)) > stat.getTime()/1000){
-					RealShopping.shopMap.get(s).stats.remove(stat);	
+					RealShopping.shopMap.get(s).removeStat(stat);	
 				}
 			}
 		}
@@ -208,10 +208,10 @@ class StatUpdater extends Thread {
 		if(oldProvMap != null){
 			keys = oldProvMap.keySet().toArray(new String[0]);
 			for(String s:keys){
-				if(RealShopping.shopMap.containsKey(s) && !RealShopping.shopMap.get(s).owner.equals("@admin")){
+				if(RealShopping.shopMap.containsKey(s) && !RealShopping.shopMap.get(s).getOwner().equals("@admin")){
 					Shop tempShop = RealShopping.shopMap.get(s);
 					if(provMap.containsKey(s)){
-						if(tempShop.notifyChanges > 0){
+						if(tempShop.getNotifyChanges() > 0){
 							Integer[] iKeys = oldProvMap.get(s).keySet().toArray(new Integer[0]);
 							for(int i:iKeys){
 								if(provMap.get(s).containsKey(i)){
@@ -222,24 +222,24 @@ class StatUpdater extends Thread {
 									else if(Config.statTimespan == 604800) sinceStr =  "last week";
 									else if(Config.statTimespan == 2592000) sinceStr =  "last month";
 									else sinceStr = new Date(Config.statTimespan).toString();
-									if(diff >= tempShop.changeTreshold) RealShopping.sendNotification(tempShop.owner, "Your store " + s + " is now the "
+									if(diff >= tempShop.getChangeTreshold()) RealShopping.sendNotification(tempShop.getOwner(), "Your store " + s + " is now the "
 									+ Utils.formatNum(provMap.get(s).get(i)) + " (" + ChatColor.GREEN + "+" + diff + ChatColor.RESET + " since " + sinceStr +") provider of " + Material.getMaterial(i));
-									else if(diff <= tempShop.changeTreshold*-1) RealShopping.sendNotification(tempShop.owner, "Your store " + s + " is now the "
+									else if(diff <= tempShop.getChangeTreshold()*-1) RealShopping.sendNotification(tempShop.getOwner(), "Your store " + s + " is now the "
 									+ Utils.formatNum(provMap.get(s).get(i)) + " (" + ChatColor.RED + diff + ChatColor.RESET + " since " + sinceStr +") provider of " + Material.getMaterial(i));
-									if(tempShop.notifyChanges == 2 && diff != 0){
-										if(tempShop.prices.containsKey(new Price(i))){
-											int tempPrice = (int) (tempShop.prices.get(new Price(i)) * 100);
-											tempPrice *= (diff >= tempShop.changeTreshold)?1f + (tempShop.changePercent / 100f):1f - (tempShop.changePercent / 100f);
+									if(tempShop.getNotifyChanges() == 2 && diff != 0){//TODO add max and min price
+										if(tempShop.hasPrice(new Price(i))){
+											int tempPrice = (int) (tempShop.getPrice(new Price(i)) * 100);
+											tempPrice *= (diff >= tempShop.getChangeTreshold())?1f + (tempShop.getChangePercent() / 100f):1f - (tempShop.getChangePercent() / 100f);
 											float newPrice = tempPrice / 100f;
-											tempShop.prices.put(new Price(i), newPrice);
-											if(diff >= tempShop.changeTreshold) RealShopping.sendNotification(tempShop.owner, "Raised the price for " + Material.getMaterial(i) + " by "
-												+ tempShop.changePercent + "% to "+ newPrice);
-											else if(diff <= tempShop.changeTreshold*-1) RealShopping.sendNotification(tempShop.owner, "Lowered the price for " + Material.getMaterial(i) + " by "
-												+ tempShop.changePercent + "% to "+ newPrice);
+											tempShop.setPrice(new Price(i), newPrice);
+											if(diff >= tempShop.getChangeTreshold()) RealShopping.sendNotification(tempShop.getOwner(), "Raised the price for " + Material.getMaterial(i) + " by "
+												+ tempShop.getChangePercent() + "% to "+ newPrice);
+											else if(diff <= tempShop.getChangeTreshold()*-1) RealShopping.sendNotification(tempShop.getOwner(), "Lowered the price for " + Material.getMaterial(i) + " by "
+												+ tempShop.getChangePercent() + "% to "+ newPrice);
 										}
 									}
 								} else {
-									RealShopping.sendNotification(tempShop.owner, "Your store " + s + " went from being the  " + oldProvMap.get(s).get(i)
+									RealShopping.sendNotification(tempShop.getOwner(), "Your store " + s + " went from being the  " + oldProvMap.get(s).get(i)
 											+ " th provider of " + Material.getMaterial(i) + " to not selling any.");
 								}
 							}
