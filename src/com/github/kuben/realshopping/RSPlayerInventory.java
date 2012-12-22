@@ -81,7 +81,7 @@ public class RSPlayerInventory {
 		
 		Object[] keys = newInv.keySet().toArray();
 		boolean hasPaid = true;
-		if(!RealShopping.shopMap.get(store).hasPrices())//If there are prices for store.
+		if(RealShopping.shopMap.get(store).hasPrices())//If there are prices for store.
 			for(int j = 0;j < keys.length;j++){
 				PItem key = (PItem)keys[j];
 				if(RealShopping.shopMap.get(store).hasPrice(new Price(key.type)) || RealShopping.shopMap.get(store).hasPrice(new Price(key.type, key.data)))//If item has price
@@ -100,7 +100,7 @@ public class RSPlayerInventory {
     public float toPay(Inventory[] invs){
     	float toPay = 0;
     	Shop tempShop = RealShopping.shopMap.get(store);
-		if(!tempShop.hasPrices()){//If shop has prices
+		if(tempShop.hasPrices()){//If shop has prices
 			Map<PItem, Integer> newInv = invToPInv();
 			
 			//Old inv = items
@@ -148,7 +148,7 @@ public class RSPlayerInventory {
     public Map<PItem, Integer> getBought(Inventory[] invs){
     	Map<PItem, Integer> bought = new HashMap<PItem, Integer>();
     	Shop tempShop = RealShopping.shopMap.get(store);
-		if(!tempShop.hasPrices()){//If shop has prices
+		if(tempShop.hasPrices()){//If shop has prices
 			Map<PItem, Integer> newInv = invToPInv();
 			
 			//Old inv = items

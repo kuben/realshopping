@@ -353,19 +353,24 @@ public class RealShopping extends JavaPlugin {
 	        doc.appendChild(root);
 	        doc.appendChild(doc.createComment("If you want to manually edit this file, do it when your server is down. Your changes won't be saved otherwise!"));
 	           
-	        Map<Price, Float> tempMap;
+	        Map<Price, Float[]> tempMap;
 	        Object[] keys = shopMap.keySet().toArray();
 	        for(int i = 0;i < keys.length;i++){	
 	        	Element shop = doc.createElement("shop");
 	        	shop.setAttribute("name", shopMap.get(keys[i]).getName());
 	        	root.appendChild(shop);
 	            	
-	            tempMap = shopMap.get(keys[i]).getPrices();//TODO link to prices
+	            tempMap = shopMap.get(keys[i]).getPricesMap();//TODO link to prices
 	          	Object[] ids = tempMap.keySet().toArray();
 	           	for(int j = 0;j < ids.length;j++){
 	           		Element item = doc.createElement("item");
 	                item.setAttribute("id", ids[j].toString());
-	                item.setAttribute("cost", tempMap.get(ids[j]) + "");
+	                Float[] p = tempMap.get(ids[j]);
+	                item.setAttribute("cost", p[0] + "");
+	                if(p.length == 2){
+	                	item.setAttribute("min", p[1] + "");
+	                	item.setAttribute("max", p[2] + "");
+	                }
 	                shop.appendChild(item);
 	           	}
 	        }
@@ -1541,7 +1546,7 @@ class Notificator extends Thread {
 
 class PricesParser extends DefaultHandler {
 	int index = -1;
-	List<Map<Price, Float>> mapList = new ArrayList<Map<Price, Float>>();
+	List<Map<Price, Float[]>> mapList = new ArrayList<Map<Price, Float[]>>();
 	List<String> shopList = new ArrayList<String>();
 	
 	 void parseDocument(File f) {
@@ -1562,10 +1567,20 @@ class PricesParser extends DefaultHandler {
 	public void startElement(String a, String b, String name, Attributes attr) throws SAXException {
 		if(name.equalsIgnoreCase("shop")){
 			shopList.add(attr.getValue("name"));
-			mapList.add(new HashMap<Price, Float>());
+			mapList.add(new HashMap<Price, Float[]>());
 			index ++;
 		} else if(name.equalsIgnoreCase("item")){
-			mapList.get(index).put(new Price(attr.getValue("id")), Float.parseFloat(attr.getValue("cost")));
+			if(attr.getValue("cost") != null){
+				Float f[];
+				if(attr.getValue("min") != null && attr.getValue("max") != null){
+					f = new Float[]{Float.parseFloat(attr.getValue("cost")), 
+									Float.parseFloat(attr.getValue("min")), 
+									Float.parseFloat(attr.getValue("max"))};
+				} else {
+					f = new Float[]{Float.parseFloat(attr.getValue("cost"))};
+				}
+				mapList.get(index).put(new Price(attr.getValue("id")), f);
+			}
 		}
 	}
 

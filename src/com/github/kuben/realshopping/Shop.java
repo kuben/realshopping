@@ -180,14 +180,32 @@ public class Shop {//TODO add load/save interface
 	 * Prices
 	 * 
 	 */
-	private Map<Price, Float> prices = new HashMap<Price, Float>();//Price array [0] is price, [1] is min and [2] is maxprice
+	private Map<Price, Float[]> prices = new HashMap<Price, Float[]>();//Price array [0] is price, [1] is min and [2] is maxprice
 	
 	public boolean hasPrices(){ return !prices.isEmpty(); }
 	public boolean hasPrice(Price p) { return prices.containsKey(p); }
-	public Float getPrice(Price p) { return prices.get(p); }
-	public Map<Price, Float> getPrices() { return prices; }
-	public Float setPrice(Price p, Float f) { return prices.put(p, f); }
+	public Float getPrice(Price p) { return prices.get(p)[0]; }
+	public Map<Price, Float> getPrices() {
+		Map<Price, Float> temp = new HashMap<Price, Float>();
+		for(Price p:prices.keySet().toArray(new Price[0]))
+			temp.put(p, prices.get(p)[0]);
+		return temp;
+	}
+	public Map<Price, Float[]> getPricesMap(){ return prices; }
+	public Float setPrice(Price p, Float f) { return prices.put(p, new Float[]{f})[0]; }
 	public boolean removePrice(Price p) { return prices.remove(p) != null; }
+	
+	public Float getMin(Price p) { if(prices.containsKey(p) && prices.get(p).length == 3) return prices.get(p)[1]; return null; }
+	public Float getMax(Price p) { if(prices.containsKey(p) && prices.get(p).length == 3) return prices.get(p)[2]; return null; }
+	public boolean hasMinMax(Price p) { return (prices.containsKey(p) && prices.get(p).length == 3); }
+	public boolean setMinMax(Price p, Float min, Float max){
+		if(prices.containsKey(p)){
+			prices.put(p, new Float[]{getPrice(p), min, max});
+			return true;
+		}
+		return false;
+	}
+	public void clearMinMax(Price p) { setPrice(p, getPrice(p)); }
 	public void clearPrices() { prices.clear(); }
 	public boolean clonePrices(String store) {
 		if(store == null){
@@ -195,10 +213,10 @@ public class Shop {//TODO add load/save interface
 			return true;
 		}
 		if(!RealShopping.shopMap.containsKey(store)) return false;
-		prices = new HashMap<Price, Float>(RealShopping.shopMap.get(store).prices);
+		prices = new HashMap<Price, Float[]>(RealShopping.shopMap.get(store).prices);
 		return true;
 	}
-	public void setPrices(Map<Price, Float> prices) { this.prices = prices; }
+	public void setPrices(Map<Price, Float[]> prices) { this.prices = prices; }
 	
 	/*
 	 * 
@@ -255,9 +273,6 @@ public class Shop {//TODO add load/save interface
 	public void addBanned(String p) { banned.add(p); }
 	public void removeBanned(String p) { banned.remove(p); }
 	
-	public Set<Location> getProtectedChests() {//TODO if correct, needed
-		return protectedChests;
-	}
 	public boolean isProtectedChest(Location chest){ return protectedChests.contains(chest);}
 	public boolean addProtectedChest(Location chest){ return protectedChests.add(chest); }
 	public boolean removeProtectedChest(Location chest){ return protectedChests.remove(chest); }
@@ -328,17 +343,17 @@ public class Shop {//TODO add load/save interface
 	}
 
 //	@SuppressWarnings("static-access")
-	private Map<Price, Float> getLowestPrices(){
-		Map<Price, Float> tempMap = new HashMap<Price, Float>();
+	private Map<Price, Float[]> getLowestPrices(){
+		Map<Price, Float[]> tempMap = new HashMap<Price, Float[]>();
 		String[] keys = RealShopping.shopMap.keySet().toArray(new String[0]);
 		for(String s:keys){
 			if(!s.equals(name)){
 				Price[] keys2 = RealShopping.shopMap.get(s).getPrices().keySet().toArray(new Price[0]);
 				for(Price p:keys2){
 					if(tempMap.containsKey(p)){
-						if(tempMap.get(p) > RealShopping.shopMap.get(s).getPrice(p)) tempMap.put(p, RealShopping.shopMap.get(s).getPrice(p));
+						if(tempMap.get(p)[0] > RealShopping.shopMap.get(s).getPrice(p)) tempMap.put(p, new Float[]{RealShopping.shopMap.get(s).getPrice(p)});
 					} else
-						tempMap.put(p, RealShopping.shopMap.get(s).getPrice(p));
+						tempMap.put(p, new Float[]{RealShopping.shopMap.get(s).getPrice(p)});
 				}
 			}
 		}

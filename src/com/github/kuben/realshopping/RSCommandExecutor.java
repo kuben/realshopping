@@ -181,7 +181,7 @@ public class RSCommandExecutor implements CommandExecutor {
     			if(args.length == 1){
     				sender.sendMessage(ChatColor.GREEN + LangPack.STORE + args[0] + ((rs.shopMap.get(args[0]).getOwner().equalsIgnoreCase("@admin"))?"":LangPack.OWNEDBY + rs.shopMap.get(args[0]).getOwner()));
     				if(rs.shopMap.get(args[0]).getBuyFor() > 0) sender.sendMessage(ChatColor.GREEN + LangPack.BUYSFOR + rs.shopMap.get(args[0]).getBuyFor() + LangPack.PCNTOFORIGINAL);
-    				if(!rs.shopMap.get(args[0]).hasSales()) sender.sendMessage(ChatColor.GREEN + LangPack.HASA + rs.shopMap.get(args[0]).getFirstSale() + LangPack.PCNTOFFSALERIGHTNOW);
+    				if(rs.shopMap.get(args[0]).hasSales()) sender.sendMessage(ChatColor.GREEN + LangPack.HASA + rs.shopMap.get(args[0]).getFirstSale() + LangPack.PCNTOFFSALERIGHTNOW);
     				if(!rs.getPlayersInStore(args[0].toLowerCase())[0].equals("")){
     					sender.sendMessage(ChatColor.DARK_GREEN + LangPack.PLAYERSINSTORE + "\n" + ChatColor.RESET + rs.formatPlayerListToMess(rs.getPlayersInStore(args[0].toLowerCase())));
     				}
@@ -419,86 +419,94 @@ public class RSCommandExecutor implements CommandExecutor {
     	    		}
     			} else sender.sendMessage(ChatColor.RED + LangPack.YOUDONTHAVEPERMISSIONTOMANAGETHATSTORE);
     		}
-    	} else if(cmd.getName().equalsIgnoreCase("rssetprices")){
-    		String shop = "";
-    		int ii = 1;
-    		if(args.length == 1 && player != null && rs.PInvMap.containsKey(player.getName())){
-    			if(args[0].equals("copy") || args[0].equals("clear")){
-    				shop = rs.PInvMap.get(player.getName()).getStore();
-    			}
-    		} else if(args.length == 2){
-    			if(player != null){
-    				if(rs.PInvMap.containsKey(player.getName())){
-    					shop = rs.PInvMap.get(player.getName()).getStore();
-    				} else sender.sendMessage(ChatColor.RED + LangPack.YOUHAVETOBEINASTORETOUSETHISCOMMANDWITHTWOARGUENTS);
-    			} else {
-    				if(args[0].equals("copy") || args[0].equals("clear")){
+    	} else if(cmd.getName().equalsIgnoreCase("rssetprices")){//TODO add add price min max
+    		if(args.length > 0){
+    			String shop = "";
+    			boolean isPlayer = player != null && rs.PInvMap.containsKey(player.getName());
+    			int ii = 1;//First argument after store, not all commands need this
+    			if(args[0].equalsIgnoreCase("add")//STORE ID:DATA:COST:MIN:MAX
+    					|| args[0].equalsIgnoreCase("del")//STORE ID:DATA 
+    					|| args[0].equalsIgnoreCase("showminmax")//STORE PRICE
+    					|| args[0].equalsIgnoreCase("clearminmax")//STORE PRICE
+    					|| args[0].equalsIgnoreCase("setminmax")){//STORE PRICE:MIN:MAX
+    				if(args.length < 3 && isPlayer) shop = rs.PInvMap.get(player.getName()).getStore();
+    				else {
     					shop = args[1];
-    				} else sender.sendMessage(ChatColor.RED + LangPack.YOUHAVETOUSEALLTHREEARGUMENTSWHENEXECUTINGTHISCOMMANDFROMCONSOLE);//TODO
+    					ii = 2;
+    				}
+    			} else if(args[0].equalsIgnoreCase("copy")){//STORE STORE
+    				if(args.length < 2 && isPlayer){
+    					shop = rs.PInvMap.get(player.getName()).getStore();
+    				} else if(args.length == 2) shop = args[1];
+    				else if(args.length > 2) {
+    					shop = args[1];
+    					ii = 2;
+    				}
+    			} else if(args[0].equalsIgnoreCase("clear")){//STORE
+    				if(args.length == 1 && isPlayer) shop = rs.PInvMap.get(player.getName()).getStore();
+    				else if(args.length > 1) shop = args[1];
     			}
-    		} else if(args.length == 3){
-    			shop = args[1];
-    			ii = 2;
-    		}
-    		if(!shop.equals("")){
-    			if(rs.shopMap.containsKey(shop)){
-        			if(player == null || (rs.shopMap.get(shop).getOwner().equals(player.getName()) || player.hasPermission("realshopping.rsset"))){//If player is owner OR has admin perms
-        				if(args[0].equalsIgnoreCase("add")){
-        					try {
-        						int i = Integer.parseInt(args[ii].split(":")[0]);
-        						int d = -1;
-        						if(args[ii].split(":").length > 2) d = Integer.parseInt(args[ii].split(":")[1]);
-        						float price = Float.parseFloat(d>-1?args[ii].split(":")[2]:args[ii].split(":")[1]);
-        						DecimalFormat twoDForm = new DecimalFormat("#.##");
-        						float j = Float.parseFloat(twoDForm.format(price));
-        						if(d == -1) rs.shopMap.get(shop).setPrice(new Price(i), j);
-        						else rs.shopMap.get(shop).setPrice(new Price(i, d), j);
-        						sender.sendMessage(ChatColor.RED + LangPack.PRICEFOR + Material.getMaterial(i) + (d>-1?"("+d+") ":"") + LangPack.SETTO + j + rs.unit);
-        						return true;
-        					} catch (NumberFormatException e) {
-        						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_FOLLOWEDBYTHEPRICE_ + rs.unit);
-        					} catch (ArrayIndexOutOfBoundsException e){
-        						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_FOLLOWEDBYTHEPRICE_ + rs.unit);
-        					}
-        				} else if(args[0].equalsIgnoreCase("del")){
-        					try {
-        						Price tempP = new Price(args[ii]);
-        						if(rs.shopMap.get(shop).hasPrice(tempP)){
-        							rs.shopMap.get(shop).removePrice(tempP);
-        							sender.sendMessage(ChatColor.RED + LangPack.REMOVEDPRICEFOR + Material.getMaterial(tempP.getType()) + (tempP.getData()>-1?"("+tempP.getData()+") ":""));
-        							return true;
-        						} else {
-       								sender.sendMessage(ChatColor.RED + LangPack.COULDNTFINDPRICEFOR + Material.getMaterial(tempP.getType()) + (tempP.getData()>-1?"("+tempP.getData()+") ":""));
-       							}
-        					} catch (NumberFormatException e) {
-        						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_);
-        					}
-        				} else if(args[0].equalsIgnoreCase("copy")){
-        					try {
-        						if((args.length == 3 && shop.equals(args[1])) || (args.length == 2 && !shop.equals(args[1]))){//If copy from store
-        							if(rs.shopMap.containsKey(args[args.length - 1])){
-        								rs.shopMap.get(shop).clonePrices(args[args.length - 1]);
-        								sender.sendMessage(ChatColor.GREEN + "Old prices replaced with prices from " + args[args.length - 1]);
+    			
+        		if(!shop.equals("")){
+        			if(rs.shopMap.containsKey(shop)){
+            			if(player == null || (rs.shopMap.get(shop).getOwner().equals(player.getName()) || player.hasPermission("realshopping.rsset"))){//If player is owner OR has admin perms
+            				if(args[0].equalsIgnoreCase("add")){
+            					try {
+            						int i = Integer.parseInt(args[ii].split(":")[0]);
+            						int d = -1;
+            						if(args[ii].split(":").length > 2) d = Integer.parseInt(args[ii].split(":")[1]);
+            						float price = Float.parseFloat(d>-1?args[ii].split(":")[2]:args[ii].split(":")[1]);
+            						DecimalFormat twoDForm = new DecimalFormat("#.##");
+            						float j = Float.parseFloat(twoDForm.format(price));
+            						if(d == -1) rs.shopMap.get(shop).setPrice(new Price(i), j);
+            						else rs.shopMap.get(shop).setPrice(new Price(i, d), j);
+            						sender.sendMessage(ChatColor.RED + LangPack.PRICEFOR + Material.getMaterial(i) + (d>-1?"("+d+") ":"") + LangPack.SETTO + j + rs.unit);
+            						return true;
+            					} catch (NumberFormatException e) {
+            						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_FOLLOWEDBYTHEPRICE_ + rs.unit);
+            					} catch (ArrayIndexOutOfBoundsException e){
+            						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_FOLLOWEDBYTHEPRICE_ + rs.unit);
+            					}
+            				} else if(args[0].equalsIgnoreCase("del")){
+            					try {
+            						Price tempP = new Price(args[ii]);
+            						if(rs.shopMap.get(shop).hasPrice(tempP)){
+            							rs.shopMap.get(shop).removePrice(tempP);
+            							sender.sendMessage(ChatColor.RED + LangPack.REMOVEDPRICEFOR + Material.getMaterial(tempP.getType()) + (tempP.getData()>-1?"("+tempP.getData()+") ":""));
+            							return true;
+            						} else {
+           								sender.sendMessage(ChatColor.RED + LangPack.COULDNTFINDPRICEFOR + Material.getMaterial(tempP.getType()) + (tempP.getData()>-1?"("+tempP.getData()+") ":""));
+           							}
+            					} catch (NumberFormatException e) {
+            						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_);
+            					}
+            				} else if(args[0].equalsIgnoreCase("copy")){
+            					try {
+            						if((args.length == 3 && shop.equals(args[1])) || (args.length == 2 && !shop.equals(args[1]))){//If copy from store
+            							if(rs.shopMap.containsKey(args[args.length - 1])){
+            								rs.shopMap.get(shop).clonePrices(args[args.length - 1]);
+            								sender.sendMessage(ChatColor.GREEN + "Old prices replaced with prices from " + args[args.length - 1]);
+            								return true;
+            							}
+            						} else {
+            							rs.shopMap.get(shop).clonePrices(null);
+        								sender.sendMessage(ChatColor.GREEN + "Old prices replaced with the lowest price of every item in every store.");
         								return true;
-        							}
-        						} else {
-        							rs.shopMap.get(shop).clonePrices(null);
-    								sender.sendMessage(ChatColor.GREEN + "Old prices replaced with the lowest price of every item in every store.");
-    								return true;
-        						}
-        					} catch (NumberFormatException e) {
-        						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_);
-        					}
-        				} else if(args[0].equalsIgnoreCase("clear")){
-        					rs.shopMap.get(shop).clearPrices();
-        					sender.sendMessage(ChatColor.GREEN + "Cleared all prices for " + shop);
-        					return true;
-        				}
-        				
-        			} else sender.sendMessage(ChatColor.RED + LangPack.YOUARENTPERMITTEDTOEMANAGETHISSTORE);
-				} else {
-					sender.sendMessage(ChatColor.RED + shop + LangPack.DOESNTEXIST);
-				}
+            						}
+            					} catch (NumberFormatException e) {
+            						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_);
+            					}
+            				} else if(args[0].equalsIgnoreCase("clear")){
+            					rs.shopMap.get(shop).clearPrices();
+            					sender.sendMessage(ChatColor.GREEN + "Cleared all prices for " + shop);
+            					return true;
+            				}
+            				
+            			} else sender.sendMessage(ChatColor.RED + LangPack.YOUARENTPERMITTEDTOEMANAGETHISSTORE);
+    				} else {
+    					sender.sendMessage(ChatColor.RED + shop + LangPack.DOESNTEXIST);
+    				}
+        		}
     		}
     	} else if(cmd.getName().equalsIgnoreCase("rssetchests")){
     		if(player != null){
@@ -969,7 +977,7 @@ public class RSCommandExecutor implements CommandExecutor {
 	}
 	
     private static boolean prices(CommandSender sender, int page, String store, boolean cmd){
-    	if(!RealShopping.shopMap.get(store).hasPrices()){
+    	if(RealShopping.shopMap.get(store).hasPrices()){
     		Map<Price, Float> tempMap = RealShopping.shopMap.get(store).getPrices();
  			if(!tempMap.isEmpty()){
  				Price[] keys = tempMap.keySet().toArray(new Price[0]);
