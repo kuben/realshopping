@@ -184,7 +184,7 @@ public class Shop {//TODO add load/save interface
 	
 	public boolean hasPrices(){ return !prices.isEmpty(); }
 	public boolean hasPrice(Price p) { return prices.containsKey(p); }
-	public Float getPrice(Price p) { return prices.get(p)[0]; }
+	public Float getPrice(Price p) { Float[] r = prices.get(p); return (r==null?null:r[0]); }
 	public Map<Price, Float> getPrices() {
 		Map<Price, Float> temp = new HashMap<Price, Float>();
 		for(Price p:prices.keySet().toArray(new Price[0]))
@@ -192,7 +192,7 @@ public class Shop {//TODO add load/save interface
 		return temp;
 	}
 	public Map<Price, Float[]> getPricesMap(){ return prices; }
-	public Float setPrice(Price p, Float f) { return prices.put(p, new Float[]{f})[0]; }
+	public Float setPrice(Price p, Float f) { Float[] r = prices.put(p, new Float[]{f}); return (r==null?null:r[0]); }
 	public boolean removePrice(Price p) { return prices.remove(p) != null; }
 	
 	public Float getMin(Price p) { if(prices.containsKey(p) && prices.get(p).length == 3) return prices.get(p)[1]; return null; }
@@ -249,9 +249,6 @@ public class Shop {//TODO add load/save interface
 	public void removeStat(Statistic stat) {
 		stats.remove(stat);
 	}
-//	public void setStats(Set<Statistic> stats) { TODO rem propably
-//		this.stats = stats;
-//	}
 	
 	/*
 	 * 
@@ -280,25 +277,8 @@ public class Shop {//TODO add load/save interface
 	/*
 	 * 
 	 * Misc
-	 * TODO WTF?
-	 
-	private Map<String,ArrayList<ItemStack>> sellToStore = new HashMap<String, ArrayList<ItemStack>>();
-	
-	public List<ItemStack> getSellToStore(String p) {
-		return sellToStore.get(p);
-	}
-	public boolean hasSellToStore(String p){
-		return sellToStore.containsKey(p);
-	}
-	public void setSellToStore(Map<String, ArrayList<ItemStack>> sellToStore) {
-		this.sellToStore = sellToStore;
-	}
-	public void removeSellToStore(String p, ItemStack item) {
-		sellToStore.get(p).remove(item);
-	}
-	public void removeAllSellToStore(String p) {
-		sellToStore.remove(p);
-	}*/
+	 * 
+	 */
 
 	public String exportProtectedToString(){
 		if(!protectedChests.isEmpty()){
@@ -342,7 +322,7 @@ public class Shop {//TODO add load/save interface
 		return "Shop " + name + (owner.equals("@admin")?"":" owned by " + owner + " Prices: " + prices.toString());
 	}
 
-//	@SuppressWarnings("static-access")
+	@SuppressWarnings("static-access")
 	private Map<Price, Float[]> getLowestPrices(){
 		Map<Price, Float[]> tempMap = new HashMap<Price, Float[]>();
 		String[] keys = RealShopping.shopMap.keySet().toArray(new String[0]);

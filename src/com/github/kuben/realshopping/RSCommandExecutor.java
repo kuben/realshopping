@@ -262,8 +262,6 @@ public class RSCommandExecutor implements CommandExecutor {
     	     					if(rs.getServer().getPlayerExact(args[2]) != null){
     	     						rs.returnStolen(rs.getServer().getPlayerExact(args[2]));
     	     						Location l = rs.shopMap.get(args[0]).getFirstE();
-//TODO rem    	     						if(rs.shopMap.get(args[0]).sellToStore.containsKey(rs.getServer().getPlayerExact(args[2]).getName()))
-  //  	     							rs.shopMap.get(args[0]).sellToStore.remove(rs.getServer().getPlayerExact(args[2]).getName());
     	     						rs.PInvMap.remove(rs.getServer().getPlayerExact(args[2]).getName());
     	     						rs.getServer().getPlayerExact(args[2]).teleport(l.add(0.5, 0, 0.5));
     	     						sender.sendMessage(ChatColor.GREEN + args[2] + LangPack.WASKICKEDFROMYOURSTORE);
@@ -281,8 +279,6 @@ public class RSCommandExecutor implements CommandExecutor {
         	     						break;
         	     					}
         	     				if(cont){
- //TODO rem       	     					if(rs.shopMap.get(args[0]).sellToStore.containsKey(rs.getServer().getOfflinePlayer(args[3]).getName()))
-      //  	     						rs.shopMap.get(args[0]).sellToStore.remove(rs.getServer().getOfflinePlayer(args[3]).getName());
         	     					rs.PInvMap.remove(rs.getServer().getOfflinePlayer(args[3]).getName());
     	     						sender.sendMessage(ChatColor.GREEN + args[3] + LangPack.WASKICKEDFROMYOURSTORE);
         	     				} else sender.sendMessage(ChatColor.RED + LangPack.PLAYER + args[3] + LangPack.DOESNTEXIST);
@@ -419,7 +415,8 @@ public class RSCommandExecutor implements CommandExecutor {
     	    		}
     			} else sender.sendMessage(ChatColor.RED + LangPack.YOUDONTHAVEPERMISSIONTOMANAGETHATSTORE);
     		}
-    	} else if(cmd.getName().equalsIgnoreCase("rssetprices")){//TODO add add price min max
+    	} else if(cmd.getName().equalsIgnoreCase("rssetprices"))
+    	{
     		if(args.length > 0){
     			String shop = "";
     			boolean isPlayer = player != null && rs.PInvMap.containsKey(player.getName());
@@ -450,17 +447,30 @@ public class RSCommandExecutor implements CommandExecutor {
         		if(!shop.equals("")){
         			if(rs.shopMap.containsKey(shop)){
             			if(player == null || (rs.shopMap.get(shop).getOwner().equals(player.getName()) || player.hasPermission("realshopping.rsset"))){//If player is owner OR has admin perms
+            				Shop tempShop = rs.shopMap.get(shop);
             				if(args[0].equalsIgnoreCase("add")){
             					try {
             						int i = Integer.parseInt(args[ii].split(":")[0]);
+            						int jj = 1;//First argument after item
             						int d = -1;
-            						if(args[ii].split(":").length > 2) d = Integer.parseInt(args[ii].split(":")[1]);
-            						float price = Float.parseFloat(d>-1?args[ii].split(":")[2]:args[ii].split(":")[1]);
+            						if(args[ii].split(":").length > 2) {
+            							d = Integer.parseInt(args[ii].split(":")[1]);
+            							jj = 2;
+            						}
+            						float price = Float.parseFloat(args[ii].split(":")[jj]);
             						DecimalFormat twoDForm = new DecimalFormat("#.##");
             						float j = Float.parseFloat(twoDForm.format(price));
-            						if(d == -1) rs.shopMap.get(shop).setPrice(new Price(i), j);
-            						else rs.shopMap.get(shop).setPrice(new Price(i, d), j);
+            						Price p;
+            						if(d == -1) p = new Price(i);
+            						else p = new Price(i, d);
+            						tempShop.setPrice(p, j);
             						sender.sendMessage(ChatColor.RED + LangPack.PRICEFOR + Material.getMaterial(i) + (d>-1?"("+d+") ":"") + LangPack.SETTO + j + rs.unit);
+            						if(args[ii].split(":").length > 3){//Also set min max
+            							String m[] = new String[]{twoDForm.format(Float.parseFloat(args[ii].split(":")[jj+1]))
+            									,twoDForm.format(Float.parseFloat(args[ii].split(":")[jj+2]))};
+            							tempShop.setMinMax(p, Float.parseFloat(m[0]), Float.parseFloat(m[1]));
+                    					sender.sendMessage(ChatColor.GREEN + "Set minimal and maximal prices for " + Material.getMaterial(i));
+            						}
             						return true;
             					} catch (NumberFormatException e) {
             						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_FOLLOWEDBYTHEPRICE_ + rs.unit);
@@ -470,8 +480,8 @@ public class RSCommandExecutor implements CommandExecutor {
             				} else if(args[0].equalsIgnoreCase("del")){
             					try {
             						Price tempP = new Price(args[ii]);
-            						if(rs.shopMap.get(shop).hasPrice(tempP)){
-            							rs.shopMap.get(shop).removePrice(tempP);
+            						if(tempShop.hasPrice(tempP)){
+            							tempShop.removePrice(tempP);
             							sender.sendMessage(ChatColor.RED + LangPack.REMOVEDPRICEFOR + Material.getMaterial(tempP.getType()) + (tempP.getData()>-1?"("+tempP.getData()+") ":""));
             							return true;
             						} else {
@@ -484,12 +494,12 @@ public class RSCommandExecutor implements CommandExecutor {
             					try {
             						if((args.length == 3 && shop.equals(args[1])) || (args.length == 2 && !shop.equals(args[1]))){//If copy from store
             							if(rs.shopMap.containsKey(args[args.length - 1])){
-            								rs.shopMap.get(shop).clonePrices(args[args.length - 1]);
+            								tempShop.clonePrices(args[args.length - 1]);
             								sender.sendMessage(ChatColor.GREEN + "Old prices replaced with prices from " + args[args.length - 1]);
             								return true;
             							}
             						} else {
-            							rs.shopMap.get(shop).clonePrices(null);
+            							tempShop.clonePrices(null);
         								sender.sendMessage(ChatColor.GREEN + "Old prices replaced with the lowest price of every item in every store.");
         								return true;
             						}
@@ -497,9 +507,37 @@ public class RSCommandExecutor implements CommandExecutor {
             						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_);
             					}
             				} else if(args[0].equalsIgnoreCase("clear")){
-            					rs.shopMap.get(shop).clearPrices();
+            					tempShop.clearPrices();
             					sender.sendMessage(ChatColor.GREEN + "Cleared all prices for " + shop);
             					return true;
+            				} else if(args[0].equalsIgnoreCase("showminmax")){
+            					int item = Integer.parseInt(args[ii]);
+            					Price p = new Price(item);
+            					if(tempShop.hasMinMax(p)){
+            						sender.sendMessage(ChatColor.GREEN + "Store " + shop + " has a minimal price of " + tempShop.getMin(p) + LangPack.UNIT
+            							+ " and a maximal price of " + tempShop.getMax(p) + LangPack.UNIT + " for " + Material.getMaterial(item));
+            					} else sender.sendMessage(ChatColor.GREEN + "Store " + shop + " doesn't have a minimal and maximal price for " + Material.getMaterial(item));
+            					return true;
+            				} else if(args[0].equalsIgnoreCase("clearminmax")){
+            					int item = Integer.parseInt(args[ii]);
+            					if(tempShop.hasMinMax(new Price(item))){
+            						tempShop.clearMinMax(new Price(item));
+            						sender.sendMessage(ChatColor.GREEN + "Cleared minimal and maximal prices for " + Material.getMaterial(item));
+            					} else sender.sendMessage(ChatColor.GREEN + "Store " + shop + " didn't have a minimal and maximal price for " + Material.getMaterial(item));
+            					return true;
+            				} else if(args[0].equalsIgnoreCase("setminmax")){
+            					try {
+            						String[] s = args[ii].split(":");
+            						if(s.length == 3){
+                    					int item = Integer.parseInt(s[0]);
+                    					DecimalFormat twoDForm = new DecimalFormat("#.##");
+                    					tempShop.setMinMax(new Price(item), Float.parseFloat(twoDForm.format(Float.parseFloat(s[1]))), Float.parseFloat(twoDForm.format(Float.parseFloat(s[2]))));
+                    					sender.sendMessage(ChatColor.GREEN + "Set minimal and maximal prices for " + Material.getMaterial(item));
+                    					return true;
+            						} else sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_);
+            					} catch (NumberFormatException e) {
+            						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_);
+            					}
             				}
             				
             			} else sender.sendMessage(ChatColor.RED + LangPack.YOUARENTPERMITTEDTOEMANAGETHISSTORE);

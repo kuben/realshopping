@@ -53,8 +53,6 @@ public class RSPlayerListener implements Listener {
 			} else {
 				if(RealShopping.allowTpOutOfStore(event.getTo())){
 					String shopName = RealShopping.PInvMap.get(player.getName()).getStore();
-//TODO rem					if(RealShopping.shopMap.get(shopName).sellToStore.containsKey(player.getName()))
-//						RealShopping.shopMap.get(shopName).sellToStore.remove(player.getName());
 					RealShopping.PInvMap.remove(player.getName());
 					player.sendMessage(ChatColor.RED + LangPack.YOULEFT + shopName);
 				} else {

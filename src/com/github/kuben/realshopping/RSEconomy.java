@@ -226,7 +226,7 @@ class StatUpdater extends Thread {
 									+ Utils.formatNum(provMap.get(s).get(i)) + " (" + ChatColor.GREEN + "+" + diff + ChatColor.RESET + " since " + sinceStr +") provider of " + Material.getMaterial(i));
 									else if(diff <= tempShop.getChangeTreshold()*-1) RealShopping.sendNotification(tempShop.getOwner(), "Your store " + s + " is now the "
 									+ Utils.formatNum(provMap.get(s).get(i)) + " (" + ChatColor.RED + diff + ChatColor.RESET + " since " + sinceStr +") provider of " + Material.getMaterial(i));
-									if(tempShop.getNotifyChanges() == 2 && diff != 0){//TODO add max and min price
+									if(tempShop.getNotifyChanges() == 2 && diff != 0){//TODO test
 										if(tempShop.hasPrice(new Price(i))){
 											int tempPrice = (int) (tempShop.getPrice(new Price(i)) * 100);
 											tempPrice *= (diff >= tempShop.getChangeTreshold())?1f + (tempShop.getChangePercent() / 100f):1f - (tempShop.getChangePercent() / 100f);

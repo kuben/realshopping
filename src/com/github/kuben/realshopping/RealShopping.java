@@ -849,8 +849,6 @@ public class RealShopping extends JavaPlugin {
 					Location l = new Location(player.getWorld(), player.getLocation().getBlockX(), player.getLocation().getBlockY(), player.getLocation().getBlockZ());
 					if(shopMap.get(shopName).hasExit(l)){
 						l = shopMap.get(shopName).getCorrEntrance(l);
-//TODO	rem					if(shopMap.get(shopName).hasSellToStore(player.getName()))
-//							shopMap.get(shopName).removeAllSellToStore(player.getName());
 						PInvMap.remove(player.getName());
 						player.teleport(l.add(0.5, 0, 0.5));
 						player.sendMessage(ChatColor.RED + LangPack.YOULEFT + shopName);
@@ -957,7 +955,6 @@ public class RealShopping extends JavaPlugin {
     			if(RSEconomy.getBalance(own) >= payment){
     				RSEconomy.deposit(p.getName(), payment);
     				RSEconomy.withdraw(own, payment);//If player owned store, withdraw from owner
-//TODO rem 				tempShop.removeAllSellToStore(p.getName());
     				p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sold.size() + LangPack.ITEMSFOR + payment + unit);
 					if(tempShop.allowsNotifications()) sendNotification(own, "Your store " + tempShop.getName() + " bought stuff for " + payment + LangPack.UNIT + " from " + p.getName());
 					for(ItemStack key:sold){
@@ -968,7 +965,6 @@ public class RealShopping extends JavaPlugin {
     			}
     		} else {
 				RSEconomy.deposit(p.getName(), payment);
-//TODO rem				tempShop.sellToStore.remove(p.getName());
 				p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sold.size() + LangPack.ITEMSFOR + payment + unit);
 				for(ItemStack key:sold){
 					PInvMap.get(p.getName()).removeItem(key, key.getAmount());
@@ -1282,8 +1278,6 @@ public class RealShopping extends JavaPlugin {
     		if(!Config.keepstolen){
     			returnStolen(p);
     		}
-//TODO rem			if(shopMap.get(PInvMap.get(p.getName()).getStore()).sellToStore.containsKey(p.getName()))
-//				shopMap.get(PInvMap.get(p.getName()).getStore()).sellToStore.remove(p.getName());
 			PInvMap.remove(p.getName());
         	p.sendMessage(ChatColor.RED + LangPack.TRYINGTOCHEATYOURWAYOUT);
         	log.info(p.getName() + LangPack.TRIEDTOSTEALFROMTHESTORE);
@@ -1331,8 +1325,6 @@ public class RealShopping extends JavaPlugin {
     			returnStolen(p);
     		}
 			jailedPlayers.put(p.getName(), shopMap.get(PInvMap.get(p.getName()).getStore()).getFirstE());
-//TODO rem			if(shopMap.get(PInvMap.get(p.getName()).getStore()).sellToStore.containsKey(p.getName()))
-//				shopMap.get(PInvMap.get(p.getName()).getStore()).sellToStore.remove(p.getName());
     		PInvMap.remove(p.getName());
         	p.sendMessage(ChatColor.RED + LangPack.TRYINGTOCHEATYOURWAYOUT);
         	log.info(p.getName() + LangPack.TRIEDTOSTEALFROMTHESTORE);
