@@ -457,17 +457,17 @@ public class RSCommandExecutor implements CommandExecutor {
             							d = Integer.parseInt(args[ii].split(":")[1]);
             							jj = 2;
             						}
-            						float price = Float.parseFloat(args[ii].split(":")[jj]);//TODO why doesn't it parse float????
+            						float price = Float.valueOf(args[ii].split(":")[jj]);
             						DecimalFormat twoDForm = new DecimalFormat("#.##");
-            						float j = Float.parseFloat(twoDForm.format(price));
+            						float j = Float.valueOf(twoDForm.format(price).replaceAll(",", "."));
             						Price p;
             						if(d == -1) p = new Price(i);
             						else p = new Price(i, d);
             						tempShop.setPrice(p, j);
             						sender.sendMessage(ChatColor.GREEN + LangPack.PRICEFOR + Material.getMaterial(i) + (d>-1?"("+d+") ":"") + LangPack.SETTO + j + rs.unit);
             						if(args[ii].split(":").length > 3){//Also set min max
-            							String m[] = new String[]{twoDForm.format(Float.parseFloat(args[ii].split(":")[jj+1]))
-            									,twoDForm.format(Float.parseFloat(args[ii].split(":")[jj+2]))};
+            							String m[] = new String[]{twoDForm.format(Float.parseFloat(args[ii].split(":")[jj+1])).replaceAll(",", ".")
+            									,twoDForm.format(Float.parseFloat(args[ii].split(":")[jj+2])).replaceAll(",", ".")};
             							tempShop.setMinMax(p, Float.parseFloat(m[0]), Float.parseFloat(m[1]));
                     					sender.sendMessage(ChatColor.GREEN + "Set minimal and maximal prices for " + Material.getMaterial(i));
             						}
@@ -531,7 +531,7 @@ public class RSCommandExecutor implements CommandExecutor {
             						if(s.length == 3){
                     					int item = Integer.parseInt(s[0]);
                     					DecimalFormat twoDForm = new DecimalFormat("#.##");
-                    					tempShop.setMinMax(new Price(item), Float.parseFloat(twoDForm.format(Float.parseFloat(s[1]))), Float.parseFloat(twoDForm.format(Float.parseFloat(s[2]))));
+                    					tempShop.setMinMax(new Price(item), Float.valueOf(twoDForm.format(Float.valueOf(s[1])).replaceAll(",", ".")), Float.valueOf(twoDForm.format(Float.valueOf(s[2])).replaceAll(",", ".")));
                     					sender.sendMessage(ChatColor.GREEN + "Set minimal and maximal prices for " + Material.getMaterial(item));
                     					return true;
             						} else sender.sendMessage(ChatColor.RED + args[ii] + " is not a proper argument.");

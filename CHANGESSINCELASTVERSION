@@ -1,33 +1,12 @@
-Changes since v0.33
+Changes since v0.40
 
-Commands:
-* Added /rssell - a new method for players to sell stuff to stores, replacing the 
-old one.
-* Added a 'help' argument to /rsstores.
-* Added 'notifications' argument to /rsstores.
-* Added 'onchange' argument to /rsstores.
-* Added 'clear' and 'copy' arguments to /rssetprices.
+Besides a rewrite of two classes in the code:
 
-Misc:
-* Added some notifications.
-* Added internal economy which is used when Vault can't find an economy plugin 
-(or when Vault isn't found).
-* Added support for item data value in prices. You can set the price for all 
-items with a certain id as usual, but you can also override that price like this: 
-ID:DATA:COST
+* Added minimal and maximal prices for items. They limit how far the automatic store management can lower or raise your prices. Currently you cannot set different min and max for different data values.
+* Altered /rssetprices command:
+* * Two more optional arguments for the **add** argument. Now you can use: // /rssetprices add ITEM[:DATA]:PRICE[:MIN:MAX]//. Note that you always need to set both the maximal and minimal price at once.
+* * Added // /rssetprices showminmax ITEM//
+* * Added // /rssetprices clearminmax ITEM//
+* * Added // /rssetprices setminmax ITEM:MIN:MAX//
 
-Added 6 lines in config:
-* notificatior-update-frequency - in milliseconds how often the notifications thread 
-should be ran. Anything bellow 500 disables notifications.
-* enable-automatic-store-management - if the server allows stores to monitor statistics 
-from itself and other stores, and also if the stores may automaticly change prices.
-* statistics-timespan - how old statistics are "remembered". On servers where things 
-happen fast, use a shorter timespan. On "slow" servers, a larger one.
-* stat-updater-frequency - how often the statistics thread should be ran.
-* clean-stats-older-than - how old statistics can be before they are removed from the database.
-* allow-filling-chests - if users are allowed to use commands that fill chests. Set 
-this to false if you have some kind of chest protection plugin. Also disables shopping 
-carts and shipping.
-
-Altered in config:
-* enable-shopping-carts-in-worlds - you can use @all to enable carts in all worlds.
+Also fixed bug not allowing to add prices with decimal numbers.
