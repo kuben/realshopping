@@ -18,7 +18,6 @@
  */
     	
 package com.github.kuben.realshopping;
-import com.github.kuben.realshopping.*;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -54,7 +53,6 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
-import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.StorageMinecart;
@@ -272,7 +270,7 @@ public class RealShopping extends JavaPlugin {
 				}
 				fstream.close();
 				br.close();
-				if(version < 0.40)//Needs updating
+				if(version < 0.41)//Needs updating
 					updateEntrancesDb();
 			}
 		} catch (FileNotFoundException e) {
@@ -367,7 +365,7 @@ public class RealShopping extends JavaPlugin {
 	                item.setAttribute("id", ids[j].toString());
 	                Float[] p = tempMap.get(ids[j]);
 	                item.setAttribute("cost", p[0] + "");
-	                if(p.length == 2){
+	                if(p.length == 3){
 	                	item.setAttribute("min", p[1] + "");
 	                	item.setAttribute("max", p[2] + "");
 	                }
@@ -396,7 +394,7 @@ public class RealShopping extends JavaPlugin {
 			if(!f.exists()) f.createNewFile();
 			PrintWriter pW = new PrintWriter(f);
 			Object[] keys = shopMap.keySet().toArray();
-			pW.println("Shops database for RealShopping v0.40");
+			pW.println("Shops database for RealShopping v0.41");
 			for(int i = 0;i<keys.length;i++){
 				Shop tempShop = shopMap.get(keys[i]);
 				pW.print(keys[i] + ":" + tempShop.getWorld() + ":" + tempShop.getOwner() + ":" + tempShop.getBuyFor()
@@ -502,7 +500,7 @@ public class RealShopping extends JavaPlugin {
     	forbiddenInStore.add(367);//Rotten Flesh
     	forbiddenInStore.add(364);//Steak
 
- /*   	I haven't managed to cancel these, they are just sending an useless message to the player
+ /*   	I haven't managed to cancel these, they are just sending an useless message to the player TODO next version
   * 	forbiddenInStore.add(326);//Bucket of water
     	forbiddenInStore.add(327);//Bucket of lava
     	
@@ -682,38 +680,39 @@ public class RealShopping extends JavaPlugin {
     	String header;
 
     	try {
+    		String vStr = "v0.41";
     		if(what == 0){
     			keys = PInvMap.keySet().toArray();//Player Map
     			f = new File(mandir + "inventories.db");
-    			header = "Inventories database for RealShopping v0.40";
+    			header = "Inventories database for RealShopping " + vStr;
     		} else if(what == 1){
     			keys = jailedPlayers.keySet().toArray();
     			f = new File(mandir + "jailed.db");
-    			header = "Jailed players database for RealShopping v0.40";
+    			header = "Jailed players database for RealShopping " + vStr;
     		} else if(what == 2){
     			keys = forbiddenTpLocs.keySet().toArray();
     			f = new File(mandir + "allowedtplocs.db");
-    			header = "Allowed teleport locations for RealShopping v0.40 " + (tpLocBlacklist?"Blacklist":"Whitelist");
+    			header = "Allowed teleport locations for RealShopping " + vStr + " " + (tpLocBlacklist?"Blacklist":"Whitelist");
     		} else if(what == 3){
     			keys = shopMap.keySet().toArray();
     			f = new File(mandir + "protectedchests.db");
-    			header = "Protected chests for RealShopping v0.40";
+    			header = "Protected chests for RealShopping " + vStr;
     		} else if(what == 4){
     			keys = shippedToCollect.keySet().toArray();//Map of players having shipped items
     			f = new File(mandir + "shipped.db");
-    			header = "Shipped Packages database for RealShopping v0.40";
+    			header = "Shipped Packages database for RealShopping " + vStr;
     		} else if(what == 5){
     			keys = shopMap.keySet().toArray();
     			f = new File(mandir + "toclaim.db");
-    			header = "Stolen items database for RealShopping v0.40";
+    			header = "Stolen items database for RealShopping " + vStr;
     		} else if(what == 6){
     			keys = shopMap.keySet().toArray();
     			f = new File(mandir + "stats.db");
-    			header = "Statistics database for RealShopping v0.40";
+    			header = "Statistics database for RealShopping " + vStr;
     		} else if(what == 7){
     			keys = notificator.keySet().toArray();
     			f = new File(mandir + "notifications.db");
-    			header = "Notifications database for RealShopping v0.40";
+    			header = "Notifications database for RealShopping " + vStr;
     		} else {
     			return false;
     		}
@@ -792,7 +791,7 @@ public class RealShopping extends JavaPlugin {
 			Location ex = null;
 			for(;i<keys.length;i++){
 				if(shopMap.get(keys[i]).hasEntrance(l)){
-					ex = shopMap.get(keys[i]).geCorrExit(l);
+					ex = shopMap.get(keys[i]).getCorrExit(l);
 					break;
 				}
 			}

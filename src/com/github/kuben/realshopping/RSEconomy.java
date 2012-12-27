@@ -167,7 +167,7 @@ class StatUpdater extends Thread {
 		for(String s:keys){
 			Statistic[] sKeys = RealShopping.shopMap.get(s).getStats().toArray(new Statistic[0]);
 			for(Statistic stat:sKeys){
-				if((System.currentTimeMillis()/1000) - Config.statTimespan < stat.getTime()/1000 && stat.isBought()){//Only past <timespan> and only bought TODO test
+				if((System.currentTimeMillis()/1000) - Config.statTimespan < stat.getTime()/1000 && stat.isBought()){//Only past <timespan> and only bought
 					if(!statsMap.containsKey(stat.getItem().type)) statsMap.put(stat.getItem().type, new TreeMap<String, Integer>());
 					if(!statsMap.get(stat.getItem().type).containsKey(s)) statsMap.get(stat.getItem().type).put(s, 0);
 					statsMap.get(stat.getItem().type).put(s, statsMap.get(stat.getItem().type).get(s) + stat.getAmount());
@@ -226,7 +226,7 @@ class StatUpdater extends Thread {
 									+ Utils.formatNum(provMap.get(s).get(i)) + " (" + ChatColor.GREEN + "+" + diff + ChatColor.RESET + " since " + sinceStr +") provider of " + Material.getMaterial(i));
 									else if(diff <= tempShop.getChangeTreshold()*-1) RealShopping.sendNotification(tempShop.getOwner(), "Your store " + s + " is now the "
 									+ Utils.formatNum(provMap.get(s).get(i)) + " (" + ChatColor.RED + diff + ChatColor.RESET + " since " + sinceStr +") provider of " + Material.getMaterial(i));
-									if(tempShop.getNotifyChanges() == 2 && diff != 0){//TODO test
+									if(tempShop.getNotifyChanges() == 2 && diff != 0){
 										if(tempShop.hasPrice(new Price(i))){
 											int tempPrice = (int) (tempShop.getPrice(new Price(i)) * 100);
 											tempPrice *= (diff >= tempShop.getChangeTreshold())?1f + (tempShop.getChangePercent() / 100f):1f - (tempShop.getChangePercent() / 100f);
@@ -257,7 +257,7 @@ class StatUpdater extends Thread {
 			}
 		}
 		
-		if(Config.debug) System.out.println(System.nanoTime() - tStamp + "ns");
+		if(Config.debug) RealShopping.log.info(System.nanoTime() - tStamp + "ns");
 	}
 	
 }

@@ -136,7 +136,6 @@ public class Config {
 				String s;
 				while ((s = br.readLine()) != null){// Read realshopping.properties
 					notInConfig -= readConfigLine(s);
-					System.out.println(notInConfig);
 				}
 				fstream.close();
 				br.close();
@@ -146,36 +145,30 @@ public class Config {
 				if(!f.exists()) f.createNewFile();
 				PrintWriter pW = new PrintWriter(new BufferedWriter(new FileWriter(RealShopping.mandir + "realshopping.properties", true)));
 				
-				if(notInConfig >= NOTTIMESPAN){
-					pW.println("notificatior-update-frequency:"+notTimespan);
-					notInConfig -= NOTTIMESPAN;
-				} if(notInConfig >= ENABLEAI){
-					pW.println("enable-automatic-store-management:"+enableAI);
-					notInConfig -= ENABLEAI;
-				} if(notInConfig >= UPDATEFREQ){
-					pW.println("stat-updater-frequency:"+getTimeString(updateFreq));
-					notInConfig -= UPDATEFREQ;
-				} if(notInConfig >= STATTIMESPAN){
-					pW.println("statistics-timespan:"+getTimeString(statTimespan));
-					notInConfig -= STATTIMESPAN;
-				} if(notInConfig >= CLEANSTATSOLD){
-					pW.println("clean-stats-older-than:"+getTimeString(cleanStatsOld));
-					notInConfig -= CLEANSTATSOLD;
-				} if(notInConfig >= ALLOWFILLCHESTS){
-					pW.println("allow-filling-chests:"+allowFillChests);
-					notInConfig -= ALLOWFILLCHESTS;
-				} if(notInConfig >= AUTOUPDATE){
-					pW.println("enable-automatic-updates:"+getAutoUpdateStr(autoUpdate));
-					notInConfig -= AUTOUPDATE;
-				} if(notInConfig >= AUTOPROTECT){
-					pW.println("auto-protect-chests:"+autoprotect);
-					notInConfig -= AUTOPROTECT;
-				} if(notInConfig >= DELIVERYZONES){
-					pW.println("delivery-cost-zones:"+deliveryZones);
-					notInConfig -= DELIVERYZONES;
+				if(notInConfig >= AUTOUPDATE){
+						pW.println("enable-automatic-updates:"+getAutoUpdateStr(autoUpdate));
+						notInConfig -= AUTOUPDATE;
 				} if(notInConfig >= LANGPACK){
 					pW.println("language-pack:"+langpack);
 					notInConfig -= LANGPACK;
+				} if(notInConfig >= PUNISHMENT){
+					pW.println("punishment:"+punishment);
+					notInConfig -= PUNISHMENT;
+				} if(notInConfig >= KEEPSTOLEN){
+					pW.println("keep-stolen-items-after-punish:"+keepstolen);
+					notInConfig -= KEEPSTOLEN;
+				} if(notInConfig >= JAILLOC){
+					pW.println("jail-location:"+jailLoc.getWorld().getName()+";"+jailLoc.getBlockX()+","+jailLoc.getBlockY()+","+jailLoc.getBlockZ());
+					notInConfig -= JAILLOC;
+				} if(notInConfig >= HELLLOC){
+					pW.println("hell-location:"+hellLoc.getWorld().getName()+";"+hellLoc.getBlockX()+","+hellLoc.getBlockY()+","+hellLoc.getBlockZ());
+					notInConfig -= HELLLOC;
+				} if(notInConfig >= DROPLOC){
+					pW.println("drop-items-at:"+dropLoc.getWorld().getName()+";"+dropLoc.getBlockX()+","+dropLoc.getBlockY()+","+dropLoc.getBlockZ());
+					notInConfig -= DROPLOC;
+				} if(notInConfig >= PSTORECREATE){
+					pW.println("player-stores-create-cost:"+pstorecreate);
+					notInConfig -= PSTORECREATE;
 				} if(notInConfig >= ENABLESELLING){
 					pW.println("enable-selling-to-stores:"+enableSelling);
 					notInConfig -= ENABLESELLING;
@@ -191,24 +184,30 @@ public class Config {
 	    			}
 	   				pW.println();
 					notInConfig -= CARTENABLEDW;
-				} if(notInConfig >= PSTORECREATE){
-					pW.println("player-stores-create-cost:"+pstorecreate);
-					notInConfig -= PSTORECREATE;
-				} if(notInConfig >= DROPLOC){
-					pW.println("drop-items-at:"+dropLoc.getWorld().getName()+";"+dropLoc.getBlockX()+","+dropLoc.getBlockY()+","+dropLoc.getBlockZ());
-					notInConfig -= DROPLOC;
-				} if(notInConfig >= HELLLOC){
-					pW.println("hell-location:"+hellLoc.getWorld().getName()+";"+hellLoc.getBlockX()+","+hellLoc.getBlockY()+","+hellLoc.getBlockZ());
-					notInConfig -= HELLLOC;
-				} if(notInConfig >= JAILLOC){
-					pW.println("jail-location:"+jailLoc.getWorld().getName()+";"+jailLoc.getBlockX()+","+jailLoc.getBlockY()+","+jailLoc.getBlockZ());
-					notInConfig -= JAILLOC;
-				} if(notInConfig >= KEEPSTOLEN){
-					pW.println("keep-stolen-items-after-punish:"+keepstolen);
-					notInConfig -= KEEPSTOLEN;
-				} if(notInConfig >= PUNISHMENT){
-					pW.println("punishment:"+punishment);
-					notInConfig -= PUNISHMENT;
+				} if(notInConfig >= DELIVERYZONES){
+					pW.println("delivery-cost-zones:"+deliveryZones);
+					notInConfig -= DELIVERYZONES;
+				} if(notInConfig >= ALLOWFILLCHESTS){
+					pW.println("allow-filling-chests:"+allowFillChests);
+					notInConfig -= ALLOWFILLCHESTS;
+				} if(notInConfig >= AUTOPROTECT){
+					pW.println("auto-protect-chests:"+autoprotect);
+					notInConfig -= AUTOPROTECT;
+				} if(notInConfig >= NOTTIMESPAN){
+					pW.println("notificatior-update-frequency:"+notTimespan);
+					notInConfig -= NOTTIMESPAN;
+				} if(notInConfig >= ENABLEAI){
+					pW.println("enable-automatic-store-management:"+enableAI);
+					notInConfig -= ENABLEAI;
+				} if(notInConfig >= UPDATEFREQ){
+					pW.println("stat-updater-frequency:"+getTimeString(updateFreq));
+					notInConfig -= UPDATEFREQ;
+				} if(notInConfig >= STATTIMESPAN){
+					pW.println("statistics-timespan:"+getTimeString(statTimespan));
+					notInConfig -= STATTIMESPAN;
+				} if(notInConfig >= CLEANSTATSOLD){
+					pW.println("clean-stats-older-than:"+getTimeString(cleanStatsOld));
+					notInConfig -= CLEANSTATSOLD;
 				}
 				pW.close();
 				
@@ -222,7 +221,7 @@ public class Config {
 					
 					int i = 0;
 					while ((s = br.readLine()) != null){
-						if(i==0) pW.println("Properties file for RealShopping v0.40");
+						if(i==0) pW.println("Properties file for RealShopping v0.41");
 						if(s.length() > 33 && s.substring(0,33).equals("Properties file for RealShopping ")){}
 						else
 							pW.println(s);
@@ -252,26 +251,26 @@ public class Config {
 	}
 	
 	private static void initVals(){
-		int curVal = 1;
-		for(int i = 0;i < 17;i++){
-			if(i == 0) KEEPSTOLEN = curVal;
-			else if(i == 1) ENABLESELLING = curVal;
-			else if(i == 2) AUTOPROTECT = curVal;
-			else if(i == 3) ALLOWFILLCHESTS = curVal;
-			else if(i == 4) ENABLEAI = curVal;
-			else if(i == 5) PUNISHMENT = curVal;
-			else if(i == 6) LANGPACK = curVal;
-			else if(i == 7) PSTORECREATE = curVal;
-			else if(i == 8) HELLLOC = curVal;
-			else if(i == 9) JAILLOC = curVal;
-			else if(i == 10) DROPLOC = curVal;
-			else if(i == 11) DELIVERYZONES = curVal;
-			else if(i == 12) AUTOUPDATE = curVal;
-			else if(i == 13) NOTTIMESPAN = curVal;
-			else if(i == 14) STATTIMESPAN = curVal;
-			else if(i == 15) CLEANSTATSOLD = curVal;
-			else if(i == 16) UPDATEFREQ = curVal;
-			else if(i == 17) CARTENABLEDW = curVal;
+		int curVal = 2;
+		for(int i = 0;i < 18;i++){
+			if(i == 0) CLEANSTATSOLD = curVal;
+			else if(i == 1) STATTIMESPAN = curVal;
+			else if(i == 2) UPDATEFREQ = curVal;
+			else if(i == 3) ENABLEAI = curVal;
+			else if(i == 4) NOTTIMESPAN = curVal;
+			else if(i == 5) AUTOPROTECT = curVal;
+			else if(i == 6) ALLOWFILLCHESTS = curVal;
+			else if(i == 7) DELIVERYZONES = curVal;
+			else if(i == 8) CARTENABLEDW = curVal;
+			else if(i == 9) ENABLESELLING = curVal;
+			else if(i == 10) PSTORECREATE = curVal;
+			else if(i == 11) DROPLOC = curVal;
+			else if(i == 12) HELLLOC = curVal;
+			else if(i == 13) JAILLOC = curVal;
+			else if(i == 14) KEEPSTOLEN = curVal;
+			else if(i == 15) PUNISHMENT = curVal;
+			else if(i == 16) LANGPACK = curVal;
+			else if(i == 17) AUTOUPDATE = curVal;
 			curVal *= 2;
 		}
 		MAX = curVal - 1;
@@ -291,12 +290,9 @@ public class Config {
 		}
 		if(!comment){
 			String s = line.substring(foo, line.length()).split("#")[0].trim();
-			System.out.println(s);
 			if(s.length() > HEADER.length() && s.substring(0, HEADER.length()).equals(HEADER)){//If header
-				System.out.println("header");
 				version = Float.parseFloat(s.substring(HEADER.length()));
-				System.out.println(version);
-				if(version == 0.40) return 1;
+				if(version == 0.41) return 1;
 			} else {
 				if(s.equals("debug")){
 					debug = true;

@@ -56,6 +56,7 @@ public class RSCommandExecutor implements CommandExecutor {
 			return false;
 		}
 		
+		try {
     	Player player = null;
     	if (sender instanceof Player) {
     		player = (Player) sender;
@@ -415,8 +416,7 @@ public class RSCommandExecutor implements CommandExecutor {
     	    		}
     			} else sender.sendMessage(ChatColor.RED + LangPack.YOUDONTHAVEPERMISSIONTOMANAGETHATSTORE);
     		}
-    	} else if(cmd.getName().equalsIgnoreCase("rssetprices"))
-    	{
+    	} else if(cmd.getName().equalsIgnoreCase("rssetprices")) {
     		if(args.length > 0){
     			String shop = "";
     			boolean isPlayer = player != null && rs.PInvMap.containsKey(player.getName());
@@ -453,18 +453,18 @@ public class RSCommandExecutor implements CommandExecutor {
             						int i = Integer.parseInt(args[ii].split(":")[0]);
             						int jj = 1;//First argument after item
             						int d = -1;
-            						if(args[ii].split(":").length > 2) {
+            						if(args[ii].split(":").length == 3 || args[ii].split(":").length == 5 ) {
             							d = Integer.parseInt(args[ii].split(":")[1]);
             							jj = 2;
             						}
-            						float price = Float.parseFloat(args[ii].split(":")[jj]);
+            						float price = Float.parseFloat(args[ii].split(":")[jj]);//TODO why doesn't it parse float????
             						DecimalFormat twoDForm = new DecimalFormat("#.##");
             						float j = Float.parseFloat(twoDForm.format(price));
             						Price p;
             						if(d == -1) p = new Price(i);
             						else p = new Price(i, d);
             						tempShop.setPrice(p, j);
-            						sender.sendMessage(ChatColor.RED + LangPack.PRICEFOR + Material.getMaterial(i) + (d>-1?"("+d+") ":"") + LangPack.SETTO + j + rs.unit);
+            						sender.sendMessage(ChatColor.GREEN + LangPack.PRICEFOR + Material.getMaterial(i) + (d>-1?"("+d+") ":"") + LangPack.SETTO + j + rs.unit);
             						if(args[ii].split(":").length > 3){//Also set min max
             							String m[] = new String[]{twoDForm.format(Float.parseFloat(args[ii].split(":")[jj+1]))
             									,twoDForm.format(Float.parseFloat(args[ii].split(":")[jj+2]))};
@@ -534,9 +534,9 @@ public class RSCommandExecutor implements CommandExecutor {
                     					tempShop.setMinMax(new Price(item), Float.parseFloat(twoDForm.format(Float.parseFloat(s[1]))), Float.parseFloat(twoDForm.format(Float.parseFloat(s[2]))));
                     					sender.sendMessage(ChatColor.GREEN + "Set minimal and maximal prices for " + Material.getMaterial(item));
                     					return true;
-            						} else sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_);
+            						} else sender.sendMessage(ChatColor.RED + args[ii] + " is not a proper argument.");
             					} catch (NumberFormatException e) {
-            						sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPER_);
+            						sender.sendMessage(ChatColor.RED + args[ii] + " is not a proper argument.");
             					}
             				}
             				
@@ -974,7 +974,7 @@ public class RSCommandExecutor implements CommandExecutor {
 				return false;
 			}
     		int i = 0;
-    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "RealShopping [v0.40] - A shop plugin for Bukkit made by kuben0");i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "RealShopping [v0.41] - A shop plugin for Bukkit made by kuben0");i++;
     		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "Loaded config settings:");i++;
     		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "enable-automatic-updates:"+Config.getAutoUpdateStr(Config.autoUpdate));i++;
     		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "auto-protect-chests:"+Config.autoprotect);i++;
@@ -1011,6 +1011,9 @@ public class RSCommandExecutor implements CommandExecutor {
     		if(pg < 2) sender.sendMessage(ChatColor.DARK_PURPLE + "realshopping " + (pg + 1) + " for more.");
        		return true;
     	}
+		} catch(Exception e){
+			//Nothing
+		}
     	return false;
 	}
 	

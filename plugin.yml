@@ -1,6 +1,6 @@
 name: RealShopping
 main: com.github.kuben.realshopping.RealShopping
-version: 0.40
+version: 0.41
 
 commands:
    rsenter:
@@ -40,7 +40,7 @@ commands:
       permission-message: You don't have permission to use this command
    rssetprices:
       description: Add/remove prices.
-      usage: /rssetprices add|del|copy|clear [STORE] (ITEM_ID[:DATA][:COST])|[COPY_FROM] OR \n /rssetprices showminmax|clearminmax|setminmax [STORE] [PRICE[:MIN:MAX]]
+      usage: /rssetprices add|del|copy|clear [STORE] (ITEM_ID[:DATA][:COST][:MIN:MAX])|[COPY_FROM] OR /rssetprices showminmax|clearminmax|setminmax [STORE] [PRICE[:MIN:MAX]]
       permission: realshopping.rssetprices
       permission-message: You don't have permission to use this command
    rssetchests:

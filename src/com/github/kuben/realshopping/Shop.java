@@ -82,14 +82,8 @@ public class Shop {//TODO add load/save interface
 	public Location getFirstE(){ return entrance.get(0); }
 	public List<Location> getEntrance(){ return entrance; }
 	public List<Location> getExit() { return exit; }
-	public Location getCorrEntrance(Location ex) {
-		if(exit.contains(ex)) return entrance.get(exit.indexOf(ex));
-		return null;
-	}
-	public Location geCorrExit(Location en) {
-		if(entrance.contains(en)) return exit.get(entrance.indexOf(en));
-		return null;
-	}
+	public Location getCorrEntrance(Location ex) { if(exit.contains(ex)){ return entrance.get(exit.indexOf(ex)).clone(); } return null; }
+	public Location getCorrExit(Location en) { if(entrance.contains(en)){ return exit.get(entrance.indexOf(en)).clone(); } return null; }
 	public int eLen(){ return entrance.size(); }
 	public boolean addE(Location en, Location ex){
 		if(entrance.contains(en) && exit.contains(ex)){//duplicates
@@ -243,12 +237,8 @@ public class Shop {//TODO add load/save interface
 	public Set<Statistic> getStats() {
 		return stats;
 	}
-	public void addStat(Statistic stat) {
-		stats.add(stat);
-	}
-	public void removeStat(Statistic stat) {
-		stats.remove(stat);
-	}
+	public void addStat(Statistic stat){ if(stat.getAmount() > 0) stats.add(stat); }
+	public void removeStat(Statistic stat){ stats.remove(stat); }
 	
 	/*
 	 * 
@@ -319,7 +309,7 @@ public class Shop {//TODO add load/save interface
 	
 	@Override
 	public String toString(){
-		return "Shop " + name + (owner.equals("@admin")?"":" owned by " + owner + " Prices: " + prices.toString());
+		return "Shop " + name + (owner.equals("@admin")?"":" owned by " + owner) + " Prices: " + prices.toString();
 	}
 
 	@SuppressWarnings("static-access")
