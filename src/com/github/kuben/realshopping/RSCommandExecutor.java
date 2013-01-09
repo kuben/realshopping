@@ -855,7 +855,7 @@ public class RSCommandExecutor implements CommandExecutor {
     			if(rs.PInvMap.containsKey(player.getName())){
     				if(args.length == 1 & args[0].equalsIgnoreCase("add")){				
    						Shop tempShop = rs.shopMap.get(rs.PInvMap.get(player.getName()).getStore());
-       					BlockState bs = player.getLocation().subtract(0, 1, 0).getBlock().getState();
+       					BlockState bs = player.getLocation().getBlock().getState();
        					if(bs instanceof Chest | bs instanceof DoubleChest){
        						if(tempShop.isProtectedChest(bs.getLocation())){
        							player.sendMessage(ChatColor.GREEN + "This chest is already protected.");
@@ -870,7 +870,7 @@ public class RSCommandExecutor implements CommandExecutor {
         				}
     				} else if(args.length == 1 & args[0].equalsIgnoreCase("remove")){
    						Shop tempShop = rs.shopMap.get(rs.PInvMap.get(player.getName()).getStore());
-       					BlockState bs = player.getLocation().subtract(0, 1, 0).getBlock().getState();
+       					BlockState bs = player.getLocation().getBlock().getState();
        					if(tempShop.isProtectedChest(bs.getLocation())){
        						tempShop.removeProtectedChest(bs.getLocation());
        						player.sendMessage(ChatColor.GREEN + "Unprotected chest.");
@@ -1074,26 +1074,20 @@ public class RSCommandExecutor implements CommandExecutor {
 		if(player != null){
 			if(!tempShop.getOwner().equalsIgnoreCase("@admin")){
 				if(cFlag){
-					if(Config.cartEnabledW.contains(player.getWorld().toString())){
-						if(player.getLocation().subtract(0, 1, 0).getBlock().getState() instanceof Chest){
+					if(Config.allowFillChests){//TODO disable all in store chest fills
+						if(player.getLocation().getBlock().getState() instanceof Chest){
 							if(tempShop.hasStolenToClaim()){
-								if(amount == 0) amount = 27;
-								ItemStack[] origIs = tempShop.getStolenToClaim().toArray(new ItemStack[0]);
-								ItemStack[] tempIs = new ItemStack[Math.min(Math.min(27, amount),origIs.length)];
+								if(amount == 0 || amount > 27) amount = 27;
+								ItemStack[] tempIs = new ItemStack[27];
 								int i = 0;
-								for(;i < 27 && i < origIs.length && i < amount;i++){
-									tempIs[i] = origIs[i];
+								for(;i < amount;i++){
+									tempIs[i] = tempShop.claimStolenToClaim();
+									if(tempIs[i] == null) break;
 								}
-								ItemStack[] oldCont = ((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().getContents();
+								ItemStack[] oldCont = ((Chest)player.getLocation().getBlock().getState()).getBlockInventory().getContents();
 								for(ItemStack tempIS:oldCont) if(tempIS != null) player.getWorld().dropItem(player.getLocation(), tempIS);
-								((Chest)player.getLocation().subtract(0, 1, 0).getBlock().getState()).getBlockInventory().setContents(tempIs);
+								((Chest)player.getLocation().getBlock().getState()).getBlockInventory().setContents(tempIs);
 								player.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH + i + LangPack.ITEMS);
-								if(origIs.length <= Math.min(27, amount)) tempShop.clearStolenToClaim();
-								else {
-									for(i = 0;i < 27 && i < origIs.length && i < amount;i++){
-										tempShop.removeStolenToClaim(tempIs[i]);
-									}
-								}
 								return true;
 							} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
 						} else sender.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUARESTANDINGONISNTACHEST);
@@ -1102,19 +1096,13 @@ public class RSCommandExecutor implements CommandExecutor {
 						return true;
 					}
 				} else {
-					ItemStack[] tempIs = tempShop.getStolenToClaim().toArray(new ItemStack[0]);
 					int i = 0;
-					for(;(i>0)?i < amount:true && i < tempIs.length;i++){
-						player.getWorld().dropItem(player.getLocation(), tempIs[i]);
+					for(;amount == 0 || i < amount;i++){
+						ItemStack tempIs = tempShop.claimStolenToClaim();
+						if(tempIs != null) player.getWorld().dropItem(player.getLocation(), tempIs);
+						else break;
 					}
 					player.sendMessage(ChatColor.GREEN + LangPack.DROPPED + i + LangPack.ITEMS);
-					if(amount == 0 || tempIs.length <= amount) tempShop.clearStolenToClaim();
-					else {
-						for(i = 0;(i>0)?i < amount:true && i < tempIs.length;i++){
-							tempShop.removeStolenToClaim(tempIs[i]);
-						}
-					}
-					return true;
 				}
 			}
 		} else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE);

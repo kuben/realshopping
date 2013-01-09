@@ -33,8 +33,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -62,16 +65,32 @@ public class RSPlayerListener implements Listener {
 			}
 		}
 	}
+
+	@EventHandler (priority = EventPriority.HIGH)
+	public void onDropItem(PlayerDropItemEvent event){
+		if(RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//TODO Add config
+			event.setCancelled(true);
+			event.getPlayer().sendMessage(ChatColor.RED + "You cannot drop items while in a store.");
+		}
+	}
+	@EventHandler (priority = EventPriority.HIGH)
+	public void onBucketEvent(PlayerBucketEmptyEvent event){
+		if(RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//Add config
+			event.setCancelled(true);
+			event.getPlayer().sendMessage(ChatColor.RED + "You cannot empty buckets while in a store.");
+		}
+	}
+	@EventHandler (priority = EventPriority.HIGH)
+	public void onPreCraft(CraftItemEvent event){
+		if(RealShopping.PInvMap.containsKey(event.getWhoClicked().getName())){//Add config
+			event.setCancelled(true);
+			Bukkit.getPlayerExact(event.getWhoClicked().getName()).sendMessage(ChatColor.RED + "You cannot craft items while in a store.");
+		}
+	}
 	@EventHandler (priority = EventPriority.HIGH)
 	public void onInteract(PlayerInteractEvent event){
 		Player player = event.getPlayer();
 		Block b = event.getClickedBlock();
-		if(event.getItem() != null && RealShopping.forbiddenInStore.contains(event.getItem().getTypeId()))
-			if(RealShopping.PInvMap.containsKey(player.getName()))
-				if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR){
-					player.sendMessage(ChatColor.RED + LangPack.YOUCANTUSETHATITEMINSTORE);
-					event.setUseItemInHand(Result.DENY);
-				}
 		if(RealShopping.jailedPlayers.containsKey(player.getName())) event.setCancelled(true);
 		else {
 			if(event.hasBlock())
@@ -139,6 +158,14 @@ public class RSPlayerListener implements Listener {
 					}
 				}
 		}
+		if(RealShopping.PInvMap.containsKey(player.getName()) && event.getItem() != null && RealShopping.forbiddenInStore.contains(event.getItem().getTypeId()))
+			if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR){
+				player.sendMessage(ChatColor.RED + LangPack.YOUCANTUSETHATITEMINSTORE);
+				event.setUseItemInHand(Result.DENY);
+				if(event.getItem().getTypeId() == 401 || event.getItem().getTypeId() == 385 || event.getItem().getTypeId() == 383){//Ugly solution, doesn't work for book and quill
+					event.setCancelled(true);
+				}
+			}
 	}
 	
     @EventHandler(priority = EventPriority.HIGH)
@@ -172,7 +199,6 @@ public class RSPlayerListener implements Listener {
         }
     }
 	
-    
 	@EventHandler (priority = EventPriority.MONITOR)
 	public void onLogin(PlayerJoinEvent event){
 		Player player = event.getPlayer();

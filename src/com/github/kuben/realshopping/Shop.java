@@ -253,7 +253,14 @@ public class Shop {//TODO add load/save interface
 	public boolean hasStolenToClaim() { return !stolenToClaim.isEmpty(); }
 	public void clearStolenToClaim() { stolenToClaim.clear(); }
 	public void addStolenToClaim(ItemStack stolenItem) { stolenToClaim.add(stolenItem); }
-	public void removeStolenToClaim(ItemStack stolenItem) { stolenToClaim.remove(stolenItem); }
+	public ItemStack claimStolenToClaim() {
+		if(!stolenToClaim.isEmpty()){
+			ItemStack tempIs = stolenToClaim.get(0);
+			stolenToClaim.remove(tempIs);
+			return tempIs;
+		}
+		return null;
+	}
 	
 	public Set<String> getBanned() { return banned; }
 	public boolean isBanned(String p) { return banned.contains(p); }

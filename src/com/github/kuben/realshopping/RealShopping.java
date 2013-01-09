@@ -322,7 +322,7 @@ public class RealShopping extends JavaPlugin {
      
     public void onDisable(){
 		try {
-			
+			//TODO disable executor
 			saveTemporaryFile(0);//Inventories
 			saveTemporaryFile(1);//Jailed
 			saveTemporaryFile(2);//TpLocs
@@ -499,18 +499,25 @@ public class RealShopping extends JavaPlugin {
     	forbiddenInStore.add(260);//Red Apple
     	forbiddenInStore.add(367);//Rotten Flesh
     	forbiddenInStore.add(364);//Steak
-
- /*   	I haven't managed to cancel these, they are just sending an useless message to the player TODO next version
-  * 	forbiddenInStore.add(326);//Bucket of water
-    	forbiddenInStore.add(327);//Bucket of lava
+    	forbiddenInStore.add(391);//Carrot
+    	forbiddenInStore.add(392);//Potato
+    	forbiddenInStore.add(393);//Baked Potato
+    	forbiddenInStore.add(394);//Poisonous Potato
+    	forbiddenInStore.add(396);//Golden Carrot
+    	forbiddenInStore.add(400);//Pumpkin Pie
     	
+    	forbiddenInStore.add(261);//Bow
+    	forbiddenInStore.add(332);//Snowball
     	forbiddenInStore.add(373);//Potion
     	forbiddenInStore.add(384);//Bottle o' enchanting
     	forbiddenInStore.add(375);//Spider Eye
     	forbiddenInStore.add(385);//Fire Charge
     	forbiddenInStore.add(344);//Egg
     	forbiddenInStore.add(368);//Ender Pearl
-    	forbiddenInStore.add(383);//Spawning egg*/
+    	forbiddenInStore.add(381);//Eye of ender
+    	forbiddenInStore.add(401);//Firework Rocket
+    	//forbiddenInStore.add(386);//Book and Quill doesn't work
+    	forbiddenInStore.add(383);//Spawning egg
     }
 
     private void loadTemporaryFile(int what){
