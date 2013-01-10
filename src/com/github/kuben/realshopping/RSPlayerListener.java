@@ -71,6 +71,7 @@ public class RSPlayerListener implements Listener {
 		if(RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//TODO Add config
 			event.setCancelled(true);
 			event.getPlayer().sendMessage(ChatColor.RED + "You cannot drop items while in a store.");
+			event.getPlayer().updateInventory();//TODO fix, check crafting tables, etc..
 		}
 	}
 	@EventHandler (priority = EventPriority.HIGH)
@@ -78,6 +79,7 @@ public class RSPlayerListener implements Listener {
 		if(RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//Add config
 			event.setCancelled(true);
 			event.getPlayer().sendMessage(ChatColor.RED + "You cannot empty buckets while in a store.");
+			event.getPlayer().updateInventory();
 		}
 	}
 	@EventHandler (priority = EventPriority.HIGH)
@@ -85,6 +87,7 @@ public class RSPlayerListener implements Listener {
 		if(RealShopping.PInvMap.containsKey(event.getWhoClicked().getName())){//Add config
 			event.setCancelled(true);
 			Bukkit.getPlayerExact(event.getWhoClicked().getName()).sendMessage(ChatColor.RED + "You cannot craft items while in a store.");
+			Bukkit.getPlayerExact(event.getWhoClicked().getName()).getPlayer().updateInventory();
 		}
 	}
 	@EventHandler (priority = EventPriority.HIGH)
@@ -169,7 +172,7 @@ public class RSPlayerListener implements Listener {
 	}
 	
     @EventHandler(priority = EventPriority.HIGH)
-    public void onInventoryOpenEvent(InventoryOpenEvent event){
+    public void onInventoryOpenEvent(InventoryOpenEvent event){//TODO disable ender chests
         if (event.getInventory().getHolder() instanceof Chest){
         	if(!RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//If player is not in store
         		if(RealShopping.isChestProtected(((Chest) event.getInventory().getHolder()).getLocation())){

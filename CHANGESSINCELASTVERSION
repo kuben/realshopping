@@ -1,12 +1,5 @@
-Changes since v0.40
+Changes since v0.41
 
-Besides a rewrite of two classes in the code:
-
-* Added minimal and maximal prices for items. They limit how far the automatic store management can lower or raise your prices. Currently you cannot set different min and max for different data values.
-* Altered /rssetprices command:
-* * Two more optional arguments for the **add** argument. Now you can use: // /rssetprices add ITEM[:DATA]:PRICE[:MIN:MAX]//. Note that you always need to set both the maximal and minimal price at once.
-* * Added // /rssetprices showminmax ITEM//
-* * Added // /rssetprices clearminmax ITEM//
-* * Added // /rssetprices setminmax ITEM:MIN:MAX//
-
-Also fixed bug not allowing to add prices with decimal numbers.
+First Alpha:
+* Fixed collect command
+* Disabled using, dropping, and crafting items in stores.
