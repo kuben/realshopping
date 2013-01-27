@@ -1,6 +1,6 @@
 name: RealShopping
 main: com.github.kuben.realshopping.RealShopping
-version: 0.41
+version: 0.42
 
 commands:
    rsenter:

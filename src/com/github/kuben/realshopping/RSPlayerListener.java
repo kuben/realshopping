@@ -1,6 +1,6 @@
 /*
  * RealShopping Bukkit plugin for Minecraft
- * Copyright 2012 Jakub Fojt
+ * Copyright 2013 Jakub Fojt
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -66,28 +66,26 @@ public class RSPlayerListener implements Listener {
 		}
 	}
 
+	
 	@EventHandler (priority = EventPriority.HIGH)
 	public void onDropItem(PlayerDropItemEvent event){
-		if(RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//TODO Add config
+		if(Config.isDisableDrop()) if(RealShopping.PInvMap.containsKey(event.getPlayer().getName())){
 			event.setCancelled(true);
 			event.getPlayer().sendMessage(ChatColor.RED + "You cannot drop items while in a store.");
-			event.getPlayer().updateInventory();//TODO fix, check crafting tables, etc..
 		}
 	}
 	@EventHandler (priority = EventPriority.HIGH)
 	public void onBucketEvent(PlayerBucketEmptyEvent event){
-		if(RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//Add config
+		if(Config.isDisableBuckets()) if(RealShopping.PInvMap.containsKey(event.getPlayer().getName())){
 			event.setCancelled(true);
 			event.getPlayer().sendMessage(ChatColor.RED + "You cannot empty buckets while in a store.");
-			event.getPlayer().updateInventory();
 		}
 	}
 	@EventHandler (priority = EventPriority.HIGH)
 	public void onPreCraft(CraftItemEvent event){
-		if(RealShopping.PInvMap.containsKey(event.getWhoClicked().getName())){//Add config
+		if(Config.isDisableCrafting()) if(RealShopping.PInvMap.containsKey(event.getWhoClicked().getName())){
 			event.setCancelled(true);
 			Bukkit.getPlayerExact(event.getWhoClicked().getName()).sendMessage(ChatColor.RED + "You cannot craft items while in a store.");
-			Bukkit.getPlayerExact(event.getWhoClicked().getName()).getPlayer().updateInventory();
 		}
 	}
 	@EventHandler (priority = EventPriority.HIGH)
@@ -111,7 +109,7 @@ public class RSPlayerListener implements Listener {
 							if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
 								if(player.hasPermission("realshopping.rspay")){
 									Inventory[] carts = null;
-									if(Config.allowFillChests && (Config.cartEnabledW.contains("@all") || Config.cartEnabledW.contains(player.getWorld().getName()))){
+									if(Config.isAllowFillChests() && Config.isCartEnabledW(player.getWorld().getName())){
 										StorageMinecart[] SM = RealShopping.checkForCarts(event.getClickedBlock().getLocation());
 										carts = new Inventory[SM.length];
 										for(int i = 0;i < SM.length;i++)
@@ -123,7 +121,7 @@ public class RSPlayerListener implements Listener {
 								if(RealShopping.PInvMap.containsKey(player.getName())){
 									event.setCancelled(true);
 									Inventory[] carts = null;
-									if(Config.allowFillChests && Config.cartEnabledW.contains(player.getWorld().toString())){
+									if(Config.isAllowFillChests() && Config.isCartEnabledW(player.getWorld().getName())){
 										StorageMinecart[] SM = RealShopping.checkForCarts(event.getClickedBlock().getLocation());
 										carts = new Inventory[SM.length];
 										for(int i = 0;i < SM.length;i++)
@@ -137,8 +135,8 @@ public class RSPlayerListener implements Listener {
 						} else if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.RED_MUSHROOM){
 							if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
 								if(player.hasPermission("realshopping.rspay")){
-									if(Config.allowFillChests){
-										if(Config.cartEnabledW.contains(player.getWorld().toString())){
+									if(Config.isAllowFillChests()){
+										if(Config.isCartEnabledW(player.getWorld().getName())){
 											Object[] mcArr = player.getWorld().getEntitiesByClass(StorageMinecart.class).toArray();
 											StorageMinecart sM = null;
 											for(Object o:mcArr)
@@ -151,7 +149,7 @@ public class RSPlayerListener implements Listener {
 								}
 							}
 						} else if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.BROWN_MUSHROOM){
-							if(Config.enableSelling){
+							if(Config.isEnableSelling()){
 								if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
 				    				Inventory tempInv = Bukkit.createInventory(null, 36, "Sell to store");
 									player.openInventory(tempInv);
@@ -172,7 +170,12 @@ public class RSPlayerListener implements Listener {
 	}
 	
     @EventHandler(priority = EventPriority.HIGH)
-    public void onInventoryOpenEvent(InventoryOpenEvent event){//TODO disable ender chests
+    public void onInventoryOpenEvent(InventoryOpenEvent event){
+    	if(Config.isDisableEnderchests()) if(RealShopping.PInvMap.containsKey(event.getPlayer().getName()) && event.getInventory().getTitle() == "container.enderchest"){//TODO find better way
+			event.setCancelled(true);
+			((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + "You cannot open Ender Chests while in a store.");
+    		return;
+    	}
         if (event.getInventory().getHolder() instanceof Chest){
         	if(!RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//If player is not in store
         		if(RealShopping.isChestProtected(((Chest) event.getInventory().getHolder()).getLocation())){
@@ -205,7 +208,7 @@ public class RSPlayerListener implements Listener {
 	@EventHandler (priority = EventPriority.MONITOR)
 	public void onLogin(PlayerJoinEvent event){
 		Player player = event.getPlayer();
-		if(Config.autoUpdate == 2 || Config.autoUpdate == 4)
+		if(Config.getAutoUpdate() == 2 || Config.getAutoUpdate() == 4)
 			if(!RealShopping.newUpdate.equals(""))
 				if(player.isOp() || player.hasPermission("realshopping.rsupdate")){
 					player.sendMessage(ChatColor.LIGHT_PURPLE + RealShopping.newUpdate);

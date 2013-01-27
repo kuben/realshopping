@@ -1,6 +1,6 @@
 /*
  * RealShopping Bukkit plugin for Minecraft
- * Copyright 2012 Jakub Fojt
+ * Copyright 2013 Jakub Fojt
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.bukkit.Bukkit;
@@ -38,26 +39,32 @@ public class Config {
 
 	public static boolean debug;
 	
-	public static boolean keepstolen;
-	public static boolean enableSelling;
-	public static boolean autoprotect;
-	public static boolean allowFillChests;
-	public static boolean enableAI;
-	public static String punishment;
-	public static String langpack;
-	public static double pstorecreate;
-	public static Location hellLoc;
-	public static Location jailLoc;
-	public static Location dropLoc;
+	private static boolean keepstolen;
+	private static boolean enableSelling;
+	private static boolean autoprotect;
+	private static boolean allowFillChests;
+	private static boolean enableAI;
+	private static boolean disableDrop;
+	private static boolean disableCrafting;
+	private static boolean disableBuckets;
+	private static boolean disableEnderchests;
+	private static String punishment;
+	private static String langpack;
+	private static double pstorecreate;
+	private static Location hellLoc;
+	private static Location jailLoc;
+	private static Location dropLoc;
 	
-	public static int deliveryZones;
-	public static Zone[] zoneArray;
-	public static byte autoUpdate;
+	private static int deliveryZones;
+	private static Zone[] zoneArray;
+	private static byte autoUpdate;
 	
-	public static int notTimespan;//[millis] anything bellow 500 means disabled
-	public static int statTimespan;//[secs]
-	public static int cleanStatsOld;//Clean stats older than [secs]
-	public static int updateFreq;//How often the statupdater should be run [secs]
+	private static int notTimespan;//[millis] anything bellow 500 means disabled
+	private static int statTimespan;//[secs]
+	private static int cleanStatsOld;//Clean stats older than [secs]
+	private static int updateFreq;//How often the statupdater should be run [secs]
+	
+	private static Set<String> cartEnabledW;
 	
 	private static int KEEPSTOLEN;
 	private static int ENABLESELLING;
@@ -77,11 +84,12 @@ public class Config {
 	private static int CLEANSTATSOLD;
 	private static int UPDATEFREQ;
 	private static int CARTENABLEDW;
+	private static int DISABLEDROP;
+	private static int DISABLECRAFTING;
+	private static int DISABLEBUCKETS;
+	private static int DISABLEENDERCHESTS;
 	
 	private static int MAX;
-	
-	public static Set<String> cartEnabledW;
-	
 	private static final String HEADER = "Properties file for RealShopping v";
 	
 	static Server server;
@@ -113,6 +121,10 @@ public class Config {
         punishment = "none";
         pstorecreate = 0.0;
         enableSelling = true;
+        disableDrop = true;
+        disableCrafting = true;
+        disableBuckets = true;
+        disableEnderchests = true;
         autoprotect = true;
     	allowFillChests = true;
     	enableAI = false;
@@ -146,10 +158,10 @@ public class Config {
 				PrintWriter pW = new PrintWriter(new BufferedWriter(new FileWriter(RealShopping.mandir + "realshopping.properties", true)));
 				
 				if(notInConfig >= AUTOUPDATE){
-						pW.println("enable-automatic-updates:"+getAutoUpdateStr(autoUpdate));
+						pW.println("enable-automatic-updates:"+getAutoUpdateStr(autoUpdate)+"  #Can be false, check-console, check, ask-console, ask, or true");
 						notInConfig -= AUTOUPDATE;
 				} if(notInConfig >= LANGPACK){
-					pW.println("language-pack:"+langpack);
+					pW.println("language-pack:"+langpack+"  #located in langpacks/ , without the .xml ending");
 					notInConfig -= LANGPACK;
 				} if(notInConfig >= PUNISHMENT){
 					pW.println("punishment:"+punishment);
@@ -172,6 +184,18 @@ public class Config {
 				} if(notInConfig >= ENABLESELLING){
 					pW.println("enable-selling-to-stores:"+enableSelling);
 					notInConfig -= ENABLESELLING;
+				} if(notInConfig >= DISABLEDROP){
+					pW.println("disable-item-drop:"+disableDrop+"  #Disable dropping items in stores.");
+					notInConfig -= DISABLEDROP;
+				} if(notInConfig >= DISABLECRAFTING){
+					pW.println("disable-crafting:"+disableCrafting+"  #Disable crafting in stores.");
+					notInConfig -= DISABLECRAFTING;
+				} if(notInConfig >= DISABLEBUCKETS){
+					pW.println("disable-buckets:"+disableBuckets+"  #Disable using buckets in stores.");
+					notInConfig -= DISABLEBUCKETS;
+				} if(notInConfig >= DISABLEENDERCHESTS){
+					pW.println("disable-ender-chests:"+disableEnderchests+"  #Disable using Ender Chests in stores.");
+					notInConfig -= DISABLEENDERCHESTS;
 				} if(notInConfig >= CARTENABLEDW){
 	    			pW.print("enable-shopping-carts-in-worlds:");
 	    			boolean i = true;
@@ -182,16 +206,16 @@ public class Config {
 	   					}
 	    				else pW.print("," + str);
 	    			}
-	   				pW.println();
+	   				pW.println("  #Separate worlds by commas, or @all for all");
 					notInConfig -= CARTENABLEDW;
 				} if(notInConfig >= DELIVERYZONES){
-					pW.println("delivery-cost-zones:"+deliveryZones);
+					pW.println("delivery-cost-zones:"+deliveryZones+"  #More about this on the plugin page.");
 					notInConfig -= DELIVERYZONES;
 				} if(notInConfig >= ALLOWFILLCHESTS){
 					pW.println("allow-filling-chests:"+allowFillChests);
 					notInConfig -= ALLOWFILLCHESTS;
 				} if(notInConfig >= AUTOPROTECT){
-					pW.println("auto-protect-chests:"+autoprotect);
+					pW.println("auto-protect-chests:"+autoprotect+"  #Protect auto-refilling chests automaticly from being opened outside a store. Just a little security feature.");
 					notInConfig -= AUTOPROTECT;
 				} if(notInConfig >= NOTTIMESPAN){
 					pW.println("notificatior-update-frequency:"+notTimespan);
@@ -221,8 +245,16 @@ public class Config {
 					
 					int i = 0;
 					while ((s = br.readLine()) != null){
-						if(i==0) pW.println("Properties file for RealShopping v0.41");
-						if(s.length() > 33 && s.substring(0,33).equals("Properties file for RealShopping ")){}
+						if(i==0){
+							pW.println("Properties file for RealShopping v0.42");
+							pW.println("## Do not edit above line!");
+							pW.println("## The rest of a line after a hashtag is a comment and will be ignored.");
+							pW.println("#");
+						}
+						if(s.length() >= 33 && s.substring(0,33).equals("Properties file for RealShopping ")){}
+						else if(s.length() >= 26 && s.substring(0,26).trim().equals("## Do not edit above line!")){}
+						else if(s.length() >= 71 && s.substring(0,71).trim().equals("## The rest of a line after a hashtag is a comment and will be ignored.")){}
+						else if(s.length() >= 1 && s.substring(0,1).trim().equals("#")){}
 						else
 							pW.println(s);
 						i++;
@@ -250,9 +282,35 @@ public class Config {
 		}
 	}
 	
+	static void resetVars(){
+    	cartEnabledW = new HashSet<String>();
+    	debug = false;
+        keepstolen = false;
+        enableSelling = false;
+        autoprotect = false;
+        deliveryZones = -1;
+        autoUpdate = 0;
+        punishment = null;
+        langpack = null;
+        hellLoc = null;
+        jailLoc = null;
+        dropLoc = null;
+        pstorecreate = 0.0;
+        notTimespan = 0;
+        statTimespan = 0;
+        cleanStatsOld = 0;
+        updateFreq = 0;
+        allowFillChests = false;
+        enableAI = false;
+        disableDrop = false;
+        disableCrafting = false;
+        disableBuckets = false;
+        disableEnderchests = false;
+	}
+	
 	private static void initVals(){
 		int curVal = 2;
-		for(int i = 0;i < 18;i++){
+		for(int i = 0;i < 22;i++){
 			if(i == 0) CLEANSTATSOLD = curVal;
 			else if(i == 1) STATTIMESPAN = curVal;
 			else if(i == 2) UPDATEFREQ = curVal;
@@ -262,15 +320,19 @@ public class Config {
 			else if(i == 6) ALLOWFILLCHESTS = curVal;
 			else if(i == 7) DELIVERYZONES = curVal;
 			else if(i == 8) CARTENABLEDW = curVal;
-			else if(i == 9) ENABLESELLING = curVal;
-			else if(i == 10) PSTORECREATE = curVal;
-			else if(i == 11) DROPLOC = curVal;
-			else if(i == 12) HELLLOC = curVal;
-			else if(i == 13) JAILLOC = curVal;
-			else if(i == 14) KEEPSTOLEN = curVal;
-			else if(i == 15) PUNISHMENT = curVal;
-			else if(i == 16) LANGPACK = curVal;
-			else if(i == 17) AUTOUPDATE = curVal;
+			else if(i == 9) DISABLEENDERCHESTS = curVal;
+			else if(i == 10) DISABLEBUCKETS = curVal;
+			else if(i == 11) DISABLECRAFTING = curVal;
+			else if(i == 12) DISABLEDROP = curVal;
+			else if(i == 13) ENABLESELLING = curVal;
+			else if(i == 14) PSTORECREATE = curVal;
+			else if(i == 15) DROPLOC = curVal;
+			else if(i == 16) HELLLOC = curVal;
+			else if(i == 17) JAILLOC = curVal;
+			else if(i == 18) KEEPSTOLEN = curVal;
+			else if(i == 19) PUNISHMENT = curVal;
+			else if(i == 20) LANGPACK = curVal;
+			else if(i == 21) AUTOUPDATE = curVal;
 			curVal *= 2;
 		}
 		MAX = curVal - 1;
@@ -292,7 +354,7 @@ public class Config {
 			String s = line.substring(foo, line.length()).split("#")[0].trim();
 			if(s.length() > HEADER.length() && s.substring(0, HEADER.length()).equals(HEADER)){//If header
 				version = Float.parseFloat(s.substring(HEADER.length()));
-				if(version == 0.41) return 1;
+				if(version == 0.42) return 1;
 			} else {
 				if(s.equals("debug")){
 					debug = true;
@@ -367,6 +429,18 @@ public class Config {
 				} else if(s.split(":")[0].equals("enable-selling-to-stores")){
 					enableSelling = Boolean.parseBoolean(s.split(":")[1]);
 					return ENABLESELLING;
+				} else if(s.split(":")[0].equals("disable-item-drop")){
+					disableDrop = Boolean.parseBoolean(s.split(":")[1]);
+					return DISABLEDROP;
+				} else if(s.split(":")[0].equals("disable-crafting")){
+					disableCrafting = Boolean.parseBoolean(s.split(":")[1]);
+					return DISABLECRAFTING;
+				} else if(s.split(":")[0].equals("disable-buckets")){
+					disableBuckets = Boolean.parseBoolean(s.split(":")[1]);
+					return DISABLEBUCKETS;
+				} else if(s.split(":")[0].equals("disable-ender-chests")){
+					disableEnderchests = Boolean.parseBoolean(s.split(":")[1]);
+					return DISABLEENDERCHESTS;
 				} else if(s.split(":")[0].equals("language-pack")){
 					langpack = s.split(":")[1];
 					return LANGPACK;
@@ -445,6 +519,32 @@ public class Config {
 		else if(s.equals("month")) return 2592000;
 		else return Integer.parseInt(s);
 	}
+
+	public static boolean isKeepstolen() { return keepstolen; }
+	public static boolean isEnableSelling() { return enableSelling; }
+	public static boolean isAutoprotect() { return autoprotect; }
+	public static boolean isAllowFillChests() { return allowFillChests; }
+	public static boolean isEnableAI() { return enableAI; }
+	public static boolean isDisableDrop() { return disableDrop; }
+	public static boolean isDisableCrafting() { return disableCrafting; }
+	public static boolean isDisableBuckets() { return disableBuckets; }	
+	public static boolean isDisableEnderchests() { return disableEnderchests; }
+	public static String getPunishment() { return punishment; }
+	public static String getLangpack() { return langpack; }
+	public static double getPstorecreate() { return pstorecreate; }
+	public static Location getHellLoc() { return hellLoc; }
+	public static Location getJailLoc() { return jailLoc; }
+	public static Location getDropLoc() { return dropLoc; }
+	public static int getDeliveryZones() { return deliveryZones; }
+	public static Zone[] getZoneArray() { return zoneArray; }
+	public static byte getAutoUpdate() { return autoUpdate; }
+	public static int getNotTimespan() { return notTimespan; }	
+	public static int getStatTimespan() { return statTimespan; }
+	public static int getCleanStatsOld() { return cleanStatsOld; }
+	public static int getUpdateFreq() { return updateFreq; }
+	public static Set<String> getCartEnabledW() { return cartEnabledW; }
+	public static boolean isCartEnabledW(String s) { if(cartEnabledW.contains("@all") || cartEnabledW.contains(s)) return true; return false; }
+
 }
 
 class Zone {

@@ -1,6 +1,6 @@
 /*
  * RealShopping Bukkit plugin for Minecraft
- * Copyright 2012 Jakub Fojt
+ * Copyright 2013 Jakub Fojt
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -151,9 +151,9 @@ class StatUpdater extends Thread {
 	
 	public void run(){
 		try {
-			while(running && Config.enableAI){
+			while(running && Config.isEnableAI()){
 				updateStats();
-				Thread.sleep(Math.max(Config.updateFreq * 1000, 60000));
+				Thread.sleep(Math.max(Config.getUpdateFreq() * 1000, 60000));
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
@@ -167,12 +167,12 @@ class StatUpdater extends Thread {
 		for(String s:keys){
 			Statistic[] sKeys = RealShopping.shopMap.get(s).getStats().toArray(new Statistic[0]);
 			for(Statistic stat:sKeys){
-				if((System.currentTimeMillis()/1000) - Config.statTimespan < stat.getTime()/1000 && stat.isBought()){//Only past <timespan> and only bought
+				if((System.currentTimeMillis()/1000) - Config.getStatTimespan() < stat.getTime()/1000 && stat.isBought()){//Only past <timespan> and only bought
 					if(!statsMap.containsKey(stat.getItem().type)) statsMap.put(stat.getItem().type, new TreeMap<String, Integer>());
 					if(!statsMap.get(stat.getItem().type).containsKey(s)) statsMap.get(stat.getItem().type).put(s, 0);
 					statsMap.get(stat.getItem().type).put(s, statsMap.get(stat.getItem().type).get(s) + stat.getAmount());
 				} else
-				if((System.currentTimeMillis()/1000) - Math.max(Config.cleanStatsOld, Math.max(Config.statTimespan, Config.updateFreq)) > stat.getTime()/1000){
+				if((System.currentTimeMillis()/1000) - Math.max(Config.getCleanStatsOld(), Math.max(Config.getStatTimespan(), Config.getUpdateFreq())) > stat.getTime()/1000){
 					RealShopping.shopMap.get(s).removeStat(stat);	
 				}
 			}
@@ -217,11 +217,11 @@ class StatUpdater extends Thread {
 								if(provMap.get(s).containsKey(i)){
 									int diff = oldProvMap.get(s).get(i) - provMap.get(s).get(i);
 									String sinceStr;
-									if(Config.statTimespan == 3600) sinceStr =  "the last hour";
-									else if(Config.statTimespan == 86400) sinceStr =  " yesterday";
-									else if(Config.statTimespan == 604800) sinceStr =  "last week";
-									else if(Config.statTimespan == 2592000) sinceStr =  "last month";
-									else sinceStr = new Date(Config.statTimespan).toString();
+									if(Config.getStatTimespan() == 3600) sinceStr =  "the last hour";
+									else if(Config.getStatTimespan() == 86400) sinceStr =  " yesterday";
+									else if(Config.getStatTimespan() == 604800) sinceStr =  "last week";
+									else if(Config.getStatTimespan() == 2592000) sinceStr =  "last month";
+									else sinceStr = new Date(Config.getStatTimespan()).toString();
 									if(diff >= tempShop.getChangeTreshold()) RealShopping.sendNotification(tempShop.getOwner(), "Your store " + s + " is now the "
 									+ Utils.formatNum(provMap.get(s).get(i)) + " (" + ChatColor.GREEN + "+" + diff + ChatColor.RESET + " since " + sinceStr +") provider of " + Material.getMaterial(i));
 									else if(diff <= tempShop.getChangeTreshold()*-1) RealShopping.sendNotification(tempShop.getOwner(), "Your store " + s + " is now the "

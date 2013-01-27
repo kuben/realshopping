@@ -1,6 +1,6 @@
 /*
  * RealShopping Bukkit plugin for Minecraft
- * Copyright 2012 Jakub Fojt
+ * Copyright 2013 Jakub Fojt
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -123,27 +123,10 @@ public class RealShopping extends JavaPlugin {
     	notificator = new HashMap<String, List<String>>();
     	
     	forbiddenInStore = new HashSet<Integer>();
-    	Config.cartEnabledW = new HashSet<String>();
-    	
     	tpLocBlacklist = false;
-    	Config.debug = false;
-        Config.keepstolen = false;
-        Config.enableSelling = false;
-        Config.autoprotect = false;
-        Config.deliveryZones = -1;
-        Config.autoUpdate = 0;
-        Config.punishment = null;
-        Config.langpack = null;
-        Config.hellLoc = null;
-        Config.jailLoc = null;
-        Config.dropLoc = null;
-        Config.pstorecreate = 0.0;
-        Config.notTimespan = 0;
-        Config.statTimespan = 0;
-        Config.cleanStatsOld = 0;
-        Config.updateFreq = 0;
-        Config.allowFillChests = false;
-        Config.enableAI = false;
+    	
+    	Config.resetVars();
+    	
         entrance = "";
         exit = "";
     	log = this.getLogger();
@@ -181,8 +164,8 @@ public class RealShopping extends JavaPlugin {
         
    		RSEconomy.setupEconomy();
 		Config.initialize();
-		if(Config.autoUpdate > 0){
-			if(Config.autoUpdate == 5){
+		if(Config.getAutoUpdate() > 0){
+			if(Config.getAutoUpdate() == 5){
 				updater = new Updater(this, "realshopping", this.getFile(), Updater.UpdateType.DEFAULT, true);
 				if(updater.getResult() == Updater.UpdateResult.SUCCESS){
 					log.info("RealShopping updated to " + updater.getLatestVersionString() + ". Restart the server to load the new version.");
@@ -190,7 +173,7 @@ public class RealShopping extends JavaPlugin {
 			} else {
 				updater = new Updater(this, "realshopping", this.getFile(), Updater.UpdateType.NO_DOWNLOAD, true);
 				if(updater.getResult() == Updater.UpdateResult.UPDATE_AVAILABLE){
-	    			if(Config.autoUpdate > 2)
+	    			if(Config.getAutoUpdate() > 2)
     						newUpdate = updater.getLatestVersionString() + " of RealShopping is available for download. Update for new features and/or bugfixes with the rsupdate command.";
 	    			else
     						newUpdate = updater.getLatestVersionString()
@@ -270,7 +253,7 @@ public class RealShopping extends JavaPlugin {
 				}
 				fstream.close();
 				br.close();
-				if(version < 0.41)//Needs updating
+				if(version < 0.42)//Needs updating
 					updateEntrancesDb();
 			}
 		} catch (FileNotFoundException e) {
@@ -305,15 +288,15 @@ public class RealShopping extends JavaPlugin {
 		
 		f = new File(mandir + "langpacks/");
 		if(!f.exists()) f.mkdir();
-    	LangPack.initialize(Config.langpack);
+    	LangPack.initialize(Config.getLangpack());
     	unit = LangPack.UNIT;
 		initForbiddenInStore();
 		initMaxDur();
-		if(Config.notTimespan >= 500){
+		if(Config.getNotTimespan() >= 500){
 			notificatorThread = new Notificator();
 			notificatorThread.start();
 		}
-		if(Config.enableAI){
+		if(Config.isEnableAI()){
 			statUpdater = new StatUpdater();
 			statUpdater.start();
 		}
@@ -331,7 +314,7 @@ public class RealShopping extends JavaPlugin {
 			saveTemporaryFile(5);//toClaim
 			saveTemporaryFile(6);//Stats
 			saveTemporaryFile(7);//Notifications
-			RSEconomy.export();//If econ is null
+			RSEconomy.export();//This will only happen if econ is null
 			
 			if(notificatorThread != null) notificatorThread.running = false;
 			if(statUpdater != null) statUpdater.running = false;
@@ -394,7 +377,7 @@ public class RealShopping extends JavaPlugin {
 			if(!f.exists()) f.createNewFile();
 			PrintWriter pW = new PrintWriter(f);
 			Object[] keys = shopMap.keySet().toArray();
-			pW.println("Shops database for RealShopping v0.41");
+			pW.println("Shops database for RealShopping v0.42");
 			for(int i = 0;i<keys.length;i++){
 				Shop tempShop = shopMap.get(keys[i]);
 				pW.print(keys[i] + ":" + tempShop.getWorld() + ":" + tempShop.getOwner() + ":" + tempShop.getBuyFor()
@@ -687,7 +670,7 @@ public class RealShopping extends JavaPlugin {
     	String header;
 
     	try {
-    		String vStr = "v0.41";
+    		String vStr = "v0.42";
     		if(what == 0){
     			keys = PInvMap.keySet().toArray();//Player Map
     			f = new File(mandir + "inventories.db");
@@ -807,7 +790,7 @@ public class RealShopping extends JavaPlugin {
 					player.teleport(ex.add(0.5, 0, 0.5));
 					
 					PInvMap.put(player.getName(), new RSPlayerInventory(player, (String) keys[i]));
-					player.sendMessage(ChatColor.RED + LangPack.YOUENTERED + shopMap.get(keys[i]).getName());
+					player.sendMessage(ChatColor.GREEN + LangPack.YOUENTERED + shopMap.get(keys[i]).getName());
 					
 					//Refill chests
 					Object[] chestArr = shopMap.get(keys[i]).getChests().keySet().toArray();
@@ -857,7 +840,7 @@ public class RealShopping extends JavaPlugin {
 						l = shopMap.get(shopName).getCorrEntrance(l);
 						PInvMap.remove(player.getName());
 						player.teleport(l.add(0.5, 0, 0.5));
-						player.sendMessage(ChatColor.RED + LangPack.YOULEFT + shopName);
+						player.sendMessage(ChatColor.GREEN + LangPack.YOULEFT + shopName);
 						return true;
 					} else {
 						if(cmd)	player.sendMessage(ChatColor.RED + LangPack.YOURENOTATTHEEXITOFASTORE);
@@ -896,7 +879,7 @@ public class RealShopping extends JavaPlugin {
 					}
 					Map<PItem, Integer> bought = PInvMap.get(player.getName()).getBought(invs);
 					
-					if(Config.enableAI){
+					if(Config.isEnableAI()){
 						PItem[] keys = bought.keySet().toArray(new PItem[0]);
 						for(PItem key:keys){
 							shopMap.get(shopName).addStat(new Statistic(key, bought.get(key), true));
@@ -905,7 +888,7 @@ public class RealShopping extends JavaPlugin {
 					
 					if(invs != null) PInvMap.get(player.getName()).update(invs);
 					else PInvMap.get(player.getName()).update();
-					player.sendMessage(ChatColor.RED + LangPack.YOUBOUGHTSTUFFFOR + toPay + unit);
+					player.sendMessage(ChatColor.GREEN + LangPack.YOUBOUGHTSTUFFFOR + toPay + unit);
 					return true;
 				}
 			} else {
@@ -926,32 +909,39 @@ public class RealShopping extends JavaPlugin {
  
     public static boolean sellToStore(Player p, ItemStack[] iS){
     	Shop tempShop = shopMap.get(PInvMap.get(p.getName()).getStore());
-    	if(Config.enableSelling && PInvMap.containsKey(p.getName()) && tempShop.getBuyFor() > 0){
+    	if(Config.isEnableSelling() && PInvMap.containsKey(p.getName()) && tempShop.getBuyFor() > 0){
     		float payment = 0;
     		List<ItemStack> sold = new ArrayList<ItemStack>();
-    		for(int i = 0;i < iS.length;i++){//Calculate cost
+    		for(int i = 0;i < iS.length;i++){//Calculate cost and check if player owns items
     			if(iS[i] != null){
         			int type = iS[i].getTypeId();
         			int data = iS[i].getData().getData();
         			if(tempShop.hasPrice(new Price(type)) || tempShop.hasPrice(new Price(type, data))){//Something in inventory has a price
         				int amount = ((maxDurMap.containsKey(type))?maxDurMap.get(type) - iS[i].getDurability():iS[i].getAmount());
-    					float cost = -1;
-    					if(tempShop.hasPrice(new Price(type))) cost = tempShop.getPrice(new Price(type));
-    					if(tempShop.hasPrice(new Price(type, data))) cost = tempShop.getPrice(new Price(type, data));
-    					if(tempShop.hasSale(new Price(type)) || tempShop.hasSale(new Price(type, data))){//There is a sale on that item.
-    						int pcnt = -1;
-    						if(tempShop.hasSale(new Price(type))) pcnt = 100 - tempShop.getSale(new Price(type));
-    						if(tempShop.hasSale(new Price(type, data)))  pcnt = 100 - tempShop.getSale(new Price(type, data));
-        					cost *= pcnt;
+        				
+        				int soldAm = amount;
+        				for(ItemStack tempSld:sold)
+        					if(tempSld.getTypeId() == iS[i].getTypeId()) soldAm += ((maxDurMap.containsKey(type))?maxDurMap.get(type) - iS[i].getDurability():iS[i].getAmount());
+ 
+        				if(PInvMap.get(p.getName()).getAmount(iS[i]) >= soldAm){
+        					float cost = -1;
+        					if(tempShop.hasPrice(new Price(type))) cost = tempShop.getPrice(new Price(type));
+        					if(tempShop.hasPrice(new Price(type, data))) cost = tempShop.getPrice(new Price(type, data));
+        					if(tempShop.hasSale(new Price(type)) || tempShop.hasSale(new Price(type, data))){//There is a sale on that item.
+        						int pcnt = -1;
+        						if(tempShop.hasSale(new Price(type))) pcnt = 100 - tempShop.getSale(new Price(type));
+        						if(tempShop.hasSale(new Price(type, data)))  pcnt = 100 - tempShop.getSale(new Price(type, data));
+            					cost *= pcnt;
+            					cost = Math.round(cost);
+            					cost /= 100;
+            				}
+          					cost *= tempShop.getBuyFor();
         					cost = Math.round(cost);
         					cost /= 100;
-        				}
-      					cost *= tempShop.getBuyFor();
-    					cost = Math.round(cost);
-    					cost /= 100;
 
-    					sold.add(iS[i]);
-        				payment += cost * (maxDurMap.containsKey(type)?Math.ceil((double)amount / (double)maxDurMap.get(type)):amount);//Convert items durability to item amount
+        					sold.add(iS[i]);
+            				payment += cost * (maxDurMap.containsKey(type)?Math.ceil((double)amount / (double)maxDurMap.get(type)):amount);//Convert items durability to item amount
+        				}
         			}
     			}
     		}
@@ -964,11 +954,11 @@ public class RealShopping extends JavaPlugin {
     				p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sold.size() + LangPack.ITEMSFOR + payment + unit);
 					if(tempShop.allowsNotifications()) sendNotification(own, "Your store " + tempShop.getName() + " bought stuff for " + payment + LangPack.UNIT + " from " + p.getName());
 					for(ItemStack key:sold){
-						if(Config.enableAI) tempShop.addStat(new Statistic(new PItem(key), key.getAmount(), false));
+						if(Config.isEnableAI()) tempShop.addStat(new Statistic(new PItem(key), key.getAmount(), false));
 						PInvMap.get(p.getName()).removeItem(key, key.getAmount());
 					}
     				cont = true;
-    			}
+    			} else p.sendMessage(ChatColor.RED + "Owner " + own + " can't afford to buy items from you for " + payment + unit);
     		} else {
 				RSEconomy.deposit(p.getName(), payment);
 				p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sold.size() + LangPack.ITEMSFOR + payment + unit);
@@ -1035,7 +1025,7 @@ public class RealShopping extends JavaPlugin {
     								, aL[7].getBlock()
     								, aL[8].getBlock()};
     	StorageMinecart firstCart = null;//First cart found on first block
-    	if(Config.allowFillChests && (Config.cartEnabledW.contains("@all") || Config.cartEnabledW.contains(l.getWorld().getName()))){
+    	if(Config.isAllowFillChests() && Config.isCartEnabledW(l.getWorld().getName())){
         	Object[] mcArr = l.getWorld().getEntitiesByClass(StorageMinecart.class).toArray();
         	String rails = "";
         	for(int i = 0;i < b.length;i++){//Get rails in area
@@ -1176,47 +1166,49 @@ public class RealShopping extends JavaPlugin {
 
 	public static boolean collectShipped(Location l, Player p, int id) {
 		if(l.getBlock().getState() instanceof Chest){
-			if(shippedToCollect.containsKey(p.getName())){
-				if(shippedToCollect.get(p.getName()).size() >= id){
-					boolean cont = false;
-					double cost = 0;
-					if(Config.zoneArray.length > 0){
-						int i = 0;
-						if(p.getLocation().getWorld().equals(shippedToCollect.get(p.getName()).get(id - 1).getLocationSent().getWorld())){//Same world
-							double dist = p.getLocation().distance(shippedToCollect.get(p.getName()).get(id - 1).getLocationSent());
-							while(i < Config.zoneArray.length && dist > Config.zoneArray[i].getBounds() && dist != -1){
-								i++;
+			if(PInvMap.containsKey(p.getName()) || shopMap.get(PInvMap.get(p.getName()).getStore()).getOwner().equals(p.getName())){
+				if(shippedToCollect.containsKey(p.getName())){
+					if(shippedToCollect.get(p.getName()).size() >= id){
+						boolean cont = false;
+						double cost = 0;
+						if(Config.getZoneArray().length > 0){
+							int i = 0;
+							if(p.getLocation().getWorld().equals(shippedToCollect.get(p.getName()).get(id - 1).getLocationSent().getWorld())){//Same world
+								double dist = p.getLocation().distance(shippedToCollect.get(p.getName()).get(id - 1).getLocationSent());
+								while(i < Config.getZoneArray().length && dist > Config.getZoneArray()[i].getBounds() && dist != -1){
+									i++;
+								}
+							} else {
+								while(i < Config.getZoneArray().length && Config.getZoneArray()[i].getBounds() > -1){
+									i++;
+								}
 							}
-						} else {
-							while(i < Config.zoneArray.length && Config.zoneArray[i].getBounds() > -1){
-								i++;
-							}
-						}
 
-						if(Config.zoneArray[i].getPercent() == -1)
-							cost = Config.zoneArray[i].getCost();
-						else {
-							cost = shippedToCollect.get(p.getName()).get(id - 1).getCost() * Config.zoneArray[i].getPercent();
-							cost = Math.round(cost);
-							cost /= 100;
-						}
-						if(RSEconomy.getBalance(p.getName()) >= cost) cont = true;
-					} else cont = true;
-					
-					if(cont){
-						RSEconomy.withdraw(p.getName(), cost);
-						p.sendMessage(ChatColor.GREEN + "" + cost + LangPack.UNIT + " withdrawn from your account.");
-						ItemStack[] contents = ((Chest)l.getBlock().getState()).getBlockInventory().getContents();
-						for(ItemStack tempIS:contents) if(tempIS != null) p.getWorld().dropItem(p.getLocation(), tempIS);
+							if(Config.getZoneArray()[i].getPercent() == -1)
+								cost = Config.getZoneArray()[i].getCost();
+							else {
+								cost = shippedToCollect.get(p.getName()).get(id - 1).getCost() * Config.getZoneArray()[i].getPercent();
+								cost = Math.round(cost);
+								cost /= 100;
+							}
+							if(RSEconomy.getBalance(p.getName()) >= cost) cont = true;
+						} else cont = true;
 						
-						((Chest)l.getBlock().getState()).getBlockInventory().setContents(shippedToCollect.get(p.getName()).get(id - 1).getContents());
-						p.sendMessage(ChatColor.GREEN + "Filled chest with: ");
-						p.sendMessage(formatItemStackToMess(shippedToCollect.get(p.getName()).get(id - 1).getContents()));
-						shippedToCollect.get(p.getName()).remove(id - 1);
-						return true;
-					} else p.sendMessage(ChatColor.RED + "You can't afford to pay the delivery fee of " + cost);
-				} else p.sendMessage(ChatColor.RED + LangPack.THERESNOPACKAGEWITHTHEID + id);
-			} else p.sendMessage(ChatColor.RED + LangPack.YOUHAVENTGOTANYITEMSWAITINGTOBEDELIVERED);
+						if(cont){
+							RSEconomy.withdraw(p.getName(), cost);
+							p.sendMessage(ChatColor.GREEN + "" + cost + LangPack.UNIT + " withdrawn from your account.");
+							ItemStack[] contents = ((Chest)l.getBlock().getState()).getBlockInventory().getContents();
+							for(ItemStack tempIS:contents) if(tempIS != null) p.getWorld().dropItem(p.getLocation(), tempIS);
+							
+							((Chest)l.getBlock().getState()).getBlockInventory().setContents(shippedToCollect.get(p.getName()).get(id - 1).getContents());
+							p.sendMessage(ChatColor.GREEN + "Filled chest with: ");
+							p.sendMessage(formatItemStackToMess(shippedToCollect.get(p.getName()).get(id - 1).getContents()));
+							shippedToCollect.get(p.getName()).remove(id - 1);
+							return true;
+						} else p.sendMessage(ChatColor.RED + "You can't afford to pay the delivery fee of " + cost);
+					} else p.sendMessage(ChatColor.RED + LangPack.THERESNOPACKAGEWITHTHEID + id);
+				} else p.sendMessage(ChatColor.RED + LangPack.YOUHAVENTGOTANYITEMSWAITINGTOBEDELIVERED);
+			} else p.sendMessage(ChatColor.RED + "You can't collect your items to a chest in a store you do not own.");
 		} else p.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUARESTANDINGONISNTACHEST);
 		return false;
 	}
@@ -1280,19 +1272,19 @@ public class RealShopping extends JavaPlugin {
 	 */
 	
     public static void punish(Player p){
-    	if(Config.punishment.equalsIgnoreCase("hell")){
-    		if(!Config.keepstolen){
+    	if(Config.getPunishment().equalsIgnoreCase("hell")){
+    		if(!Config.isKeepstolen()){
     			returnStolen(p);
     		}
 			PInvMap.remove(p.getName());
         	p.sendMessage(ChatColor.RED + LangPack.TRYINGTOCHEATYOURWAYOUT);
         	log.info(p.getName() + LangPack.TRIEDTOSTEALFROMTHESTORE);
 
-        	Location dropLoc2 = Config.dropLoc.clone().add(1, 0, 0);
-         	if(p.teleport(Config.hellLoc.clone().add(0.5, 0, 0.5))){
+        	Location dropLoc2 = Config.getDropLoc().clone().add(1, 0, 0);
+         	if(p.teleport(Config.getHellLoc().clone().add(0.5, 0, 0.5))){
         		log.info(p.getName() + LangPack.WASTELEPORTEDTOHELL);
         		p.sendMessage(ChatColor.RED + LangPack.HAVEFUNINHELL);
-             	Block block = p.getWorld().getBlockAt(Config.dropLoc);
+             	Block block = p.getWorld().getBlockAt(Config.getDropLoc());
              	if(block.getType() != Material.CHEST) block.setType(Material.CHEST);
              	BlockState blockState = block.getState();
              	
@@ -1326,8 +1318,8 @@ public class RealShopping extends JavaPlugin {
         		p.getInventory().clear();
         		p.getInventory().setArmorContents(new ItemStack[]{null, null, null, null});
         	} 	
-    	} else if(Config.punishment.equalsIgnoreCase("jail")){
-    		if(!Config.keepstolen){
+    	} else if(Config.getPunishment().equalsIgnoreCase("jail")){
+    		if(!Config.isKeepstolen()){
     			returnStolen(p);
     		}
 			jailedPlayers.put(p.getName(), shopMap.get(PInvMap.get(p.getName()).getStore()).getFirstE());
@@ -1335,12 +1327,12 @@ public class RealShopping extends JavaPlugin {
         	p.sendMessage(ChatColor.RED + LangPack.TRYINGTOCHEATYOURWAYOUT);
         	log.info(p.getName() + LangPack.TRIEDTOSTEALFROMTHESTORE);
 
-         	if(p.teleport(Config.jailLoc.clone().add(0.5, 0, 0.5))) {
+         	if(p.teleport(Config.getJailLoc().clone().add(0.5, 0, 0.5))) {
          		p.sendMessage(LangPack.YOUWEREJAILED);
          		log.info(p.getName() + LangPack.WASJAILED);
          	}
-    	} else if(Config.punishment.equalsIgnoreCase("none")){
-    		if(!Config.keepstolen){
+    	} else if(Config.getPunishment().equalsIgnoreCase("none")){
+    		if(!Config.isKeepstolen()){
     			returnStolen(p);
     		}
     	}
@@ -1489,7 +1481,7 @@ public class RealShopping extends JavaPlugin {
 	}
     
 	public static void sendNotification(String who, String what){
-		if(Config.notTimespan >= 500){
+		if(Config.getNotTimespan() >= 500){
 			if(!notificator.containsKey(who)) notificator.put(who, new ArrayList<String>());
 			notificator.get(who).add(what);
 		}
@@ -1533,7 +1525,7 @@ class Notificator extends Thread {
 						}
 					}
 				}
-				Thread.sleep(Math.max(Config.notTimespan, 500));
+				Thread.sleep(Math.max(Config.getNotTimespan(), 500));
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();

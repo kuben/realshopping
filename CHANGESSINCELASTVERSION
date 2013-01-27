@@ -1,5 +1,9 @@
 Changes since v0.41
 
-First Alpha:
 * Fixed collect command
 * Disabled using, dropping, and crafting items in stores.
+* Disabled opening Ender Chests in stores
+* Fixed a bug with selling to stores.
+
+New in config:
+* disable-item-drop, disable-crafting, disable-buckets, and disable-ender-chests. Disables doing stuff in stores.

@@ -1,6 +1,6 @@
 /*
  * RealShopping Bukkit plugin for Minecraft
- * Copyright 2012 Jakub Fojt
+ * Copyright 2013 Jakub Fojt
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -120,7 +120,7 @@ public class RSCommandExecutor implements CommandExecutor {
     	} else if(cmd.getName().equalsIgnoreCase("rssell")){
     		if(player != null){
     			if(rs.PInvMap.containsKey(player.getName())){
-					if(Config.enableSelling){
+					if(Config.isEnableSelling()){
 	    				Inventory tempInv = Bukkit.createInventory(null, 36, "Sell to store");
 						player.openInventory(tempInv);
 						return true;
@@ -218,7 +218,7 @@ public class RSCommandExecutor implements CommandExecutor {
     				}
     				
     	    		else if(args.length == 3 && args[1].equalsIgnoreCase("buyfor")){
-    	    			if(Config.enableSelling){
+    	    			if(Config.isEnableSelling()){
     	    				try {
     	    					int pcnt = Integer.parseInt(args[2]);
     	    					if(pcnt <= 100){
@@ -357,7 +357,7 @@ public class RSCommandExecutor implements CommandExecutor {
     	    				return true;
     	    			}
     	    		} else if(args[1].equals("onchange")){
-    	    			if(Config.enableAI){
+    	    			if(Config.isEnableAI()){
     	    				if(args.length == 2){
         	    				if(rs.shopMap.get(args[0]).getNotifyChanges() == 1) sender.sendMessage(ChatColor.GREEN + "You will be notified if " + args[0] + " loses/gains "
         	    						+ rs.shopMap.get(args[0]).getChangeTreshold() + " place(s).");
@@ -636,11 +636,11 @@ public class RSCommandExecutor implements CommandExecutor {
         						return true;
         					}
         			    	if(!rs.shopMap.containsKey(args[1])){//Create
-            					if(RSEconomy.getBalance(player.getName()) < Config.pstorecreate) {
-            						player.sendMessage(ChatColor.RED + LangPack.CREATINGASTORECOSTS + Config.pstorecreate + rs.unit);
+            					if(RSEconomy.getBalance(player.getName()) < Config.getPstorecreate()) {
+            						player.sendMessage(ChatColor.RED + LangPack.CREATINGASTORECOSTS + Config.getPstorecreate() + rs.unit);
             						return true;
             					} else {
-            						RSEconomy.withdraw(player.getName(), Config.pstorecreate);
+            						RSEconomy.withdraw(player.getName(), Config.getPstorecreate());
             						rs.shopMap.put(args[1], new Shop(args[1], player.getWorld().getName(), player.getName()));
             					}
         			    	}
@@ -905,10 +905,10 @@ public class RSCommandExecutor implements CommandExecutor {
     			} else sender.sendMessage(args[0] + LangPack.ISNOTJAILED);
     		}
     	} else if(cmd.getName().equalsIgnoreCase("rsupdate")){
-    		if(Config.autoUpdate > 0){
+    		if(Config.getAutoUpdate() > 0){
     			if(args.length == 1 && args[0].equals("info")){
     				if(!rs.newUpdate.equals("")){
-        				if((player != null && Config.autoUpdate > 1) || player == null){//Permission to get info
+        				if((player != null && Config.getAutoUpdate() > 1) || player == null){//Permission to get info
         					String mess = rs.updater.getLatestVersionDescription();
         					mess = mess.replace("<li>", "• ");
         					mess = mess.replace("</li>", "\n");
@@ -946,7 +946,7 @@ public class RSCommandExecutor implements CommandExecutor {
     				}
     			} else if(args.length == 1 && args[0].equals("update")){
     				if(!rs.newUpdate.equals("")){
-        				if((player != null && Config.autoUpdate == 4) || ( player == null && Config.autoUpdate > 2)){//Permission to update
+        				if((player != null && Config.getAutoUpdate() == 4) || ( player == null && Config.getAutoUpdate() > 2)){//Permission to update
         					rs.updater = new Updater(rs, "realshopping", rs.getPFile(), Updater.UpdateType.DEFAULT, true);
         					if(rs.updater.getResult() == Updater.UpdateResult.SUCCESS)
         						sender.sendMessage(ChatColor.GREEN + "Successful update!");
@@ -965,7 +965,7 @@ public class RSCommandExecutor implements CommandExecutor {
     		byte pg = 1;
     		if(args.length > 0) try {
     			pg = Byte.parseByte(args[0]);
-    			if(pg < 1 || pg > 2){
+    			if(pg < 1 || pg > 3){
     				sender.sendMessage(ChatColor.RED + LangPack.THEREARENTTHATMANYPAGES);
     				return false;
     			}
@@ -974,19 +974,23 @@ public class RSCommandExecutor implements CommandExecutor {
 				return false;
 			}
     		int i = 0;
-    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "RealShopping [v0.41] - A shop plugin for Bukkit made by kuben0");i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "RealShopping [v0.42] - A shop plugin for Bukkit made by kuben0");i++;
     		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "Loaded config settings:");i++;
-    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "enable-automatic-updates:"+Config.getAutoUpdateStr(Config.autoUpdate));i++;
-    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "auto-protect-chests:"+Config.autoprotect);i++;
-    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "delivery-cost-zones:"+Config.deliveryZones);i++;
-    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "language-pack:"+Config.langpack);i++;
-    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "enable-selling-to-stores:"+Config.enableSelling);i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "enable-automatic-updates:"+Config.getAutoUpdateStr(Config.getAutoUpdate()));i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "auto-protect-chests:"+Config.isAutoprotect());i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "delivery-cost-zones:"+Config.getDeliveryZones());i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "language-pack:"+Config.getLangpack());i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "enable-selling-to-stores:"+Config.isEnableSelling());i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "disable-item-drop:"+Config.isDisableDrop());i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "disable-crafting:"+Config.isDisableCrafting());i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "disable-buckets:"+Config.isDisableBuckets());i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "disable-ender-chests:"+Config.isDisableEnderchests());i++;
     		if(i >= (pg-1)*10 && i < pg*10) {
     			String tempStr = "";
-    			if(Config.cartEnabledW.contains("@all")) tempStr = "Enabled in all worlds";
+    			if(Config.getCartEnabledW().contains("@all")) tempStr = "Enabled in all worlds";
     			else {
         			boolean j = true;
-        			for(String str:Config.cartEnabledW){
+        			for(String str:Config.getCartEnabledW()){
         				if(j){
        						tempStr += str;
        						j = false;
@@ -996,19 +1000,19 @@ public class RSCommandExecutor implements CommandExecutor {
     			}
     			sender.sendMessage(ChatColor.GREEN + "enable-shopping-carts-in-worlds:" + tempStr);i++;
     		}
-    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "player-stores-create-cost:"+Config.pstorecreate);i++;
-    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "drop-items-at:"+Config.dropLoc.getWorld().getName()+";"+Config.dropLoc.getBlockX()+","+Config.dropLoc.getBlockY()+","+Config.dropLoc.getBlockZ());i++;
-    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "hell-location:"+Config.hellLoc.getWorld().getName()+";"+Config.hellLoc.getBlockX()+","+Config.hellLoc.getBlockY()+","+Config.hellLoc.getBlockZ());i++;
-    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "jail-location:"+Config.jailLoc.getWorld().getName()+";"+Config.jailLoc.getBlockX()+","+Config.jailLoc.getBlockY()+","+Config.jailLoc.getBlockZ());i++;
-    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "keep-stolen-items-after-punish:"+Config.keepstolen);i++;
-    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "punishment:"+Config.punishment);i++;
-    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "enable-automatic-store-management:"+Config.enableAI);i++;
-    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "stat-updater-frequency:"+Config.getTimeString(Config.updateFreq));i++;
-    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "statistics-timespan:"+Config.getTimeString(Config.statTimespan));i++;
-    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "clean-stats-older-than:"+Config.getTimeString(Config.cleanStatsOld));i++;
-    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "allow-filling-chests:"+Config.allowFillChests);i++;
-    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "notificatior-update-frequency:"+Config.notTimespan);i++;
-    		if(pg < 2) sender.sendMessage(ChatColor.DARK_PURPLE + "realshopping " + (pg + 1) + " for more.");
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "player-stores-create-cost:"+Config.getPstorecreate());i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "drop-items-at:"+Config.getDropLoc().getWorld().getName()+";"+Config.getDropLoc().getBlockX()+","+Config.getDropLoc().getBlockY()+","+Config.getDropLoc().getBlockZ());i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "hell-location:"+Config.getHellLoc().getWorld().getName()+";"+Config.getHellLoc().getBlockX()+","+Config.getHellLoc().getBlockY()+","+Config.getHellLoc().getBlockZ());i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "jail-location:"+Config.getJailLoc().getWorld().getName()+";"+Config.getJailLoc().getBlockX()+","+Config.getJailLoc().getBlockY()+","+Config.getJailLoc().getBlockZ());i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "keep-stolen-items-after-punish:"+Config.isKeepstolen());i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "punishment:"+Config.getPunishment());i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "enable-automatic-store-management:"+Config.isEnableAI());i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "stat-updater-frequency:"+Config.getTimeString(Config.getUpdateFreq()));i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "statistics-timespan:"+Config.getTimeString(Config.getStatTimespan()));i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "clean-stats-older-than:"+Config.getTimeString(Config.getCleanStatsOld()));i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "allow-filling-chests:"+Config.isAllowFillChests());i++;
+    		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "notificatior-update-frequency:"+Config.getNotTimespan());i++;
+    		if(pg < 3) sender.sendMessage(ChatColor.DARK_PURPLE + "realshopping " + (pg + 1) + " for more.");
        		return true;
     	}
 		} catch(Exception e){
@@ -1074,23 +1078,25 @@ public class RSCommandExecutor implements CommandExecutor {
 		if(player != null){
 			if(!tempShop.getOwner().equalsIgnoreCase("@admin")){
 				if(cFlag){
-					if(Config.allowFillChests){//TODO disable all in store chest fills
-						if(player.getLocation().getBlock().getState() instanceof Chest){
-							if(tempShop.hasStolenToClaim()){
-								if(amount == 0 || amount > 27) amount = 27;
-								ItemStack[] tempIs = new ItemStack[27];
-								int i = 0;
-								for(;i < amount;i++){
-									tempIs[i] = tempShop.claimStolenToClaim();
-									if(tempIs[i] == null) break;
-								}
-								ItemStack[] oldCont = ((Chest)player.getLocation().getBlock().getState()).getBlockInventory().getContents();
-								for(ItemStack tempIS:oldCont) if(tempIS != null) player.getWorld().dropItem(player.getLocation(), tempIS);
-								((Chest)player.getLocation().getBlock().getState()).getBlockInventory().setContents(tempIs);
-								player.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH + i + LangPack.ITEMS);
-								return true;
-							} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
-						} else sender.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUARESTANDINGONISNTACHEST);
+					if(Config.isAllowFillChests()){
+						if(!rs.PInvMap.containsKey(player.getName()) || tempShop.getOwner().equals(player.getName())){
+							if(player.getLocation().getBlock().getState() instanceof Chest){
+								if(tempShop.hasStolenToClaim()){
+									if(amount == 0 || amount > 27) amount = 27;
+									ItemStack[] tempIs = new ItemStack[27];
+									int i = 0;
+									for(;i < amount;i++){
+										tempIs[i] = tempShop.claimStolenToClaim();
+										if(tempIs[i] == null) break;
+									}
+									ItemStack[] oldCont = ((Chest)player.getLocation().getBlock().getState()).getBlockInventory().getContents();
+									for(ItemStack tempIS:oldCont) if(tempIS != null) player.getWorld().dropItem(player.getLocation(), tempIS);
+									((Chest)player.getLocation().getBlock().getState()).getBlockInventory().setContents(tempIs);
+									player.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH + i + LangPack.ITEMS);
+									return true;
+								} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
+							} else sender.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUARESTANDINGONISNTACHEST);
+						} else sender.sendMessage(ChatColor.RED + "You can't collect your items to a chest in a store you do not own.");
 					} else {
 						sender.sendMessage(ChatColor.RED + "You can't collect your items to a chest on this server.");
 						return true;

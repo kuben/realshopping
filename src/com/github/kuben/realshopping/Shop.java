@@ -1,6 +1,6 @@
 /*
  * RealShopping Bukkit plugin for Minecraft
- * Copyright 2012 Jakub Fojt
+ * Copyright 2013 Jakub Fojt
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
-import com.github.kuben.realshopping.*;
 
 public class Shop {//TODO add load/save interface
 	
@@ -121,7 +120,7 @@ public class Shop {//TODO add load/save interface
 	public boolean addChest(Location l){
 		if(!chests.containsKey(l)){
 			chests.put(l, new ArrayList<Integer[]>());
-			if(Config.autoprotect) protectedChests.add(l);
+			if(Config.isAutoprotect()) protectedChests.add(l);
 			return true;
 		}
 		else return false;
