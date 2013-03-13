@@ -19,13 +19,25 @@
 
 package com.github.kuben.realshopping;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import net.h31ix.updater.Updater;
 
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -37,6 +49,14 @@ import org.bukkit.block.DoubleChest;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.conversations.Conversation;
+import org.bukkit.conversations.ConversationAbandonedEvent;
+import org.bukkit.conversations.ConversationAbandonedListener;
+import org.bukkit.conversations.ConversationContext;
+import org.bukkit.conversations.ConversationPrefix;
+import org.bukkit.conversations.MessagePrompt;
+import org.bukkit.conversations.Prompt;
+import org.bukkit.conversations.ValidatingPrompt;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -48,7 +68,6 @@ public class RSCommandExecutor implements CommandExecutor {
 		this.rs = rs;
 	}
 	@SuppressWarnings("static-access")
-	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
     	
 		if(!RealShopping.working.equals("")){
@@ -121,7 +140,7 @@ public class RSCommandExecutor implements CommandExecutor {
     		if(player != null){
     			if(rs.PInvMap.containsKey(player.getName())){
 					if(Config.isEnableSelling()){
-	    				Inventory tempInv = Bukkit.createInventory(null, 36, "Sell to store");
+	    				Inventory tempInv = Bukkit.createInventory(null, 36, "Sell to store");//TODO langpack
 						player.openInventory(tempInv);
 						return true;
 					} else player.sendMessage(ChatColor.RED + LangPack.SELLINGTOSTORESISNOTENABLEDONTHISSERVER);
@@ -130,7 +149,7 @@ public class RSCommandExecutor implements CommandExecutor {
     		else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE);
     	} else if(cmd.getName().equalsIgnoreCase("rsstores")) {
     		if(args.length > 0){
-    			if(args[0].equals("help")){
+    			if(args[0].equals("help")){//TODO langpack all of this
     				if(args.length == 1){
     					sender.sendMessage(ChatColor.GREEN + "Use rsstores with only the name of the store as argument to get some information about the store. "
     							+ " For help, type any of these arguments: " + ChatColor.DARK_PURPLE + "buyfor, collect, ban, unban, kick, startsale, endsale, notifications, onchange");
@@ -343,17 +362,17 @@ public class RSCommandExecutor implements CommandExecutor {
     	    			if(args.length > 2){
     	    				if(args[2].equals("on")){
     	    					rs.shopMap.get(args[0]).setAllowNotifications(true);
-    	    					sender.sendMessage(ChatColor.GREEN + "Enabled notifications for " + args[0]);
+    	    					sender.sendMessage(ChatColor.GREEN + "Enabled notifications for " + args[0]);//TODO langpack
     	    				} else if(args[2].equals("off")){
     	    					rs.shopMap.get(args[0]).setAllowNotifications(false);
-    	    					sender.sendMessage(ChatColor.GREEN + "Disabled notifications for " + args[0]);
+    	    					sender.sendMessage(ChatColor.GREEN + "Disabled notifications for " + args[0]);//TODO langpack
     	    				} else {
     	    					sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTAVALIDARGUMENT);
-    	    					sender.sendMessage("Usage:" + ChatColor.DARK_PURPLE + "[...] notifications [on|off]");
+    	    					sender.sendMessage("Usage:" + ChatColor.DARK_PURPLE + "[...] notifications [on|off]");//TODO langpack
     	    				}
     	    				return true;
     	    			} else {
-    	    				sender.sendMessage(ChatColor.GREEN + "Notifications are " + (rs.shopMap.get(args[0]).allowsNotifications()?"on":"off") + ".");
+    	    				sender.sendMessage(ChatColor.GREEN + "Notifications are " + (rs.shopMap.get(args[0]).allowsNotifications()?"on":"off") + ".");//TODO langpack
     	    				return true;
     	    			}
     	    		} else if(args[1].equals("onchange")){
@@ -377,41 +396,41 @@ public class RSCommandExecutor implements CommandExecutor {
             						pcnt = Integer.parseInt(args[4]);
             					} catch(NumberFormatException e) {
             						sender.sendMessage(ChatColor.RED + args[4] + LangPack.ISNOTANINTEGER);
-            						if(args[4].contains("%")) sender.sendMessage("(Skip the %-sign)");
+            						if(args[4].contains("%")) sender.sendMessage("(Skip the %-sign)");//TODO langpack
             					}
             					if(args[2].equals("nothing")){
             						rs.shopMap.get(args[0]).setNotifyChanges((byte)0);
-            						sender.sendMessage(ChatColor.GREEN + "You won't get notified when your store " + args[0] + " becomes more or less popular.");
+            						sender.sendMessage(ChatColor.GREEN + "You won't get notified when your store " + args[0] + " becomes more or less popular.");//TODO langpack
             						rs.updateEntrancesDb();
             						return true;
             					} else if(args[2].equals("notify")){
             						if(tresh > -1){
             							rs.shopMap.get(args[0]).setNotifyChanges((byte)1);
             							rs.shopMap.get(args[0]).setChangeTreshold(tresh);
-                						sender.sendMessage(ChatColor.GREEN + "You will get notified when your store " + args[0] + " becomes at least " + tresh + " places more or less popular.");
+                						sender.sendMessage(ChatColor.GREEN + "You will get notified when your store " + args[0] + " becomes at least " + tresh + " places more or less popular.");//TODO langpack
                 						rs.updateEntrancesDb();
             						} else
-            							sender.sendMessage("Usage:" + ChatColor.DARK_PURPLE + "[...] onchange notify TRESHOLD " + ChatColor.RESET
-            									+ " where TRESHOLD is how many places your store needs to lose or gain for you to be notified.");
+            							sender.sendMessage("Usage:" + ChatColor.DARK_PURPLE + "[...] onchange notify TRESHOLD " + ChatColor.RESET//TODO langpack
+            									+ " where TRESHOLD is how many places your store needs to lose or gain for you to be notified.");//TODO langpack
             						return true;
         						} else if(args[2].equals("changeprices")){
         							if(tresh > -1 && pcnt > -1){
         								rs.shopMap.get(args[0]).setNotifyChanges((byte)2);
         								rs.shopMap.get(args[0]).setChangeTreshold(tresh);
         								rs.shopMap.get(args[0]).setChangePercent(pcnt);
-                						sender.sendMessage(ChatColor.GREEN + "You will get notified when your store " + args[0] + " becomes at least " + ChatColor.DARK_PURPLE + tresh
-                								+ " places more or less popular. And the prices will be lowered or increased by " + ChatColor.DARK_PURPLE + pcnt + "%.");
+                						sender.sendMessage(ChatColor.GREEN + "You will get notified when your store " + args[0] + " becomes at least " + ChatColor.DARK_PURPLE + tresh//TODO langpack
+                								+ " places more or less popular. And the prices will be lowered or increased by " + ChatColor.DARK_PURPLE + pcnt + "%.");//TODO langpack
                 						rs.updateEntrancesDb();
                 						return true;
         							} else
-            							sender.sendMessage("Usage:" + ChatColor.DARK_PURPLE + "[...] onchange changepries TRESHOLD PERCENT" + ChatColor.RESET
-            									+ " where TRESHOLD is how many places your store needs to lose or gain for you to be for the changes to happen, "
-            									+ "and PERCENT is how many percent the prices will be lowered or increased.");
+            							sender.sendMessage("Usage:" + ChatColor.DARK_PURPLE + "[...] onchange changepries TRESHOLD PERCENT" + ChatColor.RESET//TODO langpack
+            									+ " where TRESHOLD is how many places your store needs to lose or gain for you to be for the changes to happen, "//TODO langpack
+            									+ "and PERCENT is how many percent the prices will be lowered or increased.");//TODO langpack
             						return true;
         						}
             				}
     	    			} else {
-    	    				sender.sendMessage(ChatColor.RED + "Automatic store management is not enabled on this server.");
+    	    				sender.sendMessage(ChatColor.RED + "Automatic store management is not enabled on this server.");//TODO langpack
     	    			}     					
     	    		}
     			} else sender.sendMessage(ChatColor.RED + LangPack.YOUDONTHAVEPERMISSIONTOMANAGETHATSTORE);
@@ -439,7 +458,7 @@ public class RSCommandExecutor implements CommandExecutor {
     					shop = args[1];
     					ii = 2;
     				}
-    			} else if(args[0].equalsIgnoreCase("clear")){//STORE
+    			} else if(args[0].equalsIgnoreCase("clear") || args[0].equalsIgnoreCase("defaults")){//STORE
     				if(args.length == 1 && isPlayer) shop = rs.PInvMap.get(player.getName()).getStore();
     				else if(args.length > 1) shop = args[1];
     			}
@@ -469,7 +488,7 @@ public class RSCommandExecutor implements CommandExecutor {
             							String m[] = new String[]{twoDForm.format(Float.parseFloat(args[ii].split(":")[jj+1])).replaceAll(",", ".")
             									,twoDForm.format(Float.parseFloat(args[ii].split(":")[jj+2])).replaceAll(",", ".")};
             							tempShop.setMinMax(p, Float.parseFloat(m[0]), Float.parseFloat(m[1]));
-                    					sender.sendMessage(ChatColor.GREEN + "Set minimal and maximal prices for " + Material.getMaterial(i));
+                    					sender.sendMessage(ChatColor.GREEN + "Set minimal and maximal prices for " + Material.getMaterial(i));//TODO langpack
             						}
             						return true;
             					} catch (NumberFormatException e) {
@@ -495,12 +514,12 @@ public class RSCommandExecutor implements CommandExecutor {
             						if((args.length == 3 && shop.equals(args[1])) || (args.length == 2 && !shop.equals(args[1]))){//If copy from store
             							if(rs.shopMap.containsKey(args[args.length - 1])){
             								tempShop.clonePrices(args[args.length - 1]);
-            								sender.sendMessage(ChatColor.GREEN + "Old prices replaced with prices from " + args[args.length - 1]);
+            								sender.sendMessage(ChatColor.GREEN + "Old prices replaced with prices from " + args[args.length - 1]);//TODO langpack
             								return true;
             							}
             						} else {
             							tempShop.clonePrices(null);
-        								sender.sendMessage(ChatColor.GREEN + "Old prices replaced with the lowest price of every item in every store.");
+        								sender.sendMessage(ChatColor.GREEN + "Old prices replaced with the lowest price of every item in every store.");//TODO langpack
         								return true;
             						}
             					} catch (NumberFormatException e) {
@@ -508,22 +527,28 @@ public class RSCommandExecutor implements CommandExecutor {
             					}
             				} else if(args[0].equalsIgnoreCase("clear")){
             					tempShop.clearPrices();
-            					sender.sendMessage(ChatColor.GREEN + "Cleared all prices for " + shop);
+            					sender.sendMessage(ChatColor.GREEN + "Cleared all prices for " + shop);//TODO langpack
             					return true;
+            				} else if(args[0].equalsIgnoreCase("defaults")){
+            					if(RealShopping.defPrices != null && !RealShopping.defPrices.isEmpty()){
+                					tempShop.setPrices(RealShopping.defPrices);
+                					sender.sendMessage(ChatColor.GREEN + "Set default prices for " + shop);//TODO new langpack
+            						return true;
+            					} else sender.sendMessage(ChatColor.RED + "There are no default prices. Use /rsimport to import them, or see the plugin page for help.");//TODO new langpack
             				} else if(args[0].equalsIgnoreCase("showminmax")){
             					int item = Integer.parseInt(args[ii]);
             					Price p = new Price(item);
             					if(tempShop.hasMinMax(p)){
-            						sender.sendMessage(ChatColor.GREEN + "Store " + shop + " has a minimal price of " + tempShop.getMin(p) + LangPack.UNIT
-            							+ " and a maximal price of " + tempShop.getMax(p) + LangPack.UNIT + " for " + Material.getMaterial(item));
-            					} else sender.sendMessage(ChatColor.GREEN + "Store " + shop + " doesn't have a minimal and maximal price for " + Material.getMaterial(item));
+            						sender.sendMessage(ChatColor.GREEN + "Store " + shop + " has a minimal price of " + tempShop.getMin(p) + LangPack.UNIT//TODO langpack
+            							+ " and a maximal price of " + tempShop.getMax(p) + LangPack.UNIT + " for " + Material.getMaterial(item));//TODO langpack
+            					} else sender.sendMessage(ChatColor.GREEN + "Store " + shop + " doesn't have a minimal and maximal price for " + Material.getMaterial(item));//TODO langpack
             					return true;
             				} else if(args[0].equalsIgnoreCase("clearminmax")){
             					int item = Integer.parseInt(args[ii]);
             					if(tempShop.hasMinMax(new Price(item))){
             						tempShop.clearMinMax(new Price(item));
-            						sender.sendMessage(ChatColor.GREEN + "Cleared minimal and maximal prices for " + Material.getMaterial(item));
-            					} else sender.sendMessage(ChatColor.GREEN + "Store " + shop + " didn't have a minimal and maximal price for " + Material.getMaterial(item));
+            						sender.sendMessage(ChatColor.GREEN + "Cleared minimal and maximal prices for " + Material.getMaterial(item));//TODO langpack
+            					} else sender.sendMessage(ChatColor.GREEN + "Store " + shop + " didn't have a minimal and maximal price for " + Material.getMaterial(item));//TODO langpack
             					return true;
             				} else if(args[0].equalsIgnoreCase("setminmax")){
             					try {
@@ -532,11 +557,11 @@ public class RSCommandExecutor implements CommandExecutor {
                     					int item = Integer.parseInt(s[0]);
                     					DecimalFormat twoDForm = new DecimalFormat("#.##");
                     					tempShop.setMinMax(new Price(item), Float.valueOf(twoDForm.format(Float.valueOf(s[1])).replaceAll(",", ".")), Float.valueOf(twoDForm.format(Float.valueOf(s[2])).replaceAll(",", ".")));
-                    					sender.sendMessage(ChatColor.GREEN + "Set minimal and maximal prices for " + Material.getMaterial(item));
+                    					sender.sendMessage(ChatColor.GREEN + "Set minimal and maximal prices for " + Material.getMaterial(item));//TODO langpack
                     					return true;
-            						} else sender.sendMessage(ChatColor.RED + args[ii] + " is not a proper argument.");
+            						} else sender.sendMessage(ChatColor.RED + args[ii] + " is not a proper argument.");//TODO langpack
             					} catch (NumberFormatException e) {
-            						sender.sendMessage(ChatColor.RED + args[ii] + " is not a proper argument.");
+            						sender.sendMessage(ChatColor.RED + args[ii] + " is not a proper argument.");//TODO langpack
             					}
             				}
             				
@@ -632,7 +657,7 @@ public class RSCommandExecutor implements CommandExecutor {
     				if(rs.playerEntrances.containsKey(player.getName())){
         				if(rs.playerExits.containsKey(player.getName())){
         					if(args[1].equals("help")){
-        						sender.sendMessage(ChatColor.RED + "You can't name a store that.");
+        						sender.sendMessage(ChatColor.RED + "You can't name a store that.");//TODO langpack
         						return true;
         					}
         			    	if(!rs.shopMap.containsKey(args[1])){//Create
@@ -652,7 +677,7 @@ public class RSCommandExecutor implements CommandExecutor {
         			    		Location ex = new Location(rs.getServer().getWorld(rs.shopMap.get(args[1]).getWorld()), Integer.parseInt(ext[0]),Integer.parseInt(ext[1]), Integer.parseInt(ext[2]));
         			    		rs.shopMap.get(args[1]).addE(en, ex);
         			    		rs.updateEntrancesDb();
-        			    		player.sendMessage(ChatColor.RED + args[1] + LangPack.WASCREATED);
+        			    		player.sendMessage(ChatColor.GREEN + args[1] + LangPack.WASCREATED);
         			    	} else {
         			    		player.sendMessage(ChatColor.RED + LangPack.YOUARENOTTHEOWNEROFTHISSTORE);
         			    	}
@@ -688,7 +713,7 @@ public class RSCommandExecutor implements CommandExecutor {
     				return true;
     			} else if (args.length == 2 && args[0].equalsIgnoreCase("createstore")){
 					if(args[1].equals("help")){
-						sender.sendMessage(ChatColor.RED + "You can't name a store that.");
+						sender.sendMessage(ChatColor.RED + "You can't name a store that.");//TODO langpack
 						return true;
 					}
     				if(!rs.entrance.equals("")){
@@ -828,9 +853,9 @@ public class RSCommandExecutor implements CommandExecutor {
     							blockUpdater bU = new blockUpdater(toHighlight, player);
     							bU.start();
     							
-    							player.sendMessage(ChatColor.GREEN + "Highlighted 5 locations for 5 seconds.");
+    							player.sendMessage(ChatColor.GREEN + "Highlighted 5 locations for 5 seconds.");//TODO langpack
     						} else {
-    							player.sendMessage(ChatColor.RED + "No locations to highlight.");
+    							player.sendMessage(ChatColor.RED + "No locations to highlight.");//TODO langpack
     						}
 
     						return true;
@@ -858,11 +883,11 @@ public class RSCommandExecutor implements CommandExecutor {
        					BlockState bs = player.getLocation().getBlock().getState();
        					if(bs instanceof Chest | bs instanceof DoubleChest){
        						if(tempShop.isProtectedChest(bs.getLocation())){
-       							player.sendMessage(ChatColor.GREEN + "This chest is already protected.");
+       							player.sendMessage(ChatColor.GREEN + "This chest is already protected.");//TODO langpack
        							return true;
        						} else {
        							tempShop.addProtectedChest(bs.getLocation());
-       							player.sendMessage(ChatColor.GREEN + "Made chest protected.");
+       							player.sendMessage(ChatColor.GREEN + "Made chest protected.");//TODO langpack
        							return true;
         					}
         				} else {
@@ -873,10 +898,10 @@ public class RSCommandExecutor implements CommandExecutor {
        					BlockState bs = player.getLocation().getBlock().getState();
        					if(tempShop.isProtectedChest(bs.getLocation())){
        						tempShop.removeProtectedChest(bs.getLocation());
-       						player.sendMessage(ChatColor.GREEN + "Unprotected chest.");
+       						player.sendMessage(ChatColor.GREEN + "Unprotected chest.");//TODO langpack
        						return true;
     					} else {
-       						player.sendMessage(ChatColor.RED + "This chest isn't protected.");
+       						player.sendMessage(ChatColor.RED + "This chest isn't protected.");//TODO langpack
        						return true;
     					}
     				}
@@ -934,14 +959,14 @@ public class RSCommandExecutor implements CommandExecutor {
         					}
         					if(player == null) sender.sendMessage(mess);
         					else {
-        						player.sendMessage(ChatColor.GREEN + "Reading description...");
+        						player.sendMessage(ChatColor.GREEN + "Reading description...");//TODO langpack
     							messageSender mS = new messageSender(player, mess.split("\\n"), 2000);
     							mS.start();
         					}
         					return true;
         				}
     				} else {
-    					sender.sendMessage(ChatColor.RED + "This is the newest version.");
+    					sender.sendMessage(ChatColor.RED + "This is the newest version.");//TODO langpack
     					return true;
     				}
     			} else if(args.length == 1 && args[0].equals("update")){
@@ -949,18 +974,18 @@ public class RSCommandExecutor implements CommandExecutor {
         				if((player != null && Config.getAutoUpdate() == 4) || ( player == null && Config.getAutoUpdate() > 2)){//Permission to update
         					rs.updater = new Updater(rs, "realshopping", rs.getPFile(), Updater.UpdateType.DEFAULT, true);
         					if(rs.updater.getResult() == Updater.UpdateResult.SUCCESS)
-        						sender.sendMessage(ChatColor.GREEN + "Successful update!");
+        						sender.sendMessage(ChatColor.GREEN + "Successful update!");//TODO langpack
         					else
-        						sender.sendMessage(ChatColor.RED + "Update failed.");
+        						sender.sendMessage(ChatColor.RED + "Update failed.");//TODO langpack
         					return true;
         				}
     				} else{
-    					sender.sendMessage(ChatColor.RED + "This is the newest version.");
+    					sender.sendMessage(ChatColor.RED + "This is the newest version.");//TODO langpack
     					return true;
     				}
     			} else return false;
     		}
-    		sender.sendMessage(ChatColor.RED + "You aren't permitted to use this command.");
+    		sender.sendMessage(ChatColor.RED + "You aren't permitted to use this command.");//TODO langpack
     	} else if(cmd.getName().equalsIgnoreCase("realshopping")){
     		byte pg = 1;
     		if(args.length > 0) try {
@@ -1014,14 +1039,17 @@ public class RSCommandExecutor implements CommandExecutor {
     		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "notificatior-update-frequency:"+Config.getNotTimespan());i++;
     		if(pg < 3) sender.sendMessage(ChatColor.DARK_PURPLE + "realshopping " + (pg + 1) + " for more.");
        		return true;
-    	}
+    	} else if(cmd.getName().equalsIgnoreCase("rsimport")){
+			importPrices(player);
+			return true;
+		}
 		} catch(Exception e){
 			//Nothing
 		}
     	return false;
 	}
 	
-    private static boolean prices(CommandSender sender, int page, String store, boolean cmd){
+    public static boolean prices(CommandSender sender, int page, String store, boolean cmd){
     	if(RealShopping.shopMap.get(store).hasPrices()){
     		Map<Price, Float> tempMap = RealShopping.shopMap.get(store).getPrices();
  			if(!tempMap.isEmpty()){
@@ -1096,9 +1124,9 @@ public class RSCommandExecutor implements CommandExecutor {
 									return true;
 								} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
 							} else sender.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUARESTANDINGONISNTACHEST);
-						} else sender.sendMessage(ChatColor.RED + "You can't collect your items to a chest in a store you do not own.");
+						} else sender.sendMessage(ChatColor.RED + "You can't collect your items to a chest in a store you do not own.");//TODO langpack
 					} else {
-						sender.sendMessage(ChatColor.RED + "You can't collect your items to a chest on this server.");
+						sender.sendMessage(ChatColor.RED + "You can't collect your items to a chest on this server.");//TODO langpack
 						return true;
 					}
 				} else {
@@ -1114,6 +1142,183 @@ public class RSCommandExecutor implements CommandExecutor {
 		} else sender.sendMessage(ChatColor.RED + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE);
 		return false; 
 	}
+
+	private void importPrices(Player player){
+	    final Map<Object, Object> convMap = new HashMap<Object, Object>();
+	    convMap.put("data", "first");
+	    Conversation conv = RealShopping.convF.withFirstPrompt(new ImportPrompt()).withPrefix(
+	    	new ConversationPrefix() {
+	    		public String getPrefix(ConversationContext arg0){
+	    			return ChatColor.LIGHT_PURPLE + "[RealShopping]" + ChatColor.WHITE + " ";
+            	}
+            }).withTimeout(30).withInitialSessionData(convMap).withLocalEcho(false).buildConversation(player);
+	    conv.addConversationAbandonedListener(
+	    		new ConversationAbandonedListener() {
+	    			public void conversationAbandoned(ConversationAbandonedEvent event){
+	    				if (event.gracefulExit()){
+	    					((Player)((Conversation)event.getSource()).getForWhom()).sendRawMessage(ChatColor.LIGHT_PURPLE + "[RealShopping] " + ChatColor.WHITE + "Quit conversation.");//TODO new langpack
+	    				}
+	    			}
+	    		});
+	    conv.begin();
+	}
+}
+
+class ImportPrompt extends ValidatingPrompt {
+ 
+    public String getPromptText(ConversationContext context) {
+    	String in = (String) context.getSessionData("data");
+    	if(in.equals("first")){
+    		context.setSessionData("file", "murzyn");
+    		String out = "Which file do you want to import a set of default prices from?";//TODO new langpack
+    		File dirP = new File(RealShopping.mandir);
+    		File[] Mlist = null, Plist = null;
+    		File dirM = new File("./");
+    		if(dirP.isDirectory()){
+    			Mlist = dirM.listFiles(new FilenameFilter(){
+    			    public boolean accept(File dir, String name) {
+    			        return (name.endsWith(".xlsx"));
+    			    }
+    			});
+    		}
+    		if(dirP.isDirectory()){
+    			Plist = dirP.listFiles(new FilenameFilter(){
+    			    public boolean accept(File dir, String name) {
+    			        return (name.endsWith(".xlsx"));
+    			    }
+    			});
+    		}
+    		if((Mlist == null || Mlist.length == 0) && (Plist == null || Plist.length == 0))
+    			return "Error: no files with the .xlsx extension found in the main directory or the RealShopping directory.";//TODO new langpack
+    		if(Mlist != null && Mlist.length > 0){
+    			out += ChatColor.DARK_GREEN + " In the main directory:";//TODO new langpack
+    			for(int i = 1;i <= Mlist.length;i++){
+    				out += " " + ChatColor.LIGHT_PURPLE + i + ")" + ChatColor.WHITE + Mlist[i-1].getName() + " ";
+    	    	}
+    		}
+    		if(Plist != null && Plist.length > 0){
+    			out += ChatColor.DARK_GREEN + " In the RealShopping directory:";//TODO new langpack
+    			for(int i = 1;i <= Plist.length;i++){
+        			out += " " + ChatColor.LIGHT_PURPLE + i + ")" + ChatColor.WHITE + Plist[i-1].getName() + " ";
+        		}
+    		}
+    		out += "Type the corresponding number to choose a file or " + ChatColor.LIGHT_PURPLE + "c" + ChatColor.WHITE + " to cancel.";//TODO new langpack
+    		context.setSessionData("mlist", Mlist);
+    		context.setSessionData("plist", Plist);
+    		return out;
+    	} else {
+    		int num = -1;
+    		try{
+    			num = Integer.parseInt((String)context.getSessionData("data"));
+    		} catch (NumberFormatException e){
+    			return "Error: Input is not a valid integer.";//TODO new langpack
+    		}
+    		if(num > 0){
+        		if(context.getSessionData("mlist") != null && context.getSessionData("plist") != null){
+        			File[] Mlist = (File[]) context.getSessionData("mlist");
+        			File[] Plist = (File[]) context.getSessionData("plist");
+        			if(num <= Mlist.length + Plist.length){
+        				String chosen = "";
+        				if(num <= Mlist.length) chosen = Mlist[num - 1].getPath();
+        				else chosen = Plist[num -1 - Mlist.length].getPath();
+        				context.setSessionData("file", chosen);
+    				    context.setSessionData("final", true);
+        				return ChatColor.GREEN + "Chosen file " + chosen + ". "
+        						+ ChatColor.WHITE + "Type " + ChatColor.LIGHT_PURPLE + "u" + ChatColor.WHITE + " to import from the user defined prices, or " +
+        						ChatColor.LIGHT_PURPLE + "p" + ChatColor.WHITE + " to import from the proposition prices.";//TODO new langpack
+        			} else return "Wrong file chosen";//TODO new langpack
+        		}	
+    		}
+    	}
+        return "Error #1201";
+    }
+ 
+    @Override
+    protected Prompt acceptValidatedInput(ConversationContext context, String in) {
+    	if(context.getSessionData("final") != null && context.getSessionData("final").equals(true)){
+    		context.setSessionData("data", in);
+    		return new FinalPrompt();
+    	}
+        if(in.equalsIgnoreCase("stop") || in.equalsIgnoreCase("end") || in.equalsIgnoreCase("quit") || in.equalsIgnoreCase("c"))
+            return END_OF_CONVERSATION;
+        else context.setSessionData("data", in);
+        return this;
+    }
+ 
+    @Override
+    protected boolean isInputValid(ConversationContext context, String in) {
+    	if(in.equalsIgnoreCase("stop") || in.equalsIgnoreCase("end") || in.equalsIgnoreCase("quit") || in.equalsIgnoreCase("c")) return true;
+
+    	if(context.getSessionData("final") != null && context.getSessionData("final").equals(true)){
+    		if(!in.equalsIgnoreCase("p") && !in.equalsIgnoreCase("u")) return false;
+    	}
+    	
+        return true;
+    }
+ 
+}
+
+class FinalPrompt extends MessagePrompt{
+
+	public String getPromptText(ConversationContext context) {
+    	String in = (String) context.getSessionData("data");
+		if(in.equalsIgnoreCase("u") || in.equalsIgnoreCase("p")){
+			if(context.getSessionData("file") != null){
+	    		try {
+				    InputStream inp = new FileInputStream((String)context.getSessionData("file"));
+				    XSSFWorkbook wb;
+
+					wb = new XSSFWorkbook(inp);
+				    XSSFSheet sheet = wb.getSheetAt(in.equalsIgnoreCase("u")?0:2);
+				    Iterator rowIter = sheet.rowIterator();
+				    
+				    RealShopping.defPrices.clear();
+				    wb.getCreationHelper().createFormulaEvaluator().evaluateAll();
+				    while(rowIter.hasNext()){
+				    	try {
+					    	XSSFRow row = (XSSFRow) rowIter.next();
+					    	XSSFCell firstC = row.getCell(0);
+					    	int ID = -1;
+					    	byte data = 0;
+					    	if(firstC != null) if (firstC.getCellType() == XSSFCell.CELL_TYPE_NUMERIC){//ID's are numeric
+					    		ID = (int) firstC.getNumericCellValue();
+					    	} else if (firstC.getCellType() == XSSFCell.CELL_TYPE_STRING){
+					    		ID = Integer.parseInt(firstC.getStringCellValue().split(";")[0]);
+					    		data = Byte.parseByte(firstC.getStringCellValue().split(";")[1]);
+					    	}
+					    	if(ID >= 0){
+					    		XSSFCell costC = row.getCell(4);
+					    		try{
+					    			if(costC != null && costC.getCellType() == XSSFCell.CELL_TYPE_FORMULA){
+					    				Price p;
+					    				if(data == 0) p = new Price(ID);
+					    				else p = new Price(ID, data);
+	            						DecimalFormat twoDForm = new DecimalFormat("#.##");
+	            						float cost = Float.valueOf(twoDForm.format((float) costC.getNumericCellValue()).replaceAll(",", "."));
+					    				Float[] f = new Float[]{cost};
+					    				RealShopping.defPrices.put(p, f);
+					    			}
+					    		} catch (Exception e) {}
+					    	}
+				    	} catch (NumberFormatException e){}//Skip
+			        }
+					if(RealShopping.defPrices.size() > 0) return ChatColor.GREEN + "Imported " + RealShopping.defPrices.size() + " prices as default.";//TODO new langpack
+					else return "error #1202";
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+    	}
+		return null;
+	}
+
+	@Override
+	protected Prompt getNextPrompt(ConversationContext context) {
+		return END_OF_CONVERSATION;
+	}
+	
 }
 
 class blockUpdater extends Thread {
@@ -1156,7 +1361,7 @@ class messageSender extends Thread {
 				Thread.sleep(millis);
 				player.sendMessage(s);
 			}
-			player.sendMessage(ChatColor.GREEN + "Done!");
+			player.sendMessage(ChatColor.GREEN + "Done!");//TODO new langpack
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}

@@ -369,7 +369,7 @@ final class PItem{
 	}
 	
 	public ItemStack toItemStack(){
-		ItemStack tempIS = new ItemStack(type, 0, (short) 0, data);
+		ItemStack tempIS = new ItemStack(type, 0, (short) 0, data);//TODO depracted
 		tempIS.addEnchantments(enchantments);
 		return tempIS;
 	}
@@ -466,9 +466,9 @@ class ShippedPackage{
 	
 	@Override
 	public String toString(){
-		String s = "Shipped Package sent " + new Date(dateSent) + " from "
+		String s = "Shipped Package sent " + new Date(dateSent) + " from "//TODO langpack
 				+ locationSent.getBlockX() + "," + locationSent.getBlockY() + "," + locationSent.getBlockZ()
-				+ " in world " + locationSent.getWorld() + " with ";
+				+ " in world " + locationSent.getWorld() + " with ";//TODO langpack
 		for(ItemStack iS:contents){
 			if(iS != null) s += iS + ", ";
 		}
@@ -486,7 +486,7 @@ class Utils{
 		return uno;
 	}
 	
-    public static String formatNum(int value) {
+    public static String formatNum(int value) {//TODO langpack klura ut något
         int hunRem = value % 100;
         int tenRem = value % 10;
         if (hunRem - tenRem == 10) {

@@ -26,6 +26,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.bukkit.ChatColor;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -165,6 +166,110 @@ public class LangPack {
 	public static String INWORLD;
 	public static String YOUCANTUSETHATITEMINSTORE;
 	public static String THISCHESTISPROTECTED;
+	
+	/* New strings from this point on 
+	
+	"Sell to store"
+	"Enabled notifications for "
+	"Disabled notifications for "
+	"Usage:"
+	"Notifications are "
+	"on"
+	"off"
+	"(Skip the %-sign)"
+	"You won't get notified when your store "
+	" becomes more or less popular."
+	"You will get notified when your store "
+	" becomes at least "
+	" places more or less popular."
+	" where TRESHOLD is how many places your store needs to lose or gain for you to be notified."
+	"And the prices will be lowered or increased by "
+	" where TRESHOLD is how many places your store needs to lose or gain for you to be for the changes to happen, "
+	"and PERCENT is how many percent the prices will be lowered or increased."
+	"Automatic store management is not enabled on this server."
+	"Set minimal and maximal prices for "
+	"Old prices replaced with prices from "
+	"Old prices replaced with the lowest price of every item in every store."
+	"Cleared all prices for "
+	"Store "?
+	" has a minimal price of "
+	" and a maximal price of "
+	" for "?
+	" doesn't have a minimal and maximal price for "
+	"Cleared minimal and maximal prices for "
+	" didn't have a minimal and maximal price for "
+	"Set minimal and maximal prices for "
+	" is not a proper argument."
+	"You can't name a store that."
+	"Highlighted 5 locations for 5 seconds."
+	"No locations to highlight."
+	"This chest is already protected."
+	"Made chest protected."
+	"Unprotected chest."
+	"This chest isn't protected."
+	"Reading description..."
+	"This is the newest version."
+	"Successful update!"
+	"Update failed."
+	"You aren't permitted to use this command."
+	"You can't collect your items to a chest in a store you do not own."
+	"You can't collect your items to a chest on this server."
+	"the last hour"
+	" yesterday"
+	"last week"
+	"last month"
+	"Your store "?
+	" is now the "
+	" since "
+	") provider of "
+	"Raised the price for "
+	"Lowered the price for "
+	" by "
+	" to "
+	" went from being the  "
+	" th provider of "
+	" to not selling any."
+	"Shipped Package sent "
+	" from "
+	" in world "
+	" with "
+	"You cannot drop items while in a store."
+	"You cannot empty buckets while in a store."
+	"You cannot craft items while in a store."
+	"Shopping carts are not enabled in this world."
+	"Shipping is not enabled on this server."
+	"You cannot open Ender Chests while in a store."
+	". Restart the server to load the new version."
+	" of RealShopping is available for download. Update for new features and/or bugfixes with the rsupdate command."
+	" of RealShopping is available for download. Update for new features and/or bugfixes. You can get information about the new version with 'rsupdate info'"
+	"RealShopping initialized"
+	"RealShopping disabled"
+	" bought stuff for "
+	" from your store "(from + your store?)
+	"Owner "
+	" can't afford to buy items from you for "
+	" withdrawn from your account."
+	"Filled chest with: "
+	"You can't afford to pay the delivery fee of "
+	"You can't collect your items to a chest in a store you do not own."
+	" uses left"
+	" owned by "
+	" Prices: "
+	"Use rsstores with only the name of the store as argument to get some information about the store. For help, type any of these arguments: "
+	remove dots..
+	". Sets if and for how much of the sell price your store will buy items from players. 0 is default and means selling to your store is disabled."
+	". Collects items that have been stolen from (and then returned to) or sold to your store. If using the -c flag the items will spawn in a chast which you are standing on. You can limit the number of items returned by writing an number."
+	". Banishes a player from your store forever. "
+	". Unbanishes a previously banned player. "
+	". Kicks a player out of your store. You can use the -o flag to kick an offline player but do ONLY use it if you're about to remove the store, as the player won't be teleported out."
+    ". Starts a sale on the all or given items. Also cancels the last sale. Write items in this format: "
+    " and separate multiple items with commas. The percent argument can be any integer between 1 and 99"
+    ". Ends all sales."
+    ". Sets if notifications are enabled or disabled for this store. Use without arguments to check current status."
+    ". Sets if this store should notify you about changes in how well this store sells compared to others."
+    							
+
+	*/
 	
 	public static void initialize(String lang){
 		THISCOMMANDCANNOTBEUSEDFROMCONSOLE = "This command cannot be used from console";
