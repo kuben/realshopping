@@ -166,110 +166,122 @@ public class LangPack {
 	public static String INWORLD;
 	public static String YOUCANTUSETHATITEMINSTORE;
 	public static String THISCHESTISPROTECTED;
+	//v0.43
+	public static String SELLTOSTORE;
+	public static String ENABLEDNOTIFICATIONSFOR;
+	public static String DISABLEDNOTIFICATIONSFOR;
+	public static String USAGE;
+	public static String NOTIFICATIONSARE;
+	public static String ON;
+	public static String OFF;
+	public static String SKIPPSIGN;
+	public static String YOUWONTGETNOTIFIEDWHENYOURSTORE;
+	public static String BECOMESMOREORLESSPOPULAR;
+	public static String YOUWILLGETNOTIFIEDWHENYOURSTORE;
+	public static String BECOMESATLEAST;
+	public static String PLACESMOREORLESSPOPULAR;
+	public static String WHERETRESHOLDIS_;
+	public static String ANDTHEPRICESWILLBE_;
+	public static String WHERETRESHOLDIS_CHANGES_;
+	public static String ANDPERCENTIS_;
+	public static String AI_ISNOTENABLED_;
+	public static String SETMINIMALANDMAXIMALPRICESFOR;
+	public static String OLDPRICESREPLACEDWITHPRICESFROM;
+	public static String OLDPRICESREPLACEDWITHTHELOWEST_;
+	public static String CLEAREDALLPRICESFOR;
+	public static String HASAMINIMALPRICEOF;
+	public static String ANDAMAXIMALPRICEOF;
+	public static String FOR;
+	public static String DOESNTHAVEAMINIMALANDMAXIMALPRICEFOR;
+	public static String CLEAREDMINIMALANDMAXIMALPRICESFOR;
+	public static String DIDNTHAVEAMINIMALANDMAXIMALPRICEFOR;
+	public static String ISNOTAPROPERARGUMENT;
+	public static String YOUCANTNAMEASTORETHAT;
+	public static String HIGHLIGHTED5LOCATIONSFOR5SECONDS;
+	public static String NOLOCATIONSTOHIGHLIGHT;
+	public static String THISCHESTISALREADYPROTECTED;
+	public static String MADECHESTPROTECTED;
+	public static String UNPROTECTEDCHEST;
+	public static String THISCHESTISNTPROTECTED;
+	public static String READINGDESCRIPTION;
+	public static String THISISTHENEWESTVERSION;
+	public static String SUCCESSFULUPDATE;
+	public static String UPDATEFAILED;
+	public static String YOUARENTPERMITTEDTOUSETHISCOMMAND;
+	public static String YOUCANTCOLLECT_YOUDONOTOWN;
+	public static String YOUCANTCOLLECT_SERVER;
+	public static String THELASTHOUR;
+	public static String YESTERDAY;
+	public static String LASTWEEK;
+	public static String LASTMONTH;
+	public static String YOURSTORE;
+	public static String ISNOWTHE;
+	public static String SINCE;
+	public static String PROVIDEROF;
+	public static String RAISEDTHEPRICEFOR;
+	public static String LOWEREDTHEPRICEFOR;
+	public static String BY;
+	public static String TO;
+	public static String WENTFROMBEINGTHE;
+	public static String THPROVIDEROF;
+	public static String TONOTSELLINGANY;
+	public static String SHIPPEDPACKAGESENT;
+	public static String WITH;
+	public static String YOUCANNOTDROPITEMS_;
+	public static String YOUCANNOTEMPTYBUCKETS_;
+	public static String YOUCANNOTCRAFTITEMS_;
+	public static String SHOPPINGCARTSARENOTENABLED_;
+	public static String SHIPPINGISNOTENABLED_;
+	public static String YOUCANNOTOPENENDERCHESTS_;
+	public static String RESTARTTHESERVER_VERSION;
+	public static String OFRE_UPDATECOMMAND;
+	public static String OFRE_UPDATEINFO;
+	public static String REALSHOPPINGINITIALIZED;
+	public static String REALSHOPPINGDISABLED;
+	public static String BOUGHTSTUFFFOR;
+	public static String FROMYOURSTORE;
+	public static String OWNER;
+	public static String CANTAFFORDTOBUYITEMSFROMYOUFOR;
+	public static String WITHDRAWNFROMYOURACCOUNT;
+	public static String YOUCANTAFFORDTOPAYTHEDELIVERYFEEOF;
+	public static String USESLEFT;
+	public static String PRICES;
+	public static String RSSTORESHELP;
+	public static String BUYFORHELP;
+	public static String COLLECTHELP;
+	public static String BANHELP;
+	public static String UNBANHELP;
+	public static String KICKHELP;
+	public static String STARTSALEHELP;
+	public static String STARTSALEHELP2;
+	public static String ENDSALEHELP;
+	public static String NOTIFICATIONSHELP;
+	public static String ONCHANGEHELP;
+	public static String SETDEFAULTPRICESFOR;
+	public static String THEREARENODEFAULTPRICES;
+	public static String QUITCONVERSATION;
+	public static String WHICHFILEDOYOUWANTTOIMPORT_;
+	public static String ERROR_NO_XLSX_;
+	public static String INTHEMAINDIRECTORY;
+	public static String INTHEREALSHOPPINGDIRECTORY;
+	public static String TYPETHECORRESPONDINGNUMBER_;
+	public static String TOCANCEL;
+	public static String ERROR_INPUTISNOTAVALIDINTEGER;
+	public static String CHOSENFILE;
+	public static String TYPE;
+	public static String TOIMPORT_USERDEFINED_;
+	public static String TOIMPORT_PROPOSITION_;
+	public static String WRONGFILECHOSEN;
+	public static String IMPORTED;
+	public static String PRICESASDEFAULT;
+	public static String ERRORCOULDNTIMPORTPRICES;
+	public static String DONE;
+	public static String REALSHOPPINGUPDATEDTO;
+	public static String X_ST;
+	public static String X_ND;
+	public static String X_RD;
+	public static String X_TH;
 	
-	/* New strings from this point on 
-	
-	"Sell to store"
-	"Enabled notifications for "
-	"Disabled notifications for "
-	"Usage:"
-	"Notifications are "
-	"on"
-	"off"
-	"(Skip the %-sign)"
-	"You won't get notified when your store "
-	" becomes more or less popular."
-	"You will get notified when your store "
-	" becomes at least "
-	" places more or less popular."
-	" where TRESHOLD is how many places your store needs to lose or gain for you to be notified."
-	"And the prices will be lowered or increased by "
-	" where TRESHOLD is how many places your store needs to lose or gain for you to be for the changes to happen, "
-	"and PERCENT is how many percent the prices will be lowered or increased."
-	"Automatic store management is not enabled on this server."
-	"Set minimal and maximal prices for "
-	"Old prices replaced with prices from "
-	"Old prices replaced with the lowest price of every item in every store."
-	"Cleared all prices for "
-	"Store "?
-	" has a minimal price of "
-	" and a maximal price of "
-	" for "?
-	" doesn't have a minimal and maximal price for "
-	"Cleared minimal and maximal prices for "
-	" didn't have a minimal and maximal price for "
-	"Set minimal and maximal prices for "
-	" is not a proper argument."
-	"You can't name a store that."
-	"Highlighted 5 locations for 5 seconds."
-	"No locations to highlight."
-	"This chest is already protected."
-	"Made chest protected."
-	"Unprotected chest."
-	"This chest isn't protected."
-	"Reading description..."
-	"This is the newest version."
-	"Successful update!"
-	"Update failed."
-	"You aren't permitted to use this command."
-	"You can't collect your items to a chest in a store you do not own."
-	"You can't collect your items to a chest on this server."
-	"the last hour"
-	" yesterday"
-	"last week"
-	"last month"
-	"Your store "?
-	" is now the "
-	" since "
-	") provider of "
-	"Raised the price for "
-	"Lowered the price for "
-	" by "
-	" to "
-	" went from being the  "
-	" th provider of "
-	" to not selling any."
-	"Shipped Package sent "
-	" from "
-	" in world "
-	" with "
-	"You cannot drop items while in a store."
-	"You cannot empty buckets while in a store."
-	"You cannot craft items while in a store."
-	"Shopping carts are not enabled in this world."
-	"Shipping is not enabled on this server."
-	"You cannot open Ender Chests while in a store."
-	". Restart the server to load the new version."
-	" of RealShopping is available for download. Update for new features and/or bugfixes with the rsupdate command."
-	" of RealShopping is available for download. Update for new features and/or bugfixes. You can get information about the new version with 'rsupdate info'"
-	"RealShopping initialized"
-	"RealShopping disabled"
-	" bought stuff for "
-	" from your store "(from + your store?)
-	"Owner "
-	" can't afford to buy items from you for "
-	" withdrawn from your account."
-	"Filled chest with: "
-	"You can't afford to pay the delivery fee of "
-	"You can't collect your items to a chest in a store you do not own."
-	" uses left"
-	" owned by "
-	" Prices: "
-	"Use rsstores with only the name of the store as argument to get some information about the store. For help, type any of these arguments: "
-	remove dots..
-	". Sets if and for how much of the sell price your store will buy items from players. 0 is default and means selling to your store is disabled."
-	". Collects items that have been stolen from (and then returned to) or sold to your store. If using the -c flag the items will spawn in a chast which you are standing on. You can limit the number of items returned by writing an number."
-	". Banishes a player from your store forever. "
-	". Unbanishes a previously banned player. "
-	". Kicks a player out of your store. You can use the -o flag to kick an offline player but do ONLY use it if you're about to remove the store, as the player won't be teleported out."
-    ". Starts a sale on the all or given items. Also cancels the last sale. Write items in this format: "
-    " and separate multiple items with commas. The percent argument can be any integer between 1 and 99"
-    ". Ends all sales."
-    ". Sets if notifications are enabled or disabled for this store. Use without arguments to check current status."
-    ". Sets if this store should notify you about changes in how well this store sells compared to others."
-    							
-
-	*/
 	
 	public static void initialize(String lang){
 		THISCOMMANDCANNOTBEUSEDFROMCONSOLE = "This command cannot be used from console";
@@ -403,6 +415,122 @@ public class LangPack {
 		ISNOTAVALIDARGUMENT = " is not a valid argument.";
 		YOUARENTALLOWEDTOTELEPORTTHERE = "You aren't allowed to teleport there!";
 		SELLINGTOSTORESISNOTENABLEDONTHISSERVER = "Selling to stores in not enabled on this server.";
+		//v0.43
+		SELLTOSTORE = "Sell to store";
+		ENABLEDNOTIFICATIONSFOR = "Enabled notifications for ";
+		DISABLEDNOTIFICATIONSFOR = "Disabled notifications for ";
+		USAGE = "Usage:";
+		NOTIFICATIONSARE = "Notifications are ";
+		ON = "on";
+		OFF = "off";
+		SKIPPSIGN = "(Skip the %-sign)";
+		YOUWONTGETNOTIFIEDWHENYOURSTORE = "You won't get notified when your store ";
+		BECOMESMOREORLESSPOPULAR = " becomes more or less popular.";
+		YOUWILLGETNOTIFIEDWHENYOURSTORE = "You will get notified when your store ";
+		BECOMESATLEAST = " becomes at least ";
+		PLACESMOREORLESSPOPULAR = " places more or less popular.";
+		WHERETRESHOLDIS_ = " where TRESHOLD is how many places your store needs to lose or gain for you to be notified.";
+		ANDTHEPRICESWILLBE_ = " And the prices will be lowered or increased by ";
+		WHERETRESHOLDIS_CHANGES_ = " where TRESHOLD is how many places your store needs to lose or gain for you to be for the changes to happen, ";
+		ANDPERCENTIS_ = "and PERCENT is how many percent the prices will be lowered or increased.";
+		AI_ISNOTENABLED_ = "Automatic store management is not enabled on this server.";
+		SETMINIMALANDMAXIMALPRICESFOR = "Set minimal and maximal prices for ";
+		OLDPRICESREPLACEDWITHPRICESFROM = "Old prices replaced with prices from ";
+		OLDPRICESREPLACEDWITHTHELOWEST_ = "Old prices replaced with the lowest price of every item in every store.";
+		CLEAREDALLPRICESFOR = "Cleared all prices for ";
+		HASAMINIMALPRICEOF = " has a minimal price of ";
+		ANDAMAXIMALPRICEOF = " and a maximal price of ";
+		FOR = " for ";
+		DOESNTHAVEAMINIMALANDMAXIMALPRICEFOR = " doesn't have a minimal and maximal price for ";
+		CLEAREDMINIMALANDMAXIMALPRICESFOR = "Cleared minimal and maximal prices for ";
+		DIDNTHAVEAMINIMALANDMAXIMALPRICEFOR = " didn't have a minimal and maximal price for ";
+		ISNOTAPROPERARGUMENT = " is not a proper argument.";
+		YOUCANTNAMEASTORETHAT = "You can't name a store that.";
+		HIGHLIGHTED5LOCATIONSFOR5SECONDS = "Highlighted 5 locations for 5 seconds.";
+		NOLOCATIONSTOHIGHLIGHT = "No locations to highlight.";
+		THISCHESTISALREADYPROTECTED = "This chest is already protected.";
+		MADECHESTPROTECTED = "Made chest protected.";
+		UNPROTECTEDCHEST = "Unprotected chest.";
+		THISCHESTISNTPROTECTED = "This chest isn't protected.";
+		READINGDESCRIPTION = "Reading description...";
+		THISISTHENEWESTVERSION = "This is the newest version.";
+		SUCCESSFULUPDATE = "Successful update!";
+		UPDATEFAILED = "Update failed.";
+		YOUARENTPERMITTEDTOUSETHISCOMMAND = "You aren't permitted to use this command.";
+		YOUCANTCOLLECT_YOUDONOTOWN = "You can't collect your items to a chest in a store you do not own.";
+		YOUCANTCOLLECT_SERVER = "You can't collect your items to a chest on this server.";
+		THELASTHOUR = "the last hour";
+		YESTERDAY = " yesterday";
+		LASTWEEK = "last week";
+		LASTMONTH = "last month";
+		YOURSTORE = "Your store ";
+		ISNOWTHE = " is now the ";
+		SINCE = " since ";
+		PROVIDEROF = ") provider of ";
+		RAISEDTHEPRICEFOR = "Raised the price for ";
+		LOWEREDTHEPRICEFOR = "Lowered the price for ";
+		BY = " by ";
+		TO = " to ";
+		WENTFROMBEINGTHE = " went from being the  ";
+		THPROVIDEROF = " th provider of ";
+		TONOTSELLINGANY = " to not selling any.";
+		SHIPPEDPACKAGESENT = "Shipped Package sent ";
+		WITH = " with ";
+		YOUCANNOTDROPITEMS_ = "You cannot drop items while in a store.";
+		YOUCANNOTEMPTYBUCKETS_ = "You cannot empty buckets while in a store.";
+		YOUCANNOTCRAFTITEMS_ = "You cannot craft items while in a store.";
+		SHOPPINGCARTSARENOTENABLED_ = "Shopping carts are not enabled in this world.";
+		SHIPPINGISNOTENABLED_ = "Shipping is not enabled on this server.";
+		YOUCANNOTOPENENDERCHESTS_ = "You cannot open Ender Chests while in a store.";
+		RESTARTTHESERVER_VERSION = ". Restart the server to load the new version.";
+		OFRE_UPDATECOMMAND = " of RealShopping is available for download. Update for new features and/or bugfixes with the rsupdate command.";
+		OFRE_UPDATEINFO = " of RealShopping is available for download. Update for new features and/or bugfixes. You can get information about the new version with 'rsupdate info'";
+		REALSHOPPINGINITIALIZED = "RealShopping initialized";
+		REALSHOPPINGDISABLED = "RealShopping disabled";
+		BOUGHTSTUFFFOR = " bought stuff for ";
+		FROMYOURSTORE = " from your store ";
+		OWNER = "Owner ";
+		CANTAFFORDTOBUYITEMSFROMYOUFOR = " can't afford to buy items from you for ";
+		WITHDRAWNFROMYOURACCOUNT = " withdrawn from your account.";
+		YOUCANTAFFORDTOPAYTHEDELIVERYFEEOF = "You can't afford to pay the delivery fee of ";
+		USESLEFT = " uses left";
+		PRICES = " Prices: ";
+		RSSTORESHELP = "Use rsstores with only the name of the store as argument to get some information about the store. For help, type any of these arguments: ";
+		BUYFORHELP = ". Sets if and for how much of the sell price your store will buy items from players. 0 is default and means selling to your store is disabled.";
+		COLLECTHELP = ". Collects items that have been stolen from (and then returned to) or sold to your store. If using the -c flag the items will spawn in a chast which you are standing on. You can limit the number of items returned by writing an number.";
+		BANHELP = ". Banishes a player from your store forever. ";
+		UNBANHELP = ". Unbanishes a previously banned player. ";
+		KICKHELP = ". Kicks a player out of your store. You can use the -o flag to kick an offline player but do ONLY use it if you're about to remove the store, as the player won't be teleported out.";
+		STARTSALEHELP = ". Starts a sale on the all or given items. Also cancels the last sale. Write items in this format: ";
+		STARTSALEHELP2 = " and separate multiple items with commas. The percent argument can be any integer between 1 and 99";
+		ENDSALEHELP = ". Ends all sales.";
+		NOTIFICATIONSHELP = ". Sets if notifications are enabled or disabled for this store. Use without arguments to check current status.";
+		ONCHANGEHELP = ". Sets if this store should notify you about changes in how well this store sells compared to others.";
+		SETDEFAULTPRICESFOR = "Set default prices for ";
+		THEREARENODEFAULTPRICES = "There are no default prices. Use /rsimport to import them, or see the plugin page for help.";
+		QUITCONVERSATION = "Quit conversation.";
+		WHICHFILEDOYOUWANTTOIMPORT_ = "Which file do you want to import a set of default prices from?";  
+		ERROR_NO_XLSX_ = "Error: no files with the .xlsx extension found in the main directory or the RealShopping directory.";
+		INTHEMAINDIRECTORY = " In the main directory:";
+		INTHEREALSHOPPINGDIRECTORY = " In the RealShopping directory:";
+		TYPETHECORRESPONDINGNUMBER_ = "Type the corresponding number to choose a file or ";
+		TOCANCEL = " to cancel.";
+		ERROR_INPUTISNOTAVALIDINTEGER = "Error: Input is not a valid integer.";
+		CHOSENFILE = "Chosen file ";
+		TYPE = "Type ";
+		TOIMPORT_USERDEFINED_ = " to import from the user defined prices, or ";
+		TOIMPORT_PROPOSITION_ = " to import from the proposition prices.";
+		WRONGFILECHOSEN = "Wrong file chosen";
+		IMPORTED = "Imported ";
+		PRICESASDEFAULT = " prices as default.";
+		ERRORCOULDNTIMPORTPRICES = "Error: Couldn't import prices.";
+		DONE = "Done!";
+		REALSHOPPINGUPDATEDTO = "RealShopping updated to ";
+		X_ST = "st";
+		X_ND = "nd";
+		X_RD = "rd";
+		X_TH = "th";
+		
 		UNIT = "$";
 		
 		File f = new File(RealShopping.mandir + "langpacks/" + lang + ".xml");
@@ -549,7 +677,121 @@ public class LangPack {
 					else if(name.equals("INWORLD")) INWORLD = el.getAttribute("value");
 					else if(name.equals("YOUCANTUSETHATITEMINSTORE")) YOUCANTUSETHATITEMINSTORE = el.getAttribute("value");
 					else if(name.equals("THISCHESTISPROTECTED")) THISCHESTISPROTECTED = el.getAttribute("value");
-					
+					//v0.43
+					else if(name.equals("SELLTOSTORE")) SELLTOSTORE = el.getAttribute("value");
+					else if(name.equals("ENABLEDNOTIFICATIONSFOR")) ENABLEDNOTIFICATIONSFOR = el.getAttribute("value");
+					else if(name.equals("DISABLEDNOTIFICATIONSFOR")) DISABLEDNOTIFICATIONSFOR = el.getAttribute("value");
+					else if(name.equals("USAGE")) USAGE = el.getAttribute("value");
+					else if(name.equals("NOTIFICATIONSARE")) NOTIFICATIONSARE = el.getAttribute("value");
+					else if(name.equals("ON")) ON = el.getAttribute("value");
+					else if(name.equals("OFF")) OFF = el.getAttribute("value");
+					else if(name.equals("SKIPPSIGN")) SKIPPSIGN = el.getAttribute("value");
+					else if(name.equals("YOUWONTGETNOTIFIEDWHENYOURSTORE")) YOUWONTGETNOTIFIEDWHENYOURSTORE = el.getAttribute("value");
+					else if(name.equals("BECOMESMOREORLESSPOPULAR")) BECOMESMOREORLESSPOPULAR = el.getAttribute("value");
+					else if(name.equals("YOUWILLGETNOTIFIEDWHENYOURSTORE")) YOUWILLGETNOTIFIEDWHENYOURSTORE = el.getAttribute("value");
+					else if(name.equals("BECOMESATLEAST")) BECOMESATLEAST = el.getAttribute("value");
+					else if(name.equals("PLACESMOREORLESSPOPULAR")) PLACESMOREORLESSPOPULAR = el.getAttribute("value");
+					else if(name.equals("WHERETRESHOLDIS_")) WHERETRESHOLDIS_ = el.getAttribute("value");
+					else if(name.equals("ANDTHEPRICESWILLBE_")) ANDTHEPRICESWILLBE_ = el.getAttribute("value");
+					else if(name.equals("WHERETRESHOLDIS_CHANGES_")) WHERETRESHOLDIS_CHANGES_ = el.getAttribute("value");
+					else if(name.equals("ANDPERCENTIS_")) ANDPERCENTIS_ = el.getAttribute("value");
+					else if(name.equals("AI_ISNOTENABLED_")) AI_ISNOTENABLED_ = el.getAttribute("value");
+					else if(name.equals("SETMINIMALANDMAXIMALPRICESFOR")) SETMINIMALANDMAXIMALPRICESFOR = el.getAttribute("value");
+					else if(name.equals("OLDPRICESREPLACEDWITHPRICESFROM")) OLDPRICESREPLACEDWITHPRICESFROM = el.getAttribute("value");
+					else if(name.equals("OLDPRICESREPLACEDWITHTHELOWEST_")) OLDPRICESREPLACEDWITHTHELOWEST_ = el.getAttribute("value");
+					else if(name.equals("CLEAREDALLPRICESFOR")) CLEAREDALLPRICESFOR = el.getAttribute("value");
+					else if(name.equals("HASAMINIMALPRICEOF")) HASAMINIMALPRICEOF = el.getAttribute("value");
+					else if(name.equals("ANDAMAXIMALPRICEOF")) ANDAMAXIMALPRICEOF = el.getAttribute("value");
+					else if(name.equals("FOR")) FOR = el.getAttribute("value");
+					else if(name.equals("DOESNTHAVEAMINIMALANDMAXIMALPRICEFOR")) DOESNTHAVEAMINIMALANDMAXIMALPRICEFOR = el.getAttribute("value");
+					else if(name.equals("CLEAREDMINIMALANDMAXIMALPRICESFOR")) CLEAREDMINIMALANDMAXIMALPRICESFOR = el.getAttribute("value");
+					else if(name.equals("DIDNTHAVEAMINIMALANDMAXIMALPRICEFOR")) DIDNTHAVEAMINIMALANDMAXIMALPRICEFOR = el.getAttribute("value");
+					else if(name.equals("ISNOTAPROPERARGUMENT")) ISNOTAPROPERARGUMENT = el.getAttribute("value");
+					else if(name.equals("YOUCANTNAMEASTORETHAT")) YOUCANTNAMEASTORETHAT = el.getAttribute("value");
+					else if(name.equals("HIGHLIGHTED5LOCATIONSFOR5SECONDS")) HIGHLIGHTED5LOCATIONSFOR5SECONDS = el.getAttribute("value");
+					else if(name.equals("NOLOCATIONSTOHIGHLIGHT")) NOLOCATIONSTOHIGHLIGHT = el.getAttribute("value");
+					else if(name.equals("THISCHESTISALREADYPROTECTED")) THISCHESTISALREADYPROTECTED = el.getAttribute("value");
+					else if(name.equals("MADECHESTPROTECTED")) MADECHESTPROTECTED = el.getAttribute("value");
+					else if(name.equals("UNPROTECTEDCHEST")) UNPROTECTEDCHEST = el.getAttribute("value");
+					else if(name.equals("THISCHESTISNTPROTECTED")) THISCHESTISNTPROTECTED = el.getAttribute("value");
+					else if(name.equals("READINGDESCRIPTION")) READINGDESCRIPTION = el.getAttribute("value");
+					else if(name.equals("THISISTHENEWESTVERSION")) THISISTHENEWESTVERSION = el.getAttribute("value");
+					else if(name.equals("SUCCESSFULUPDATE")) SUCCESSFULUPDATE = el.getAttribute("value");
+					else if(name.equals("UPDATEFAILED")) UPDATEFAILED = el.getAttribute("value");
+					else if(name.equals("YOUARENTPERMITTEDTOUSETHISCOMMAND")) YOUARENTPERMITTEDTOUSETHISCOMMAND = el.getAttribute("value");
+					else if(name.equals("YOUCANTCOLLECT_YOUDONOTOWN")) YOUCANTCOLLECT_YOUDONOTOWN = el.getAttribute("value");
+					else if(name.equals("YOUCANTCOLLECT_SERVER")) YOUCANTCOLLECT_SERVER = el.getAttribute("value");
+					else if(name.equals("THELASTHOUR")) THELASTHOUR = el.getAttribute("value");
+					else if(name.equals("YESTERDAY")) YESTERDAY = el.getAttribute("value");
+					else if(name.equals("LASTWEEK")) LASTWEEK = el.getAttribute("value");
+					else if(name.equals("LASTMONTH")) LASTMONTH = el.getAttribute("value");
+					else if(name.equals("YOURSTORE")) YOURSTORE = el.getAttribute("value");
+					else if(name.equals("ISNOWTHE")) ISNOWTHE = el.getAttribute("value");
+					else if(name.equals("SINCE")) SINCE = el.getAttribute("value");
+					else if(name.equals("PROVIDEROF")) PROVIDEROF = el.getAttribute("value");
+					else if(name.equals("RAISEDTHEPRICEFOR")) RAISEDTHEPRICEFOR = el.getAttribute("value");
+					else if(name.equals("LOWEREDTHEPRICEFOR")) LOWEREDTHEPRICEFOR = el.getAttribute("value");
+					else if(name.equals("BY")) BY = el.getAttribute("value");
+					else if(name.equals("TO")) TO = el.getAttribute("value");
+					else if(name.equals("WENTFROMBEINGTHE")) WENTFROMBEINGTHE = el.getAttribute("value");
+					else if(name.equals("THPROVIDEROF")) THPROVIDEROF = el.getAttribute("value");
+					else if(name.equals("TONOTSELLINGANY")) TONOTSELLINGANY = el.getAttribute("value");
+					else if(name.equals("SHIPPEDPACKAGESENT")) SHIPPEDPACKAGESENT = el.getAttribute("value");
+					else if(name.equals("WITH")) WITH = el.getAttribute("value");
+					else if(name.equals("YOUCANNOTDROPITEMS_")) YOUCANNOTDROPITEMS_ = el.getAttribute("value");
+					else if(name.equals("YOUCANNOTEMPTYBUCKETS_")) YOUCANNOTEMPTYBUCKETS_ = el.getAttribute("value");
+					else if(name.equals("YOUCANNOTCRAFTITEMS_")) YOUCANNOTCRAFTITEMS_ = el.getAttribute("value");
+					else if(name.equals("SHOPPINGCARTSARENOTENABLED_")) SHOPPINGCARTSARENOTENABLED_ = el.getAttribute("value");
+					else if(name.equals("SHIPPINGISNOTENABLED_")) SHIPPINGISNOTENABLED_ = el.getAttribute("value");
+					else if(name.equals("YOUCANNOTOPENENDERCHESTS_")) YOUCANNOTOPENENDERCHESTS_ = el.getAttribute("value");
+					else if(name.equals("RESTARTTHESERVER_VERSION")) RESTARTTHESERVER_VERSION = el.getAttribute("value");
+					else if(name.equals("OFRE_UPDATECOMMAND")) OFRE_UPDATECOMMAND = el.getAttribute("value");
+					else if(name.equals("OFRE_UPDATEINFO")) OFRE_UPDATEINFO = el.getAttribute("value");
+					else if(name.equals("REALSHOPPINGINITIALIZED")) REALSHOPPINGINITIALIZED = el.getAttribute("value");
+					else if(name.equals("REALSHOPPINGDISABLED")) REALSHOPPINGDISABLED = el.getAttribute("value");
+					else if(name.equals("BOUGHTSTUFFFOR")) BOUGHTSTUFFFOR = el.getAttribute("value");
+					else if(name.equals("FROMYOURSTORE")) FROMYOURSTORE = el.getAttribute("value");
+					else if(name.equals("OWNER")) OWNER = el.getAttribute("value");
+					else if(name.equals("CANTAFFORDTOBUYITEMSFROMYOUFOR")) CANTAFFORDTOBUYITEMSFROMYOUFOR = el.getAttribute("value");
+					else if(name.equals("WITHDRAWNFROMYOURACCOUNT")) WITHDRAWNFROMYOURACCOUNT = el.getAttribute("value");
+					else if(name.equals("YOUCANTAFFORDTOPAYTHEDELIVERYFEEOF")) YOUCANTAFFORDTOPAYTHEDELIVERYFEEOF = el.getAttribute("value");
+					else if(name.equals("USESLEFT")) USESLEFT = el.getAttribute("value");
+					else if(name.equals("PRICES")) PRICES = el.getAttribute("value");
+					else if(name.equals("RSSTORESHELP")) RSSTORESHELP = el.getAttribute("value");
+					else if(name.equals("BUYFORHELP")) BUYFORHELP = el.getAttribute("value");
+					else if(name.equals("COLLECTHELP")) COLLECTHELP = el.getAttribute("value");
+					else if(name.equals("BANHELP")) BANHELP = el.getAttribute("value");
+					else if(name.equals("UNBANHELP")) UNBANHELP = el.getAttribute("value");
+					else if(name.equals("KICKHELP")) KICKHELP = el.getAttribute("value");
+					else if(name.equals("STARTSALEHELP")) STARTSALEHELP = el.getAttribute("value");
+					else if(name.equals("STARTSALEHELP2")) STARTSALEHELP2 = el.getAttribute("value");
+					else if(name.equals("ENDSALEHELP")) ENDSALEHELP = el.getAttribute("value");
+					else if(name.equals("NOTIFICATIONSHELP")) NOTIFICATIONSHELP = el.getAttribute("value");
+					else if(name.equals("ONCHANGEHELP")) ONCHANGEHELP = el.getAttribute("value");
+					else if(name.equals("SETDEFAULTPRICESFOR")) SETDEFAULTPRICESFOR = el.getAttribute("value");
+					else if(name.equals("THEREARENODEFAULTPRICES")) THEREARENODEFAULTPRICES = el.getAttribute("value");
+					else if(name.equals("QUITCONVERSATION")) QUITCONVERSATION = el.getAttribute("value");
+					else if(name.equals("WHICHFILEDOYOUWANTTOIMPORT_")) WHICHFILEDOYOUWANTTOIMPORT_ = el.getAttribute("value");
+					else if(name.equals("ERROR_NO_XLSX_")) ERROR_NO_XLSX_ = el.getAttribute("value");
+					else if(name.equals("INTHEMAINDIRECTORY")) INTHEMAINDIRECTORY = el.getAttribute("value");
+					else if(name.equals("INTHEREALSHOPPINGDIRECTORY")) INTHEREALSHOPPINGDIRECTORY = el.getAttribute("value");
+					else if(name.equals("TYPETHECORRESPONDINGNUMBER_")) TYPETHECORRESPONDINGNUMBER_ = el.getAttribute("value");
+					else if(name.equals("TOCANCEL")) TOCANCEL = el.getAttribute("value");
+					else if(name.equals("ERROR_INPUTISNOTAVALIDINTEGER")) ERROR_INPUTISNOTAVALIDINTEGER = el.getAttribute("value");
+					else if(name.equals("CHOSENFILE")) CHOSENFILE = el.getAttribute("value");
+					else if(name.equals("TYPE")) TYPE = el.getAttribute("value");
+					else if(name.equals("TOIMPORT_USERDEFINED_")) TOIMPORT_USERDEFINED_ = el.getAttribute("value");
+					else if(name.equals("TOIMPORT_PROPOSITION_")) TOIMPORT_PROPOSITION_ = el.getAttribute("value");
+					else if(name.equals("WRONGFILECHOSEN")) WRONGFILECHOSEN = el.getAttribute("value");
+					else if(name.equals("IMPORTED")) IMPORTED = el.getAttribute("value");
+					else if(name.equals("PRICESASDEFAULT")) PRICESASDEFAULT = el.getAttribute("value");
+					else if(name.equals("ERRORCOULDNTIMPORTPRICES")) ERRORCOULDNTIMPORTPRICES = el.getAttribute("value");
+					else if(name.equals("DONE")) DONE = el.getAttribute("value");
+					else if(name.equals("REALSHOPPINGUPDATEDTO")) REALSHOPPINGUPDATEDTO = el.getAttribute("value");
+					else if(name.equals("X_ST")) X_ST = el.getAttribute("value");
+					else if(name.equals("X_ND")) X_ND = el.getAttribute("value");
+					else if(name.equals("X_RD")) X_RD = el.getAttribute("value");
+					else if(name.equals("X_TH")) X_TH = el.getAttribute("value");
 				}
 				RealShopping.log.info("Loaded " + lang + " language pack.");
 			}

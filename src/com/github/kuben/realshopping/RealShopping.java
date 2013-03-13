@@ -23,7 +23,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
@@ -79,7 +78,7 @@ public class RealShopping extends JavaPlugin {
 	StatUpdater statUpdater;
 	Notificator notificatorThread;
 	
-	public static Map<Price, Float[]> defPrices = new HashMap<Price, Float[]>();
+	public static Map<Price, Float[]> defPrices;
 	public static ConversationFactory convF;
 	
 	public static Map<String, RSPlayerInventory> PInvMap;
@@ -117,7 +116,8 @@ public class RealShopping extends JavaPlugin {
 	 */
 	
     public void onEnable(){
-    	convF = new ConversationFactory(this);//TODO fix proper loading
+    	convF = new ConversationFactory(this);
+    	defPrices = new HashMap<Price, Float[]>();
     	mandir = "plugins/RealShopping/";
     	updater = null;
     	statUpdater = null;
@@ -179,16 +179,16 @@ public class RealShopping extends JavaPlugin {
 			if(Config.getAutoUpdate() == 5){
 				updater = new Updater(this, "realshopping", this.getFile(), Updater.UpdateType.DEFAULT, true);
 				if(updater.getResult() == Updater.UpdateResult.SUCCESS){
-					log.info("RealShopping updated to " + updater.getLatestVersionString() + ". Restart the server to load the new version.");//TODO langpack
+					log.info(LangPack.REALSHOPPINGUPDATEDTO + updater.getLatestVersionString() + LangPack.RESTARTTHESERVER_VERSION);
 				}
 			} else {
 				updater = new Updater(this, "realshopping", this.getFile(), Updater.UpdateType.NO_DOWNLOAD, true);
 				if(updater.getResult() == Updater.UpdateResult.UPDATE_AVAILABLE){
 	    			if(Config.getAutoUpdate() > 2)
-    						newUpdate = updater.getLatestVersionString() + " of RealShopping is available for download. Update for new features and/or bugfixes with the rsupdate command.";//TODO langpack
+    						newUpdate = updater.getLatestVersionString() + LangPack.OFRE_UPDATECOMMAND;
 	    			else
     						newUpdate = updater.getLatestVersionString()
-    						+ " of RealShopping is available for download. Update for new features and/or bugfixes. You can get information about the new version with 'rsupdate info'";//TODO langpack
+    						+ LangPack.OFRE_UPDATEINFO;
 	    			log.info(newUpdate);
 				}
 			}
@@ -264,7 +264,7 @@ public class RealShopping extends JavaPlugin {
 				}
 				fstream.close();
 				br.close();
-				if(version < 0.42)//Needs updating
+				if(version < 0.43)//Needs updating
 					updateEntrancesDb();
 			}
 		} catch (FileNotFoundException e) {
@@ -311,7 +311,7 @@ public class RealShopping extends JavaPlugin {
 			statUpdater = new StatUpdater();
 			statUpdater.start();
 		}
-		log.info("RealShopping initialized");//TODO langpack
+		log.info(LangPack.REALSHOPPINGINITIALIZED);
     }
      
     public void onDisable(){
@@ -391,7 +391,7 @@ public class RealShopping extends JavaPlugin {
 		} catch (TransformerException e) {
 			e.printStackTrace();
 		}
-    	log.info("RealShopping disabled");//TODO langpack
+    	log.info(LangPack.REALSHOPPINGDISABLED);
     }
 
     void updateEntrancesDb(){
@@ -401,7 +401,7 @@ public class RealShopping extends JavaPlugin {
 			if(!f.exists()) f.createNewFile();
 			PrintWriter pW = new PrintWriter(f);
 			Object[] keys = shopMap.keySet().toArray();
-			pW.println("Shops database for RealShopping v0.42");
+			pW.println("Shops database for RealShopping v0.43");
 			for(int i = 0;i<keys.length;i++){
 				Shop tempShop = shopMap.get(keys[i]);
 				pW.print(keys[i] + ":" + tempShop.getWorld() + ":" + tempShop.getOwner() + ":" + tempShop.getBuyFor()
@@ -694,7 +694,7 @@ public class RealShopping extends JavaPlugin {
     	String header;
 
     	try {
-    		String vStr = "v0.42";
+    		String vStr = "v0.43";
     		if(what == 0){
     			keys = PInvMap.keySet().toArray();//Player Map
     			f = new File(mandir + "inventories.db");
@@ -899,7 +899,7 @@ public class RealShopping extends JavaPlugin {
 					if(!shopMap.get(shopName).getOwner().equals("@admin")){
 						RSEconomy.deposit(shopMap.get(shopName).getOwner(), toPay);//If player owned store, pay player
 						if(shopMap.get(shopName).allowsNotifications()) sendNotification(shopMap.get(shopName).getOwner(), player.getName()
-								+ " bought stuff for " + toPay + LangPack.UNIT + " from your store " + shopName + ".");//TODO langpack
+								+ LangPack.BOUGHTSTUFFFOR + toPay + LangPack.UNIT + LangPack.FROMYOURSTORE + shopName + ".");
 					}
 					Map<PItem, Integer> bought = PInvMap.get(player.getName()).getBought(invs);
 					
@@ -976,13 +976,13 @@ public class RealShopping extends JavaPlugin {
     				RSEconomy.deposit(p.getName(), payment);
     				RSEconomy.withdraw(own, payment);//If player owned store, withdraw from owner
     				p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sold.size() + LangPack.ITEMSFOR + payment + unit);
-					if(tempShop.allowsNotifications()) sendNotification(own, "Your store " + tempShop.getName() + " bought stuff for " + payment + LangPack.UNIT + " from " + p.getName());//TODO langpack
+					if(tempShop.allowsNotifications()) sendNotification(own, LangPack.YOURSTORE + tempShop.getName() + LangPack.BOUGHTSTUFFFOR + payment + LangPack.UNIT + LangPack.FROM + p.getName());
 					for(ItemStack key:sold){
 						if(Config.isEnableAI()) tempShop.addStat(new Statistic(new PItem(key), key.getAmount(), false));
 						PInvMap.get(p.getName()).removeItem(key, key.getAmount());
 					}
     				cont = true;
-    			} else p.sendMessage(ChatColor.RED + "Owner " + own + " can't afford to buy items from you for " + payment + unit);//TODO langpack
+    			} else p.sendMessage(ChatColor.RED + LangPack.OWNER + own + LangPack.CANTAFFORDTOBUYITEMSFROMYOUFOR + payment + unit);
     		} else {
 				RSEconomy.deposit(p.getName(), payment);
 				p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sold.size() + LangPack.ITEMSFOR + payment + unit);
@@ -1220,19 +1220,19 @@ public class RealShopping extends JavaPlugin {
 						
 						if(cont){
 							RSEconomy.withdraw(p.getName(), cost);
-							p.sendMessage(ChatColor.GREEN + "" + cost + LangPack.UNIT + " withdrawn from your account.");//TODO langpack
+							p.sendMessage(ChatColor.GREEN + "" + cost + LangPack.UNIT + LangPack.WITHDRAWNFROMYOURACCOUNT);
 							ItemStack[] contents = ((Chest)l.getBlock().getState()).getBlockInventory().getContents();
 							for(ItemStack tempIS:contents) if(tempIS != null) p.getWorld().dropItem(p.getLocation(), tempIS);
 							
 							((Chest)l.getBlock().getState()).getBlockInventory().setContents(shippedToCollect.get(p.getName()).get(id - 1).getContents());
-							p.sendMessage(ChatColor.GREEN + "Filled chest with: ");//TODO langpack
+							p.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH);
 							p.sendMessage(formatItemStackToMess(shippedToCollect.get(p.getName()).get(id - 1).getContents()));
 							shippedToCollect.get(p.getName()).remove(id - 1);
 							return true;
-						} else p.sendMessage(ChatColor.RED + "You can't afford to pay the delivery fee of " + cost);//TODO langpack
+						} else p.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOPAYTHEDELIVERYFEEOF + cost);
 					} else p.sendMessage(ChatColor.RED + LangPack.THERESNOPACKAGEWITHTHEID + id);
 				} else p.sendMessage(ChatColor.RED + LangPack.YOUHAVENTGOTANYITEMSWAITINGTOBEDELIVERED);
-			} else p.sendMessage(ChatColor.RED + "You can't collect your items to a chest in a store you do not own.");//TODO langpack
+			} else p.sendMessage(ChatColor.RED + LangPack.YOUCANTCOLLECT_YOUDONOTOWN);
 		} else p.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUARESTANDINGONISNTACHEST);
 		return false;
 	}
@@ -1249,8 +1249,8 @@ public class RealShopping extends JavaPlugin {
 		for(ItemStack iS:IS){
 			if(iS != null){
 				String tempStr = "[" + ChatColor.RED + iS.getType() + (maxDurMap.containsKey(iS.getTypeId())
-								?ChatColor.RESET + " with " + ChatColor.GREEN + (maxDurMap.get(iS.getTypeId()) - iS.getDurability())//TODO langpack
-								+ ChatColor.RESET +  "/" + ChatColor.GREEN + maxDurMap.get(iS.getTypeId()) + ChatColor.RESET + " uses left" + "] "//TODO langpack
+								?ChatColor.RESET + LangPack.WITH + ChatColor.GREEN + (maxDurMap.get(iS.getTypeId()) - iS.getDurability())
+								+ ChatColor.RESET +  "/" + ChatColor.GREEN + maxDurMap.get(iS.getTypeId()) + ChatColor.RESET + LangPack.USESLEFT + "] "
 								:ChatColor.RESET + " * " + ChatColor.GREEN + iS.getAmount() + ChatColor.RESET + "] " + ChatColor.BLACK + ChatColor.RESET);
 				if((str + tempStr).substring(newLn).length() > 96){//84+12
 					str += "\n";

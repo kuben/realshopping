@@ -315,7 +315,7 @@ public class Shop {//TODO add load/save interface
 	
 	@Override
 	public String toString(){
-		return "Shop " + name + (owner.equals("@admin")?"":" owned by " + owner) + " Prices: " + prices.toString();//TODO langpack
+		return "Shop " + name + (owner.equals("@admin")?"":" owned by " + owner) + " Prices: " + prices.toString();
 	}
 
 	@SuppressWarnings("static-access")

@@ -75,21 +75,21 @@ public class RSPlayerListener implements Listener {
 	public void onDropItem(PlayerDropItemEvent event){
 		if(Config.isDisableDrop()) if(RealShopping.PInvMap.containsKey(event.getPlayer().getName())){
 			event.setCancelled(true);
-			event.getPlayer().sendMessage(ChatColor.RED + "You cannot drop items while in a store.");//TODO langpack
+			event.getPlayer().sendMessage(ChatColor.RED + LangPack.YOUCANNOTDROPITEMS_);
 		}
 	}
 	@EventHandler (priority = EventPriority.HIGH)
 	public void onBucketEvent(PlayerBucketEmptyEvent event){
 		if(Config.isDisableBuckets()) if(RealShopping.PInvMap.containsKey(event.getPlayer().getName())){
 			event.setCancelled(true);
-			event.getPlayer().sendMessage(ChatColor.RED + "You cannot empty buckets while in a store.");//TODO langpack
+			event.getPlayer().sendMessage(ChatColor.RED + LangPack.YOUCANNOTEMPTYBUCKETS_);
 		}
 	}
 	@EventHandler (priority = EventPriority.HIGH)
 	public void onPreCraft(CraftItemEvent event){
 		if(Config.isDisableCrafting()) if(RealShopping.PInvMap.containsKey(event.getWhoClicked().getName())){
 			event.setCancelled(true);
-			Bukkit.getPlayerExact(event.getWhoClicked().getName()).sendMessage(ChatColor.RED + "You cannot craft items while in a store.");//TODO langpack
+			Bukkit.getPlayerExact(event.getWhoClicked().getName()).sendMessage(ChatColor.RED + LangPack.YOUCANNOTCRAFTITEMS_);
 		}
 	}
 	
@@ -108,7 +108,7 @@ public class RSPlayerListener implements Listener {
 							if(player.hasPermission("realshopping.rsenter")) event.setCancelled(RealShopping.enter(player, false));
 						}
 					}
-				} else if(b.getType() == Material.WOODEN_DOOR || b.getType() == Material.IRON_DOOR_BLOCK) {//and if doors are enabled
+				} else if(Config.isEnableDoors() && (b.getType() == Material.WOODEN_DOOR || b.getType() == Material.IRON_DOOR_BLOCK)) {
 					if(event.getAction() == Action.RIGHT_CLICK_BLOCK && !canOpenDoor(b.getLocation())){
 						event.setCancelled(true);
 						if(RealShopping.PInvMap.containsKey(player.getName())){
@@ -162,14 +162,14 @@ public class RSPlayerListener implements Listener {
 													sM = (StorageMinecart)o;
 											if(sM != null)
 												event.setCancelled(RealShopping.shipCartContents(sM, player));
-										} else player.sendMessage(ChatColor.RED + "Shopping carts are not enabled in this world.");//TODO langpack
-									} else player.sendMessage(ChatColor.RED + "Shipping is not enabled on this server.");//TODO langpack
+										} else player.sendMessage(ChatColor.RED + LangPack.SHOPPINGCARTSARENOTENABLED_);
+									} else player.sendMessage(ChatColor.RED + LangPack.SHIPPINGISNOTENABLED_);
 								}
 							}
 						} else if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.BROWN_MUSHROOM){
 							if(Config.isEnableSelling()){
 								if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
-				    				Inventory tempInv = Bukkit.createInventory(null, 36, "Sell to store");//TODO langpack
+				    				Inventory tempInv = Bukkit.createInventory(null, 36, LangPack.SELLTOSTORE);
 									player.openInventory(tempInv);
 								}
 							} else player.sendMessage(ChatColor.RED + LangPack.SELLINGTOSTORESISNOTENABLEDONTHISSERVER);
@@ -187,9 +187,10 @@ public class RSPlayerListener implements Listener {
 			}
 	}
 
+	@EventHandler (priority = EventPriority.HIGH)
 	public void onInteractEntity(PlayerInteractEntityEvent event){
 		Player player = event.getPlayer();
-		
+
 		if(event.getRightClicked() instanceof ItemFrame) {
 			if(RealShopping.PInvMap.containsKey(player.getName())
 				&& player.hasPermission("realshopping.rsprices")
@@ -205,7 +206,7 @@ public class RSPlayerListener implements Listener {
     public void onInventoryOpenEvent(InventoryOpenEvent event){
     	if(Config.isDisableEnderchests()) if(RealShopping.PInvMap.containsKey(event.getPlayer().getName()) && event.getInventory().getTitle() == "container.enderchest"){//TODO find better way
 			event.setCancelled(true);
-			((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + "You cannot open Ender Chests while in a store.");//TODO langpack
+			((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + LangPack.YOUCANNOTOPENENDERCHESTS_);
     		return;
     	}
         if (event.getInventory().getHolder() instanceof Chest){
@@ -230,7 +231,7 @@ public class RSPlayerListener implements Listener {
 	
     @EventHandler(priority = EventPriority.HIGH)
     public void onInventoryCloseEvent(InventoryCloseEvent event){
-        if (event.getInventory().getTitle().equals("Sell to store")){//TODO langpack
+        if (event.getInventory().getTitle().equals(LangPack.SELLTOSTORE)){//TODO consider if this is a good idea
         	if(RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//If player is in store
         		RealShopping.sellToStore((Player) event.getPlayer(), event.getInventory().getContents());
         	}
@@ -250,7 +251,7 @@ public class RSPlayerListener implements Listener {
 	@EventHandler (priority = EventPriority.HIGH)
 	public void onRedstoneBlockEvent(BlockRedstoneEvent event){
 		Block b = event.getBlock();
-		if(b.getType() == Material.WOODEN_DOOR || b.getType() == Material.IRON_DOOR_BLOCK){//First config thing
+		if(Config.isEnableDoors() && (b.getType() == Material.WOODEN_DOOR || b.getType() == Material.IRON_DOOR_BLOCK)){
 			if(!canOpenDoor(b.getLocation())){
 				event.setNewCurrent(0);
 			}

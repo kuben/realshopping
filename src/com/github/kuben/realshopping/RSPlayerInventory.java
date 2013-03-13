@@ -466,9 +466,9 @@ class ShippedPackage{
 	
 	@Override
 	public String toString(){
-		String s = "Shipped Package sent " + new Date(dateSent) + " from "//TODO langpack
+		String s = LangPack.SHIPPEDPACKAGESENT + new Date(dateSent) + LangPack.FROM
 				+ locationSent.getBlockX() + "," + locationSent.getBlockY() + "," + locationSent.getBlockZ()
-				+ " in world " + locationSent.getWorld() + " with ";//TODO langpack
+				+ LangPack.INWORLD + locationSent.getWorld() + LangPack.WITH;
 		for(ItemStack iS:contents){
 			if(iS != null) s += iS + ", ";
 		}
@@ -486,21 +486,21 @@ class Utils{
 		return uno;
 	}
 	
-    public static String formatNum(int value) {//TODO langpack klura ut något
+    public static String formatNum(int value) {
         int hunRem = value % 100;
         int tenRem = value % 10;
         if (hunRem - tenRem == 10) {
-                return value + "th";
+                return value + LangPack.X_TH;
         }
         switch (tenRem) {
         case 1:
-                return value + "st";
+                return value + LangPack.X_ST;
         case 2:
-                return value + "nd";
+                return value + LangPack.X_ND;
         case 3:
-                return value + "rd";
+                return value + LangPack.X_RD;
         default:
-                return value + "th";
+                return value + LangPack.X_TH;
         }
 }
 

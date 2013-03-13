@@ -1,0 +1,2 @@
+Manifest-Version: 1.0
+Class-Path: lib/poi.jar lib/poi-ooxml.jar lib/poi-ooxml-schemas.jar lib/xmlbeans.jar lib/dom4j.jar

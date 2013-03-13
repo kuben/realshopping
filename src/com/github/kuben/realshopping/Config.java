@@ -44,6 +44,7 @@ public class Config {
 	private static boolean autoprotect;
 	private static boolean allowFillChests;
 	private static boolean enableAI;
+	private static boolean enableDoors;
 	private static boolean disableDrop;
 	private static boolean disableCrafting;
 	private static boolean disableBuckets;
@@ -88,6 +89,7 @@ public class Config {
 	private static int DISABLECRAFTING;
 	private static int DISABLEBUCKETS;
 	private static int DISABLEENDERCHESTS;
+	private static int ENABLEDOORS;
 	
 	private static int MAX;
 	private static final String HEADER = "Properties file for RealShopping v";
@@ -121,6 +123,7 @@ public class Config {
         punishment = "none";
         pstorecreate = 0.0;
         enableSelling = true;
+        enableDoors = false;
         disableDrop = true;
         disableCrafting = true;
         disableBuckets = true;
@@ -184,6 +187,9 @@ public class Config {
 				} if(notInConfig >= ENABLESELLING){
 					pW.println("enable-selling-to-stores:"+enableSelling);
 					notInConfig -= ENABLESELLING;
+				} if(notInConfig >= ENABLEDOORS){
+					pW.println("enable-doors-as-entrances:"+enableDoors);
+					notInConfig -= ENABLEDOORS;
 				} if(notInConfig >= DISABLEDROP){
 					pW.println("disable-item-drop:"+disableDrop+"  #Disable dropping items in stores.");
 					notInConfig -= DISABLEDROP;
@@ -246,7 +252,7 @@ public class Config {
 					int i = 0;
 					while ((s = br.readLine()) != null){
 						if(i==0){
-							pW.println("Properties file for RealShopping v0.42");
+							pW.println("Properties file for RealShopping v0.43");
 							pW.println("## Do not edit above line!");
 							pW.println("## The rest of a line after a hashtag is a comment and will be ignored.");
 							pW.println("#");
@@ -306,11 +312,12 @@ public class Config {
         disableCrafting = false;
         disableBuckets = false;
         disableEnderchests = false;
+        enableDoors = false;
 	}
 	
 	private static void initVals(){
 		int curVal = 2;
-		for(int i = 0;i < 22;i++){
+		for(int i = 0;i < 23;i++){
 			if(i == 0) CLEANSTATSOLD = curVal;
 			else if(i == 1) STATTIMESPAN = curVal;
 			else if(i == 2) UPDATEFREQ = curVal;
@@ -324,15 +331,16 @@ public class Config {
 			else if(i == 10) DISABLEBUCKETS = curVal;
 			else if(i == 11) DISABLECRAFTING = curVal;
 			else if(i == 12) DISABLEDROP = curVal;
-			else if(i == 13) ENABLESELLING = curVal;
-			else if(i == 14) PSTORECREATE = curVal;
-			else if(i == 15) DROPLOC = curVal;
-			else if(i == 16) HELLLOC = curVal;
-			else if(i == 17) JAILLOC = curVal;
-			else if(i == 18) KEEPSTOLEN = curVal;
-			else if(i == 19) PUNISHMENT = curVal;
-			else if(i == 20) LANGPACK = curVal;
-			else if(i == 21) AUTOUPDATE = curVal;
+			else if(i == 13) ENABLEDOORS = curVal;
+			else if(i == 14) ENABLESELLING = curVal;
+			else if(i == 15) PSTORECREATE = curVal;
+			else if(i == 16) DROPLOC = curVal;
+			else if(i == 17) HELLLOC = curVal;
+			else if(i == 18) JAILLOC = curVal;
+			else if(i == 19) KEEPSTOLEN = curVal;
+			else if(i == 20) PUNISHMENT = curVal;
+			else if(i == 21) LANGPACK = curVal;
+			else if(i == 22) AUTOUPDATE = curVal;
 			curVal *= 2;
 		}
 		MAX = curVal - 1;
@@ -354,7 +362,7 @@ public class Config {
 			String s = line.substring(foo, line.length()).split("#")[0].trim();
 			if(s.length() > HEADER.length() && s.substring(0, HEADER.length()).equals(HEADER)){//If header
 				version = Float.parseFloat(s.substring(HEADER.length()));
-				if(version == 0.42) return 1;
+				if(version == 0.43) return 1;
 			} else {
 				if(s.equals("debug")){
 					debug = true;
@@ -429,6 +437,9 @@ public class Config {
 				} else if(s.split(":")[0].equals("enable-selling-to-stores")){
 					enableSelling = Boolean.parseBoolean(s.split(":")[1]);
 					return ENABLESELLING;
+				} else if(s.split(":")[0].equals("enable-doors-as-entrances")){
+					enableDoors = Boolean.parseBoolean(s.split(":")[1]);
+					return ENABLEDOORS;
 				} else if(s.split(":")[0].equals("disable-item-drop")){
 					disableDrop = Boolean.parseBoolean(s.split(":")[1]);
 					return DISABLEDROP;
@@ -524,6 +535,7 @@ public class Config {
 	public static boolean isEnableSelling() { return enableSelling; }
 	public static boolean isAutoprotect() { return autoprotect; }
 	public static boolean isAllowFillChests() { return allowFillChests; }
+	public static boolean isEnableDoors() { return enableDoors; }
 	public static boolean isEnableAI() { return enableAI; }
 	public static boolean isDisableDrop() { return disableDrop; }
 	public static boolean isDisableCrafting() { return disableCrafting; }

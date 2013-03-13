@@ -109,7 +109,7 @@ public class RSEconomy {
     				fstream.close();
     				br.close();
     			}
-    			//f.delete();TODO uncomment
+    			f.delete();
     		} catch (Exception e){
 				e.printStackTrace();
     			RealShopping.log.info("Failed while reading econ.db");
@@ -217,15 +217,15 @@ class StatUpdater extends Thread {
 								if(provMap.get(s).containsKey(i)){
 									int diff = oldProvMap.get(s).get(i) - provMap.get(s).get(i);
 									String sinceStr;
-									if(Config.getStatTimespan() == 3600) sinceStr =  "the last hour";//TODO langpack
-									else if(Config.getStatTimespan() == 86400) sinceStr =  " yesterday";//TODO langpack
-									else if(Config.getStatTimespan() == 604800) sinceStr =  "last week";//TODO langpack
-									else if(Config.getStatTimespan() == 2592000) sinceStr =  "last month";//TODO langpack
+									if(Config.getStatTimespan() == 3600) sinceStr =  LangPack.THELASTHOUR;
+									else if(Config.getStatTimespan() == 86400) sinceStr =  LangPack.YESTERDAY;
+									else if(Config.getStatTimespan() == 604800) sinceStr =  LangPack.LASTWEEK;
+									else if(Config.getStatTimespan() == 2592000) sinceStr =  LangPack.LASTMONTH;
 									else sinceStr = new Date(Config.getStatTimespan()).toString();
-									if(diff >= tempShop.getChangeTreshold()) RealShopping.sendNotification(tempShop.getOwner(), "Your store " + s + " is now the "//TODO langpack
-									+ Utils.formatNum(provMap.get(s).get(i)) + " (" + ChatColor.GREEN + "+" + diff + ChatColor.RESET + " since " + sinceStr +") provider of " + Material.getMaterial(i));//TODO langpack
-									else if(diff <= tempShop.getChangeTreshold()*-1) RealShopping.sendNotification(tempShop.getOwner(), "Your store " + s + " is now the "//TODO langpack
-									+ Utils.formatNum(provMap.get(s).get(i)) + " (" + ChatColor.RED + diff + ChatColor.RESET + " since " + sinceStr +") provider of " + Material.getMaterial(i));//TODO langpack
+									if(diff >= tempShop.getChangeTreshold()) RealShopping.sendNotification(tempShop.getOwner(), LangPack.YOURSTORE + s + LangPack.ISNOWTHE
+									+ Utils.formatNum(provMap.get(s).get(i)) + " (" + ChatColor.GREEN + "+" + diff + ChatColor.RESET + LangPack.SINCE+ sinceStr +LangPack.PROVIDEROF + Material.getMaterial(i));
+									else if(diff <= tempShop.getChangeTreshold()*-1) RealShopping.sendNotification(tempShop.getOwner(), LangPack.YOURSTORE + s + LangPack.ISNOWTHE
+									+ Utils.formatNum(provMap.get(s).get(i)) + " (" + ChatColor.RED + diff + ChatColor.RESET + LangPack.SINCE + sinceStr +LangPack.PROVIDEROF + Material.getMaterial(i));
 									if(tempShop.getNotifyChanges() == 2 && diff != 0){
 										if(tempShop.hasPrice(new Price(i))){
 											int tempPrice = (int) (tempShop.getPrice(new Price(i)) * 100);
@@ -237,16 +237,16 @@ class StatUpdater extends Thread {
 											}
 											if(newPrice != tempPrice){
 												tempShop.setPrice(new Price(i), newPrice);
-												if(diff >= tempShop.getChangeTreshold()) RealShopping.sendNotification(tempShop.getOwner(), "Raised the price for " + Material.getMaterial(i) + " by "//TODO langpack
-													+ tempShop.getChangePercent() + "%" +" to "+ newPrice);
-												else if(diff <= tempShop.getChangeTreshold()*-1) RealShopping.sendNotification(tempShop.getOwner(), "Lowered the price for " + Material.getMaterial(i) + " by "//TODO langpack
-													+ tempShop.getChangePercent() + "% to "+ newPrice);	
+												if(diff >= tempShop.getChangeTreshold()) RealShopping.sendNotification(tempShop.getOwner(), LangPack.RAISEDTHEPRICEFOR+ Material.getMaterial(i) + LangPack.BY
+													+ tempShop.getChangePercent() + "%" +LangPack.TO + newPrice);
+												else if(diff <= tempShop.getChangeTreshold()*-1) RealShopping.sendNotification(tempShop.getOwner(), LangPack.LOWEREDTHEPRICEFOR + Material.getMaterial(i) + LangPack.BY
+													+ tempShop.getChangePercent() + "%" + LangPack.TO + newPrice);	
 											}
 										}
 									}
 								} else {
-									RealShopping.sendNotification(tempShop.getOwner(), "Your store " + s + " went from being the  " + oldProvMap.get(s).get(i)//TODO langpack
-											+ " th provider of " + Material.getMaterial(i) + " to not selling any.");//TODO langpack
+									RealShopping.sendNotification(tempShop.getOwner(), LangPack.YOURSTORE + s + LangPack.WENTFROMBEINGTHE + oldProvMap.get(s).get(i)
+											+ LangPack.THPROVIDEROF + Material.getMaterial(i) + LangPack.TONOTSELLINGANY);
 								}
 							}
 						}

@@ -1,9 +1,10 @@
-Changes since v0.41
+Changes since v0.42
 
-* Fixed collect command
-* Disabled using, dropping, and crafting items in stores.
-* Disabled opening Ender Chests in stores
-* Fixed a bug with selling to stores.
+* Added /rsimport. Used for importing prices from an Excel sheet. Still a lot left to improve..
+* Added /rssetprices defaults [STORE]. Related to the above point
+* Updated Language Pack.
+* Right-clicking an item frame with paper in (while in a store) displays the prices.
+* You can now use doors as entrances in stores (although glass is safer).
 
 New in config:
-* disable-item-drop, disable-crafting, disable-buckets, and disable-ender-chests. Disables doing stuff in stores.
+* enable-doors-as-entrances : If the mod should let you use a door instead of glass blocks/panes as an entrance/exit.
