@@ -132,7 +132,6 @@
 	<ISNOTAVALIDARGUMENT value=" is not a valid argument."/>
 	<YOUARENTALLOWEDTOTELEPORTTHERE value="You aren't allowed to teleport there!"/>
 	<SELLINGTOSTORESISNOTENABLEDONTHISSERVER value="Selling to stores in not enabled on this server."/>
-	<//v0.43
 	<SELLTOSTORE value="Sell to store"/>
 	<ENABLEDNOTIFICATIONSFOR value="Enabled notifications for "/>
 	<DISABLEDNOTIFICATIONSFOR value="Disabled notifications for "/>
