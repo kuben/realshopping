@@ -45,7 +45,7 @@ commands:
       permission-message: You don't have permission to use this command
    rssetchests:
       description: Manage self-refilling chests.
-      usage: /rssetchests create|del|additems|delitems [ITEMID[:DATA][,ITEMID[:DATA][,ITEMID[:DATA]...]]]
+      usage: /rssetchests create|del|additems|delitems [ITEMID[:DATA[:AMOUNT]][,ITEMID[:DATA[:AMOUNT]]][...]]
       permission: realshopping.rssetchests
       permission-message: You don't have permission to use this command
    rssetstores:

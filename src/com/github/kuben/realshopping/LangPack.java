@@ -281,7 +281,13 @@ public class LangPack {
 	public static String X_ND;
 	public static String X_RD;
 	public static String X_TH;
-	
+	//v0.50
+	public static String YOUWILLBENOTIFIEDIF;
+	public static String LOSESGAINS;
+	public static String PLACES;
+	public static String THEPRICEWILLBELOWEREDINCREASED_;
+	public static String PCNTIF;
+	public static String WONTNOTIFY_;
 	
 	public static void initialize(String lang){
 		THISCOMMANDCANNOTBEUSEDFROMCONSOLE = "This command cannot be used from console";
@@ -530,10 +536,17 @@ public class LangPack {
 		X_ND = "nd";
 		X_RD = "rd";
 		X_TH = "th";
+		//v0.50
+		YOUWILLBENOTIFIEDIF = "You will be notified if ";
+		LOSESGAINS = " loses/gains ";
+		PLACES = " place(s).";
+		THEPRICEWILLBELOWEREDINCREASED_ = "The price will be lowered/increased by ";
+		PCNTIF = "% if ";
+		WONTNOTIFY_ = " won't notify you about changes.";
 		
 		UNIT = "$";
 		
-		File f = new File(RealShopping.mandir + "langpacks/" + lang + ".xml");
+		File f = new File(RealShopping.MANDIR + "langpacks/" + lang + ".xml");
 		if(f.exists()) try {
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 			DocumentBuilder db = dbf.newDocumentBuilder();
@@ -792,6 +805,13 @@ public class LangPack {
 					else if(name.equals("X_ND")) X_ND = el.getAttribute("value");
 					else if(name.equals("X_RD")) X_RD = el.getAttribute("value");
 					else if(name.equals("X_TH")) X_TH = el.getAttribute("value");
+					//v0.50
+					else if(name.equals(YOUWILLBENOTIFIEDIF)) YOUWILLBENOTIFIEDIF = el.getAttribute("value");
+					else if(name.equals(LOSESGAINS)) LOSESGAINS = el.getAttribute("value");
+					else if(name.equals(PLACES)) PLACES = el.getAttribute("value");
+					else if(name.equals(THEPRICEWILLBELOWEREDINCREASED_)) THEPRICEWILLBELOWEREDINCREASED_ = el.getAttribute("value");
+					else if(name.equals(PCNTIF)) PCNTIF = el.getAttribute("value");
+					else if(name.equals(WONTNOTIFY_)) WONTNOTIFY_ = el.getAttribute("value");
 				}
 				RealShopping.log.info("Loaded " + lang + " language pack.");
 			}

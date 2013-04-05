@@ -138,12 +138,12 @@ public class Config {
         statTimespan = 604800;
         cleanStatsOld = 2592000;
         updateFreq = 3600;
-    	File f = new File(RealShopping.mandir);
+    	File f = new File(RealShopping.MANDIR);
     	if(!f.exists()) f.mkdir();
 		FileInputStream fstream;
 		BufferedReader br;
 		try {
-			f = new File(RealShopping.mandir + "realshopping.properties");
+			f = new File(RealShopping.MANDIR + "realshopping.properties");
 			int notInConfig = MAX;
 			if(f.exists()) {
 				fstream = new FileInputStream(f);
@@ -158,7 +158,7 @@ public class Config {
 			
 			if(!f.exists() || notInConfig > 0){
 				if(!f.exists()) f.createNewFile();
-				PrintWriter pW = new PrintWriter(new BufferedWriter(new FileWriter(RealShopping.mandir + "realshopping.properties", true)));
+				PrintWriter pW = new PrintWriter(new BufferedWriter(new FileWriter(RealShopping.MANDIR + "realshopping.properties", true)));
 				
 				if(notInConfig >= AUTOUPDATE){
 						pW.println("enable-automatic-updates:"+getAutoUpdateStr(autoUpdate)+"  #Can be false, check-console, check, ask-console, ask, or true");
@@ -244,7 +244,7 @@ public class Config {
 				if(notInConfig >= 1){//Read the file all over again, and save every line as reading
 					fstream = new FileInputStream(f);
 					br = new BufferedReader(new InputStreamReader(fstream));
-					File tempF = new File(RealShopping.mandir + "tempproperties");
+					File tempF = new File(RealShopping.MANDIR + "tempproperties");
 					tempF.createNewFile();
 					pW = new PrintWriter(tempF);
 					String s;
@@ -506,7 +506,7 @@ public class Config {
 		return 0;
 	}
 	
-	static String getAutoUpdateStr(byte au){
+	public static String getAutoUpdateStr(byte au){
 		if(au == 5) return "true";//Download the new version as soon as there is one. Prints info in console
 		else if(au == 4) return "ask";//Check for updates, alert all with rsupdate permission/OP. Update with rsupdate
 		else if(au == 3) return "ask-console";//Check for updates, alert in console and be able to update via console with rsupdate
@@ -515,7 +515,7 @@ public class Config {
 		else return "false";//No automatic updates at all
 	}
 	
-	static String getTimeString(int t){
+	public static String getTimeString(int t){
 		if(t == 3600) return "hour";
 		else if(t == 86400) return "day";
 		else if(t == 604800) return "week";

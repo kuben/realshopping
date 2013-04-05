@@ -97,7 +97,7 @@ public class RSEconomy {
     		FileInputStream fstream;
     		BufferedReader br;
     		try {
-    			f = new File(RealShopping.mandir + "econ.db");
+    			f = new File(RealShopping.MANDIR + "econ.db");
     			if(f.exists()){
     				fstream = new FileInputStream(f);
     				br = new BufferedReader(new InputStreamReader(fstream));
@@ -121,7 +121,7 @@ public class RSEconomy {
     public static void export(){
     	if(econ == null && !accounts.isEmpty()){
         	String[] keys = accounts.keySet().toArray(new String[0]);
-        	File f = new File(RealShopping.mandir + "econ.db");
+        	File f = new File(RealShopping.MANDIR + "econ.db");
         	
 			if(!f.exists())
 				try {

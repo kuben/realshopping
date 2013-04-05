@@ -196,7 +196,7 @@ public class RSPlayerListener implements Listener {
 				&& player.hasPermission("realshopping.rsprices")
 				&& ((ItemFrame)event.getRightClicked()).getItem().getType() == Material.PAPER){
 					event.setCancelled(true);
-					RSCommandExecutor.prices(player, 0, RealShopping.PInvMap.get(player.getName()).getStore(), true);//TODO false?
+					RealShopping.prices(player, 0, RealShopping.PInvMap.get(player.getName()).getStore());
 				}
 					
 		}
