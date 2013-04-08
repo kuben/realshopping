@@ -20,16 +20,17 @@ public abstract class RSCommand {
 	protected abstract boolean execute();
 	
 	public boolean exec(){
-		if(help()) return true;
+		Boolean res = help();
+		if(res != null) return res;
 		return execute();
 	}
 	
-	protected boolean help(){//TODO make Boolean and return null. Maybe
+	protected Boolean help(){//Returns if null if help was not asked for
 		//Check if help was asked for
 		if(args.length > 0 && args[0].equalsIgnoreCase("help")){
 			sender.sendMessage(ChatColor.RED + "No help documentation for this command.");//LANG
-			return true;
+			return false;
 		}
-		return false;
+		return null;
 	}
 }

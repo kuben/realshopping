@@ -1,10 +1,5 @@
-Changes since v0.42
+Changes since v0.43
 
-* Added /rsimport. Used for importing prices from an Excel sheet. Still a lot left to improve..
-* Added /rssetprices defaults [STORE]. Related to the above point
-* Updated Language Pack.
-* Right-clicking an item frame with paper in (while in a store) displays the prices.
-* You can now use doors as entrances in stores (although glass is safer).
-
-New in config:
-* enable-doors-as-entrances : If the mod should let you use a door instead of glass blocks/panes as an entrance/exit.
+I'm releasing this version just to add one function which I think is needed. 
+Now stores will buy and sell partly-broken tools with a discount equal to 
+the durability percentage.

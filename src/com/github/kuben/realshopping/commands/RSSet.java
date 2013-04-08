@@ -4,9 +4,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 
-import com.github.kuben.realshopping.Config;
 import com.github.kuben.realshopping.LangPack;
-import com.github.kuben.realshopping.RSEconomy;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
 
@@ -55,7 +53,7 @@ class RSSet extends RSPlayerCommand {
 				return true;
 			} else player.sendMessage(ChatColor.RED + args[1] + LangPack.WASNTFOUND);
 		}
-		return true;
+		return false;
 	}
 
 }

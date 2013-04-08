@@ -6,12 +6,9 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 
-import com.github.kuben.realshopping.Config;
 import com.github.kuben.realshopping.LangPack;
-import com.github.kuben.realshopping.RSEconomy;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.ShippedPackage;
-import com.github.kuben.realshopping.Shop;
 
 class RSShipped extends RSPlayerCommand {
 

@@ -1,18 +1,10 @@
 package com.github.kuben.realshopping.commands;
 
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Chest;
-import org.bukkit.block.DoubleChest;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import com.github.kuben.realshopping.Config;
 import com.github.kuben.realshopping.LangPack;
-import com.github.kuben.realshopping.RSEconomy;
 import com.github.kuben.realshopping.RealShopping;
-import com.github.kuben.realshopping.Shop;
 
 class RSUnjail extends RSCommand {
 

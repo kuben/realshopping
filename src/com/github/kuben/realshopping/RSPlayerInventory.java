@@ -19,13 +19,11 @@
 
 package com.github.kuben.realshopping;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -93,12 +91,12 @@ public class RSPlayerInventory {
 		return hasPaid;
     }
     
-    public float toPay(){
+    public int toPay(){
     	return toPay(null);
     }
     
-    public float toPay(Inventory[] invs){
-    	float toPay = 0;
+    public int toPay(Inventory[] invs){
+    	int toPay = 0;
     	Shop tempShop = RealShopping.shopMap.get(store);
 		if(tempShop.hasPrices()){//If shop has prices
 			Map<PItem, Integer> newInv = invToPInv();
@@ -118,16 +116,14 @@ public class RSPlayerInventory {
 				PItem key = (PItem) keys[i];
 				if(tempShop.hasPrice(new Price(key.type)) || tempShop.hasPrice(new Price(key.type, key.data))) {//Something in inventory has a price
 					int amount = newInv.get(keys[i]);
-					float cost = -1;
+					int cost = -1;
 					if(tempShop.hasPrice(new Price(key.type))) cost = tempShop.getPrice(new Price(key.type));
 					if(tempShop.hasPrice(new Price(key.type, key.data))) cost = tempShop.getPrice(new Price(key.type, key.data));
 					if(tempShop.hasSale(new Price(key.type)) || tempShop.hasSale(new Price(key.type, key.data))){//There is a sale on that item.
 						int pcnt = -1;
 						if(tempShop.hasSale(new Price(key.type))) pcnt = 100 - tempShop.getSale(new Price(key.type));
 						if(tempShop.hasSale(new Price(key.type, key.data)))  pcnt = 100 - tempShop.getSale(new Price(key.type, key.data));
-						cost *= pcnt;
-						cost = Math.round(cost);
-						cost /= 100;
+						cost *= pcnt/100f;
 					}
 					if(items.containsKey(key)) {
 						int oldAm = items.get(key);
@@ -137,7 +133,7 @@ public class RSPlayerInventory {
 							amount -= oldAm;
 						}
 					}
-					toPay += cost * (RealShopping.maxDurMap.containsKey(key.type)?Math.ceil((double)amount / (double)RealShopping.maxDurMap.get(key.type)):amount);//Convert items durability to item amount
+					toPay += cost * (RealShopping.maxDurMap.containsKey(key.type)?(double)amount / (double)RealShopping.maxDurMap.get(key.type):amount);//Convert items durability to item amount
 				}
 			}
 		}
@@ -369,7 +365,7 @@ final class PItem{
 	}
 	
 	public ItemStack toItemStack(){
-		ItemStack tempIS = new MaterialData(type, data).toItemStack(0);//TODO test this zero stack size
+		ItemStack tempIS = new MaterialData(type, data).toItemStack(0);
 		tempIS.addEnchantments(enchantments);
 		return tempIS;
 	}

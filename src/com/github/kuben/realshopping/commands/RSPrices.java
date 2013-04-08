@@ -1,20 +1,9 @@
 package com.github.kuben.realshopping.commands;
 
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Chest;
-import org.bukkit.block.DoubleChest;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-
-import com.github.kuben.realshopping.Config;
 import com.github.kuben.realshopping.LangPack;
-import com.github.kuben.realshopping.Price;
-import com.github.kuben.realshopping.RSEconomy;
 import com.github.kuben.realshopping.RealShopping;
-import com.github.kuben.realshopping.Shop;
 
 class RSPrices extends RSCommand {
 	
@@ -30,7 +19,7 @@ class RSPrices extends RSCommand {
 					return RealShopping.prices(sender, 0, RealShopping.PInvMap.get(player.getName()).getStore());
 				} else {
 					sender.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
-					return true;
+					return false;
 				}
 			} else sender.sendMessage(ChatColor.RED + LangPack.YOUHAVETOUSETHESTOREARGUMENTWHENEXECUTINGTHISCOMMANDFROMCONSOLE);
 		} else if(args.length == 1){

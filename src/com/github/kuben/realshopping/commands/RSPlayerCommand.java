@@ -12,7 +12,8 @@ public abstract class RSPlayerCommand extends RSCommand {
 
 	@Override
 	public boolean exec(){
-		if(help()) return true;
+		Boolean res = help();
+		if(res != null) return res;
 		if(player != null){
 			return execute();
 		}

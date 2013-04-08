@@ -24,51 +24,27 @@ import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.DecimalFormat;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 
-import net.h31ix.updater.Updater;
-
-import org.apache.poi.poifs.filesystem.POIFSFileSystem;
-import org.apache.poi.ss.usermodel.FormulaEvaluator;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Chest;
-import org.bukkit.block.DoubleChest;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.conversations.Conversation;
-import org.bukkit.conversations.ConversationAbandonedEvent;
-import org.bukkit.conversations.ConversationAbandonedListener;
 import org.bukkit.conversations.ConversationContext;
-import org.bukkit.conversations.ConversationPrefix;
 import org.bukkit.conversations.MessagePrompt;
 import org.bukkit.conversations.Prompt;
 import org.bukkit.conversations.ValidatingPrompt;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-
-import com.github.kuben.realshopping.Config;
 import com.github.kuben.realshopping.LangPack;
 import com.github.kuben.realshopping.Price;
-import com.github.kuben.realshopping.RSEconomy;
 import com.github.kuben.realshopping.RealShopping;
-import com.github.kuben.realshopping.ShippedPackage;
-import com.github.kuben.realshopping.Shop;
-import com.github.kuben.realshopping.commands.*;
 
 public class RSCommandExecutor implements CommandExecutor {
 	RealShopping rs;
@@ -222,7 +198,7 @@ class FinalPrompt extends MessagePrompt{
 
 					wb = new XSSFWorkbook(inp);
 				    XSSFSheet sheet = wb.getSheetAt(in.equalsIgnoreCase("u")?0:2);
-				    Iterator rowIter = sheet.rowIterator();
+				    Iterator rowIter = sheet.rowIterator();//TODO use fix
 				    
 				    RealShopping.defPrices.clear();
 				    wb.getCreationHelper().createFormulaEvaluator().evaluateAll();
@@ -245,9 +221,8 @@ class FinalPrompt extends MessagePrompt{
 					    				Price p;
 					    				if(data == 0) p = new Price(ID);
 					    				else p = new Price(ID, data);
-	            						DecimalFormat twoDForm = new DecimalFormat("#.##");
-	            						float cost = Float.valueOf(twoDForm.format((float) costC.getNumericCellValue()).replaceAll(",", "."));
-					    				Float[] f = new Float[]{cost};
+	            						int cost = Float.valueOf(costC.getNumericCellValue() + "").intValue();
+					    				Integer[] f = new Integer[]{cost};
 					    				RealShopping.defPrices.put(p, f);
 					    			}
 					    		} catch (Exception e) {}

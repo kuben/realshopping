@@ -2,17 +2,13 @@ package com.github.kuben.realshopping.commands;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
-import org.bukkit.block.DoubleChest;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import com.github.kuben.realshopping.Config;
 import com.github.kuben.realshopping.LangPack;
 import com.github.kuben.realshopping.Price;
-import com.github.kuben.realshopping.RSEconomy;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
 
@@ -26,11 +22,13 @@ class RSStores extends RSCommand {
 	}
 
 	@Override
-	protected boolean help(){
+	protected Boolean help(){
 		//Check if help was asked for
 		if(args.length == 0 || args[0].equalsIgnoreCase("help")){
 			if(args.length == 0){
-				sender.sendMessage(LangPack.USAGE + " /rsstores store [help COMMAND|buyfor %_OF_SELL_PRICE|collect [-c] [AMOUNT]|ban PLAYER|unban PLAYER|kick [-o] PLAYER|startsale %_OFF [ITEMID[:DATA][,ITEMID[:DATA][,ITEMID[:DATA]...]]]|endsale|notifications [on|off]|onchange [nothing|notify|changeprices] [TRESHOLD] [PERCENT]]");
+				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rsstores store [buyfor %_OF_SELL_PRICE|collect [-c] [AMOUNT]|ban PLAYER|unban PLAYER|kick [-o] PLAYER|startsale %_OFF [ITEMID[:DATA][,ITEMID[:DATA][,ITEMID[:DATA]...]]]|endsale|notifications [on|off]|onchange [nothing|notify|changeprices] [TRESHOLD] [PERCENT]]");
+				sender.sendMessage("For help for a specific command, type: " + ChatColor.DARK_PURPLE + "/rsstores help COMMAND");
+				return true;
 			} if(args.length == 1){
 				sender.sendMessage(ChatColor.GREEN + LangPack.RSSTORESHELP + ChatColor.DARK_PURPLE + "buyfor, collect, ban, unban, kick, startsale, endsale, notifications, onchange");
 			} else {
@@ -55,7 +53,7 @@ class RSStores extends RSCommand {
 			}
 			return true;
 		}
-		return false;
+		return null;
 	}
 	
 	private boolean determineIfOwner(){

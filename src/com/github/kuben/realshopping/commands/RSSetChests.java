@@ -86,7 +86,7 @@ class RSSetChests extends RSPlayerCommand {
     			}
 			} else sender.sendMessage(ChatColor.RED + LangPack.ONLYADMINSTORESCANHAVESELFREFILLINGCHESTS);
 		} else sender.sendMessage(ChatColor.RED + LangPack.YOUHAVETOBEINASTORETOUSETHISCOMMAND);
-		return true;
+		return false;
 	}
 
 }

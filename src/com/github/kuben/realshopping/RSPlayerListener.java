@@ -145,7 +145,7 @@ public class RSPlayerListener implements Listener {
 										for(int i = 0;i < SM.length;i++)
 											carts[i] = SM[i].getInventory();
 									}
-									player.sendMessage(LangPack.YOURARTICLESCOST + RealShopping.PInvMap.get(player.getName()).toPay(carts) + RealShopping.unit);
+									player.sendMessage(LangPack.YOURARTICLESCOST + RealShopping.PInvMap.get(player.getName()).toPay(carts)/100f + RealShopping.unit);
 								} else {
 									player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
 								}
@@ -169,8 +169,10 @@ public class RSPlayerListener implements Listener {
 						} else if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.BROWN_MUSHROOM){
 							if(Config.isEnableSelling()){
 								if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
-				    				Inventory tempInv = Bukkit.createInventory(null, 36, LangPack.SELLTOSTORE);
-									player.openInventory(tempInv);
+									if(RealShopping.shopMap.get(RealShopping.PInvMap.get(player.getName()).getStore()).getBuyFor() > 0){
+										Inventory tempInv = Bukkit.createInventory(null, 36, LangPack.SELLTOSTORE);
+										player.openInventory(tempInv);
+									} else player.sendMessage(ChatColor.RED + LangPack.NOTBUYINGFROMPLAYERS);
 								}
 							} else player.sendMessage(ChatColor.RED + LangPack.SELLINGTOSTORESISNOTENABLEDONTHISSERVER);
 						}

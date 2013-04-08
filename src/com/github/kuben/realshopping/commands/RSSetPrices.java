@@ -1,7 +1,5 @@
 package com.github.kuben.realshopping.commands;
 
-import java.text.DecimalFormat;
-
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
@@ -60,18 +58,15 @@ class RSSetPrices extends RSCommand {
         							d = Integer.parseInt(args[ii].split(":")[1]);
         							jj = 2;
         						}
-        						float price = Float.valueOf(args[ii].split(":")[jj]);
-        						DecimalFormat twoDForm = new DecimalFormat("#.##");
-        						float j = Float.valueOf(twoDForm.format(price).replaceAll(",", "."));
+        						int price = (int) (Float.valueOf(args[ii].split(":")[jj])*100);
         						Price p;
         						if(d == -1) p = new Price(i);
         						else p = new Price(i, d);
-        						tempShop.setPrice(p, j);
-        						sender.sendMessage(ChatColor.GREEN + LangPack.PRICEFOR + Material.getMaterial(i) + (d>-1?"("+d+") ":"") + LangPack.SETTO + j + RealShopping.unit);
+        						tempShop.setPrice(p, price);
+        						sender.sendMessage(ChatColor.GREEN + LangPack.PRICEFOR + Material.getMaterial(i) + (d>-1?"("+d+") ":"") + LangPack.SETTO + price/100f + RealShopping.unit);
         						if(args[ii].split(":").length > 3){//Also set min max
-        							String m[] = new String[]{twoDForm.format(Float.parseFloat(args[ii].split(":")[jj+1])).replaceAll(",", ".")
-        									,twoDForm.format(Float.parseFloat(args[ii].split(":")[jj+2])).replaceAll(",", ".")};
-        							tempShop.setMinMax(p, Float.parseFloat(m[0]), Float.parseFloat(m[1]));
+        							tempShop.setMinMax(p, (int)(Float.parseFloat(args[ii].split(":")[jj+1])*100)
+        									,(int)(Float.parseFloat(args[ii].split(":")[jj+2])*100));
                 					sender.sendMessage(ChatColor.GREEN + LangPack.SETMINIMALANDMAXIMALPRICESFOR + Material.getMaterial(i));
         						}
         						return true;
@@ -123,8 +118,8 @@ class RSSetPrices extends RSCommand {
         					int item = Integer.parseInt(args[ii]);
         					Price p = new Price(item);
         					if(tempShop.hasMinMax(p)){
-        						sender.sendMessage(ChatColor.GREEN + LangPack.STORE + shop + LangPack.HASAMINIMALPRICEOF + tempShop.getMin(p) + LangPack.UNIT
-        							+ LangPack.ANDAMAXIMALPRICEOF + tempShop.getMax(p) + LangPack.UNIT + LangPack.FOR + Material.getMaterial(item));
+        						sender.sendMessage(ChatColor.GREEN + LangPack.STORE + shop + LangPack.HASAMINIMALPRICEOF + tempShop.getMin(p)/100f + LangPack.UNIT
+        							+ LangPack.ANDAMAXIMALPRICEOF + tempShop.getMax(p)/100f + LangPack.UNIT + LangPack.FOR + Material.getMaterial(item));
         					} else sender.sendMessage(ChatColor.GREEN + LangPack.STORE + shop + LangPack.DOESNTHAVEAMINIMALANDMAXIMALPRICEFOR + Material.getMaterial(item));
         					return true;
         				} else if(args[0].equalsIgnoreCase("clearminmax")){
@@ -139,8 +134,7 @@ class RSSetPrices extends RSCommand {
         						String[] s = args[ii].split(":");
         						if(s.length == 3){
                 					int item = Integer.parseInt(s[0]);
-                					DecimalFormat twoDForm = new DecimalFormat("#.##");
-                					tempShop.setMinMax(new Price(item), Float.valueOf(twoDForm.format(Float.valueOf(s[1])).replaceAll(",", ".")), Float.valueOf(twoDForm.format(Float.valueOf(s[2])).replaceAll(",", ".")));
+                					tempShop.setMinMax(new Price(item), (int)(Float.valueOf(s[1])*100), (int)(Float.valueOf(s[2])*100));
                 					sender.sendMessage(ChatColor.GREEN + LangPack.SETMINIMALANDMAXIMALPRICESFOR + Material.getMaterial(item));
                 					return true;
         						} else sender.sendMessage(ChatColor.RED + args[ii] + LangPack.ISNOTAPROPERARGUMENT);
@@ -158,13 +152,13 @@ class RSSetPrices extends RSCommand {
 		return false;
 	}
 
-	protected boolean help(){
+	protected Boolean help(){
 		//Check if help was asked for TODO add help
 		if(args.length == 0 || args[0].equalsIgnoreCase("help")){
 			sender.sendMessage(ChatColor.RED + "No help documentation for this command.");//LANG
-			return true;
+			return false;
 		}
-		return false;
+		return null;
 	}
 	
 }

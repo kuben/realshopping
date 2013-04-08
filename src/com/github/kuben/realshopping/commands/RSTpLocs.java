@@ -5,11 +5,8 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 
-import com.github.kuben.realshopping.Config;
 import com.github.kuben.realshopping.LangPack;
-import com.github.kuben.realshopping.RSEconomy;
 import com.github.kuben.realshopping.RealShopping;
-import com.github.kuben.realshopping.Shop;
 
 class RSTpLocs extends RSPlayerCommand {
 

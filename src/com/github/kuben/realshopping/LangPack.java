@@ -26,7 +26,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.bukkit.ChatColor;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -281,7 +280,7 @@ public class LangPack {
 	public static String X_ND;
 	public static String X_RD;
 	public static String X_TH;
-	//v0.50
+	//v0.44
 	public static String YOUWILLBENOTIFIEDIF;
 	public static String LOSESGAINS;
 	public static String PLACES;
@@ -425,7 +424,7 @@ public class LangPack {
 		SELLTOSTORE = "Sell to store";
 		ENABLEDNOTIFICATIONSFOR = "Enabled notifications for ";
 		DISABLEDNOTIFICATIONSFOR = "Disabled notifications for ";
-		USAGE = "Usage:";
+		USAGE = "Usage: ";
 		NOTIFICATIONSARE = "Notifications are ";
 		ON = "on";
 		OFF = "off";
@@ -536,7 +535,7 @@ public class LangPack {
 		X_ND = "nd";
 		X_RD = "rd";
 		X_TH = "th";
-		//v0.50
+		//v0.44
 		YOUWILLBENOTIFIEDIF = "You will be notified if ";
 		LOSESGAINS = " loses/gains ";
 		PLACES = " place(s).";
@@ -805,7 +804,7 @@ public class LangPack {
 					else if(name.equals("X_ND")) X_ND = el.getAttribute("value");
 					else if(name.equals("X_RD")) X_RD = el.getAttribute("value");
 					else if(name.equals("X_TH")) X_TH = el.getAttribute("value");
-					//v0.50
+					//v0.44
 					else if(name.equals(YOUWILLBENOTIFIEDIF)) YOUWILLBENOTIFIEDIF = el.getAttribute("value");
 					else if(name.equals(LOSESGAINS)) LOSESGAINS = el.getAttribute("value");
 					else if(name.equals(PLACES)) PLACES = el.getAttribute("value");

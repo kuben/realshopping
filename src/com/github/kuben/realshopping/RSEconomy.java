@@ -66,6 +66,7 @@ public class RSEconomy {
 	}
 	
 	public static boolean deposit(String p, float amount){
+		//TODO investigate
 		if(econ != null) return econ.depositPlayer(p, amount).transactionSuccess();
 		if(accounts.containsKey(p)){
 			accounts.put(p, accounts.get(p) + (long)(amount * 100));
@@ -228,14 +229,13 @@ class StatUpdater extends Thread {
 									+ Utils.formatNum(provMap.get(s).get(i)) + " (" + ChatColor.RED + diff + ChatColor.RESET + LangPack.SINCE + sinceStr +LangPack.PROVIDEROF + Material.getMaterial(i));
 									if(tempShop.getNotifyChanges() == 2 && diff != 0){
 										if(tempShop.hasPrice(new Price(i))){
-											int tempPrice = (int) (tempShop.getPrice(new Price(i)) * 100);
-											tempPrice *= (diff >= tempShop.getChangeTreshold())?1f + (tempShop.getChangePercent() / 100f):1f - (tempShop.getChangePercent() / 100f);
-											float newPrice = tempPrice / 100f;
+											int newPrice = (int) (tempShop.getPrice(new Price(i)));
+											newPrice *= (diff >= tempShop.getChangeTreshold())?1f + (tempShop.getChangePercent() / 100f):1f - (tempShop.getChangePercent() / 100f);
 											if(tempShop.hasMinMax(new Price(i))){
 												if(newPrice > tempShop.getMax(new Price(i))) newPrice = tempShop.getMax(new Price(i));
 												else if(newPrice < tempShop.getMin(new Price(i))) newPrice = tempShop.getMin(new Price(i));
 											}
-											if(newPrice != tempPrice){
+											if(newPrice != tempShop.getPrice(new Price(i))){
 												tempShop.setPrice(new Price(i), newPrice);
 												if(diff >= tempShop.getChangeTreshold()) RealShopping.sendNotification(tempShop.getOwner(), LangPack.RAISEDTHEPRICEFOR+ Material.getMaterial(i) + LangPack.BY
 													+ tempShop.getChangePercent() + "%" +LangPack.TO + newPrice);
