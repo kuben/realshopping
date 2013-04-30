@@ -17,7 +17,7 @@ class RSProtect extends RSPlayerCommand {
 	}
 
 	@Override
-	protected boolean execute() {//TODO add help
+	protected boolean execute() {
 		if(RealShopping.PInvMap.containsKey(player.getName())){
 			if(args.length == 1 & args[0].equalsIgnoreCase("add")){				
 					Shop tempShop = RealShopping.shopMap.get(RealShopping.PInvMap.get(player.getName()).getStore());
@@ -50,4 +50,14 @@ class RSProtect extends RSPlayerCommand {
 		return false;
 	}
 
+	@Override
+	protected Boolean help(){
+		//Check if help was asked for
+		if(args.length == 0 || args[0].equalsIgnoreCase("help")){
+			sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rsprotect add|remove");
+			sender.sendMessage(ChatColor.GREEN + "Makes chests protected, so they cannot be opened from outside the store. Use when neccecary. Add makes a chest protected, and remove unmakes it.");
+			return true;
+		}
+		return null;
+	}
 }

@@ -54,18 +54,15 @@ import net.h31ix.updater.Updater;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.command.CommandSender;
-import org.bukkit.conversations.ConversationFactory;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.StorageMinecart;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.MaterialData;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -76,14 +73,15 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import com.github.kuben.realshopping.commands.RSCommandExecutor;
+import com.github.kuben.realshopping.listeners.RSPlayerListener;
+import com.github.kuben.realshopping.prompts.PromptMaster;
 
-public class RealShopping extends JavaPlugin {
+public class RealShopping extends JavaPlugin {//FIXME decide on equals or equalsignorecase
 	private Updater updater;
 	StatUpdater statUpdater;
 	Notificator notificatorThread;
 	
 	public static Map<Price, Integer[]> defPrices;
-	public static ConversationFactory convF;
 	
 	public static Map<String, RSPlayerInventory> PInvMap;
 	
@@ -120,7 +118,6 @@ public class RealShopping extends JavaPlugin {
 	 */
 	
     public void onEnable(){
-    	convF = new ConversationFactory(this);
     	defPrices = new HashMap<Price, Integer[]>();
     	setUpdater(null);
     	statUpdater = null;
@@ -175,6 +172,7 @@ public class RealShopping extends JavaPlugin {
    		working = "";
    		tpLocBlacklist = true;
         
+   		PromptMaster.initialize(this);
    		RSEconomy.setupEconomy();
 		Config.initialize();
 		if(Config.getAutoUpdate() > 0){
@@ -804,153 +802,27 @@ public class RealShopping extends JavaPlugin {
 	 * 
 	 */
     
-    public static boolean enter(Player player, boolean cmd){
-		if(shopMap.size() > 0){
-			int i = 0;
-			Object[] keys = shopMap.keySet().toArray();
-			Location l = player.getLocation().getBlock().getLocation().clone();
-			Location ex = null;
-			for(;i<keys.length;i++){
-				if(shopMap.get(keys[i]).hasEntrance(l)){
-					ex = shopMap.get(keys[i]).getCorrExit(l);
-					break;
-				}
-			}
-			if(ex != null){//Enter shop
-				if(!shopMap.get(keys[i]).isBanned(player.getName().toLowerCase())) {
-					player.teleport(ex.add(0.5, 0, 0.5));
-					
-					PInvMap.put(player.getName(), new RSPlayerInventory(player, (String) keys[i]));
-					player.sendMessage(ChatColor.GREEN + LangPack.YOUENTERED + shopMap.get(keys[i]).getName());
-					
-					//Refill chests
-					Object[] chestArr = shopMap.get(keys[i]).getChests().keySet().toArray();
-					for(int ii = 0;ii < chestArr.length;ii++){
-						Block tempChest = player.getWorld().getBlockAt((Location) chestArr[ii]);
-						if(tempChest.getType() != Material.CHEST) tempChest.setType(Material.CHEST);
-		             	BlockState blockState = tempChest.getState();
-		             	if(blockState instanceof Chest)
-		             	{
-		             	    Chest chest = (Chest)blockState;
-		             	    chest.getBlockInventory().clear();
-		             	    ItemStack[] itemStack = new ItemStack[27];
-		             	    int k = 0;
-		             	    for(Integer[] jj:shopMap.get(keys[i]).getChests().get((Location) chestArr[ii])){
-		             	    	itemStack[k] = new MaterialData(jj[0],jj[1].byteValue())
-		             	    		.toItemStack((jj[2]==0)?Material.getMaterial(jj[0]).getMaxStackSize():jj[0]);
-		             	    	k++;
-		             	    }
-		             	    chest.getBlockInventory().setContents(itemStack);
-		             	}
-					}
-					return true;
-				} else {
-					player.sendMessage(ChatColor.RED + LangPack.YOUAREBANNEDFROM + keys[i]);
-					return false;
-				}
-			} else {
-				if(cmd){
-					player.sendMessage(ChatColor.RED + LangPack.YOURENOTATTHEENTRANCEOFASTORE);
-				}
-				return false;
-			}
-		} else {
-			if(cmd){
-				player.sendMessage(ChatColor.RED + LangPack.THEREARENOSTORESSET);
-			}
-			return false;
-		}
-    }
-    
-    public static boolean exit(Player player, boolean cmd){
-		if(PInvMap.containsKey(player.getName())){
-			if(shopMap.size() > 0){
-				if(PInvMap.get(player.getName()).hasPaid() || player.getGameMode() == GameMode.CREATIVE){
-					String shopName = PInvMap.get(player.getName()).getStore();
-					Location l = player.getLocation().getBlock().getLocation().clone();
-					if(shopMap.get(shopName).hasExit(l)){
-						l = shopMap.get(shopName).getCorrEntrance(l);
-						PInvMap.remove(player.getName());
-						player.teleport(l.add(0.5, 0, 0.5));
-						player.sendMessage(ChatColor.GREEN + LangPack.YOULEFT + shopName);
-						return true;
-					} else {
-						if(cmd)	player.sendMessage(ChatColor.RED + LangPack.YOURENOTATTHEEXITOFASTORE);
-						return false;
-					}
-
-				} else {
-					player.sendMessage(ChatColor.RED + LangPack.YOUHAVENTPAIDFORALLYOURARTICLES);
-					return false;
-				}
-			} else {
-				player.sendMessage(ChatColor.RED + LangPack.THEREARENOSTORESSET);
-				return false;
-			}
-		} else {
-			player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
-			return false;
-		}
-    }
-    
-    public static boolean pay(Player player, Inventory[] invs){
-		if(PInvMap.containsKey(player.getName())){
-			String shopName = PInvMap.get(player.getName()).getStore();
-			if(shopMap.get(shopName).hasPrices()) {
-				int toPay = PInvMap.get(player.getName()).toPay(invs);
-				if(toPay==0) return false;
-				if(RSEconomy.getBalance(player.getName()) < toPay/100f) {
-					player.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOBUYTHINGSFOR + toPay/100f + unit);
-					return true;
-				} else {
-					RSEconomy.withdraw(player.getName(), toPay/100f);
-					if(!shopMap.get(shopName).getOwner().equals("@admin")){
-						RSEconomy.deposit(shopMap.get(shopName).getOwner(), toPay/100f);//If player owned store, pay player
-						if(shopMap.get(shopName).allowsNotifications()) sendNotification(shopMap.get(shopName).getOwner(), player.getName()
-								+ LangPack.BOUGHTSTUFFFOR + toPay/100f + LangPack.UNIT + LangPack.FROMYOURSTORE + shopName + ".");
-					}
-					Map<PItem, Integer> bought = PInvMap.get(player.getName()).getBought(invs);
-					
-					if(Config.isEnableAI()){
-						PItem[] keys = bought.keySet().toArray(new PItem[0]);
-						for(PItem key:keys){
-							shopMap.get(shopName).addStat(new Statistic(key, bought.get(key), true));
-						}
-					}
-					
-					if(invs != null) PInvMap.get(player.getName()).update(invs);
-					else PInvMap.get(player.getName()).update();
-					player.sendMessage(ChatColor.GREEN + LangPack.YOUBOUGHTSTUFFFOR + toPay/100f + unit);
-					return true;
-				}
-			} else {
-				player.sendMessage(ChatColor.RED + LangPack.THEREARENOPRICESSETFORTHISSTORE);
-				return true;
-			}
-		} else {
-			player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
-		}
-		return false;
-	}
-    
-    public static boolean prices(CommandSender sender, int page, String store){//TODO fix pages
-    	if(RealShopping.shopMap.get(store).hasPrices()){
-    		Map<Price, Integer> tempMap = RealShopping.shopMap.get(store).getPrices();
+    public static boolean prices(CommandSender sender, int page, String store){//In 0.50+ pages start from 1 TODO fix pages
+    	Shop tempShop = RealShopping.shopMap.get(store);
+    	if(tempShop.hasPrices()){
+    		Map<Price, Integer> tempMap = tempShop.getPrices();
  			if(!tempMap.isEmpty()){
  				Price[] keys = tempMap.keySet().toArray(new Price[0]);
  				if(page*9 < keys.length){//If page exists
 // 					boolean SL = false;
- 					if(RealShopping.shopMap.get(store).hasSales()){
- 						sender.sendMessage(ChatColor.GREEN + LangPack.THEREISA + RealShopping.shopMap.get(store).getFirstSale() + LangPack.PCNTOFFSALEAT + store);
+ 					if(tempShop.hasSales()){
+ 						sender.sendMessage(ChatColor.GREEN + LangPack.THEREISA + tempShop.getFirstSale() + LangPack.PCNTOFFSALEAT + store);
 // 						SL = true;
  					}
  					if((page+1)*9 < keys.length){//Not last
  		 				for(int i = 9*page;i < 9*(page+1);i++){
  		 					int cost = tempMap.get(keys[i]);
- 		 					String onSlStr = "";//TODO sale on items with data?
- 		 					if(RealShopping.shopMap.get(store).hasSale(keys[i])){//There is a sale on that item.
- 		 						int pcnt = 100 - RealShopping.shopMap.get(store).getSale(keys[i]);
- 		 						cost *= pcnt/100f;
+ 		 					String onSlStr = "";//FIXME sale on items with data in rsstores
+ 		 					if(tempShop.hasSale(keys[i].stripOffData()) || tempShop.hasSale(keys[i])){//There is a sale on that item.
+ 								int pcnt = -1;
+ 								if(tempShop.hasSale(keys[i].stripOffData())) pcnt = 100 - tempShop.getSale(keys[i].stripOffData());
+ 								if(tempShop.hasSale(keys[i]))  pcnt = 100 - tempShop.getSale(keys[i]);
+ 								cost *= pcnt/100f;
  		 						onSlStr = ChatColor.GREEN + LangPack.ONSALE;
  		 					}
  		 					sender.sendMessage(ChatColor.BLUE + "" + keys[i] + " " + Material.getMaterial(keys[i].getType()) + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
@@ -960,9 +832,11 @@ public class RealShopping extends JavaPlugin {
  		 				for(int i = 9*page;i < keys.length;i++){
  		 					int cost = tempMap.get(keys[i]);
  		 					String onSlStr = "";
- 		 					if(RealShopping.shopMap.get(store).hasSale(keys[i])){//There is a sale on that item.
- 		 						int pcnt = 100 - RealShopping.shopMap.get(store).getSale(keys[i]);
- 		 						cost *= pcnt/100f;
+ 		 					if(tempShop.hasSale(keys[i].stripOffData()) || tempShop.hasSale(keys[i])){//There is a sale on that item.
+ 								int pcnt = -1;
+ 								if(tempShop.hasSale(keys[i].stripOffData())) pcnt = 100 - tempShop.getSale(keys[i].stripOffData());
+ 								if(tempShop.hasSale(keys[i]))  pcnt = 100 - tempShop.getSale(keys[i]);
+ 								cost *= pcnt/100f;
  		 						onSlStr = ChatColor.GREEN + LangPack.ONSALE;
  		 					}
  		 					sender.sendMessage(ChatColor.BLUE + "" + keys[i] + " " + Material.getMaterial(keys[i].getType()) + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
@@ -1082,7 +956,7 @@ public class RealShopping extends JavaPlugin {
 	 * 
 	 */
     
-    static StorageMinecart[] checkForCarts(Location l){
+    public static StorageMinecart[] checkForCarts(Location l){
     	Location[] aL = new Location[]{	l.clone().subtract(0, 1, 0)		// [6][7][8]
     									, l.clone().subtract(-1, 1, 0)	// [5][0][1]
 										, l.clone().subtract(-1, 1, -1)	// [4][3][2]
@@ -1478,7 +1352,7 @@ public class RealShopping extends JavaPlugin {
 	 * Get functions
 	 * 
 	 */
-    
+  
     public static boolean allowTpOutOfStore(Location l){
     	Object[] keys = forbiddenTpLocs.keySet().toArray();
     	boolean allow = true;

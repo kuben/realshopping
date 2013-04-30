@@ -66,7 +66,7 @@ public class RSEconomy {
 	}
 	
 	public static boolean deposit(String p, float amount){
-		//TODO investigate
+		//TODO investigate kuben kuben_
 		if(econ != null) return econ.depositPlayer(p, amount).transactionSuccess();
 		if(accounts.containsKey(p)){
 			accounts.put(p, accounts.get(p) + (long)(amount * 100));

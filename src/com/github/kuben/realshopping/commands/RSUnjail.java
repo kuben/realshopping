@@ -13,7 +13,7 @@ class RSUnjail extends RSCommand {
 	}
 
 	@Override
-	protected boolean execute() {//TODO add help
+	protected boolean execute() {
 	    if (args.length == 1){
 	        if(RealShopping.jailedPlayers.containsKey(args[0])){
 	        Player[] pla = sender.getServer().getOnlinePlayers();

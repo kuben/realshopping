@@ -17,7 +17,7 @@ class RSUpdate extends RSCommand {
 	}
 
 	@Override
-	protected boolean execute() {//TODO add help
+	protected boolean execute() {
 		if(Config.getAutoUpdate() > 0){
 			if(args.length == 1 && args[0].equals("info")){
 				if(!RealShopping.newUpdate.equals("")){
@@ -77,4 +77,23 @@ class RSUpdate extends RSCommand {
 		return false;
 	}
 
+	@Override
+	protected Boolean help(){
+		//Check if help was asked for
+		if(args.length == 0 || args[0].equalsIgnoreCase("help")){//LANG
+			if(args.length == 0){
+				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rsupdate update|info");
+				sender.sendMessage("For help for a specific command, type: " + ChatColor.DARK_PURPLE + "/rsupdate help COMMAND");
+			} else if(args.length == 1){
+				sender.sendMessage("Updates RealShopping to the latest version, if such permissions have been given you in the config. You can get more help about each of these arguments: " + ChatColor.DARK_PURPLE + "update, info");
+			} else {
+				if(args[1].equals("update")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "update" + ChatColor.RESET
+						+ ". Updates to the newest version. You need to reload the server after this command.");
+				else if(args[1].equals("info")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "info" + ChatColor.RESET
+						+ ". Prints the description of the newest version of RealShopping.");
+			}
+			return true;
+		}
+		return null;
+	}
 }

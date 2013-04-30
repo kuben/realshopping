@@ -1,7 +1,8 @@
 package com.github.kuben.realshopping.commands;
 
 import org.bukkit.command.CommandSender;
-import com.github.kuben.realshopping.RealShopping;
+
+import com.github.kuben.realshopping.Shop;
 
 class RSEnter extends RSPlayerCommand {
 
@@ -11,7 +12,7 @@ class RSEnter extends RSPlayerCommand {
 
 	@Override
 	protected boolean execute() {
-		return RealShopping.enter(player, true);
+		return Shop.enter(player, true);
 	}
 
 }

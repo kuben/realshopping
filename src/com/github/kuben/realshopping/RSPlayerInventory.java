@@ -33,7 +33,7 @@ import org.bukkit.material.MaterialData;
 public class RSPlayerInventory {
 
 	private Map<PItem, Integer> items;
-	private String store;
+	private String store;//TODO switch to Shop
 	
 	public RSPlayerInventory(Player p, String store){//Use when player is entering store
 		this.store = store;
@@ -277,6 +277,10 @@ public class RSPlayerInventory {
 	
 	public String getStore(){
 		return store;
+	}
+	
+	public Shop getShop(){
+		return RealShopping.shopMap.get(store);
 	}
 	
 	public boolean setStore(String store){

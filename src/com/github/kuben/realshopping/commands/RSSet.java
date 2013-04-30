@@ -15,7 +15,7 @@ class RSSet extends RSPlayerCommand {
 	}
 
 	@Override
-	protected boolean execute() {//TODO add help
+	protected boolean execute() {
 		if (args.length == 1 && args[0].equalsIgnoreCase("entrance")){
 			RealShopping.entrance = player.getLocation().getBlockX() + "," + player.getLocation().getBlockY() + "," + player.getLocation().getBlockZ();
 			player.sendMessage(ChatColor.RED + LangPack.ENTRANCEVARIABLESETTO + RealShopping.entrance);
@@ -54,6 +54,33 @@ class RSSet extends RSPlayerCommand {
 			} else player.sendMessage(ChatColor.RED + args[1] + LangPack.WASNTFOUND);
 		}
 		return false;
+	}
+	
+	@Override
+	protected Boolean help(){
+		//Check if help was asked for
+		if(args.length == 0 || args[0].equalsIgnoreCase("help")){//LANG
+			if(args.length == 0){
+				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rsset prompt|entrance|exit|createstore|delstore [NAME]");
+				sender.sendMessage("For help for a specific command, type: " + ChatColor.DARK_PURPLE + "/rsset help COMMAND");
+			} else if(args.length == 1){
+				sender.sendMessage("Creates or deletes player owned stores, as well as entrances/exits to them. Use the prompt argument for a guide, or the other arguments to create stores manually. You can get more help about each of these arguments: " + ChatColor.DARK_PURPLE + "prompt, entrance, exit, createstore, delstore, delen");
+			} else {
+				if(args[1].equals("prompt")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "prompt" + ChatColor.RESET + ". Starts an interactive prompt.");
+				else if(args[1].equals("entrance")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "entrance" + ChatColor.RESET
+						+ ". Stores the location of the block you stand on to an entrance variable.");
+				else if(args[1].equals("exit")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "exit" + ChatColor.RESET
+						+ ". Stores the location of the block you stand on to an exit variable.");
+				else if(args[1].equals("createstore")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "createstore NAME" + ChatColor.RESET
+						+ ". If no store by that name exists, this command creates it with the entrance and exit set. If a store already exists (and is an admin store) then the entrance and exit pair get appended to it.");
+				else if(args[1].equals("delstore")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "delstore NAME" + ChatColor.RESET
+						+ ". Wipes the named store off the face of the earth, along with settings and prices. Use with care.");
+				else if(args[1].equals("delen")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "delen" + ChatColor.RESET
+						+ ". Deletes the entrance and exit pair which you most recently have set with entrance and exit. You can only remove matching entrances and exits.");
+			}
+			return true;
+		}
+		return null;
 	}
 
 }

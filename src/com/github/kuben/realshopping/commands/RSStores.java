@@ -28,7 +28,6 @@ class RSStores extends RSCommand {
 			if(args.length == 0){
 				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rsstores store [buyfor %_OF_SELL_PRICE|collect [-c] [AMOUNT]|ban PLAYER|unban PLAYER|kick [-o] PLAYER|startsale %_OFF [ITEMID[:DATA][,ITEMID[:DATA][,ITEMID[:DATA]...]]]|endsale|notifications [on|off]|onchange [nothing|notify|changeprices] [TRESHOLD] [PERCENT]]");
 				sender.sendMessage("For help for a specific command, type: " + ChatColor.DARK_PURPLE + "/rsstores help COMMAND");
-				return true;
 			} if(args.length == 1){
 				sender.sendMessage(ChatColor.GREEN + LangPack.RSSTORESHELP + ChatColor.DARK_PURPLE + "buyfor, collect, ban, unban, kick, startsale, endsale, notifications, onchange");
 			} else {

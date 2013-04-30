@@ -1,7 +1,8 @@
 package com.github.kuben.realshopping.commands;
 
 import org.bukkit.command.CommandSender;
-import com.github.kuben.realshopping.RealShopping;
+
+import com.github.kuben.realshopping.Shop;
 
 class RSPay extends RSPlayerCommand {
 
@@ -11,7 +12,7 @@ class RSPay extends RSPlayerCommand {
 
 	@Override
 	protected boolean execute() {
-		return RealShopping.pay(player, null);
+		return Shop.pay(player, null);
 	}
 
 }

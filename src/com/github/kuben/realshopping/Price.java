@@ -45,6 +45,10 @@ public final class Price {
 	public int getData() {
 		return data;
 	}
+
+	public Price stripOffData(){
+		return new Price(type);
+	}
 	
 	@Override
 	public String toString() {

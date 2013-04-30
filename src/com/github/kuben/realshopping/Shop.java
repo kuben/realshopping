@@ -27,10 +27,18 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.MaterialData;
 
 public class Shop {//TODO add load/save interface
 	
@@ -173,7 +181,7 @@ public class Shop {//TODO add load/save interface
 	 * 
 	 */
 	
-	//Stores cents from 0.44 on
+	//Stores pennies from 0.44 on
 	private Map<Price, Integer[]> prices = new HashMap<Price, Integer[]>();//Price array [0] is price, [1] is min and [2] is maxprice
 	
 	public boolean hasPrices(){ return !prices.isEmpty(); }
@@ -318,8 +326,7 @@ public class Shop {//TODO add load/save interface
 	public String toString(){
 		return "Shop " + name + (owner.equals("@admin")?"":" owned by " + owner) + " Prices: " + prices.toString();
 	}
-
-	@SuppressWarnings("static-access")
+	
 	private Map<Price, Integer[]> getLowestPrices(){
 		Map<Price, Integer[]> tempMap = new HashMap<Price, Integer[]>();
 		String[] keys = RealShopping.shopMap.keySet().toArray(new String[0]);
@@ -335,6 +342,139 @@ public class Shop {//TODO add load/save interface
 			}
 		}
 		return tempMap;
+	}
+
+	/*
+	 * 
+	 * Static Methods
+	 * 
+	 */
+	
+	public static boolean pay(Player player, Inventory[] invs){
+		if(RealShopping.PInvMap.containsKey(player.getName())){
+			String shopName = RealShopping.PInvMap.get(player.getName()).getStore();
+			if(RealShopping.shopMap.get(shopName).hasPrices()) {
+				int toPay = RealShopping.PInvMap.get(player.getName()).toPay(invs);
+				if(toPay==0) return false;
+				if(RSEconomy.getBalance(player.getName()) < toPay/100f) {
+					player.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOBUYTHINGSFOR + toPay/100f + RealShopping.unit);
+					return true;
+				} else {
+					RSEconomy.withdraw(player.getName(), toPay/100f);
+					if(!RealShopping.shopMap.get(shopName).getOwner().equals("@admin")){
+						RSEconomy.deposit(RealShopping.shopMap.get(shopName).getOwner(), toPay/100f);//If player owned store, pay player
+						if(RealShopping.shopMap.get(shopName).allowsNotifications()) RealShopping.sendNotification(RealShopping.shopMap.get(shopName).getOwner(), player.getName()
+								+ LangPack.BOUGHTSTUFFFOR + toPay/100f + LangPack.UNIT + LangPack.FROMYOURSTORE + shopName + ".");
+					}
+					Map<PItem, Integer> bought = RealShopping.PInvMap.get(player.getName()).getBought(invs);
+					
+					if(Config.isEnableAI()){
+						PItem[] keys = bought.keySet().toArray(new PItem[0]);
+						for(PItem key:keys){
+							RealShopping.shopMap.get(shopName).addStat(new Statistic(key, bought.get(key), true));
+						}
+					}
+					
+					if(invs != null) RealShopping.PInvMap.get(player.getName()).update(invs);
+					else RealShopping.PInvMap.get(player.getName()).update();
+					player.sendMessage(ChatColor.GREEN + LangPack.YOUBOUGHTSTUFFFOR + toPay/100f + RealShopping.unit);
+					return true;
+				}
+			} else {
+				player.sendMessage(ChatColor.RED + LangPack.THEREARENOPRICESSETFORTHISSTORE);
+				return true;
+			}
+		} else {
+			player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
+		}
+		return false;
+	}
+	public static boolean exit(Player player, boolean cmd){
+		if(RealShopping.PInvMap.containsKey(player.getName())){
+			if(RealShopping.shopMap.size() > 0){
+				if(RealShopping.PInvMap.get(player.getName()).hasPaid() || player.getGameMode() == GameMode.CREATIVE){
+					String shopName = RealShopping.PInvMap.get(player.getName()).getStore();
+					Location l = player.getLocation().getBlock().getLocation().clone();
+					if(RealShopping.shopMap.get(shopName).hasExit(l)){
+						l = RealShopping.shopMap.get(shopName).getCorrEntrance(l);
+						RealShopping.PInvMap.remove(player.getName());
+						player.teleport(l.add(0.5, 0, 0.5));
+						player.sendMessage(ChatColor.GREEN + LangPack.YOULEFT + shopName);
+						return true;
+					} else {
+						if(cmd)	player.sendMessage(ChatColor.RED + LangPack.YOURENOTATTHEEXITOFASTORE);
+						return false;
+					}
+	
+				} else {
+					player.sendMessage(ChatColor.RED + LangPack.YOUHAVENTPAIDFORALLYOURARTICLES);
+					return false;
+				}
+			} else {
+				player.sendMessage(ChatColor.RED + LangPack.THEREARENOSTORESSET);
+				return false;
+			}
+		} else {
+			player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
+			return false;
+		}
+	}
+	public static boolean enter(Player player, boolean cmd){
+		if(RealShopping.shopMap.size() > 0){
+			int i = 0;
+			Object[] keys = RealShopping.shopMap.keySet().toArray();
+			Location l = player.getLocation().getBlock().getLocation().clone();
+			Location ex = null;
+			for(;i<keys.length;i++){
+				if(RealShopping.shopMap.get(keys[i]).hasEntrance(l)){
+					ex = RealShopping.shopMap.get(keys[i]).getCorrExit(l);
+					break;
+				}
+			}
+			if(ex != null){//Enter shop
+				if(!RealShopping.shopMap.get(keys[i]).isBanned(player.getName().toLowerCase())) {
+					player.teleport(ex.add(0.5, 0, 0.5));
+					
+					RealShopping.PInvMap.put(player.getName(), new RSPlayerInventory(player, (String) keys[i]));
+					player.sendMessage(ChatColor.GREEN + LangPack.YOUENTERED + RealShopping.shopMap.get(keys[i]).getName());
+					
+					//Refill chests
+					Object[] chestArr = RealShopping.shopMap.get(keys[i]).getChests().keySet().toArray();
+					for(int ii = 0;ii < chestArr.length;ii++){
+						Block tempChest = player.getWorld().getBlockAt((Location) chestArr[ii]);
+						if(tempChest.getType() != Material.CHEST) tempChest.setType(Material.CHEST);
+		             	BlockState blockState = tempChest.getState();
+		             	if(blockState instanceof Chest)
+		             	{
+		             	    Chest chest = (Chest)blockState;
+		             	    chest.getBlockInventory().clear();
+		             	    ItemStack[] itemStack = new ItemStack[27];
+		             	    int k = 0;
+		             	    for(Integer[] jj:RealShopping.shopMap.get(keys[i]).getChests().get((Location) chestArr[ii])){
+		             	    	itemStack[k] = new MaterialData(jj[0],jj[1].byteValue())
+		             	    		.toItemStack((jj[2]==0)?Material.getMaterial(jj[0]).getMaxStackSize():jj[0]);
+		             	    	k++;
+		             	    }
+		             	    chest.getBlockInventory().setContents(itemStack);
+		             	}
+					}
+					return true;
+				} else {
+					player.sendMessage(ChatColor.RED + LangPack.YOUAREBANNEDFROM + keys[i]);
+					return false;
+				}
+			} else {
+				if(cmd){
+					player.sendMessage(ChatColor.RED + LangPack.YOURENOTATTHEENTRANCEOFASTORE);
+				}
+				return false;
+			}
+		} else {
+			if(cmd){
+				player.sendMessage(ChatColor.RED + LangPack.THEREARENOSTORESSET);
+			}
+			return false;
+		}
 	}
 }
 
