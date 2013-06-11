@@ -40,7 +40,7 @@ commands:
       permission-message: You don't have permission to use this command
    rssetprices:
       description: Add/remove prices.
-      usage: /rssetprices add|del|defaults|copy|clear [STORE] (ITEM_ID[:DATA][:COST][:MIN:MAX])|[COPY_FROM] OR /rssetprices showminmax|clearminmax|setminmax [STORE] [PRICE[:MIN:MAX]]
+      usage: /rssetprices add|del|defaults|copy|clear [STORE] (ITEM_ID[:DATA][:COST][:MIN:MAX])|[COPY_FROM] OR /rssetprices showminmax|clearminmax|setminmax [STORE] [ITEM_ID[:DATA]:MIN:MAX]]
       permission: realshopping.rssetprices
       permission-message: You don't have permission to use this command
    rssetchests:

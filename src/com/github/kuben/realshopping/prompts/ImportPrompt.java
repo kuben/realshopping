@@ -125,7 +125,7 @@ class FinalPrompt extends MessagePrompt{
 				    XSSFSheet sheet = wb.getSheetAt(in.equalsIgnoreCase("u")?0:2);
 				    Iterator<Row> rowIter = sheet.rowIterator();
 				    
-				    RealShopping.defPrices.clear();
+				    RealShopping.clearDefPrices();
 				    wb.getCreationHelper().createFormulaEvaluator().evaluateAll();
 				    while(rowIter.hasNext()){
 				    	try {
@@ -148,13 +148,13 @@ class FinalPrompt extends MessagePrompt{
 					    				else p = new Price(ID, data);
 	            						int cost = Float.valueOf(costC.getNumericCellValue() + "").intValue();
 					    				Integer[] f = new Integer[]{cost};
-					    				RealShopping.defPrices.put(p, f);
+					    				RealShopping.addDefPrice(p, f);
 					    			}
 					    		} catch (Exception e) {}
 					    	}
 				    	} catch (NumberFormatException e){}//Skip
 			        }
-					if(RealShopping.defPrices.size() > 0) return ChatColor.GREEN + LangPack.IMPORTED + RealShopping.defPrices.size() + LangPack.PRICESASDEFAULT;
+					if(RealShopping.getDefPricesSize() > 0) return ChatColor.GREEN + LangPack.IMPORTED + RealShopping.getDefPricesSize() + LangPack.PRICESASDEFAULT;
 					else return LangPack.ERRORCOULDNTIMPORTPRICES;
 				} catch (IOException e) {
 					e.printStackTrace();

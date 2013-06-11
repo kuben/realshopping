@@ -28,13 +28,13 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -55,14 +55,8 @@ import net.h31ix.updater.Updater;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Chest;
-import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.StorageMinecart;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.MaterialData;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -72,44 +66,46 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import com.github.kuben.realshopping.RSEconomy;
 import com.github.kuben.realshopping.commands.RSCommandExecutor;
+import com.github.kuben.realshopping.exceptions.RealShoppingException;
 import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
 
-public class RealShopping extends JavaPlugin {//FIXME decide on equals or equalsignorecase
+public class RealShopping extends JavaPlugin {//FIXME decided on equals
 	private Updater updater;
-	StatUpdater statUpdater;
-	Notificator notificatorThread;
+	private StatUpdater statUpdater;
+	private Notificator notificatorThread;
 	
-	public static Map<Price, Integer[]> defPrices;
-	
-	public static Map<String, RSPlayerInventory> PInvMap;
-	
+	//Constants
 	public static final String MANDIR = "plugins/RealShopping/";
-	public static Map<Integer, Integer> maxDurMap;
-	public static Map<String, Shop> shopMap;
-	public static Map<String, String> playerEntrances;
-	public static Map<String, String> playerExits;
-	public static Map<String, Location> jailedPlayers;
-	public static Map<String, List<ShippedPackage>> shippedToCollect;
-	public static Map<Location, Integer> forbiddenTpLocs;
-	public static Map<String, List<String>> notificator;
 	
-	public static Set<Integer> forbiddenInStore;
+	//Vars
+	public static Map<String, RSPlayerInventory> PInvMap;
+	public static Map<String, Shop> shopMap;//TODO Special two, decide at last
 	
-	public static boolean tpLocBlacklist;
+	private static Map<EEPair, Shop> eePairs;
+	private static Map<Price, Integer[]> defPrices;
+	private static Map<Integer, Integer> maxDurMap;
+	private static List<String> sortedAliases;
+	private static Map<String, Integer[]> aliasesMap;
+	private static Set<Integer> forbiddenInStore;
+	private static Map<String, Location> playerEntrances;
+	private static Map<String, Location> playerExits;
+	private static Map<String, Location> jailedPlayers;
+	private static Map<String, List<ShippedPackage>> shippedToCollect;
+	private static Map<Location, Integer> forbiddenTpLocs;//TODO Maybe have a class for these, or enum
+	private static Map<String, List<String>> notificator;
+	
+	private static boolean tpLocBlacklist;
+	private static Location entrance;
+	private static Location exit;
 
-    public static String entrance;//TODO getter setter
-    public static String exit;
+	private boolean smallReload = false;
+
 	static Logger log;
-	
 	public static String working;
-	
-	boolean smallReload = false;
-	
 	public static String newUpdate;
-	
-	public static String unit;
 	
 	/*
 	 * 
@@ -118,15 +114,19 @@ public class RealShopping extends JavaPlugin {//FIXME decide on equals or equals
 	 */
 	
     public void onEnable(){
-    	defPrices = new HashMap<Price, Integer[]>();
     	setUpdater(null);
     	statUpdater = null;
     	notificatorThread = null;
+    	eePairs = new HashMap<EEPair, Shop>();
+      	defPrices = new HashMap<Price, Integer[]>();
     	PInvMap = new HashMap<String, RSPlayerInventory>();
     	maxDurMap = new HashMap<Integer, Integer>();
+    	sortedAliases = null;//Is initialized in initAliases
+    	aliasesMap = new HashMap<String, Integer[]>(801);
+    	defPrices = new HashMap<Price, Integer[]>();
     	shopMap = new HashMap<String, Shop>();
-    	playerEntrances = new HashMap<String, String>();
-    	playerExits = new HashMap<String, String>();
+    	playerEntrances = new HashMap<String, Location>();
+    	playerExits = new HashMap<String, Location>();
     	jailedPlayers = new HashMap<String, Location>();
     	shippedToCollect = new HashMap<String, List<ShippedPackage>>();
     	forbiddenTpLocs = new HashMap<Location, Integer>();
@@ -136,14 +136,12 @@ public class RealShopping extends JavaPlugin {//FIXME decide on equals or equals
     	
     	Config.resetVars();
     	
-        entrance = "";
-        exit = "";
+        entrance = null;
+        exit = null;
     	log = this.getLogger();
     	working = null;
     	
     	newUpdate = "";
-    	
-    	unit = "$";
 
     	if(!smallReload){
     		getServer().getPluginManager().registerEvents(new RSPlayerListener(), this);
@@ -231,7 +229,7 @@ public class RealShopping extends JavaPlugin {//FIXME decide on equals or equals
     						String[] tSS = tS[i].split(",");
     			    		Location en = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[0]),Integer.parseInt(tSS[1]), Integer.parseInt(tSS[2]));
     			    		Location ex = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[3]),Integer.parseInt(tSS[4]), Integer.parseInt(tSS[5]));
-    			    		shopMap.get(tS[0]).addE(en, ex);
+    			    		try { shopMap.get(tS[0]).addEntranceExit(en, ex); } catch (RealShoppingException e) { }//Ignore
     					}
     					for(int i = 1;i < s.split(";").length;i++){//There are chests
     						Location l = new Location(getServer().getWorld(tS[1]), Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[0])
@@ -304,9 +302,9 @@ public class RealShopping extends JavaPlugin {//FIXME decide on equals or equals
 		f = new File(MANDIR + "langpacks/");
 		if(!f.exists()) f.mkdir();
     	LangPack.initialize(Config.getLangpack());
-    	unit = LangPack.UNIT;
 		initForbiddenInStore();
 		initMaxDur();
+		initAliases();
 		if(Config.getNotTimespan() >= 500){
 			notificatorThread = new Notificator();
 			notificatorThread.start();
@@ -355,7 +353,7 @@ public class RealShopping extends JavaPlugin {//FIXME decide on equals or equals
 	        	shop.setAttribute("name", shopMap.get(keys[i]).getName());
 	        	root.appendChild(shop);
 	            	
-	            tempMap = shopMap.get(keys[i]).getPricesMap();//TODO link to prices
+	            tempMap = shopMap.get(keys[i]).getPricesMap();
 	          	Object[] ids = tempMap.keySet().toArray();
 	           	for(int j = 0;j < ids.length;j++){
 	           		Element item = doc.createElement("item");
@@ -369,11 +367,6 @@ public class RealShopping extends JavaPlugin {//FIXME decide on equals or equals
 	                shop.appendChild(item);
 	           	}
 	        }
-	            
-//	        OutputFormat format = new OutputFormat(doc);
-//	        format.setIndenting(true);
-//			XMLSerializer serializer = new XMLSerializer(new FileOutputStream(f), format);
-//			serializer.serialize(doc);
 	        
 	        DOMSource source = new DOMSource(doc);
 
@@ -400,6 +393,7 @@ public class RealShopping extends JavaPlugin {//FIXME decide on equals or equals
 
     public static void updateEntrancesDb(){
     	//Update file
+    	long supernigga = System.nanoTime();
 		try {
 			File f = new File(MANDIR + "shops.db");
 			if(!f.exists()) f.createNewFile();
@@ -411,8 +405,9 @@ public class RealShopping extends JavaPlugin {//FIXME decide on equals or equals
 				pW.print(keys[i] + ":" + tempShop.getWorld() + ":" + tempShop.getOwner() + ":" + tempShop.getBuyFor()
 						+ ":" + (tempShop.getNotifyChanges()==2?"change":(tempShop.getNotifyChanges()==1?"notify":"nothing"))
 						+ ":" + tempShop.getChangeTreshold() + ":" + tempShop.getChangePercent() + ":" + tempShop.allowsNotifications());
-				for(int j = 0;j < tempShop.eLen();j++){
-					pW.print(":" + locAsString(tempShop.getEntrance().get(j)) + "," + locAsString(tempShop.getExit().get(j)));
+				for(EEPair ee:eePairs.keySet()){
+					if(eePairs.get(ee).equals(tempShop))
+						pW.print(":" + RSUtils.locAsString(ee.getEntrance()) + "," + RSUtils.locAsString(ee.getExit()));
 				}
 				Map<Location, ArrayList<Integer[]>> tempChests = tempShop.getChests();
 				Object[] chestLocs = tempChests.keySet().toArray();
@@ -424,7 +419,7 @@ public class RealShopping extends JavaPlugin {//FIXME decide on equals or equals
 						if(ii.length > 1 && ii[1] != 0) items += ":" + ii[1];
 						if(ii.length > 2 && ii[2] != 0) items += ":" + ii[2];
 					}
-					pW.print(";" + locAsString((Location) chestLocs[j]) + "[ " + items + "]");
+					pW.print(";" + RSUtils.locAsString((Location) chestLocs[j]) + "[ " + items + "]");
 				}
 				Object[] banned = tempShop.getBanned().toArray();
 				if(banned.length > 0){
@@ -441,6 +436,7 @@ public class RealShopping extends JavaPlugin {//FIXME decide on equals or equals
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		System.out.println("Finished updating shops.db in " + (System.nanoTime() - supernigga) + "ns");//TODO
     }
     
     private void initMaxDur(){
@@ -533,6 +529,613 @@ public class RealShopping extends JavaPlugin {//FIXME decide on equals or equals
     	forbiddenInStore.add(383);//Spawning egg
     }
 
+    private void initAliases(){
+    	aliasesMap.put("stone", new Integer[]{1});
+    	aliasesMap.put("grass", new Integer[]{2});
+    	aliasesMap.put("dirt", new Integer[]{3});
+    	aliasesMap.put("cobble", new Integer[]{4});
+    	aliasesMap.put("cobblestone", new Integer[]{4});
+    	aliasesMap.put("plank", new Integer[]{5});
+    	aliasesMap.put("oakplank", new Integer[]{5,0});
+    	aliasesMap.put("spruceplank", new Integer[]{5,1});
+    	aliasesMap.put("brichplank", new Integer[]{5,2});
+    	aliasesMap.put("jungleplank", new Integer[]{5,3});
+    	aliasesMap.put("planks", new Integer[]{5});
+    	aliasesMap.put("oakplanks", new Integer[]{5,0});
+    	aliasesMap.put("spruceplanks", new Integer[]{5,1});
+    	aliasesMap.put("brichplanks", new Integer[]{5,2});
+    	aliasesMap.put("jungleplanks", new Integer[]{5,3});
+    	aliasesMap.put("sapling", new Integer[]{6});
+    	aliasesMap.put("oaksapling", new Integer[]{6,0});
+    	aliasesMap.put("sprucesapling", new Integer[]{6,1});
+    	aliasesMap.put("birchsapling", new Integer[]{6,2});
+    	aliasesMap.put("junglesapling", new Integer[]{6,3});
+    	aliasesMap.put("bedrock", new Integer[]{7});
+    	aliasesMap.put("water", new Integer[]{8});
+    	aliasesMap.put("stationarywater", new Integer[]{9});
+    	aliasesMap.put("lava", new Integer[]{10});
+    	aliasesMap.put("stationarylava", new Integer[]{11});
+    	aliasesMap.put("sand", new Integer[]{12});
+    	aliasesMap.put("gravel", new Integer[]{13});
+    	aliasesMap.put("goldore", new Integer[]{14});
+    	aliasesMap.put("ironore", new Integer[]{15});
+    	aliasesMap.put("coalore", new Integer[]{16});
+    	aliasesMap.put("wood", new Integer[]{17});
+    	aliasesMap.put("oakwood", new Integer[]{17,0});
+    	aliasesMap.put("sprucewood", new Integer[]{17,1});
+    	aliasesMap.put("birchwood", new Integer[]{17,2});
+    	aliasesMap.put("junglewood", new Integer[]{17,3});
+    	aliasesMap.put("leaves", new Integer[]{18});
+    	aliasesMap.put("oakleaves", new Integer[]{18,0});
+    	aliasesMap.put("spruceleaves", new Integer[]{18,1});
+    	aliasesMap.put("birchleaves", new Integer[]{18,2});
+    	aliasesMap.put("jungleleaves", new Integer[]{18,3});
+    	aliasesMap.put("sponge", new Integer[]{19});
+    	aliasesMap.put("glass", new Integer[]{20});
+    	aliasesMap.put("lapisore", new Integer[]{21});
+    	aliasesMap.put("lapisblock", new Integer[]{22});
+    	aliasesMap.put("lapislazuliore", new Integer[]{21});
+    	aliasesMap.put("lapislazuliblock", new Integer[]{22});
+    	aliasesMap.put("dispenser", new Integer[]{23});
+    	aliasesMap.put("sandstone", new Integer[]{24});
+    	aliasesMap.put("chiseledsandstone", new Integer[]{24,1});
+    	aliasesMap.put("smoothsandstone", new Integer[]{24,2});
+    	aliasesMap.put("noteblock", new Integer[]{25});
+    	aliasesMap.put("bedblock", new Integer[]{26});
+    	aliasesMap.put("poweredrail", new Integer[]{27});
+    	aliasesMap.put("detectorrail", new Integer[]{28});
+    	aliasesMap.put("stickypiston", new Integer[]{29});
+    	aliasesMap.put("web", new Integer[]{30});
+    	aliasesMap.put("deadshrub", new Integer[]{31});
+    	aliasesMap.put("grass", new Integer[]{31,1});
+    	aliasesMap.put("fern", new Integer[]{31,2});
+    	aliasesMap.put("deadshrub", new Integer[]{32});
+    	aliasesMap.put("piston", new Integer[]{33});
+    	aliasesMap.put("pistonhead", new Integer[]{34});
+    	aliasesMap.put("wool", new Integer[]{35});
+    	aliasesMap.put("whitewool", new Integer[]{35,0});
+    	aliasesMap.put("orangewool", new Integer[]{35,1});
+    	aliasesMap.put("magentawool", new Integer[]{35,2});
+    	aliasesMap.put("lightbluewool", new Integer[]{35,3});
+    	aliasesMap.put("yellowwool", new Integer[]{35,4});
+    	aliasesMap.put("lightgreenwool", new Integer[]{35,5});
+    	aliasesMap.put("pinkwool", new Integer[]{35,6});
+    	aliasesMap.put("graywool", new Integer[]{35,7});
+    	aliasesMap.put("lightgraywool", new Integer[]{35,8});
+    	aliasesMap.put("cyanwool", new Integer[]{35,9});
+    	aliasesMap.put("purplewool", new Integer[]{35,10});
+    	aliasesMap.put("bluewool", new Integer[]{35,11});
+    	aliasesMap.put("brownwool", new Integer[]{35,12});
+    	aliasesMap.put("darkgreenwool", new Integer[]{35,13});
+    	aliasesMap.put("redwool", new Integer[]{35,14});
+    	aliasesMap.put("blackwool", new Integer[]{35,15});
+    	aliasesMap.put("dandelion", new Integer[]{37});
+    	aliasesMap.put("rose", new Integer[]{38});
+    	aliasesMap.put("brownmushroom", new Integer[]{39});
+    	aliasesMap.put("redmushroom", new Integer[]{40});
+    	aliasesMap.put("goldblock", new Integer[]{41});
+    	aliasesMap.put("ironblock", new Integer[]{42});
+    	aliasesMap.put("doubleslab", new Integer[]{43});
+    	aliasesMap.put("doublestoneslab", new Integer[]{43,0});
+    	aliasesMap.put("doublesandstoneslab", new Integer[]{43,1});
+    	aliasesMap.put("doublewoodenslab", new Integer[]{43,2});
+    	aliasesMap.put("doublecobblestoneslab", new Integer[]{43,3});
+    	aliasesMap.put("doublebrickslab", new Integer[]{43,4});
+    	aliasesMap.put("doublestonebrickslab", new Integer[]{43,5});
+    	aliasesMap.put("doublenetherbrickslab", new Integer[]{43,6});
+    	aliasesMap.put("doublequartzslab", new Integer[]{43,7});
+    	aliasesMap.put("slab", new Integer[]{44});
+    	aliasesMap.put("stoneslab", new Integer[]{44,0});
+    	aliasesMap.put("sandstoneslab", new Integer[]{44,1});
+    	aliasesMap.put("woodenslab", new Integer[]{44,2});
+    	aliasesMap.put("cobblestoneslab", new Integer[]{44,3});
+    	aliasesMap.put("brickslab", new Integer[]{44,4});
+    	aliasesMap.put("stonebrickslab", new Integer[]{44,5});
+    	aliasesMap.put("netherbrickslab", new Integer[]{44,6});
+    	aliasesMap.put("quartzslab", new Integer[]{44,7});
+    	aliasesMap.put("brickblock", new Integer[]{45});
+    	aliasesMap.put("tnt", new Integer[]{46});
+    	aliasesMap.put("bookshelf", new Integer[]{47});
+    	aliasesMap.put("mossycobble", new Integer[]{48});
+    	aliasesMap.put("mossycobblestone", new Integer[]{48});
+    	aliasesMap.put("obsidian", new Integer[]{49});
+    	aliasesMap.put("torch", new Integer[]{50});
+    	aliasesMap.put("fire", new Integer[]{51});
+    	aliasesMap.put("monsterspawner", new Integer[]{52});
+    	aliasesMap.put("woodenstair", new Integer[]{53});
+    	aliasesMap.put("woodstair", new Integer[]{53});
+    	aliasesMap.put("woodenstairs", new Integer[]{53});
+    	aliasesMap.put("woodstairs", new Integer[]{53});
+    	aliasesMap.put("chest", new Integer[]{54});
+    	aliasesMap.put("redstonewire", new Integer[]{55});
+    	aliasesMap.put("diamondore", new Integer[]{56});
+    	aliasesMap.put("diamondblock", new Integer[]{57});
+    	aliasesMap.put("workbench", new Integer[]{58});
+    	aliasesMap.put("wheatcrops", new Integer[]{59});
+    	aliasesMap.put("farmland", new Integer[]{60});
+    	aliasesMap.put("soil", new Integer[]{60});
+    	aliasesMap.put("furnace", new Integer[]{61});
+    	aliasesMap.put("burningfurnace", new Integer[]{62});
+    	aliasesMap.put("signpost", new Integer[]{63});
+    	aliasesMap.put("woodendoorblock", new Integer[]{64});
+    	aliasesMap.put("ladder", new Integer[]{65});
+    	aliasesMap.put("rail", new Integer[]{66});
+    	aliasesMap.put("rails", new Integer[]{66});
+    	aliasesMap.put("cobblestair", new Integer[]{67});
+    	aliasesMap.put("cobblestonestair", new Integer[]{67});
+    	aliasesMap.put("cobblestairs", new Integer[]{67});
+    	aliasesMap.put("cobblestonestairs", new Integer[]{67});
+    	aliasesMap.put("wallsign", new Integer[]{68});
+    	aliasesMap.put("lever", new Integer[]{69});
+    	aliasesMap.put("stonepressureplate", new Integer[]{70});
+    	aliasesMap.put("irondoorblock", new Integer[]{71});
+    	aliasesMap.put("woodpressureplate", new Integer[]{72});
+    	aliasesMap.put("woodenpressureplate", new Integer[]{72});
+    	aliasesMap.put("redstoneore", new Integer[]{73});
+    	aliasesMap.put("glowingredstoneore", new Integer[]{74});
+    	aliasesMap.put("redstonetorch", new Integer[]{75});
+    	aliasesMap.put("redstonetorchon", new Integer[]{76});
+    	aliasesMap.put("stonebutton", new Integer[]{77});
+    	aliasesMap.put("snow", new Integer[]{78});
+    	aliasesMap.put("ice", new Integer[]{79});
+    	aliasesMap.put("snowblock", new Integer[]{80});
+    	aliasesMap.put("cactus", new Integer[]{81});
+    	aliasesMap.put("clayblock", new Integer[]{82});
+    	aliasesMap.put("sugarcane", new Integer[]{83});
+    	aliasesMap.put("jukebox", new Integer[]{84});
+    	aliasesMap.put("fence", new Integer[]{85});
+    	aliasesMap.put("pumpkin", new Integer[]{86});
+    	aliasesMap.put("netherrack", new Integer[]{87});
+    	aliasesMap.put("soulsand", new Integer[]{88});
+    	aliasesMap.put("glowstone", new Integer[]{89});
+    	aliasesMap.put("portalblock", new Integer[]{90});
+    	aliasesMap.put("jack-o-lantern", new Integer[]{91});
+    	aliasesMap.put("cakeblock", new Integer[]{92});
+    	aliasesMap.put("redstonerepeaterblockoff", new Integer[]{93});
+    	aliasesMap.put("redstonerepeaterblockon", new Integer[]{94});
+    	aliasesMap.put("lockedchest", new Integer[]{95});
+    	aliasesMap.put("trapdoor", new Integer[]{96});
+    	aliasesMap.put("monsteregg", new Integer[]{97});
+    	aliasesMap.put("silverfishblock", new Integer[]{97});
+    	aliasesMap.put("silverfishstone", new Integer[]{97,0});
+    	aliasesMap.put("silverfishcobble", new Integer[]{97,1});
+    	aliasesMap.put("silverfishcobblestone", new Integer[]{97,1});
+    	aliasesMap.put("silverfishstonebricks", new Integer[]{97,2});
+    	aliasesMap.put("silverfishstonebrick", new Integer[]{97,2});
+    	aliasesMap.put("stonebricks", new Integer[]{98});
+    	aliasesMap.put("mossystonebricks", new Integer[]{98,1});
+    	aliasesMap.put("crackedstonebricks", new Integer[]{98,2});
+    	aliasesMap.put("chiseledstonebricks", new Integer[]{98,3});
+    	aliasesMap.put("stonebrick", new Integer[]{98});
+    	aliasesMap.put("mossystonebrick", new Integer[]{98,1});
+    	aliasesMap.put("crackedstonebrick", new Integer[]{98,2});
+    	aliasesMap.put("chiseledstonebrick", new Integer[]{98,3});
+    	aliasesMap.put("redhugemushroom", new Integer[]{99});
+    	aliasesMap.put("brownhugemushroom", new Integer[]{100});
+    	aliasesMap.put("ironbars", new Integer[]{101});
+    	aliasesMap.put("glasspane", new Integer[]{102});
+    	aliasesMap.put("melonblock", new Integer[]{103});
+    	aliasesMap.put("pumpkinstem", new Integer[]{104});
+    	aliasesMap.put("melonstem", new Integer[]{105});
+    	aliasesMap.put("vines", new Integer[]{106});
+    	aliasesMap.put("fencegate", new Integer[]{107});
+    	aliasesMap.put("brickstair", new Integer[]{108});
+    	aliasesMap.put("stonebrickstair", new Integer[]{109});
+    	aliasesMap.put("brickstairs", new Integer[]{108});
+    	aliasesMap.put("stonebrickstairs", new Integer[]{109});
+    	aliasesMap.put("mycelium", new Integer[]{110});
+    	aliasesMap.put("lilypad", new Integer[]{111});
+    	aliasesMap.put("netherbrick", new Integer[]{112});
+    	aliasesMap.put("netherbrickfence", new Integer[]{113});
+    	aliasesMap.put("netherbrickstair", new Integer[]{114});
+    	aliasesMap.put("netherbrickstairs", new Integer[]{114});
+    	aliasesMap.put("netherwartcrops", new Integer[]{115});
+    	aliasesMap.put("enchantmenttable", new Integer[]{116});
+    	aliasesMap.put("brewingstand", new Integer[]{117});
+    	aliasesMap.put("cauldron", new Integer[]{118});
+    	aliasesMap.put("endportal", new Integer[]{119});
+    	aliasesMap.put("endportalframe", new Integer[]{120});
+    	aliasesMap.put("endstone", new Integer[]{121});
+    	aliasesMap.put("dragonegg", new Integer[]{122});
+    	aliasesMap.put("redstonelamp", new Integer[]{123});
+    	aliasesMap.put("redstonelampon", new Integer[]{124});
+    	aliasesMap.put("doublewoodenslab", new Integer[]{125});
+    	aliasesMap.put("doublewoodslab", new Integer[]{125});
+    	aliasesMap.put("doubleoakwoodslab", new Integer[]{125,0});
+    	aliasesMap.put("doublesprucewoodslab", new Integer[]{125,1});
+    	aliasesMap.put("doublebirchwoodslab", new Integer[]{125,2});
+    	aliasesMap.put("doublejunglewoodslab", new Integer[]{125,3});
+    	aliasesMap.put("woodslab", new Integer[]{126});
+    	aliasesMap.put("woodenslab", new Integer[]{126});
+    	aliasesMap.put("oakwoodslab", new Integer[]{126,0});
+    	aliasesMap.put("sprucewoodslab", new Integer[]{126,1});
+    	aliasesMap.put("birchwoodslab", new Integer[]{126,2});
+    	aliasesMap.put("junglewoodslab", new Integer[]{126,3});
+    	aliasesMap.put("cocoaplant", new Integer[]{127});
+    	aliasesMap.put("sandstonestairs", new Integer[]{128});
+    	aliasesMap.put("emeraldore", new Integer[]{129});
+    	aliasesMap.put("enderchest", new Integer[]{130});
+    	aliasesMap.put("tripwirehook", new Integer[]{131});
+    	aliasesMap.put("tripwire", new Integer[]{132});
+    	aliasesMap.put("emeraldblock", new Integer[]{133});
+    	aliasesMap.put("sprucewoodstair", new Integer[]{134});
+    	aliasesMap.put("birchwoodstair", new Integer[]{135});
+    	aliasesMap.put("junglewoodstair", new Integer[]{136});
+    	aliasesMap.put("sprucewoodstairs", new Integer[]{134});
+    	aliasesMap.put("birchwoodstairs", new Integer[]{135});
+    	aliasesMap.put("junglewoodstairs", new Integer[]{136});
+    	aliasesMap.put("commandblock", new Integer[]{137});
+    	aliasesMap.put("beacon", new Integer[]{138});
+    	aliasesMap.put("beaconblock", new Integer[]{138});
+    	aliasesMap.put("cobblewall", new Integer[]{139});
+    	aliasesMap.put("mossycobblewall", new Integer[]{139,1});
+    	aliasesMap.put("cobblestonewall", new Integer[]{139});
+    	aliasesMap.put("mossycobblestonewall", new Integer[]{139,1});
+    	aliasesMap.put("flowerpot", new Integer[]{140});
+    	aliasesMap.put("carrotcrops", new Integer[]{141});
+    	aliasesMap.put("potatocrops", new Integer[]{142});
+    	aliasesMap.put("woodbutton", new Integer[]{143});
+    	aliasesMap.put("woodenbutton", new Integer[]{143});
+    	aliasesMap.put("mobheadblock", new Integer[]{144});
+    	aliasesMap.put("anvil", new Integer[]{145});
+    	aliasesMap.put("trappedchest", new Integer[]{146});
+    	aliasesMap.put("lightpressureplate", new Integer[]{147});
+    	aliasesMap.put("heavypressureplate", new Integer[]{148});
+    	aliasesMap.put("lightweightedpressureplate", new Integer[]{147});
+    	aliasesMap.put("heavyweightedpressureplate", new Integer[]{148});
+    	aliasesMap.put("redstonecomparatorblockoff", new Integer[]{149});
+    	aliasesMap.put("redstonecomparatorblockon", new Integer[]{150});
+    	aliasesMap.put("daylightsensor", new Integer[]{151});
+    	aliasesMap.put("redstoneblock", new Integer[]{152});
+    	aliasesMap.put("quartzore", new Integer[]{153});
+    	aliasesMap.put("netherquartzore", new Integer[]{153});
+    	aliasesMap.put("hopper", new Integer[]{154});
+    	aliasesMap.put("quartzblock", new Integer[]{155});
+    	aliasesMap.put("chiseledquartzblock", new Integer[]{155,1});
+    	aliasesMap.put("pillarquartzblock", new Integer[]{155,2});
+    	aliasesMap.put("quartzstair", new Integer[]{156});
+    	aliasesMap.put("quartzstairs", new Integer[]{156});
+    	aliasesMap.put("activatorrail", new Integer[]{157});
+    	aliasesMap.put("dropper", new Integer[]{158});
+    	aliasesMap.put("ironshovel", new Integer[]{256});
+    	aliasesMap.put("ironpickaxe", new Integer[]{257});
+    	aliasesMap.put("ironaxe", new Integer[]{258});
+    	aliasesMap.put("flintandsteel", new Integer[]{259});
+    	aliasesMap.put("apple", new Integer[]{260});
+    	aliasesMap.put("bow", new Integer[]{261});
+    	aliasesMap.put("arrow", new Integer[]{262});
+    	aliasesMap.put("coal", new Integer[]{263});
+    	aliasesMap.put("charcoal", new Integer[]{263,1});
+    	aliasesMap.put("diamond", new Integer[]{264});
+    	aliasesMap.put("ironingot", new Integer[]{265});
+    	aliasesMap.put("goldingot", new Integer[]{266});
+    	aliasesMap.put("ironsword", new Integer[]{267});
+    	aliasesMap.put("woodsword", new Integer[]{268});
+    	aliasesMap.put("woodshovel", new Integer[]{269});
+    	aliasesMap.put("woodpickaxe", new Integer[]{270});
+    	aliasesMap.put("woodaxe", new Integer[]{271});
+    	aliasesMap.put("woodensword", new Integer[]{268});
+    	aliasesMap.put("woodenshovel", new Integer[]{269});
+    	aliasesMap.put("woodenpickaxe", new Integer[]{270});
+    	aliasesMap.put("woodenaxe", new Integer[]{271});
+    	aliasesMap.put("stonesword", new Integer[]{272});
+    	aliasesMap.put("stoneshovel", new Integer[]{273});
+    	aliasesMap.put("stonepickaxe", new Integer[]{274});
+    	aliasesMap.put("stoneaxe", new Integer[]{275});
+    	aliasesMap.put("diamondsword", new Integer[]{276});
+    	aliasesMap.put("diamondshovel", new Integer[]{277});
+    	aliasesMap.put("diamondpickaxe", new Integer[]{278});
+    	aliasesMap.put("diamondaxe", new Integer[]{279});
+    	aliasesMap.put("sticks", new Integer[]{280});
+    	aliasesMap.put("stick", new Integer[]{280});
+    	aliasesMap.put("bowl", new Integer[]{281});
+    	aliasesMap.put("mushroomstew", new Integer[]{282});
+    	aliasesMap.put("mushroomsoup", new Integer[]{282});
+    	aliasesMap.put("goldsword", new Integer[]{283});
+    	aliasesMap.put("goldshovel", new Integer[]{284});
+    	aliasesMap.put("goldpickaxe", new Integer[]{285});
+    	aliasesMap.put("goldaxe", new Integer[]{286});
+    	aliasesMap.put("string", new Integer[]{287});
+    	aliasesMap.put("feather", new Integer[]{288});
+    	aliasesMap.put("gunpowder", new Integer[]{289});
+    	aliasesMap.put("sulphur", new Integer[]{289});
+    	aliasesMap.put("woodhoe", new Integer[]{290});
+    	aliasesMap.put("woodenhoe", new Integer[]{290});
+    	aliasesMap.put("stonehoe", new Integer[]{291});
+    	aliasesMap.put("ironhoe", new Integer[]{292});
+    	aliasesMap.put("diamondhoe", new Integer[]{293});
+    	aliasesMap.put("goldhoe", new Integer[]{294});
+    	aliasesMap.put("wheatseeds", new Integer[]{295});
+    	aliasesMap.put("wheat", new Integer[]{296});
+    	aliasesMap.put("bread", new Integer[]{297});
+    	aliasesMap.put("leatherhelmet", new Integer[]{298});
+    	aliasesMap.put("leatherchestplate", new Integer[]{299});
+    	aliasesMap.put("leatherleggings", new Integer[]{300});
+    	aliasesMap.put("leatherboots", new Integer[]{301});
+    	aliasesMap.put("chainmailhelmet", new Integer[]{302});
+    	aliasesMap.put("chainmailchestplate", new Integer[]{303});
+    	aliasesMap.put("chainmailleggings", new Integer[]{304});
+    	aliasesMap.put("chainmailboots", new Integer[]{305});
+    	aliasesMap.put("ironhelmet", new Integer[]{306});
+    	aliasesMap.put("ironchestplate", new Integer[]{307});
+    	aliasesMap.put("ironleggings", new Integer[]{308});
+    	aliasesMap.put("ironboots", new Integer[]{309});
+    	aliasesMap.put("diamondhelmet", new Integer[]{310});
+    	aliasesMap.put("diamondchestplate", new Integer[]{311});
+    	aliasesMap.put("diamondleggings", new Integer[]{312});
+    	aliasesMap.put("diamondboots", new Integer[]{313});
+    	aliasesMap.put("goldhelmet", new Integer[]{314});
+    	aliasesMap.put("goldchestplate", new Integer[]{315});
+    	aliasesMap.put("goldleggings", new Integer[]{316});
+    	aliasesMap.put("goldboots", new Integer[]{317});
+    	aliasesMap.put("flint", new Integer[]{318});
+    	aliasesMap.put("rawporkchop", new Integer[]{319});
+    	aliasesMap.put("pork", new Integer[]{320});
+    	aliasesMap.put("porkchop", new Integer[]{320});
+    	aliasesMap.put("cookedpork", new Integer[]{320});
+    	aliasesMap.put("cookedporkchop", new Integer[]{320});
+    	aliasesMap.put("painting", new Integer[]{321});
+    	aliasesMap.put("goldenapple", new Integer[]{322});
+    	aliasesMap.put("enchantedgoldenapple", new Integer[]{322,1});
+    	aliasesMap.put("sign", new Integer[]{323});
+    	aliasesMap.put("wooddoor", new Integer[]{324});
+    	aliasesMap.put("woodendoor", new Integer[]{324});
+    	aliasesMap.put("bucket", new Integer[]{325});
+    	aliasesMap.put("waterbucket", new Integer[]{326});
+    	aliasesMap.put("lavabucket", new Integer[]{327});
+    	aliasesMap.put("minecart", new Integer[]{328});
+    	aliasesMap.put("saddle", new Integer[]{329});
+    	aliasesMap.put("irondoor", new Integer[]{330});
+    	aliasesMap.put("redstone", new Integer[]{331});
+    	aliasesMap.put("snowball", new Integer[]{332});
+    	aliasesMap.put("boat", new Integer[]{333});
+    	aliasesMap.put("leather", new Integer[]{334});
+    	aliasesMap.put("milkbucket", new Integer[]{335});
+    	aliasesMap.put("brick", new Integer[]{336});
+    	aliasesMap.put("claybrick", new Integer[]{336});
+    	aliasesMap.put("clayballs", new Integer[]{337});
+    	aliasesMap.put("clay", new Integer[]{337});
+    	aliasesMap.put("sugarcane", new Integer[]{338});
+    	aliasesMap.put("paper", new Integer[]{339});
+    	aliasesMap.put("book", new Integer[]{340});
+    	aliasesMap.put("slimeball", new Integer[]{341});
+    	aliasesMap.put("chestminecraft", new Integer[]{342});
+    	aliasesMap.put("minecraftwithchest", new Integer[]{342});
+    	aliasesMap.put("storageminecart", new Integer[]{342});
+    	aliasesMap.put("minecartwithfurnace", new Integer[]{343});
+    	aliasesMap.put("furnaceminecart", new Integer[]{343});
+    	aliasesMap.put("poweredminecart", new Integer[]{343});
+    	aliasesMap.put("egg", new Integer[]{344});
+    	aliasesMap.put("compass", new Integer[]{345});
+    	aliasesMap.put("fishingpole", new Integer[]{346});
+    	aliasesMap.put("fishingrod", new Integer[]{346});
+    	aliasesMap.put("clock", new Integer[]{347});
+    	aliasesMap.put("glowstone", new Integer[]{348});
+    	aliasesMap.put("glowstonedust", new Integer[]{348});
+    	aliasesMap.put("rawfish", new Integer[]{349});
+    	aliasesMap.put("fish", new Integer[]{350});
+    	aliasesMap.put("cookedfish", new Integer[]{350});
+    	aliasesMap.put("dye", new Integer[]{351});
+    	aliasesMap.put("inksack", new Integer[]{351,0});
+    	aliasesMap.put("rosered", new Integer[]{351,1});
+    	aliasesMap.put("cactusgreen", new Integer[]{351,2});
+    	aliasesMap.put("cocobeans", new Integer[]{351,3});
+    	aliasesMap.put("lapislazuli", new Integer[]{351,4});
+    	aliasesMap.put("purpledye", new Integer[]{351,5});
+    	aliasesMap.put("cyandye", new Integer[]{351,6});
+    	aliasesMap.put("lightgraydye", new Integer[]{351,7});
+    	aliasesMap.put("graydye", new Integer[]{351,8});
+    	aliasesMap.put("pinkdye", new Integer[]{351,9});
+    	aliasesMap.put("limedye", new Integer[]{351,10});
+    	aliasesMap.put("dandelionyellow", new Integer[]{351,11});
+    	aliasesMap.put("lightbluedye", new Integer[]{351,12});
+    	aliasesMap.put("magentadye", new Integer[]{351,13});
+    	aliasesMap.put("orangedye", new Integer[]{351,14});
+    	aliasesMap.put("bonemeal", new Integer[]{351,15});
+    	aliasesMap.put("bone", new Integer[]{352});
+    	aliasesMap.put("sugar", new Integer[]{353});
+    	aliasesMap.put("cake", new Integer[]{354});
+    	aliasesMap.put("bed", new Integer[]{355});
+    	aliasesMap.put("repeater", new Integer[]{356});
+    	aliasesMap.put("redstonerepeater", new Integer[]{356});
+    	aliasesMap.put("cookie", new Integer[]{357});
+    	aliasesMap.put("map", new Integer[]{358});
+    	aliasesMap.put("shears", new Integer[]{359});
+    	aliasesMap.put("melon", new Integer[]{360});
+    	aliasesMap.put("pumpkinseeds", new Integer[]{361});
+    	aliasesMap.put("melonseeds", new Integer[]{362});
+    	aliasesMap.put("rawbeef", new Integer[]{363});
+    	aliasesMap.put("cookedbeef", new Integer[]{364});
+    	aliasesMap.put("steak", new Integer[]{364});
+    	aliasesMap.put("rawchicken", new Integer[]{365});
+    	aliasesMap.put("chicken", new Integer[]{366});
+    	aliasesMap.put("cookedchicken", new Integer[]{366});
+    	aliasesMap.put("rottenflesh", new Integer[]{367});
+    	aliasesMap.put("enderpearl", new Integer[]{368});
+    	aliasesMap.put("blazerod", new Integer[]{369});
+    	aliasesMap.put("ghasttear", new Integer[]{370});
+    	aliasesMap.put("goldnugget", new Integer[]{371});
+    	aliasesMap.put("netherwart", new Integer[]{372});
+    	aliasesMap.put("potion", new Integer[]{373});
+    	aliasesMap.put("waterbottle", new Integer[]{373,0});
+    	aliasesMap.put("awkwardpotion", new Integer[]{373,16});
+    	aliasesMap.put("thickpotion", new Integer[]{373,32});
+    	aliasesMap.put("mundanepotion", new Integer[]{373,64});
+    	aliasesMap.put("regenerationpotion", new Integer[]{373,8193});
+    	aliasesMap.put("regenerationpotionlong", new Integer[]{373,8257});
+    	aliasesMap.put("regenerationpotion2", new Integer[]{373,8225});
+    	aliasesMap.put("regenerationpotion2long", new Integer[]{373,8289});
+    	aliasesMap.put("swiftnesspotion", new Integer[]{373,8194});
+    	aliasesMap.put("swiftnesspotionlong", new Integer[]{373,8258});
+    	aliasesMap.put("swiftnesspotion2", new Integer[]{373,8226});
+    	aliasesMap.put("swiftnesspotion2long", new Integer[]{373,8290});
+    	aliasesMap.put("fireresistancepotion", new Integer[]{373,8195});
+    	aliasesMap.put("fireresistancepotionlong", new Integer[]{373,8259});
+    	aliasesMap.put("poisonpotion", new Integer[]{373,8196});
+    	aliasesMap.put("poisonpotionlong", new Integer[]{373,8260});
+    	aliasesMap.put("poisonpotion2", new Integer[]{373,8228});
+    	aliasesMap.put("poisonpotion2long", new Integer[]{373,8292});
+    	aliasesMap.put("healingpotion", new Integer[]{373,8197});
+    	aliasesMap.put("healingpotion2", new Integer[]{373,8229});
+    	aliasesMap.put("nightvisionpotion", new Integer[]{373,8198});
+    	aliasesMap.put("nightvisionpotionlong", new Integer[]{373,8262});
+    	aliasesMap.put("weaknesspotion", new Integer[]{373,8200});
+    	aliasesMap.put("weaknesspotionlong", new Integer[]{373,8264});
+    	aliasesMap.put("strengthpotion", new Integer[]{373,8201});
+    	aliasesMap.put("strengthpotionlong", new Integer[]{373,8265});
+    	aliasesMap.put("strengthpotion2", new Integer[]{373,8233});
+    	aliasesMap.put("strengthpotion2long", new Integer[]{373,8297});
+    	aliasesMap.put("slownesspotion", new Integer[]{373,8202});
+    	aliasesMap.put("slownesspotionlong", new Integer[]{373,8266});
+    	aliasesMap.put("harmingpotion", new Integer[]{373,8204});
+    	aliasesMap.put("harmingpotion2", new Integer[]{373,8236});
+    	aliasesMap.put("invisibilitypotion", new Integer[]{373,8206});
+    	aliasesMap.put("invisibilitypotionlong", new Integer[]{373,8270});
+    	aliasesMap.put("regenerationsplash", new Integer[]{373,16385});
+    	aliasesMap.put("regenerationsplashlong", new Integer[]{373,16449});
+    	aliasesMap.put("regenerationsplash2", new Integer[]{373,16417});
+    	aliasesMap.put("regenerationsplash2long", new Integer[]{373,16481});
+    	aliasesMap.put("swiftnesssplash", new Integer[]{373,16386});
+    	aliasesMap.put("swiftnesssplashlong", new Integer[]{373,16450});
+    	aliasesMap.put("swiftnesssplash2", new Integer[]{373,16418});
+    	aliasesMap.put("swiftnesssplash2long", new Integer[]{373,16482});
+    	aliasesMap.put("fireresistancesplash", new Integer[]{373,16387});
+    	aliasesMap.put("fireresistancesplashlong", new Integer[]{373,16451});
+    	aliasesMap.put("poisonsplash", new Integer[]{373,16388});
+    	aliasesMap.put("poisonsplashlong", new Integer[]{373,16452});
+    	aliasesMap.put("poisonsplash2", new Integer[]{373,16420});
+    	aliasesMap.put("poisonsplash2long", new Integer[]{373,16484});
+    	aliasesMap.put("healingsplash", new Integer[]{373,16389});
+    	aliasesMap.put("healingsplash2", new Integer[]{373,16421});
+    	aliasesMap.put("nightvisionsplash", new Integer[]{373,16390});
+    	aliasesMap.put("nightvisionsplashlong", new Integer[]{373,16454});
+    	aliasesMap.put("weaknesssplash", new Integer[]{373,16392});
+    	aliasesMap.put("weaknesssplashlong", new Integer[]{373,16456});
+    	aliasesMap.put("strengthsplash", new Integer[]{373,16393});
+    	aliasesMap.put("strengthsplashlong", new Integer[]{373,16457});
+    	aliasesMap.put("strengthsplash2", new Integer[]{373,16425});
+    	aliasesMap.put("strengthsplash2long", new Integer[]{373,16489});
+    	aliasesMap.put("slownesssplash", new Integer[]{373,16394});
+    	aliasesMap.put("slownesssplashlong", new Integer[]{373,16458});
+    	aliasesMap.put("harmingsplash", new Integer[]{373,16396});
+    	aliasesMap.put("harmingsplash2", new Integer[]{373,16428});
+    	aliasesMap.put("invisibilitysplash", new Integer[]{373,16398});
+    	aliasesMap.put("invisibilitysplashlong", new Integer[]{373,16462});
+    	aliasesMap.put("emptybottle", new Integer[]{374});
+    	aliasesMap.put("glassbottle", new Integer[]{374});
+    	aliasesMap.put("spidereye", new Integer[]{375});
+    	aliasesMap.put("fermentedspidereye", new Integer[]{376});
+    	aliasesMap.put("blazepowder", new Integer[]{377});
+    	aliasesMap.put("magmacream", new Integer[]{378});
+    	aliasesMap.put("brewingstand", new Integer[]{379});
+    	aliasesMap.put("cauldron", new Integer[]{380});
+    	aliasesMap.put("eyeofender", new Integer[]{381});
+    	aliasesMap.put("glisteringmelon", new Integer[]{382});
+    	aliasesMap.put("spawnegg", new Integer[]{383});
+    	aliasesMap.put("spawnmob", new Integer[]{383});
+    	aliasesMap.put("mobegg", new Integer[]{383});
+    	aliasesMap.put("creeperegg", new Integer[]{383,50});
+    	aliasesMap.put("skeletonegg", new Integer[]{383,51});
+    	aliasesMap.put("spideregg", new Integer[]{383,52});
+    	aliasesMap.put("zombieegg", new Integer[]{383,54});
+    	aliasesMap.put("slimeegg", new Integer[]{383,55});
+    	aliasesMap.put("ghastegg", new Integer[]{383,56});
+    	aliasesMap.put("pigmanegg", new Integer[]{383,57});
+    	aliasesMap.put("endermaneggegg", new Integer[]{383,58});
+    	aliasesMap.put("cavespideregg", new Integer[]{383,59});
+    	aliasesMap.put("silverfishegg", new Integer[]{383,60});
+    	aliasesMap.put("blazeegg", new Integer[]{383,61});
+    	aliasesMap.put("magmacubeegg", new Integer[]{383,62});
+    	aliasesMap.put("bategg", new Integer[]{383,65});
+    	aliasesMap.put("witchegg", new Integer[]{383,66});
+    	aliasesMap.put("pigegg", new Integer[]{383,90});
+    	aliasesMap.put("sheepegg", new Integer[]{383,91});
+    	aliasesMap.put("cowegg", new Integer[]{383,92});
+    	aliasesMap.put("chickenegg", new Integer[]{383,93});
+    	aliasesMap.put("squidegg", new Integer[]{383,94});
+    	aliasesMap.put("wolfegg", new Integer[]{383,95});
+    	aliasesMap.put("mooshroomegg", new Integer[]{383,96});
+    	aliasesMap.put("ocelotegg", new Integer[]{383,98});
+    	aliasesMap.put("villageregg", new Integer[]{383,120});
+    	aliasesMap.put("spawncreeper", new Integer[]{383,50});
+    	aliasesMap.put("spawnskeleton", new Integer[]{383,51});
+    	aliasesMap.put("spawnspider", new Integer[]{383,52});
+    	aliasesMap.put("spawnzombie", new Integer[]{383,54});
+    	aliasesMap.put("spawnslime", new Integer[]{383,55});
+    	aliasesMap.put("spawnghast", new Integer[]{383,56});
+    	aliasesMap.put("spawnpigman", new Integer[]{383,57});
+    	aliasesMap.put("spawnenderman", new Integer[]{383,58});
+    	aliasesMap.put("spawncavespider", new Integer[]{383,59});
+    	aliasesMap.put("spawnsilverfish", new Integer[]{383,60});
+    	aliasesMap.put("spawnblaze", new Integer[]{383,61});
+    	aliasesMap.put("spawnmagmacube", new Integer[]{383,62});
+    	aliasesMap.put("spawnbat", new Integer[]{383,65});
+    	aliasesMap.put("spawnwitch", new Integer[]{383,66});
+    	aliasesMap.put("spawnpig", new Integer[]{383,90});
+    	aliasesMap.put("spawnsheep", new Integer[]{383,91});
+    	aliasesMap.put("spawncow", new Integer[]{383,92});
+    	aliasesMap.put("spawnchicken", new Integer[]{383,93});
+    	aliasesMap.put("spawnsquid", new Integer[]{383,94});
+    	aliasesMap.put("spawnwolf", new Integer[]{383,95});
+    	aliasesMap.put("spawnmooshroom", new Integer[]{383,96});
+    	aliasesMap.put("spawnocelot", new Integer[]{383,98});
+    	aliasesMap.put("spawnvillager", new Integer[]{383,120});
+    	aliasesMap.put("expflask", new Integer[]{384});
+    	aliasesMap.put("experiencepotion", new Integer[]{384});
+    	aliasesMap.put("enchantingbottle", new Integer[]{384});
+    	aliasesMap.put("bottleoenchanting", new Integer[]{384});
+    	aliasesMap.put("firecharge", new Integer[]{385});
+    	aliasesMap.put("bookandquill", new Integer[]{386});
+    	aliasesMap.put("writtenbook", new Integer[]{387});
+    	aliasesMap.put("emerald", new Integer[]{388});
+    	aliasesMap.put("itemframe", new Integer[]{389});
+    	aliasesMap.put("flowerpot", new Integer[]{390});
+    	aliasesMap.put("carrots", new Integer[]{391});
+    	aliasesMap.put("carrot", new Integer[]{391});
+    	aliasesMap.put("potato", new Integer[]{392});
+    	aliasesMap.put("bakedpotato", new Integer[]{393});
+    	aliasesMap.put("poisonouspotato", new Integer[]{394});
+    	aliasesMap.put("map", new Integer[]{395});
+    	aliasesMap.put("goldencarrot", new Integer[]{396});
+    	aliasesMap.put("mobhead", new Integer[]{397});
+    	aliasesMap.put("skeletonhead", new Integer[]{397,0});
+    	aliasesMap.put("witherhead", new Integer[]{397,1});
+    	aliasesMap.put("zombiehead", new Integer[]{397,2});
+    	aliasesMap.put("stevehead", new Integer[]{397,3});
+    	aliasesMap.put("humanhead", new Integer[]{397,3});
+    	aliasesMap.put("creeperhead", new Integer[]{397,4});
+    	aliasesMap.put("carrotonastick", new Integer[]{398});
+    	aliasesMap.put("netherstar", new Integer[]{399});
+    	aliasesMap.put("pumpkinpie", new Integer[]{400});
+    	aliasesMap.put("fireworkrocket", new Integer[]{401});
+    	aliasesMap.put("fireworkstar", new Integer[]{402});
+    	aliasesMap.put("enchantedbook", new Integer[]{403});
+    	aliasesMap.put("comparator", new Integer[]{404});
+    	aliasesMap.put("redstonecomparator", new Integer[]{404});
+    	aliasesMap.put("netherbrick", new Integer[]{405});
+    	aliasesMap.put("netherquartz", new Integer[]{406});
+    	aliasesMap.put("tntminecart", new Integer[]{407});
+    	aliasesMap.put("hopperminecart", new Integer[]{408});
+    	aliasesMap.put("minecartwithtnt", new Integer[]{407});
+    	aliasesMap.put("minecartwithhopper", new Integer[]{408});
+    	aliasesMap.put("13disc", new Integer[]{2256});
+    	aliasesMap.put("catdisc", new Integer[]{2257});
+    	aliasesMap.put("blocksdisc", new Integer[]{2258});
+    	aliasesMap.put("chirpdisc", new Integer[]{2259});
+    	aliasesMap.put("fardisc", new Integer[]{2260});
+    	aliasesMap.put("malldisc", new Integer[]{2261});
+    	aliasesMap.put("mellohidisc", new Integer[]{2262});
+    	aliasesMap.put("staldisc", new Integer[]{2263});
+    	aliasesMap.put("straddisc", new Integer[]{2264});
+    	aliasesMap.put("warddisc", new Integer[]{2265});
+    	aliasesMap.put("11disc", new Integer[]{2266});
+    	aliasesMap.put("waitdisc", new Integer[]{2267});
+
+    	
+    	sortedAliases = new ArrayList<String>(aliasesMap.keySet());
+		Collections.sort(sortedAliases, new StringLengthComparator());//Actually sort the keys
+    }
+    
     private void loadTemporaryFile(int what){
     	File f = null;
     	FileInputStream fstream = null;
@@ -588,9 +1191,9 @@ public class RealShopping extends JavaPlugin {//FIXME decide on equals or equals
 					if(what == 0){
 						PInvMap.put(s.split(";")[0].split("-")[0], new RSPlayerInventory(s.split(";")[1] ,s.split(";")[0].split("-")[1]));//Name - Pinv
 		    		} else if(what == 1){
-		    			jailedPlayers.put(s.split(";")[0], stringToLoc(s.split(";")[1], s.split(";")[2]));
+		    			jailedPlayers.put(s.split(";")[0], RSUtils.stringToLoc(s.split(";")[1], s.split(";")[2]));
 		    		} else if(what == 2){
-		    			forbiddenTpLocs.put(stringToLoc(s.split(";")[0], s.split(";")[1]), Integer.parseInt(s.split(";")[2]));
+		    			forbiddenTpLocs.put(RSUtils.stringToLoc(s.split(";")[0], s.split(";")[1]), Integer.parseInt(s.split(";")[2]));
 		    		} else if(what == 3){
 						shopMap.get(s.split(";")[0]).addProtectedChest(new Location(getServer().getWorld(s.split(";")[1].split(",")[0])
 								,Double.parseDouble(s.split(";")[1].split(",")[1])
@@ -627,23 +1230,6 @@ public class RealShopping extends JavaPlugin {//FIXME decide on equals or equals
 	    						}
 	    						shippedToCollect.get(s.split("\\[")[0]).add(new ShippedPackage(iS, cost, loc, timeStamp));
 	    					}
-						} else {//TODO remove to next version?
-	    					shippedToCollect.put(s.split("\\[\\]")[0], new ArrayList<ShippedPackage>());
-	    					for(int i = 1;i < s.split("\\[\\]").length;i++){
-	    						ItemStack[] iS = new ItemStack[27];
-	    						Integer cost = 0;
-	    						Location loc = getServer().getWorlds().get(0).getSpawnLocation();
-	    						long timeStamp = System.currentTimeMillis();
-	    						for(int j = 0;j < iS.length && j < 27;j++){
-	    							if(s.split("\\[\\]")[i].split(";")[j].equals("null")) iS[j] = null;
-	    							else {
-	    								String s1[] = s.split("\\[\\]")[i].split(";")[j].split(",");
-	    								iS[j] = new MaterialData(Integer.parseInt(s1[0]), Byte.parseByte(s1[3])).toItemStack(Integer.parseInt(s1[1]));
-	    								iS[j].setDurability(Short.parseShort(s1[2]));
-	    							}
-	    						}
-	    						shippedToCollect.get(s.split("\\[\\]")[0]).add(new ShippedPackage(iS, cost, loc, timeStamp));
-	    					}
 						}
 		    		} else if(what == 5){
 						Shop tempShop;
@@ -659,7 +1245,7 @@ public class RealShopping extends JavaPlugin {//FIXME decide on equals or equals
 	    						tempShop.addStolenToClaim(tempIS);
 	    					}
 						} else {
-							String[] stores = getOwnedStores(s.split(";")[0]);
+							String[] stores = RSUtils.getOwnedStores(s.split(";")[0]);
 							if(!stores[0].equals("")){
 								tempShop = shopMap.get(stores[0]);
 		    					for(int i = 1;i < s.split(";").length;i++){
@@ -747,10 +1333,10 @@ public class RealShopping extends JavaPlugin {//FIXME decide on equals or equals
 						line = keys[i] + "-" + PInvMap.get(keys[i]).getStore() + ";" + PInvMap.get(keys[i]).exportToString();
 						break;
 					case 1:
-						line = ((String)keys[i]) + ";" + jailedPlayers.get(keys[i]).getWorld().getName() + ";" + locAsString(jailedPlayers.get(keys[i]));
+						line = ((String)keys[i]) + ";" + jailedPlayers.get(keys[i]).getWorld().getName() + ";" + RSUtils.locAsString(jailedPlayers.get(keys[i]));
 						break;
 					case 2:
-						line = ((Location)keys[i]).getWorld().getName() + ";" + locAsString((Location)keys[i]) + ";" + forbiddenTpLocs.get(keys[i]);
+						line = ((Location)keys[i]).getWorld().getName() + ";" + RSUtils.locAsString((Location)keys[i]) + ";" + forbiddenTpLocs.get(keys[i]);
 						break;
 					case 3:
 						String protStr = shopMap.get(keys[i]).exportProtectedToString();
@@ -763,7 +1349,7 @@ public class RealShopping extends JavaPlugin {//FIXME decide on equals or equals
 							for(int j = 0;j < keys2.length;j++){
 								ShippedPackage tempSP = (ShippedPackage)keys2[j];
 								line += "[" + tempSP.getCost() + ":" + tempSP.getLocationSent().getWorld().getName() + ";"
-								+ tempSP.getLocationSent().getBlockX() + "," + tempSP.getLocationSent().getBlockY() + "," + tempSP.getLocationSent().getBlockZ() + ":" + tempSP.getDateSent();
+								+ RSUtils.locAsString(tempSP.getLocationSent()) + ":" + tempSP.getDateSent();
 								line += "]" + tempSP.exportContents();
 							}
 						}
@@ -798,637 +1384,121 @@ public class RealShopping extends JavaPlugin {//FIXME decide on equals or equals
     
 	/*
 	 * 
-	 * Basic store functions
+	 * Getters and Setters
 	 * 
 	 */
     
-    public static boolean prices(CommandSender sender, int page, String store){//In 0.50+ pages start from 1 TODO fix pages
-    	Shop tempShop = RealShopping.shopMap.get(store);
-    	if(tempShop.hasPrices()){
-    		Map<Price, Integer> tempMap = tempShop.getPrices();
- 			if(!tempMap.isEmpty()){
- 				Price[] keys = tempMap.keySet().toArray(new Price[0]);
- 				if(page*9 < keys.length){//If page exists
-// 					boolean SL = false;
- 					if(tempShop.hasSales()){
- 						sender.sendMessage(ChatColor.GREEN + LangPack.THEREISA + tempShop.getFirstSale() + LangPack.PCNTOFFSALEAT + store);
-// 						SL = true;
- 					}
- 					if((page+1)*9 < keys.length){//Not last
- 		 				for(int i = 9*page;i < 9*(page+1);i++){
- 		 					int cost = tempMap.get(keys[i]);
- 		 					String onSlStr = "";//FIXME sale on items with data in rsstores
- 		 					if(tempShop.hasSale(keys[i].stripOffData()) || tempShop.hasSale(keys[i])){//There is a sale on that item.
- 								int pcnt = -1;
- 								if(tempShop.hasSale(keys[i].stripOffData())) pcnt = 100 - tempShop.getSale(keys[i].stripOffData());
- 								if(tempShop.hasSale(keys[i]))  pcnt = 100 - tempShop.getSale(keys[i]);
- 								cost *= pcnt/100f;
- 		 						onSlStr = ChatColor.GREEN + LangPack.ONSALE;
- 		 					}
- 		 					sender.sendMessage(ChatColor.BLUE + "" + keys[i] + " " + Material.getMaterial(keys[i].getType()) + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
- 		 				}
- 		 				sender.sendMessage(ChatColor.RED + LangPack.MOREITEMSONPAGE + (page + 2));
- 					} else {//Last page
- 		 				for(int i = 9*page;i < keys.length;i++){
- 		 					int cost = tempMap.get(keys[i]);
- 		 					String onSlStr = "";
- 		 					if(tempShop.hasSale(keys[i].stripOffData()) || tempShop.hasSale(keys[i])){//There is a sale on that item.
- 								int pcnt = -1;
- 								if(tempShop.hasSale(keys[i].stripOffData())) pcnt = 100 - tempShop.getSale(keys[i].stripOffData());
- 								if(tempShop.hasSale(keys[i]))  pcnt = 100 - tempShop.getSale(keys[i]);
- 								cost *= pcnt/100f;
- 		 						onSlStr = ChatColor.GREEN + LangPack.ONSALE;
- 		 					}
- 		 					sender.sendMessage(ChatColor.BLUE + "" + keys[i] + " " + Material.getMaterial(keys[i].getType()) + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
- 		 				}
- 					}
- 				} else {
- 					sender.sendMessage(ChatColor.RED + LangPack.THEREARENTTHATMANYPAGES);
- 				}
- 			} else {
- 				sender.sendMessage(ChatColor.RED + LangPack.THEREARENOPRICESSETFORTHISSTORE);
- 				return true;
- 			}
-    	} else {
-				sender.sendMessage(ChatColor.RED + LangPack.THEREARENOPRICESSETFORTHISSTORE);
-				return true;
-    	}
- 		return true;
-     }
+	public Updater getUpdater() { return updater; }
+	public void setUpdater(Updater updater) { this.updater = updater; }
     
-	/*
-	 * 
-	 * Selling to stores functions
-	 * 
-	 */
- 
-    public static boolean sellToStore(Player p, ItemStack[] iS){
-    	Shop tempShop = shopMap.get(PInvMap.get(p.getName()).getStore());
-    	if(Config.isEnableSelling() && PInvMap.containsKey(p.getName()) && tempShop.getBuyFor() > 0){
-    		int payment = 0;
-    		List<ItemStack> sold = new ArrayList<ItemStack>();
-    		for(int i = 0;i < iS.length;i++){//Calculate cost and check if player owns items
-    			if(iS[i] != null){
-        			int type = iS[i].getTypeId();
-        			int data = iS[i].getData().getData();
-        			if(tempShop.hasPrice(new Price(type)) || tempShop.hasPrice(new Price(type, data))){//Something in inventory has a price
-        				int amount = ((maxDurMap.containsKey(type))?maxDurMap.get(type) - iS[i].getDurability():iS[i].getAmount());
-        				
-        				int soldAm = amount;
-        				for(ItemStack tempSld:sold)
-        					if(tempSld.getTypeId() == iS[i].getTypeId()) soldAm += ((maxDurMap.containsKey(type))?maxDurMap.get(type) - iS[i].getDurability():iS[i].getAmount());
- 
-        				if(PInvMap.get(p.getName()).getAmount(iS[i]) >= soldAm){
-        					int cost = -1;
-        					if(tempShop.hasPrice(new Price(type))) cost = tempShop.getPrice(new Price(type));
-        					if(tempShop.hasPrice(new Price(type, data))) cost = tempShop.getPrice(new Price(type, data));
-        					if(tempShop.hasSale(new Price(type)) || tempShop.hasSale(new Price(type, data))){//There is a sale on that item.
-        						int pcnt = -1;
-        						if(tempShop.hasSale(new Price(type))) pcnt = 100 - tempShop.getSale(new Price(type));
-        						if(tempShop.hasSale(new Price(type, data)))  pcnt = 100 - tempShop.getSale(new Price(type, data));
-            					cost *= pcnt/100f;
-            				}
-          					cost *= tempShop.getBuyFor()/100f;
-
-        					sold.add(iS[i]);
-            				payment += cost * (maxDurMap.containsKey(type)?(double)amount / (double)maxDurMap.get(type):amount);//Convert items durability to item amount
-        				}
-        			}
-    			}
-    		}
-    		boolean cont = false;
-    		String own = tempShop.getOwner();
-    		if(!own.equals("@admin")){
-    			if(RSEconomy.getBalance(own) >= payment/100f){
-    				RSEconomy.deposit(p.getName(), payment/100f);
-    				RSEconomy.withdraw(own, payment/100f);//If player owned store, withdraw from owner
-    				p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sold.size() + LangPack.ITEMSFOR + payment/100f + unit);
-					if(tempShop.allowsNotifications()) sendNotification(own, LangPack.YOURSTORE + tempShop.getName() + LangPack.BOUGHTSTUFFFOR + payment/100f + LangPack.UNIT + LangPack.FROM + p.getName());
-					for(ItemStack key:sold){
-						if(Config.isEnableAI()) tempShop.addStat(new Statistic(new PItem(key), key.getAmount(), false));
-						PInvMap.get(p.getName()).removeItem(key, key.getAmount());
-					}
-    				cont = true;
-    			} else p.sendMessage(ChatColor.RED + LangPack.OWNER + own + LangPack.CANTAFFORDTOBUYITEMSFROMYOUFOR + payment/100f + unit);
-    		} else {
-				RSEconomy.deposit(p.getName(), payment/100f);
-				p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sold.size() + LangPack.ITEMSFOR + payment/100f + unit);
-				for(ItemStack key:sold){
-					PInvMap.get(p.getName()).removeItem(key, key.getAmount());
-				}
-				cont = true;
-   			}
-   			if(cont){
-       			if(!own.equals("@admin")){//Return items if player store.
-       				for(int i = 0;i < sold.size();i++){
-        				tempShop.addStolenToClaim(sold.get(i));
-        			}
-        		}
-    			ItemStack[] newInv = p.getInventory().getContents();
-    			boolean skip = false;//To save CPU
-        		for(int i = 0;i < iS.length;i++){
-        			if(sold.contains(iS[i])){//Item is sold, do not return to player
-        				sold.remove(iS[i]);
-        			} else {
-        				if(!skip) for(int j = 0;j < newInv.length;j++){
-        					if(newInv[j] == null){
-        						newInv[j] = iS[i];
-        						iS[i] = null;
-        						break;
-        					}
-        				}
-        				if(iS[i] != null){//Item hasn't been returned
-        					skip = true;
-        					p.getWorld().dropItem(p.getLocation(), iS[i]);
-        				}
-        			}
-        		}
-        		p.getInventory().setContents(newInv);
-        		return true;
+    public static Set<String> getNotificatorKeys(){ return notificator.keySet(); }
+    public static List<String> getNotifications(String player){ return notificator.get(player); }
+    
+    public static boolean isTool(int item){ return maxDurMap.containsKey(item); }
+    public static int getMaxDur(int item){ return maxDurMap.get(item); }
+    
+    public static boolean isForbiddenInStore(int item){ return forbiddenInStore.contains(item); }
+    
+    public static List<String> getSortedAliases(){ return sortedAliases; }
+    public static Map<String, Integer[]> getAliasesMap(){ return aliasesMap; }
+    
+    public static boolean addEntranceExit(EEPair eePair, Shop shop){
+    	if(eePairs.containsKey(eePair)) return false;
+    	eePairs.put(eePair, shop);
+    	return true;
+    }
+    public static boolean removeEntranceExit(Shop shop, Location en, Location ex){
+    	for(EEPair ee:eePairs.keySet()){
+    		if(ee.hasEntrance(en) && ee.hasExit(ex) && eePairs.get(ee).equals(shop)){
+    			eePairs.remove(ee);
+    			return true; 
     		}
     	}
     	return false;
     }
-    
-	/*
-	 * 
-	 * Cart-related functions
-	 * 
-	 */
-    
-    public static StorageMinecart[] checkForCarts(Location l){
-    	Location[] aL = new Location[]{	l.clone().subtract(0, 1, 0)		// [6][7][8]
-    									, l.clone().subtract(-1, 1, 0)	// [5][0][1]
-										, l.clone().subtract(-1, 1, -1)	// [4][3][2]
-										, l.clone().subtract(0, 1, -1)
-										, l.clone().subtract(1, 1, -1)
-										, l.clone().subtract(1, 1, 0)
-										, l.clone().subtract(1, 1, 1)
-										, l.clone().subtract(0, 1, 1)
-										, l.clone().subtract(-1, 1, 1)};
-    	Block[] b = new Block[]{	aL[0].getBlock()
-									, aL[1].getBlock()
-    								, aL[2].getBlock()
-    								, aL[3].getBlock()
-    								, aL[4].getBlock()
-    								, aL[5].getBlock()
-    								, aL[6].getBlock()
-    								, aL[7].getBlock()
-    								, aL[8].getBlock()};
-    	StorageMinecart firstCart = null;//First cart found on first block
-    	if(Config.isAllowFillChests() && Config.isCartEnabledW(l.getWorld().getName())){
-        	Object[] mcArr = l.getWorld().getEntitiesByClass(StorageMinecart.class).toArray();
-        	String rails = "";
-        	for(int i = 0;i < b.length;i++){//Get rails in area
-        		if(b[i].getType() == Material.RAILS || b[i].getType() == Material.POWERED_RAIL || b[i].getType() == Material.DETECTOR_RAIL){
-        			rails += "," + i;
-        		}
-        	}
-        	if(!rails.equals("")){
-        		for(int j = 1;j < rails.split(",").length;j++){//Repeat for every rail in area until a minecart is found
-        			int areaInt = Integer.parseInt(rails.split(",")[j]);
-            		int k = 0;
-            		boolean hasCart = false;
-            		for(;k < mcArr.length;k++){//Repeat until a minecart is found on the block, or no minecarts are found
-            			if(((StorageMinecart)mcArr[k]).getLocation().getBlock().getLocation().equals(aL[areaInt])){//If minecart is on the rail
-            				hasCart = true;
-            				break;
-            			}
-            		}
-        			if(hasCart){
-        				firstCart = (StorageMinecart)mcArr[k];
-        				break;
-        			}
-        		}
-        	}
+    public static boolean hasEntrance(Shop shop, Location en){
+    	for(EEPair ee:eePairs.keySet()){
+    		if(ee.hasEntrance(en) && eePairs.get(ee).equals(shop)) return true; 
     	}
-    	if(firstCart == null) return new StorageMinecart[0];
-    	else return new StorageMinecart[]{firstCart};//TODO add more carts
+    	return false;
     }
-    
-	public static boolean shipCartContents(StorageMinecart sM, Player p) {
-		//Get bought items in cart
-		
-		//Old inv = items
-		
-		ItemStack[] cartInv = sM.getInventory().getContents();//Items in shopping cart
-		
-		Map<PItem, Integer> bought = new HashMap<PItem, Integer>();
-		
-		if(PInvMap.get(p.getName()).hasItems()){
-			for(int i = 0;i < cartInv.length;i++){
-				ItemStack x = cartInv[i];
-				if(x != null){
-					int type = x.getTypeId();
-					if(shopMap.get(PInvMap.get(p.getName()).getStore()).hasPrice(new Price(type))
-							|| shopMap.get(PInvMap.get(p.getName()).getStore()).hasPrice(new Price(type, x.getData().getData()))){//Something in cart has a price
-						if(PInvMap.get(p.getName()).hasItem(x)){//Player owns item
-							int amount = (maxDurMap.containsKey(type)?maxDurMap.get(type) - x.getDurability():x.getAmount());
-							PItem tempPI = new PItem(x);
-							
-							if(bought.containsKey(tempPI)) amount += bought.get(tempPI);
-							if(amount > PInvMap.get(p.getName()).getAmount(tempPI))
-								bought.put(tempPI, PInvMap.get(p.getName()).getAmount(tempPI));
-							else
-								bought.put(tempPI, amount);
-						}
-					}
-				}
-			}
-			
-			if(bought.isEmpty()){
-				p.sendMessage(ChatColor.RED + LangPack.YOUCANTSHIPANEMPTYCART);
-				return true;
-			}
-			Map<PItem, Integer> bought2 = new HashMap<PItem, Integer>(bought);
-			
-			//Remove bought items from carts inventory
-			ItemStack[] newCartInv = new ItemStack[cartInv.length];
-			ItemStack[] boughtIS = new ItemStack[cartInv.length];
-			for(int i = 0;i < cartInv.length;i++){
-				ItemStack x = cartInv[i];
-				if(x != null){
-					PItem tempPI = new PItem(x);
-					if(bought.containsKey(tempPI)){//Has bought item
-						int diff = bought.get(tempPI) - (maxDurMap.containsKey(x.getTypeId())?maxDurMap.get(x.getTypeId()) - x.getDurability():x.getAmount());
-						if(diff > 0){//If + then even more bought left
-							if(diff > 0) bought.put(tempPI, diff);
-							boughtIS[i] = x.clone();
-							x = null;
-						} else if(diff == 0) {//If zero
-							if(maxDurMap.containsKey(x.getTypeId())){
-								if(x.getDurability()  - bought.get(tempPI) < maxDurMap.get(x.getTypeId())){
-									x.setDurability((short)(x.getDurability() - bought.get(tempPI)));// - ?
-									boughtIS[i] = new ItemStack(x);
-									boughtIS[i].setDurability(bought.get(tempPI).shortValue());
-								} else x = null;
-							} else {
-								boughtIS[i] = new ItemStack(x);
-								boughtIS[i].setAmount(bought.get(tempPI));
-								x = null;
-							}
-							bought.remove(tempPI);
-						}
-					}
-				}
-				newCartInv[i] = x;
-			}
-			sM.getInventory().setContents(newCartInv);
-			
-			if(!bought.isEmpty()){ log.info("Error #802"); System.out.println(bought);}
-			
-			//Calculate cost
-			//TODO why is this code repeated without getting its own function?
-			int toPay = 0;
-			Object[] keys = bought2.keySet().toArray();
-
-			for(int i = 0;i < keys.length;i++){
-				PItem key = (PItem) keys[i];
-				Shop tempShop = shopMap.get(PInvMap.get(p.getName()).getStore());
-				int amount = bought2.get(key);
-				int cost = -1;
-				if(tempShop.hasPrice(new Price(key.type))) cost = tempShop.getPrice(new Price(key.type));
-				if(tempShop.hasPrice(new Price(key.type, key.data))) cost = tempShop.getPrice(new Price(key.type, key.data));
-				if(tempShop.hasSale(new Price(key.type)) || tempShop.hasSale(new Price(key.type, key.data))){//There is a sale on that item.
-					int pcnt = -1;
-					if(tempShop.hasSale(new Price(key.type))) pcnt = 100 - tempShop.getSale(new Price(key.type));
-					if(tempShop.hasSale(new Price(key.type, key.data))) pcnt = 100 - tempShop.getSale(new Price(key.type, key.data));
-					cost *= pcnt/100f;
-				}
-				toPay += cost * (RealShopping.maxDurMap.containsKey(key.type)?(double)amount / (double)RealShopping.maxDurMap.get(key.type):amount);//Convert items durability to item amount
-			}
-			
-			//Ship
-			if(!shippedToCollect.containsKey(p.getName()))
-				shippedToCollect.put(p.getName(), new ArrayList<ShippedPackage>());
-			shippedToCollect.get(p.getName()).add(new ShippedPackage(boughtIS, toPay, sM.getLocation()));
-			
-			p.sendMessage(ChatColor.GREEN + LangPack.PACKAGEWAITINGTOBEDELIVERED);
-			
-			//Update player inv
-			for(int i = 0;i < keys.length;i++){
-				PInvMap.get(p.getName()).removeItem((PItem)keys[i], bought2.get(keys[i]));
-			}
-		} else p.sendMessage(ChatColor.RED + LangPack.YOUHAVENTBOUGHTANYTHING);
-
-		return true;
-	}
-
-	public static boolean collectShipped(Location l, Player p, int id) {
-		if(l.getBlock().getState() instanceof Chest){
-			if(PInvMap.containsKey(p.getName()) || shopMap.get(PInvMap.get(p.getName()).getStore()).getOwner().equals(p.getName())){
-				if(shippedToCollect.containsKey(p.getName())){
-					if(shippedToCollect.get(p.getName()).size() >= id){
-						boolean cont = false;
-						int cost = 0;
-						if(Config.getZoneArray().length > 0){
-							int i = 0;
-							if(p.getLocation().getWorld().equals(shippedToCollect.get(p.getName()).get(id - 1).getLocationSent().getWorld())){//Same world
-								double dist = p.getLocation().distance(shippedToCollect.get(p.getName()).get(id - 1).getLocationSent());
-								while(i < Config.getZoneArray().length && dist > Config.getZoneArray()[i].getBounds() && dist != -1){
-									i++;
-								}
-							} else {
-								while(i < Config.getZoneArray().length && Config.getZoneArray()[i].getBounds() > -1){
-									i++;
-								}
-							}
-
-							if(Config.getZoneArray()[i].getPercent() == -1)
-								cost = (int) (Config.getZoneArray()[i].getCost()*100);
-							else {
-								cost = (int) (shippedToCollect.get(p.getName()).get(id - 1).getCost() * Config.getZoneArray()[i].getPercent()/100f);
-							}
-							if(RSEconomy.getBalance(p.getName()) >= cost/100f) cont = true;
-						} else cont = true;
-						
-						if(cont){
-							RSEconomy.withdraw(p.getName(), cost/100f);
-							p.sendMessage(ChatColor.GREEN + "" + cost/100f + LangPack.UNIT + LangPack.WITHDRAWNFROMYOURACCOUNT);
-							ItemStack[] contents = ((Chest)l.getBlock().getState()).getBlockInventory().getContents();
-							for(ItemStack tempIS:contents) if(tempIS != null) p.getWorld().dropItem(p.getLocation(), tempIS);
-							
-							((Chest)l.getBlock().getState()).getBlockInventory().setContents(shippedToCollect.get(p.getName()).get(id - 1).getContents());
-							p.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH);
-							p.sendMessage(formatItemStackToMess(shippedToCollect.get(p.getName()).get(id - 1).getContents()));
-							shippedToCollect.get(p.getName()).remove(id - 1);
-							return true;
-						} else p.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOPAYTHEDELIVERYFEEOF + cost);
-					} else p.sendMessage(ChatColor.RED + LangPack.THERESNOPACKAGEWITHTHEID + id);
-				} else p.sendMessage(ChatColor.RED + LangPack.YOUHAVENTGOTANYITEMSWAITINGTOBEDELIVERED);
-			} else p.sendMessage(ChatColor.RED + LangPack.YOUCANTCOLLECT_YOUDONOTOWN);
-		} else p.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUARESTANDINGONISNTACHEST);
-		return false;
-	}
-
-	/*
-	 * 
-	 * Utils and formatting functions
-	 * 
-	 */
-	
-	public static String formatItemStackToMess(ItemStack[] IS){
-		String str = "";
-		int newLn = 0;
-		for(ItemStack iS:IS){
-			if(iS != null){
-				String tempStr = "[" + ChatColor.RED + iS.getType() + (maxDurMap.containsKey(iS.getTypeId())
-								?ChatColor.RESET + LangPack.WITH + ChatColor.GREEN + (maxDurMap.get(iS.getTypeId()) - iS.getDurability())
-								+ ChatColor.RESET +  "/" + ChatColor.GREEN + maxDurMap.get(iS.getTypeId()) + ChatColor.RESET + LangPack.USESLEFT + "] "
-								:ChatColor.RESET + " * " + ChatColor.GREEN + iS.getAmount() + ChatColor.RESET + "] " + ChatColor.BLACK + ChatColor.RESET);
-				if((str + tempStr).substring(newLn).length() > 96){//84+12
-					str += "\n";
-					newLn = str.length();
-					str += tempStr;
-				} else str += tempStr;
-			}
-		}
-		return str;
-	}
-
-	public static String formatPlayerListToMess(String[] formStr){
-		String str = "";
-		int newLn = 0;
-		for(String s:formStr){
-			boolean online = (Bukkit.getServer().getPlayerExact(s)==null)?false:true;
-			String tempStr = "[" + (online?ChatColor.GREEN:ChatColor.RESET) + s + ChatColor.RESET + "] ";
-			if((str + tempStr).substring(newLn).length() > 88){//84+4
-				if(str.split("\n").length < 7){
-					str += "\n";
-					newLn = str.length();
-					str += tempStr;
-				} else {
-					str += "...";
-				}
-			} else str += tempStr;
-		}
-		return str;
-	}
-
-	public static String locAsString(Location l){
-		return l.getBlockX() + "," + l.getBlockY() + "," + l.getBlockZ();
-	}
-	
-	public Location stringToLoc(String world, String s){
-		return new Location(getServer().getWorld(world), Double.parseDouble(s.split(",")[0].trim()), Double.parseDouble(s.split(",")[1].trim()), Double.parseDouble(s.split(",")[2].trim()));
-	}
-	
-	/*
-	 * 
-	 * Punishment functions
-	 * 
-	 */
-	
-    public static void punish(Player p){//TODO add more
-    	if(Config.getPunishment().equalsIgnoreCase("hell")){
-    		if(!Config.isKeepstolen()){
-    			returnStolen(p);
-    		}
-			PInvMap.remove(p.getName());
-        	p.sendMessage(ChatColor.RED + LangPack.TRYINGTOCHEATYOURWAYOUT);
-        	log.info(p.getName() + LangPack.TRIEDTOSTEALFROMTHESTORE);
-
-        	Location dropLoc2 = Config.getDropLoc().clone().add(1, 0, 0);
-         	if(p.teleport(Config.getHellLoc().clone().add(0.5, 0, 0.5))){
-        		log.info(p.getName() + LangPack.WASTELEPORTEDTOHELL);
-        		p.sendMessage(ChatColor.RED + LangPack.HAVEFUNINHELL);
-             	Block block = p.getWorld().getBlockAt(Config.getDropLoc());
-             	if(block.getType() != Material.CHEST) block.setType(Material.CHEST);
-             	BlockState blockState = block.getState();
-             	
-             	block = p.getWorld().getBlockAt(dropLoc2);
-             	if(block.getType() != Material.CHEST) block.setType(Material.CHEST);
-
-             	BlockState blockState2 = block.getState();
-             	ItemStack[] pS = p.getInventory().getContents();
-             	if(blockState instanceof Chest) {
-             	    Chest chest = (Chest)blockState;
-             	    ItemStack[] iS = new ItemStack[27];
-             	    for (int i = 0;i<17;i++) {
-             	    	iS[i] = pS[i+9];
-             	    }
-             	    chest.getBlockInventory().clear();
-             	    chest.getBlockInventory().setContents(iS);
-             	}
-             	if(blockState2 instanceof Chest) {
-             	   Chest chest = (Chest)blockState;
-             	   ItemStack[] iS = new ItemStack[9];
-             	   for (int i = 0;i<9;i++) {
-             		   iS[i] = pS[i];
-             	   }
-             	   chest.getBlockInventory().clear();
-             	   chest.getBlockInventory().setContents(iS);
-             	   chest.getBlockInventory().addItem(p.getInventory().getArmorContents());
-             	}
-             	p.getInventory().clear();
-             	p.getInventory().setArmorContents(new ItemStack[]{null, null, null, null});
-        	} else {
-        		p.getInventory().clear();
-        		p.getInventory().setArmorContents(new ItemStack[]{null, null, null, null});
-        	} 	
-    	} else if(Config.getPunishment().equalsIgnoreCase("jail")){
-    		if(!Config.isKeepstolen()){
-    			returnStolen(p);
-    		}
-			jailedPlayers.put(p.getName(), shopMap.get(PInvMap.get(p.getName()).getStore()).getFirstE());
-    		PInvMap.remove(p.getName());
-        	p.sendMessage(ChatColor.RED + LangPack.TRYINGTOCHEATYOURWAYOUT);
-        	log.info(p.getName() + LangPack.TRIEDTOSTEALFROMTHESTORE);
-
-         	if(p.teleport(Config.getJailLoc().clone().add(0.5, 0, 0.5))) {
-         		p.sendMessage(LangPack.YOUWEREJAILED);
-         		log.info(p.getName() + LangPack.WASJAILED);
-         	}
-    	} else if(Config.getPunishment().equalsIgnoreCase("none")){
-    		if(!Config.isKeepstolen()){
-    			returnStolen(p);
-    		}
+    public static boolean hasExit(Shop shop, Location ex){
+    	for(EEPair ee:eePairs.keySet()){
+    		if(ee.hasExit(ex) && eePairs.get(ee).equals(shop)) return true; 
     	}
+    	return false;
+    }
+    public static Location getRandomEntrance(Shop shop){
+    	for(EEPair ee:eePairs.keySet()){
+    		if(eePairs.get(ee).equals(shop)) return ee.getEntrance();
+    	}
+    	return null;
+    }
+    public static Location getEntrance(Shop shop, Location ex){
+    	for(EEPair ee:eePairs.keySet()){
+    		if(ee.hasExit(ex) && eePairs.get(ee).equals(shop)) return ee.getEntrance(); 
+    	}
+    	return null;
+    }
+    public static Location getExit(Shop shop, Location en){
+    	for(EEPair ee:eePairs.keySet()){
+    		if(ee.hasEntrance(en) && eePairs.get(ee).equals(shop)) return ee.getExit(); 
+    	}
+    	return null;
     }
     
-    public static void returnStolen(Player p){
-    	Map<PItem, Integer> stolen = PInvMap.get(p.getName()).getStolen();
-    	Map<PItem, Integer> stolen2 = new HashMap<PItem, Integer>(stolen);
-
-		//Remove stolen items from players inventory
-		ItemStack[][] playerInv = new ItemStack[][]{p.getInventory().getContents(), p.getInventory().getArmorContents()};
-		ItemStack[][] newPlayerInv = new ItemStack[][]{new ItemStack[playerInv[0].length], new ItemStack[playerInv[1].length]};
-		for(int j = 0;j < 2;j ++)
-		for(int i = 0;i < playerInv[j].length;i++){
-			ItemStack x = playerInv[j][i];
-			if(x != null){
-				PItem tempPI = new PItem(x);
-				if(stolen.containsKey(tempPI)){//Has stolen item
-					int diff = stolen.get(tempPI) - (maxDurMap.containsKey(x.getTypeId())?maxDurMap.get(x.getTypeId()) - x.getDurability():x.getAmount());
-					if(diff >= 0){//If + then even more stolen left
-						stolen.put(tempPI, diff);
-						x = null;
-					} else {//If negative then no more stolen thing in inventory
-						if(maxDurMap.containsKey(x.getTypeId())){
-							x.setDurability((short)(x.getDurability() + stolen.get(tempPI)));
-						} else {
-							x.setAmount(x.getAmount() - stolen.get(tempPI));
-						}
-						stolen.remove(tempPI);
-					}
-				}
-			}
-			newPlayerInv[j][i] = x;
-		}
-		p.getInventory().setContents(newPlayerInv[0]);
-		p.getInventory().setArmorContents(newPlayerInv[1]);
-		
-		String own = shopMap.get(PInvMap.get(p.getName()).getStore()).getOwner();
-		if(!own.equals("@admin")){//Return items if player store.
-			Object[] keyss = stolen2.keySet().toArray();
-			for(int i = 0;i < keyss.length;i++){
-				int type = ((PItem) keyss[i]).type;
-				ItemStack tempIS = ((PItem) keyss[i]).toItemStack();
-				if(maxDurMap.containsKey(type)){
-					if(stolen2.get(keyss[i]) > maxDurMap.get(type))
-						while(maxDurMap.get(type) < stolen2.get(keyss[i])){//If more than one stack/full tool
-							shopMap.get(PInvMap.get(p.getName()).getStore()).addStolenToClaim(tempIS.clone());
-							stolen2.put((PItem) keyss[i], stolen2.get(keyss[i]) - maxDurMap.get(type));
-						}
-					tempIS.setDurability((short) (maxDurMap.get(type) - stolen2.get(keyss[i])));
-					shopMap.get(PInvMap.get(p.getName()).getStore()).addStolenToClaim(tempIS);
-				} else {
-					if(stolen2.get(keyss[i]) > Material.getMaterial(type).getMaxStackSize())
-						while(Material.getMaterial(type).getMaxStackSize() < stolen2.get(keyss[i])){//If more than one stack/full tool
-							ItemStack tempIStemp = tempIS.clone();
-							tempIStemp.setAmount(Material.getMaterial(type).getMaxStackSize());
-							shopMap.get(PInvMap.get(p.getName()).getStore()).addStolenToClaim(tempIStemp);
-							stolen2.put((PItem) keyss[i], stolen2.get(keyss[i]) - Material.getMaterial(type).getMaxStackSize());
-						}
-					tempIS.setAmount(stolen2.get(keyss[i]));
-					shopMap.get(PInvMap.get(p.getName()).getStore()).addStolenToClaim(tempIS);
-				}
-			}
-		}
+    public static boolean hasDefPrices(){ return !RealShopping.defPrices.isEmpty(); }
+    public static void clearDefPrices(){ defPrices.clear(); }
+	public static Integer getDefPricesSize() { return defPrices.size(); }
+	public static Map<Price, Integer[]> getDefPrices() { return defPrices; }
+	public static void addDefPrice(Price p, Integer[] i) { defPrices.put(p, i); }
+    
+    public static Location[] getTpLocsKeysArray(){ return forbiddenTpLocs.keySet().toArray(new Location[0]); }
+    public static Integer getTpLoc(Location loc){ return forbiddenTpLocs.get(loc); }
+    public static boolean hasTpLoc(Location loc){ return forbiddenTpLocs.containsKey(loc); }
+    public static Integer addTpLoc(Location loc, Integer radius){ return forbiddenTpLocs.put(loc, radius); }
+    public static Integer removeTpLoc(Location loc){ return forbiddenTpLocs.remove(loc); }
+    public static boolean isTpLocBlacklist() { return tpLocBlacklist; }
+	public static void setTpLocBlacklist() { tpLocBlacklist = true; }
+	public static void setTpLocWhitelist() { tpLocBlacklist = false; }
+    
+    public static Location getJailed(String player){ return jailedPlayers.get(player); }
+    public static boolean isJailed(String player){ return jailedPlayers.containsKey(player); }
+    public static Location removeJailed(String player){ return jailedPlayers.remove(player); }
+    
+    public static boolean hasShippedToCollect(String player){ return shippedToCollect.containsKey(player); }
+    public static int getShippedToCollectAmount(String player){ return shippedToCollect.get(player).size(); }
+    public static ShippedPackage getShippedToCollect(String player, int ID){ return shippedToCollect.get(player).get(ID); }
+    public static ShippedPackage removeShippedToCollect(String player, int ID){ return shippedToCollect.get(player).remove(ID); }
+    public static void addShippedToCollect(String player, ShippedPackage pack){
+		if(!hasShippedToCollect(player))
+			shippedToCollect.put(player, new ArrayList<ShippedPackage>());
+		shippedToCollect.get(player).add(pack);
     }
+    
+	public static void setEntrance(Player player) { entrance = player.getLocation().getBlock().getLocation(); }//TODO Rename?
+	public static void setExit(Player player) { exit = player.getLocation().getBlock().getLocation(); }
+    public static boolean hasEntrance(){ return !entrance.equals(""); }
+    public static boolean hasExit(){ return !exit.equals(""); }
+    public static Location getEntrance() { return entrance; }
+	public static Location getExit() { return exit; }
+    
+    public static Location addPlayerEntrance(Player player){ return playerEntrances.put(player.getName(), player.getLocation().getBlock().getLocation()); }
+    public static Location addPlayerExit(Player player){ return playerExits.put(player.getName(), player.getLocation().getBlock().getLocation()); }
+    public static boolean hasPlayerEntrance(String player){ return playerEntrances.containsKey(player); }
+    public static boolean hasPlayerExit(String player){ return playerExits.containsKey(player); }
+    public static Location getPlayerEntrance(String player){ return playerEntrances.get(player); }
+    public static Location getPlayerExit(String player){ return playerExits.get(player); }
+    
+    public static void jailPlayer(Player player){ jailedPlayers.put(player.getName(), shopMap.get(PInvMap.get(player.getName()).getStore()).getFirstE()); }
     
 	/*
 	 * 
-	 * Get functions
+	 * Misc
 	 * 
 	 */
-  
-    public static boolean allowTpOutOfStore(Location l){
-    	Object[] keys = forbiddenTpLocs.keySet().toArray();
-    	boolean allow = true;
-    	if(tpLocBlacklist){
-    		for(Object loc:keys){
-    			if(l.getWorld() == ((Location)loc).getWorld());
-    			int xDif = l.getBlockX() - ((Location)loc).getBlockX();
-    			int yDif = l.getBlockY() - ((Location)loc).getBlockY();
-    			int zDif = l.getBlockZ() - ((Location)loc).getBlockZ();
-    			double temp = Math.sqrt(Math.pow(Math.max(xDif, xDif * -1), 2) + Math.pow(Math.max(yDif, yDif * -1), 2) + Math.pow(Math.max(zDif, zDif * -1), 2));
-    			if(temp <= forbiddenTpLocs.get(loc)){
-    					allow = false;
-    					break;
-    			}		
-    		}
-    	}
-
-    	return allow;
-    }
-
-	public static String[] getPlayersInStore(String store){
-		String pString = "";
-		String[] keys = PInvMap.keySet().toArray(new String[0]);
-		for(String player:keys){
-			if(PInvMap.get(player).getStore().toLowerCase().equals(store)){
-				if(!pString.equals("")) pString += ",";
-				pString += player;
-			}
-		}
-		return pString.split(",");
-	}
-	
-	public static boolean isChestProtected(Location l){
-		Shop[] keys = shopMap.values().toArray(new Shop[0]);
-		for(Shop temp:keys){
-			if(temp.isProtectedChest(l)) return true;
-		}
-		return false;
-	}
-	
-	public String[] getOwnedStores(String player){
-		String sString = ",";
-		String[] keys = shopMap.keySet().toArray(new String[0]);
-		for(String store:keys){
-			if(shopMap.get(store).getOwner().toLowerCase().equals(player)) sString += store;
-		}
-		return sString.substring(1).split(",");
-	}
-	
-	public static Location[] getNearestTpLocs(Location loc, int maxAmount){
-		Location[] keys = forbiddenTpLocs.keySet().toArray(new Location[0]);
-		Location[] nearest = null;
-		Map<Location, Double> locDist = new HashMap<Location, Double>();
-		for(Location l:keys)
-			if(loc.getWorld().equals(l.getWorld()))
-				locDist.put(l, loc.distance(l));
-		
-		if(!locDist.isEmpty()){
-			ValueComparator bvc =  new ValueComparator(locDist);
-			TreeMap<Location,Double> sorted_map = new TreeMap<Location,Double>(bvc);
-			sorted_map.putAll(locDist);
-			
-			
-			if(sorted_map.size() < maxAmount) nearest = new Location[sorted_map.size()];
-			else nearest = new Location[maxAmount];
-			
-			keys = sorted_map.keySet().toArray(new Location[0]);
-			for(int i = 0;i < nearest.length;i++){
-				nearest[i] = keys[i];
-			}
-		}
-		
-		return nearest;
-	}
     
-	public static void sendNotification(String who, String what){
+    public static void sendNotification(String who, String what){
 		if(Config.getNotTimespan() >= 500){
 			if(!notificator.containsKey(who)) notificator.put(who, new ArrayList<String>());
 			notificator.get(who).add(what);
@@ -1439,25 +1509,11 @@ public class RealShopping extends JavaPlugin {//FIXME decide on equals or equals
     	return this.getFile();
     }
     
-	/*
-	 * 
-	 * Reload
-	 * 
-	 */
-    
-     public void reload(){
+    public void reload(){
 		smallReload = true;
 		onDisable();
 		onEnable();
     }
-
-	public Updater getUpdater() {
-		return updater;
-	}
-
-	public void setUpdater(Updater updater) {
-		this.updater = updater;
-	}
 
 }
 
@@ -1469,15 +1525,15 @@ class Notificator extends Thread {
 		running = true;
 	}
 	
-	
 	public void run(){
 		try {
 			while(running){
-				for(String s:RealShopping.notificator.keySet()){
+				for(String s:RealShopping.getNotificatorKeys()){
 					if(Bukkit.getPlayerExact(s) != null){
-						for(int i = 0;i < 10 && 0 < RealShopping.notificator.get(s).size();i ++){
-							Bukkit.getPlayerExact(s).sendMessage(ChatColor.LIGHT_PURPLE + "[RealShopping] " + ChatColor.RESET + RealShopping.notificator.get(s).get(0));
-							RealShopping.notificator.get(s).remove(0);
+						List<String> nots = RealShopping.getNotifications(s);
+						for(int i = 0;i < 10 && 0 < nots.size();i ++){
+							Bukkit.getPlayerExact(s).sendMessage(ChatColor.LIGHT_PURPLE + "[RealShopping] " + ChatColor.RESET + nots.get(0));
+							nots.remove(0);
 						}
 					}
 				}

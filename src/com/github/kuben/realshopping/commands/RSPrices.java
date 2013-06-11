@@ -7,6 +7,7 @@ import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import com.github.kuben.realshopping.LangPack;
 import com.github.kuben.realshopping.Price;
+import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
 
@@ -54,7 +55,7 @@ class RSPrices extends RSCommand {
 				if(player != null){
 					if(RealShopping.PInvMap.get(player.getName()) != null) {
 						return searchItem(RealShopping.shopMap.get(RealShopping.PInvMap.get(player.getName()).getStore())
-								, pullPrice(args[1]));
+								, RSUtils.pullPrice(args[1]));
 					} else {
 						sender.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
 						return false;
@@ -72,20 +73,10 @@ class RSPrices extends RSCommand {
 				}	
 			}
 		} else if (args.length > 2 && args[1].equalsIgnoreCase("search")){//Has to be STORE search ITEM
-			return searchItem(RealShopping.shopMap.get(args[0]), pullPrice(args[2]));
+			return searchItem(RealShopping.shopMap.get(args[0]), RSUtils.pullPrice(args[2]));
 		}
 		
-		return RealShopping.prices(sender, page, shop);
-	}
-	
-	private Price pullPrice(String s){//TODO This is the super duper future method. It shall have an honored place in an utils class.
-		/*
-		 * Check for aliases
-		 * Try:s and catches 
-		 */
-		if(s.contains(":")){
-			return new Price(Integer.parseInt(s.split(":")[0]),Integer.parseInt(s.split(":")[1]));
-		} else return new Price(Integer.parseInt(s));
+		return Shop.prices(sender, page, shop);
 	}
 	
 	private boolean searchItem(Shop shop, Price price){

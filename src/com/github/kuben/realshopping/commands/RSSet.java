@@ -1,12 +1,13 @@
 package com.github.kuben.realshopping.commands;
 
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 
 import com.github.kuben.realshopping.LangPack;
+import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
+import com.github.kuben.realshopping.exceptions.RealShoppingException;
 
 class RSSet extends RSPlayerCommand {
 
@@ -17,35 +18,36 @@ class RSSet extends RSPlayerCommand {
 	@Override
 	protected boolean execute() {
 		if (args.length == 1 && args[0].equalsIgnoreCase("entrance")){
-			RealShopping.entrance = player.getLocation().getBlockX() + "," + player.getLocation().getBlockY() + "," + player.getLocation().getBlockZ();
-			player.sendMessage(ChatColor.RED + LangPack.ENTRANCEVARIABLESETTO + RealShopping.entrance);
+			RealShopping.setEntrance(player);
+			player.sendMessage(ChatColor.RED + LangPack.ENTRANCEVARIABLESETTO + RealShopping.getEntrance());
 			return true;
 		} else if (args.length == 1 && args[0].equalsIgnoreCase("exit")){
-			RealShopping.exit = player.getLocation().getBlockX() + "," + player.getLocation().getBlockY() + "," + player.getLocation().getBlockZ();
-			player.sendMessage(ChatColor.RED + LangPack.EXITVARIABLESETTO + RealShopping.exit);
+			RealShopping.setExit(player);
+			player.sendMessage(ChatColor.RED + LangPack.EXITVARIABLESETTO + RealShopping.getExit());
 			return true;
 		} else if (args.length == 2 && args[0].equalsIgnoreCase("createstore")){
 			if(args[1].equals("help")){
 				sender.sendMessage(ChatColor.RED + LangPack.YOUCANTNAMEASTORETHAT);
 				return true;
 			}
-			if(!RealShopping.entrance.equals("")){
-				if(!RealShopping.exit.equals("")){
+			if(RealShopping.hasEntrance()){
+				if(RealShopping.hasExit()){//TODO test if blank store doesn't cause crash
 			    	if(!RealShopping.shopMap.containsKey(args[1])){//Create
 			    		RealShopping.shopMap.put(args[1], new Shop(args[1], player.getWorld().getName(), "@admin"));
 			    	}
-			    	//Add entrance
-			    	Location en = new Location(player.getServer().getWorld(RealShopping.shopMap.get(args[1]).getWorld()), Integer.parseInt(RealShopping.entrance.split(",")[0]),Integer.parseInt(RealShopping.entrance.split(",")[1]), Integer.parseInt(RealShopping.entrance.split(",")[2]));
-			    	Location ex = new Location(player.getServer().getWorld(RealShopping.shopMap.get(args[1]).getWorld()), Integer.parseInt(RealShopping.exit.split(",")[0]),Integer.parseInt(RealShopping.exit.split(",")[1]), Integer.parseInt(RealShopping.exit.split(",")[2]));
-			    	RealShopping.shopMap.get(args[1]).addE(en, ex);
-			    	RealShopping.updateEntrancesDb();
-					player.sendMessage(ChatColor.RED + args[1] + LangPack.WASCREATED);
+			    	try {
+				    	RealShopping.shopMap.get(args[1]).addEntranceExit(RealShopping.getEntrance(), RealShopping.getExit());
+				    	RealShopping.updateEntrancesDb();
+						player.sendMessage(ChatColor.RED + args[1] + LangPack.WASCREATED);
+			    	} catch(RealShoppingException e){
+			    		player.sendMessage(ChatColor.RED + "This entrance and exit pair is already used.");//LANG
+			    	}
 					return true;
 				} else player.sendMessage(ChatColor.RED + LangPack.THERSNOEXITSET);
 			} else player.sendMessage(ChatColor.RED + LangPack.THERESNOENTRANCESET);
 		} else if (args.length == 2 && args[0].equalsIgnoreCase("delstore")){
 			if(RealShopping.shopMap.containsKey(args[1])){
-				if(RealShopping.getPlayersInStore(args[1].toLowerCase())[0].equals("")){
+				if(RSUtils.getPlayersInStore(args[1].toLowerCase())[0].equals("")){
 					RealShopping.shopMap.remove(args[1]);
 					player.sendMessage(ChatColor.RED + args[1] + LangPack.WASREMOVED);
 					RealShopping.updateEntrancesDb();

@@ -16,6 +16,7 @@ import org.bukkit.entity.Player;
 
 import com.github.kuben.realshopping.LangPack;
 import com.github.kuben.realshopping.RealShopping;
+import com.github.kuben.realshopping.listeners.RSPlayerListener;
 
 public class PromptMaster {
 
@@ -43,8 +44,10 @@ public class PromptMaster {
 	  		case CHOOSE_CHESTS:
 	  			if(c instanceof Player) return createChestConv((Player) c);
 	  			else return false;
-	  		case SETUP_STORE:
 	  		case SETUP_PLAYER_STORE:
+	  			if(c instanceof Player) return createSetupPStoreConv((Player) c);
+	  			else return false;
+	  		case SETUP_STORE:
 	  			c.sendRawMessage("Not yet implemented.");
 	  	}
 		return false;
@@ -64,7 +67,7 @@ public class PromptMaster {
 	private static boolean createChestConv(Player p){
 	    final Map<Object, Object> convMap = new HashMap<Object, Object>();
 	    convMap.put("ID", "first");
-	    Conversation conv = convF.withFirstPrompt(new ChestPrompt()).withPrefix(prefix).withTimeout(30)
+	    Conversation conv = convF.withFirstPrompt(new ChestPrompt()).withPrefix(prefix)
 	    		.withEscapeSequence("quit").withEscapeSequence("exit") 
 	    		.withInitialSessionData(convMap).withLocalEcho(false).buildConversation(p);
 	    conv.addConversationAbandonedListener(abandonL);
@@ -72,10 +75,23 @@ public class PromptMaster {
 	    return true;
 	}
 	
+	private static boolean createSetupPStoreConv(Player p){
+	    final Map<Object, Object> convMap = new HashMap<Object, Object>();
+	    convMap.put("ID", "first");
+	    Conversation conv = convF.withFirstPrompt(new SetupPStorePrompt()).withPrefix(prefix)
+	    		.withEscapeSequence("quit").withEscapeSequence("exit") 
+	    		.withInitialSessionData(convMap).withLocalEcho(false).buildConversation(p);
+	    conv.addConversationAbandonedListener(abandonL);
+	    conv.begin();
+	    return true;
+	}
 }
 
 class RSConversationAbandonedListener implements ConversationAbandonedListener {
 	public void conversationAbandoned(ConversationAbandonedEvent event){
+		if(event.getContext().getForWhom() instanceof Player)
+			RSPlayerListener.killConversationListener((Player)event.getContext().getForWhom());
+		
 		if (event.gracefulExit()){//if getNextPrompt returned END_OF_CONVERSATION
 			((Conversable)((Conversation)event.getSource()).getForWhom()).sendRawMessage(ChatColor.LIGHT_PURPLE
 					+ "[RealShopping] " + ChatColor.WHITE + LangPack.QUITCONVERSATION);
@@ -85,9 +101,10 @@ class RSConversationAbandonedListener implements ConversationAbandonedListener {
 				if(c instanceof ExactMatchConversationCanceller)
 					((Conversable)((Conversation)event.getSource()).getForWhom()).sendRawMessage(ChatColor.LIGHT_PURPLE
 							+ "[RealShopping] " + ChatColor.WHITE + "Conversation aborted.");//LANG
-				else
+				else {
 					((Conversable)((Conversation)event.getSource()).getForWhom()).sendRawMessage(ChatColor.LIGHT_PURPLE
 							+ "[RealShopping] " + ChatColor.WHITE + "Quit conversation for unknown reason.");//LANG
+				}
 			}
 		}
 	}

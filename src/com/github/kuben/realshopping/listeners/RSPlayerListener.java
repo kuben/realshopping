@@ -33,6 +33,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.StorageMinecart;
+import org.bukkit.event.Event;
 import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -42,6 +43,7 @@ import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -53,9 +55,13 @@ import org.bukkit.inventory.Inventory;
 
 import com.github.kuben.realshopping.Config;
 import com.github.kuben.realshopping.LangPack;
+import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
+import com.github.kuben.realshopping.exceptions.RSListenerException;
+import com.github.kuben.realshopping.exceptions.RSListenerException.Type;
 
+@SuppressWarnings("deprecation")
 public class RSPlayerListener implements Listener {
 	private static Set<GeneralListener> listenerSet = new HashSet<GeneralListener>();
 	
@@ -66,14 +72,14 @@ public class RSPlayerListener implements Listener {
 		if(hasConversationListener(player)){
 			System.out.println("teport");
 			event.setCancelled(true);
-			player.sendMessage(ChatColor.RED + "You can't teleport while in a conversation.");//Does it event show?
+			player.sendRawMessage(ChatColor.RED + "You can't teleport while in a conversation.");
 		} else
 		if(RealShopping.PInvMap.containsKey(player.getName()) && event.getCause() != TeleportCause.UNKNOWN){
 			if(!RealShopping.PInvMap.get(player.getName()).hasPaid()){
 				event.setCancelled(true);
-				RealShopping.punish(player);
+				RSUtils.punish(player);
 			} else {
-				if(RealShopping.allowTpOutOfStore(event.getTo())){
+				if(RSUtils.allowTpOutOfStore(event.getTo())){
 					String shopName = RealShopping.PInvMap.get(player.getName()).getStore();
 					RealShopping.PInvMap.remove(player.getName());
 					player.sendMessage(ChatColor.RED + LangPack.YOULEFT + shopName);
@@ -113,7 +119,7 @@ public class RSPlayerListener implements Listener {
 		Player player = event.getPlayer();
 		if(!launchConversationListener(player, event)){//Redirects event if player is in conversation, otherwise as usual
 			Block b = event.getClickedBlock();
-			if(RealShopping.jailedPlayers.containsKey(player.getName())) event.setCancelled(true);
+			if(RealShopping.isJailed(player.getName())) event.setCancelled(true);
 			else {
 				if(event.hasBlock())
 					if(b.getType() == Material.GLASS || b.getType() == Material.THIN_GLASS) {
@@ -139,29 +145,29 @@ public class RSPlayerListener implements Listener {
 						}
 					} else if(b.getType() == Material.OBSIDIAN) {
 						if(RealShopping.PInvMap.containsKey(player.getName())){
-							if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.STEP){
+							if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.STEP){//TODO well looks like no problem
 								if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
 									if(player.hasPermission("realshopping.rspay")){
 										Inventory[] carts = null;
 										if(Config.isAllowFillChests() && Config.isCartEnabledW(player.getWorld().getName())){
-											StorageMinecart[] SM = RealShopping.checkForCarts(event.getClickedBlock().getLocation());
+											StorageMinecart[] SM = RSUtils.checkForCarts(event.getClickedBlock().getLocation());
 											carts = new Inventory[SM.length];
 											for(int i = 0;i < SM.length;i++)
 												carts[i] = SM[i].getInventory();
 										}
-										event.setCancelled(Shop.pay(player, carts));//TODO Never false
+										event.setCancelled(Shop.pay(player, carts));
 									}
 								} else if(event.getAction() == Action.LEFT_CLICK_BLOCK) if(player.hasPermission("realshopping.rscost")){
 									if(RealShopping.PInvMap.containsKey(player.getName())){
 										event.setCancelled(true);
 										Inventory[] carts = null;
 										if(Config.isAllowFillChests() && Config.isCartEnabledW(player.getWorld().getName())){
-											StorageMinecart[] SM = RealShopping.checkForCarts(event.getClickedBlock().getLocation());
+											StorageMinecart[] SM = RSUtils.checkForCarts(event.getClickedBlock().getLocation());
 											carts = new Inventory[SM.length];
 											for(int i = 0;i < SM.length;i++)
 												carts[i] = SM[i].getInventory();
 										}
-										player.sendMessage(LangPack.YOURARTICLESCOST + RealShopping.PInvMap.get(player.getName()).toPay(carts)/100f + RealShopping.unit);
+										player.sendMessage(LangPack.YOURARTICLESCOST + RealShopping.PInvMap.get(player.getName()).toPay(carts)/100f + LangPack.UNIT);
 									} else {
 										player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
 									}
@@ -177,7 +183,7 @@ public class RSPlayerListener implements Listener {
 													if(((StorageMinecart)o).getLocation().getBlock().getLocation().equals(b.getLocation().subtract(0,1,0)))
 														sM = (StorageMinecart)o;
 												if(sM != null)
-													event.setCancelled(RealShopping.shipCartContents(sM, player));
+													event.setCancelled(RSUtils.shipCartContents(sM, player));
 											} else player.sendMessage(ChatColor.RED + LangPack.SHOPPINGCARTSARENOTENABLED_);
 										} else player.sendMessage(ChatColor.RED + LangPack.SHIPPINGISNOTENABLED_);
 									}
@@ -195,7 +201,7 @@ public class RSPlayerListener implements Listener {
 						}
 					}
 			}
-			if(RealShopping.PInvMap.containsKey(player.getName()) && event.getItem() != null && RealShopping.forbiddenInStore.contains(event.getItem().getTypeId()))
+			if(RealShopping.PInvMap.containsKey(player.getName()) && event.getItem() != null && RealShopping.isForbiddenInStore(event.getItem().getTypeId()))
 				if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR){
 					player.sendMessage(ChatColor.RED + LangPack.YOUCANTUSETHATITEMINSTORE);
 					event.setUseItemInHand(Result.DENY);
@@ -215,7 +221,7 @@ public class RSPlayerListener implements Listener {
 				&& player.hasPermission("realshopping.rsprices")
 				&& ((ItemFrame)event.getRightClicked()).getItem().getType() == Material.PAPER){
 					event.setCancelled(true);
-					RealShopping.prices(player, 1, RealShopping.PInvMap.get(player.getName()).getStore());
+					Shop.prices(player, 1, RealShopping.PInvMap.get(player.getName()).getStore());
 				}
 					
 		}
@@ -223,14 +229,14 @@ public class RSPlayerListener implements Listener {
 	
     @EventHandler(priority = EventPriority.HIGH)
     public void onInventoryOpenEvent(InventoryOpenEvent event){
-    	if(Config.isDisableEnderchests()) if(RealShopping.PInvMap.containsKey(event.getPlayer().getName()) && event.getInventory().getTitle() == "container.enderchest"){//TODO find better way
+    	if(Config.isDisableEnderchests()) if(RealShopping.PInvMap.containsKey(event.getPlayer().getName()) && event.getInventory().getType() == InventoryType.ENDER_CHEST){
 			event.setCancelled(true);
 			((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + LangPack.YOUCANNOTOPENENDERCHESTS_);
     		return;
     	}
         if (event.getInventory().getHolder() instanceof Chest){
         	if(!RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//If player is not in store
-        		if(RealShopping.isChestProtected(((Chest) event.getInventory().getHolder()).getLocation())){
+        		if(RSUtils.isChestProtected(((Chest) event.getInventory().getHolder()).getLocation())){
         			event.setCancelled(true);
         			((Chest) event.getInventory().getHolder()).getInventory().getViewers().remove(event.getPlayer());
         			((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + "[RealShopping] " + LangPack.THISCHESTISPROTECTED);
@@ -238,8 +244,8 @@ public class RSPlayerListener implements Listener {
         	}
         } else if (event.getInventory().getHolder() instanceof DoubleChest){
         	if(!RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//If player is not in store
-        		if(RealShopping.isChestProtected(((Chest)((DoubleChest) event.getInventory().getHolder()).getLeftSide()).getLocation())
-        		| RealShopping.isChestProtected(((Chest)((DoubleChest) event.getInventory().getHolder()).getRightSide()).getLocation())){
+        		if(RSUtils.isChestProtected(((Chest)((DoubleChest) event.getInventory().getHolder()).getLeftSide()).getLocation())
+        		| RSUtils.isChestProtected(((Chest)((DoubleChest) event.getInventory().getHolder()).getRightSide()).getLocation())){
         			event.setCancelled(true);
         			((DoubleChest) event.getInventory().getHolder()).getInventory().getViewers().remove(event.getPlayer());
         			((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + "[RealShopping] " + LangPack.THISCHESTISPROTECTED);
@@ -250,11 +256,14 @@ public class RSPlayerListener implements Listener {
 	
     @EventHandler(priority = EventPriority.HIGH)
     public void onInventoryCloseEvent(InventoryCloseEvent event){
-        if (event.getInventory().getTitle().equals(LangPack.SELLTOSTORE)){//TODO consider if this is a good idea, Probably isn't
-        	if(RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//If player is in store
-        		RealShopping.sellToStore((Player) event.getPlayer(), event.getInventory().getContents());
-        	}
-        }
+		Player player = (Player) event.getPlayer();
+		if(!launchConversationListener(player, event)){//Redirects event if player is in conversation, otherwise as usual
+	        if (event.getInventory().getTitle().equals(LangPack.SELLTOSTORE)){//TODO consider if this is a good idea, Probably isn't. Create own class extending inventory???
+	        	if(RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//If player is in store
+	        		Shop.sellToStore((Player) event.getPlayer(), event.getInventory().getContents());
+	        	}
+	        }
+		}
     }
 	
 	@EventHandler (priority = EventPriority.MONITOR)
@@ -303,7 +312,7 @@ public class RSPlayerListener implements Listener {
     	return false;
     }
     
-    static boolean killConversationListener(GeneralListener l){
+    static boolean killConversationListener(GeneralListener l){//aka kill yourself
    		if(listenerSet.contains(l)){
    			listenerSet.remove(l);
    			return true;
@@ -313,9 +322,18 @@ public class RSPlayerListener implements Listener {
     
     public static int finishConversationListener(Player p){
     	for(GeneralListener l:listenerSet) if(l.getPlayer() == p)
-   			if(l instanceof ChestListener) return ((ChestListener) l).apply();
+   			if(l instanceof Appliable) return ((Appliable) l).apply();
    			else return -2;
     	return -1;
+    }
+    
+    public static Object sendSignalToConversationListener(Player p, Object sig) throws RSListenerException{
+    	for(GeneralListener l:listenerSet) if(l.getPlayer() == p)
+   			if(l instanceof SignalReceiver){
+   				return ((SignalReceiver) l).receiveSignal(sig);
+   			}
+   			else throw new RSListenerException(p, Type.LISTENER_MISMATCH);
+    	return false;
     }
     
     static boolean addConversationListener(GeneralListener l){
@@ -326,10 +344,10 @@ public class RSPlayerListener implements Listener {
     	return false;
     }  
 	
-    private boolean launchConversationListener(Player p, PlayerInteractEvent event){
+    private boolean launchConversationListener(Player p, Event event){
     	for(GeneralListener l:listenerSet){
     		if(l.getPlayer() == p){
-    			l.onInteract(event);
+    			l.onEvent(event);
     			return true;
     		}
     	}

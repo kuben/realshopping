@@ -1,28 +1,18 @@
 package com.github.kuben.realshopping.exceptions;
 
-import org.bukkit.entity.Player;
-
-import com.github.kuben.realshopping.RealShopping;
-
 public class RealShoppingException extends Exception {
 
-	private static final long serialVersionUID = 6492116744455070187L;
-	private Player player;
-	private Type type;
+	private static final long serialVersionUID = 1516574848772470424L;
+	protected Type type;
 	
 	public enum Type {
-		NOT_IN_SHOP, NOT_ALLOWED_MANAGE, PLAYER_ALREADY_HAS_LISTENER;
+		EEPAIR_ALREADY_EXISTS
 	}
 	
-	public RealShoppingException(Player player, Type type){
-		super((type==Type.NOT_IN_SHOP) ? "Player " + player + " is not in a store.":
-			(type==Type.NOT_ALLOWED_MANAGE) ? "Player " + player + " is not allowed to manage store " + RealShopping.PInvMap.get(player.getName()).getShop().getName():
-			(type==Type.PLAYER_ALREADY_HAS_LISTENER) ? "Player " + player + " is already in an conversation.":"");
-		this.player = player;
+	public RealShoppingException(Type type){
+		super((type==Type.EEPAIR_ALREADY_EXISTS)?"This entrance/exit pair already exists.":"Nigga");
 		this.type = type;
 	}
-	
+
 	public Type getType(){ return type; }
-	public Player getPlayer(){ return player; }
-	
 }

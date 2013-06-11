@@ -15,7 +15,7 @@ class RSUnjail extends RSCommand {
 	@Override
 	protected boolean execute() {
 	    if (args.length == 1){
-	        if(RealShopping.jailedPlayers.containsKey(args[0])){
+	        if(RealShopping.isJailed(args[0])){
 	        Player[] pla = sender.getServer().getOnlinePlayers();
 	        Player jailee = null;
 	        for(Player p:pla){
@@ -25,8 +25,8 @@ class RSUnjail extends RSCommand {
 	        }
 	        }
 	        if(jailee != null){
-	            jailee.teleport(RealShopping.jailedPlayers.get(args[0]));
-	            RealShopping.jailedPlayers.remove(args[0]);
+	            jailee.teleport(RealShopping.getJailed(args[0]));
+	            RealShopping.removeJailed(args[0]);
 	            jailee.sendMessage(LangPack.YOUARENOLONGERINJAIL);
 	            sender.sendMessage(LangPack.UNJAILED + args[0]);
 	            return true;

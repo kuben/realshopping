@@ -9,6 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import com.github.kuben.realshopping.Config;
 import com.github.kuben.realshopping.LangPack;
 import com.github.kuben.realshopping.Price;
+import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
 
@@ -186,16 +187,16 @@ class RSStores extends RSCommand {
 	
 	private boolean kick(){
 		if(args.length == 3){
- 			if(!RealShopping.getPlayersInStore(args[0].toLowerCase())[0].equals("")){
+ 			if(!RSUtils.getPlayersInStore(args[0].toLowerCase())[0].equals("")){
  				boolean cont = false;
- 				for(String tempP:RealShopping.getPlayersInStore(args[0].toLowerCase()))
+ 				for(String tempP:RSUtils.getPlayersInStore(args[0].toLowerCase()))
  					if(tempP.toLowerCase().equals(args[2].toLowerCase())){
  						cont = true;
  						break;
  					}
  				if(cont){
  					if(sender.getServer().getPlayerExact(args[2]) != null){
- 						RealShopping.returnStolen(sender.getServer().getPlayerExact(args[2]));
+ 						RSUtils.returnStolen(sender.getServer().getPlayerExact(args[2]));
  						Location l = RealShopping.shopMap.get(args[0]).getFirstE();
  						RealShopping.PInvMap.remove(sender.getServer().getPlayerExact(args[2]).getName());
  						sender.getServer().getPlayerExact(args[2]).teleport(l.add(0.5, 0, 0.5));
@@ -205,10 +206,10 @@ class RSStores extends RSCommand {
  			} else sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTINYOURSTORE);
  			return true;
 		} else if(args.length == 4 && args[2].equalsIgnoreCase("-o")){
- 			if(!RealShopping.getPlayersInStore(args[0].toLowerCase())[0].equals("")){
+ 			if(!RSUtils.getPlayersInStore(args[0].toLowerCase())[0].equals("")){
  				if(sender.getServer().getOfflinePlayer(args[3]) != null){
      				boolean cont = false;
-     				for(String tempP:RealShopping.getPlayersInStore(args[0].toLowerCase()))
+     				for(String tempP:RSUtils.getPlayersInStore(args[0].toLowerCase()))
      					if(tempP.toLowerCase().equals(args[3].toLowerCase())){
      						cont = true;
      						break;
@@ -224,53 +225,45 @@ class RSStores extends RSCommand {
 	}
 	
 	private boolean startsale(){
-		if(args.length == 3){
-			try {
-				int pcnt = Integer.parseInt(args[2]);
-				if(pcnt < 100){
-					if(pcnt > 0){
-						if(RealShopping.shopMap.containsKey(args[0]) && RealShopping.shopMap.get(args[0]).hasPrices()){
-							RealShopping.shopMap.get(args[0]).clearSales();
-							Price[] keys = RealShopping.shopMap.get(args[0]).getPrices().keySet().toArray(new Price[0]);
-							int i = 0;
-							for(;i < keys.length;i++){
-								RealShopping.shopMap.get(args[0]).addSale(keys[i], pcnt);
-							}
-							if(pcnt > 0) sender.sendMessage(ChatColor.GREEN + "" + pcnt + LangPack.PCNTOFF + i + LangPack.ITEMS);
-							else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);
-							return true;
-						} else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);
-					} else sender.sendMessage(ChatColor.RED + LangPack.YOUCANTUSEAVALUEOF0ORLESS);
-				} else  sender.sendMessage(ChatColor.RED + LangPack.YOUCANTUSEAVALUEOF100ORMORE);
-			} catch(NumberFormatException e){
-				sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTANINTEGER);
-			}
-		} else if(args.length == 4){
-			try {
-				int pcnt = Integer.parseInt(args[2]);
-				if(pcnt < 100){
-					if(pcnt > 0){
-						String[] keys = args[3].split(",");
-						if(keys.length > 0){
-							RealShopping.shopMap.get(args[0]).clearSales();
-							int i = 0;
-							int j = 0;
-							for(;i < keys.length;i++){
-								Price tempP = new Price(keys[i]);
-								if(RealShopping.shopMap.get(args[0]).hasPrice(tempP) || RealShopping.shopMap.get(args[0]).hasPrice(new Price(keys[i].split(":")[0]))){
-									RealShopping.shopMap.get(args[0]).addSale(tempP, pcnt);
-									j++;
+		try {
+			int pcnt = Integer.parseInt(args[2]);
+			if(pcnt < 100){
+				if(pcnt > 0){
+					Shop tempShop = RealShopping.shopMap.get(args[0]);
+					if(tempShop != null){
+						if(tempShop.hasPrices()){
+							tempShop.clearSales();
+							if(args.length == 3){
+								Price[] keys = tempShop.getPrices().keySet().toArray(new Price[0]);
+								int i = 0;
+								for(;i < keys.length;i++){
+									tempShop.addSale(keys[i], pcnt);
 								}
+								if(pcnt > 0) sender.sendMessage(ChatColor.GREEN + "" + pcnt + LangPack.PCNTOFF + i + LangPack.ITEMS);
+								else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);
+								return true;
+							} else {//If args.length > 3
+								String[] keys = args[3].split(",");
+								if(keys.length > 0){
+									int i = 0, j = 0;
+									for(;i < keys.length;i++){
+										Price tempP = RSUtils.pullPrice(keys[i]);
+										if(tempShop.hasPrice(tempP) || tempShop.hasPrice(tempP.stripOffData())){
+											tempShop.addSale(tempP, pcnt);
+											j++;
+										}
+									}
+									if(pcnt > 0) sender.sendMessage(ChatColor.GREEN + "" + pcnt + LangPack.PCNTOFF + j + LangPack.ITEMS);
+									else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);
+									return true;
+								} else sender.sendMessage(ChatColor.RED + args[3] + LangPack.ISNOTAVALIDARGUMENT);
 							}
-							if(pcnt > 0) sender.sendMessage(ChatColor.GREEN + "" + pcnt + LangPack.PCNTOFF + j + LangPack.ITEMS);
-							else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);
-							return true;
-						} else sender.sendMessage(ChatColor.RED + args[3] + LangPack.ISNOTAVALIDARGUMENT);
-					} else sender.sendMessage(ChatColor.RED + LangPack.YOUCANTUSEAVALUEOF0ORLESS); 
-				} else  sender.sendMessage(ChatColor.RED + LangPack.YOUCANTUSEAVALUEOF100ORMORE);
-			} catch(NumberFormatException e){
-				sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTANINTEGER);
-			}
+						} else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);	
+					} else sender.sendMessage(ChatColor.RED + LangPack.STORE + args[0] + LangPack.DOESNTEXIST);
+				} else sender.sendMessage(ChatColor.RED + LangPack.YOUCANTUSEAVALUEOF0ORLESS);
+			} else  sender.sendMessage(ChatColor.RED + LangPack.YOUCANTUSEAVALUEOF100ORMORE);
+		} catch(NumberFormatException e){
+			sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTANINTEGER);
 		}
 		return false;
 	}
@@ -367,8 +360,8 @@ class RSStores extends RSCommand {
 			sender.sendMessage(ChatColor.GREEN + LangPack.STORE + args[0] + ((RealShopping.shopMap.get(args[0]).getOwner().equalsIgnoreCase("@admin"))?"":LangPack.OWNEDBY + RealShopping.shopMap.get(args[0]).getOwner()));
 			if(RealShopping.shopMap.get(args[0]).getBuyFor() > 0) sender.sendMessage(ChatColor.GREEN + LangPack.BUYSFOR + RealShopping.shopMap.get(args[0]).getBuyFor() + LangPack.PCNTOFORIGINAL);
 			if(RealShopping.shopMap.get(args[0]).hasSales()) sender.sendMessage(ChatColor.GREEN + LangPack.HASA + RealShopping.shopMap.get(args[0]).getFirstSale() + LangPack.PCNTOFFSALERIGHTNOW);
-			if(!RealShopping.getPlayersInStore(args[0].toLowerCase())[0].equals("")){
-				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.PLAYERSINSTORE + "\n" + ChatColor.RESET + RealShopping.formatPlayerListToMess(RealShopping.getPlayersInStore(args[0].toLowerCase())));
+			if(!RSUtils.getPlayersInStore(args[0].toLowerCase())[0].equals("")){
+				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.PLAYERSINSTORE + "\n" + ChatColor.RESET + RSUtils.formatPlayerListToMess(RSUtils.getPlayersInStore(args[0].toLowerCase())));
 			}
 			sender.sendMessage(ChatColor.GREEN + "For help, type " + ChatColor.DARK_PURPLE + "/rsstores help");//LANG
 			return true;
@@ -383,7 +376,7 @@ class RSStores extends RSCommand {
      			return unban();
     		} else if(args[1].equalsIgnoreCase("kick")){
     			return kick();
-    		} else if(args.length == 3 && args[1].equalsIgnoreCase("startsale")){
+    		} else if(args.length > 2 && args[1].equalsIgnoreCase("startsale")){
     			return startsale();
     		} else if(args.length == 2 && args[1].equalsIgnoreCase("endsale")){
     			return endsale();

@@ -6,6 +6,7 @@ import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 
 import com.github.kuben.realshopping.LangPack;
+import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.RealShopping;
 
 class RSTpLocs extends RSPlayerCommand {
@@ -18,35 +19,35 @@ class RSTpLocs extends RSPlayerCommand {
 	protected boolean execute() {
 		if (args.length == 1){
 			if(args[0].equalsIgnoreCase("setwhitelistmode")){
-				if(!RealShopping.tpLocBlacklist){
+				if(!RealShopping.isTpLocBlacklist()){
 					player.sendMessage(ChatColor.RED + LangPack.WHITELISTMODEALREADYSET);
 				} else {
-					RealShopping.tpLocBlacklist = false;
+					RealShopping.setTpLocWhitelist();
 					player.sendMessage(ChatColor.GREEN + LangPack.SETWHITELISTMODE);
 					return true;
 				}
 			} else if(args[0].equalsIgnoreCase("setblacklistmode")){
-				if(RealShopping.tpLocBlacklist){
+				if(RealShopping.isTpLocBlacklist()){
 					player.sendMessage(ChatColor.RED + LangPack.BLACKLISTMODEALREADYSET);
 				} else {
-					RealShopping.tpLocBlacklist = true;
+					RealShopping.setTpLocBlacklist();
 					player.sendMessage(ChatColor.GREEN + LangPack.SETBLACKLISTMODE);
 					return true;
 				}
 			} else if(args[0].equalsIgnoreCase("remove")){
-				if(RealShopping.forbiddenTpLocs.containsKey(player.getLocation().getBlock().getLocation())){
-					RealShopping.forbiddenTpLocs.remove(player.getLocation().getBlock().getLocation());
-					player.sendMessage(ChatColor.GREEN + LangPack.REMOVEDONEOFTHE + ((RealShopping.tpLocBlacklist)?"FORBIDDEN":"ALLOWED") + LangPack.TELEPORTLOCATIONS);
+				if(RealShopping.hasTpLoc(player.getLocation().getBlock().getLocation())){
+					RealShopping.removeTpLoc(player.getLocation().getBlock().getLocation());
+					player.sendMessage(ChatColor.GREEN + LangPack.REMOVEDONEOFTHE + ((RealShopping.isTpLocBlacklist())?"FORBIDDEN":"ALLOWED") + LangPack.TELEPORTLOCATIONS);
 					return true;
 				} else {
-					player.sendMessage(ChatColor.RED + LangPack.THEREISNO + ((RealShopping.tpLocBlacklist)?"FORBIDDEN":"ALLOWED") + LangPack.TELEPORTLOCATIONWITHITSCENTERHERE);
+					player.sendMessage(ChatColor.RED + LangPack.THEREISNO + ((RealShopping.isTpLocBlacklist())?"FORBIDDEN":"ALLOWED") + LangPack.TELEPORTLOCATIONWITHITSCENTERHERE);
 				}
 			} else if(args[0].equalsIgnoreCase("highlight")){
-					Location[] toHighlight = RealShopping.getNearestTpLocs(player.getLocation().getBlock().getLocation(), 5);
+					Location[] toHighlight = RSUtils.getNearestTpLocs(player.getLocation().getBlock().getLocation(), 5);
 					if(toHighlight != null){
 						for(Location l:toHighlight){
 							Byte dB;
-							int radius = RealShopping.forbiddenTpLocs.get(l);
+							int radius = RealShopping.getTpLoc(l);
 							if(radius <= 1) dB = 0;
 							else if(radius <= 5) dB = 1;
 							else if(radius <= 10) dB = 2;
@@ -95,11 +96,11 @@ class RSTpLocs extends RSPlayerCommand {
 		} else if(args.length == 2 && args[0].equalsIgnoreCase("add")){
 			try {
 				int radius = Integer.parseInt(args[1]);
-				if(RealShopping.forbiddenTpLocs.containsKey(player.getLocation().getBlock().getLocation())){
-					player.sendMessage(ChatColor.GREEN + LangPack.OLDRADIUSVALUE + RealShopping.forbiddenTpLocs.put(player.getLocation().getBlock().getLocation(), radius) + LangPack.REPLACEDWITH + radius);
+				if(RealShopping.hasTpLoc(player.getLocation().getBlock().getLocation())){
+					player.sendMessage(ChatColor.GREEN + LangPack.OLDRADIUSVALUE + RealShopping.addTpLoc(player.getLocation().getBlock().getLocation(), radius) + LangPack.REPLACEDWITH + radius);
 				} else {
-					RealShopping.forbiddenTpLocs.put(player.getLocation().getBlock().getLocation(), radius);
-					player.sendMessage(ChatColor.GREEN + LangPack.ADDED + ((RealShopping.tpLocBlacklist)?"FORBIDDEN":"ALLOWED") + LangPack.TELEPORTLOCATIONWITHARADIUSOF + radius);
+					RealShopping.addTpLoc(player.getLocation().getBlock().getLocation(), radius);
+					player.sendMessage(ChatColor.GREEN + LangPack.ADDED + ((RealShopping.isTpLocBlacklist())?"FORBIDDEN":"ALLOWED") + LangPack.TELEPORTLOCATIONWITHARADIUSOF + radius);
 				}
 				return true;
 			} catch (NumberFormatException e){

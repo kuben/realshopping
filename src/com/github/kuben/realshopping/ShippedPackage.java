@@ -80,7 +80,7 @@ public class ShippedPackage{
 	@Override
 	public String toString(){
 		String s = LangPack.SHIPPEDPACKAGESENT + new Date(dateSent) + LangPack.FROM
-				+ locationSent.getBlockX() + "," + locationSent.getBlockY() + "," + locationSent.getBlockZ()
+				+ RSUtils.locAsString(locationSent)
 				+ LangPack.INWORLD + locationSent.getWorld() + LangPack.WITH;
 		for(ItemStack iS:contents){
 			if(iS != null) s += iS + ", ";

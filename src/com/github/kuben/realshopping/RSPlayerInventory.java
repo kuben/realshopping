@@ -60,14 +60,13 @@ public class RSPlayerInventory {
 		return true;	
 	}
 	
-
 	public boolean update(Inventory[] invs){
 		items.clear();
 		items = invToPInv();
 		
 		if(invs != null)
 			for(int i = 0;i < invs.length;i++)
-				items = Utils.joinMaps(items, invToPInv(invs[i]));
+				items = RSUtils.joinMaps(items, invToPInv(invs[i]));
 		
 		return true;	
 	}
@@ -106,7 +105,7 @@ public class RSPlayerInventory {
 			if(invs != null){
 				for(int i = 0;i < invs.length;i++){
 					Map<PItem, Integer> tempInv = invToPInv(invs[i]);
-					newInv = Utils.joinMaps(newInv, tempInv);
+					newInv = RSUtils.joinMaps(newInv, tempInv);
 				}
 			}
 
@@ -133,7 +132,7 @@ public class RSPlayerInventory {
 							amount -= oldAm;
 						}
 					}
-					toPay += cost * (RealShopping.maxDurMap.containsKey(key.type)?(double)amount / (double)RealShopping.maxDurMap.get(key.type):amount);//Convert items durability to item amount
+					toPay += cost * (RealShopping.isTool(key.type)?(double)amount / (double)RealShopping.getMaxDur(key.type):amount);//Convert items durability to item amount
 				}
 			}
 		}
@@ -152,7 +151,7 @@ public class RSPlayerInventory {
 			if(invs != null){
 				for(int i = 0;i < invs.length;i++){
 					Map<PItem, Integer> tempInv = invToPInv(invs[i]);
-					newInv = Utils.joinMaps(newInv, tempInv);
+					newInv = RSUtils.joinMaps(newInv, tempInv);
 				}
 			}
 
@@ -236,8 +235,8 @@ public class RSPlayerInventory {
 			if(iS != null){
 				PItem temp = new PItem(iS);
 				int amount;
-				if(RealShopping.maxDurMap.containsKey(iS.getTypeId()))
-					amount = RealShopping.maxDurMap.get(iS.getTypeId()) - iS.getDurability();
+				if(RealShopping.isTool(iS.getTypeId()))
+					amount = RealShopping.getMaxDur(iS.getTypeId()) - iS.getDurability();
 				else 
 					amount = iS.getAmount();
 				if(tempMap.containsKey(temp)) tempMap.put(temp, tempMap.get(temp) + amount);
@@ -352,9 +351,9 @@ public class RSPlayerInventory {
 
 final class PItem{
 	
-	int type;
-	byte data;
-	Map<Enchantment, Integer> enchantments;
+	final int type;
+	final byte data;
+	final Map<Enchantment, Integer> enchantments;
 	
 	public PItem(ItemStack is){
 		enchantments = is.getEnchantments();
@@ -410,34 +409,4 @@ final class PItem{
 			return false;
 		return true;
 	}
-}
-
-class Utils{
-	public static Map<PItem, Integer> joinMaps(Map<PItem,Integer> uno, Map<PItem,Integer> dos){//Preserves old values
-		PItem[] keys = dos.keySet().toArray(new PItem[0]);
-		for(PItem o:keys){
-			if(uno.containsKey(o)) uno.put(o, uno.get(o) + dos.get(o));
-			else uno.put(o, dos.get(o));
-		}
-		return uno;
-	}
-	
-    public static String formatNum(int value) {
-        int hunRem = value % 100;
-        int tenRem = value % 10;
-        if (hunRem - tenRem == 10) {
-                return value + LangPack.X_TH;
-        }
-        switch (tenRem) {
-        case 1:
-                return value + LangPack.X_ST;
-        case 2:
-                return value + LangPack.X_ND;
-        case 3:
-                return value + LangPack.X_RD;
-        default:
-                return value + LangPack.X_TH;
-        }
-}
-
 }

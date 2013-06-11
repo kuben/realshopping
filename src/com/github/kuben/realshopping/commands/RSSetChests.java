@@ -5,8 +5,10 @@ import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 
 import com.github.kuben.realshopping.LangPack;
+import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
+import com.github.kuben.realshopping.exceptions.RSListenerException;
 import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.kuben.realshopping.prompts.PromptMaster.PromptType;
 
@@ -54,24 +56,7 @@ class RSSetChests extends RSPlayerCommand {
 
 	private boolean additems(){
 		try {
-			String[] strs = getItemsArray();
-			if(strs == null) return false;
-
-			int[][] ids = new int[strs.length][3];
-			for(int i = 0;i < strs.length;i++){
-				if(strs[i].contains(":")){
-					ids[i][0] = Integer.parseInt(strs[i].split(":")[0].trim());
-					ids[i][1] = Integer.parseInt(strs[i].split(":")[1].trim());
-					if(strs[i].split(":").length > 2)
-						ids[i][2] = Integer.parseInt(strs[i].split(":")[2].trim());
-					else ids[i][2] = 0;//Means full stack
-				} else {
-					ids[i][0] = Integer.parseInt(strs[i].trim());
-					ids[i][1] = 0;
-					ids[i][2] = 0;
-				}
-			}
-			int j = tempShop.addChestItem(l, ids);
+			int j = tempShop.addChestItem(l, RSUtils.pullItems(args[1]));
 			if(j > -1){
 				sender.sendMessage(ChatColor.RED + LangPack.ADDED + j + LangPack.ITEMS);
 				RealShopping.updateEntrancesDb();
@@ -81,25 +66,15 @@ class RSSetChests extends RSPlayerCommand {
 			}
 		} catch (NumberFormatException e){
 			sender.sendMessage(ChatColor.RED + LangPack.ONEORMOREOFTHEITEMIDSWERENOTINTEGERS + args[1]);
+		} catch (RSListenerException e){
+			//TODO
 		}
 		return false;
 	}
 	
 	private boolean delitems(){
 		try {
-			String[] strs = getItemsArray();
-			if(strs == null) return false;
-			
-			int[][] ids = new int[strs.length][2];
-			for(int i = 0;i < strs.length;i++){
-				if(strs[i].contains(":")){
-					ids[i][0] = Integer.parseInt(strs[i].split(":")[0].trim());
-					ids[i][1] = Integer.parseInt(strs[i].split(":")[1].trim());
-				} else {
-					ids[i][0] = Integer.parseInt(strs[i].trim());
-					ids[i][1] = 0;
-				}
-			}
+			int[][] ids = RSUtils.pullItems(args[1]);
 			int j = tempShop.delChestItem(l, ids);
 			if(j > -1){
 				sender.sendMessage(ChatColor.RED + LangPack.REMOVED + j + LangPack.ITEMS);
@@ -110,37 +85,10 @@ class RSSetChests extends RSPlayerCommand {
 			}
 		} catch (NumberFormatException e){
 			sender.sendMessage(ChatColor.RED + LangPack.ONEORMOREOFTHEITEMIDSWERENOTINTEGERS + args[1]);
+		} catch (RSListenerException e){
+			//TODO
 		}
 		return false;
-	}
-	
-	private String[] getItemsArray(){
-		String[] strs = new String[27];
-		int i = 0;//How far the loop has gotten in filling the array;
-		for(String s:args[1].split(",")){
-			int m = 1, j = 0;//m is multiplier, j is how many times the loop has multiplied
-			try {
-				if(s.contains("*")) m = Integer.parseInt(s.split("\\*")[1]);
-			} catch (NumberFormatException e) {
-				sender.sendMessage(ChatColor.RED + s.split("\\*")[1] + LangPack.ISNOTANINTEGER);
-				return null;
-			}
-			while(j < m){//Add as many times as requested
-				if(i >= 27) return strs;//Done if full
-				strs[i] = s.split("\\*")[0];
-				i++;
-				j++;
-			}
-		}
-		//Not necessarily full array
-		String temp = "";
-		for(String s:strs){
-			if(s != null){
-				if(!temp.equals("")) temp += ",";
-				temp += s;
-			}
-		}
-		return temp.split(",");
 	}
 		
 	@Override
