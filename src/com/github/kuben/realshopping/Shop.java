@@ -42,6 +42,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.MaterialData;
 
 import com.github.kuben.realshopping.RSPlayerInventory;
+import com.github.kuben.realshopping.listeners.RSPlayerListener;
+import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.kuben.realshopping.exceptions.RealShoppingException;
 import com.github.kuben.realshopping.exceptions.RealShoppingException.Type;
 
@@ -95,7 +97,8 @@ public class Shop {//TODO add load/save interface
 	 */
 
 	public void addEntranceExit(Location en, Location ex) throws RealShoppingException{ new EEPair(en, ex, this); }
-	public boolean removeEntranceExit(Location en, Location ex){ return RealShopping.removeEntranceExit(this, en, ex); }//TODO heh, isn't used
+	public boolean removeEntranceExit(Location en, Location ex){ return RealShopping.removeEntranceExit(this, en, ex); }//TODO add to rsset and rssetstores
+	public int clearEntrancesExits(){ return RealShopping.clearEntrancesExits(this); }
 	public boolean hasEntrance(Location en){ return RealShopping.hasEntrance(this, en); }
 	public boolean hasExit(Location ex){ return RealShopping.hasExit(this, ex); }
 	public Location getFirstE(){ return RealShopping.getRandomEntrance(this); }
@@ -144,10 +147,13 @@ public class Shop {//TODO add load/save interface
 		if(chests.containsKey(l)){
 			if(i != null){
 				chests.get(l).clear();
+				System.out.println("setting chest contents");
 				for(ItemStack iS:i.getContents()){
-					int am = iS.getAmount();
-					if(am == iS.getType().getMaxStackSize()) am = 0;//TODO Check for swords and stuff
-					chests.get(l).add(new Integer[]{iS.getTypeId(), (int)iS.getData().getData(), am});
+					if(iS != null){
+						int am = iS.getAmount();
+						if(am == iS.getType().getMaxStackSize()) am = 0;
+						chests.get(l).add(new Integer[]{iS.getTypeId(), (int)iS.getData().getData(), am});
+					} else chests.get(l).add(new Integer[]{0, 0, 0});
 				}	
 			}
 		}
@@ -358,8 +364,8 @@ public class Shop {//TODO add load/save interface
 	 */
 	
 	public static boolean sellToStore(Player p, ItemStack[] iS){
-		Shop tempShop = RealShopping.shopMap.get(RealShopping.PInvMap.get(p.getName()).getStore());
-		if(Config.isEnableSelling() && RealShopping.PInvMap.containsKey(p.getName()) && tempShop.getBuyFor() > 0){
+		Shop tempShop = RealShopping.shopMap.get(RealShopping.getPInv(p).getStore());
+		if(Config.isEnableSelling() && RealShopping.hasPInv(p) && tempShop.getBuyFor() > 0){
 			int payment = 0;
 			List<ItemStack> sold = new ArrayList<ItemStack>();
 			for(int i = 0;i < iS.length;i++){//Calculate cost and check if player owns items
@@ -373,7 +379,7 @@ public class Shop {//TODO add load/save interface
 	    				for(ItemStack tempSld:sold)
 	    					if(tempSld.getTypeId() == iS[i].getTypeId()) soldAm += ((RealShopping.isTool(type))?RealShopping.getMaxDur(type) - iS[i].getDurability():iS[i].getAmount());
 	
-	    				if(RealShopping.PInvMap.get(p.getName()).getAmount(iS[i]) >= soldAm){
+	    				if(RealShopping.getPInv(p).getAmount(iS[i]) >= soldAm){
 	    					int cost = -1;
 	    					if(tempShop.hasPrice(new Price(type))) cost = tempShop.getPrice(new Price(type));
 	    					if(tempShop.hasPrice(new Price(type, data))) cost = tempShop.getPrice(new Price(type, data));
@@ -401,7 +407,7 @@ public class Shop {//TODO add load/save interface
 					if(tempShop.allowsNotifications()) RealShopping.sendNotification(own, LangPack.YOURSTORE + tempShop.getName() + LangPack.BOUGHTSTUFFFOR + payment/100f + LangPack.UNIT + LangPack.FROM + p.getName());
 					for(ItemStack key:sold){
 						if(Config.isEnableAI()) tempShop.addStat(new Statistic(new PItem(key), key.getAmount(), false));
-						RealShopping.PInvMap.get(p.getName()).removeItem(key, key.getAmount());
+						RealShopping.getPInv(p).removeItem(key, key.getAmount());
 					}
 					cont = true;
 				} else p.sendMessage(ChatColor.RED + LangPack.OWNER + own + LangPack.CANTAFFORDTOBUYITEMSFROMYOUFOR + payment/100f + LangPack.UNIT);
@@ -409,7 +415,7 @@ public class Shop {//TODO add load/save interface
 				RSEconomy.deposit(p.getName(), payment/100f);
 				p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sold.size() + LangPack.ITEMSFOR + payment/100f + LangPack.UNIT);
 				for(ItemStack key:sold){
-					RealShopping.PInvMap.get(p.getName()).removeItem(key, key.getAmount());
+					RealShopping.getPInv(p).removeItem(key, key.getAmount());
 				}
 				cont = true;
 			}
@@ -500,10 +506,10 @@ public class Shop {//TODO add load/save interface
 	     }
 	
 	public static boolean pay(Player player, Inventory[] invs){
-		if(RealShopping.PInvMap.containsKey(player.getName())){
-			String shopName = RealShopping.PInvMap.get(player.getName()).getStore();
+		if(RealShopping.hasPInv(player)){
+			String shopName = RealShopping.getPInv(player).getStore();
 			if(RealShopping.shopMap.get(shopName).hasPrices()) {
-				int toPay = RealShopping.PInvMap.get(player.getName()).toPay(invs);
+				int toPay = RealShopping.getPInv(player).toPay(invs);
 				if(toPay==0) return false;
 				if(RSEconomy.getBalance(player.getName()) < toPay/100f) {
 					player.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOBUYTHINGSFOR + toPay/100f + LangPack.UNIT);
@@ -515,7 +521,7 @@ public class Shop {//TODO add load/save interface
 						if(RealShopping.shopMap.get(shopName).allowsNotifications()) RealShopping.sendNotification(RealShopping.shopMap.get(shopName).getOwner(), player.getName()
 								+ LangPack.BOUGHTSTUFFFOR + toPay/100f + LangPack.UNIT + LangPack.FROMYOURSTORE + shopName + ".");
 					}
-					Map<PItem, Integer> bought = RealShopping.PInvMap.get(player.getName()).getBought(invs);
+					Map<PItem, Integer> bought = RealShopping.getPInv(player).getBought(invs);
 					
 					if(Config.isEnableAI()){
 						PItem[] keys = bought.keySet().toArray(new PItem[0]);
@@ -524,8 +530,8 @@ public class Shop {//TODO add load/save interface
 						}
 					}
 					
-					if(invs != null) RealShopping.PInvMap.get(player.getName()).update(invs);
-					else RealShopping.PInvMap.get(player.getName()).update();
+					if(invs != null) RealShopping.getPInv(player).update(invs);
+					else RealShopping.getPInv(player).update();
 					player.sendMessage(ChatColor.GREEN + LangPack.YOUBOUGHTSTUFFFOR + toPay/100f + LangPack.UNIT);
 					return true;
 				}
@@ -540,24 +546,29 @@ public class Shop {//TODO add load/save interface
 	}
 	
 	public static boolean exit(Player player, boolean cmd){
-		if(RealShopping.PInvMap.containsKey(player.getName())){
+		if(RealShopping.hasPInv(player)){
 			if(RealShopping.shopMap.size() > 0){
-				if(RealShopping.PInvMap.get(player.getName()).hasPaid() || player.getGameMode() == GameMode.CREATIVE){
-					String shopName = RealShopping.PInvMap.get(player.getName()).getStore();
-					Location l = player.getLocation().getBlock().getLocation().clone();
-					if(RealShopping.shopMap.get(shopName).hasExit(l)){
-						l = RealShopping.shopMap.get(shopName).getCorrEntrance(l);
-						RealShopping.PInvMap.remove(player.getName());
-						player.teleport(l.add(0.5, 0, 0.5));
-						player.sendMessage(ChatColor.GREEN + LangPack.YOULEFT + shopName);
-						return true;
+				if(!PromptMaster.isConversing(player) && !RSPlayerListener.hasConversationListener(player)){
+					if(RealShopping.getPInv(player).hasPaid() || player.getGameMode() == GameMode.CREATIVE){
+						String shopName = RealShopping.getPInv(player).getStore();
+						Location l = player.getLocation().getBlock().getLocation().clone();
+						if(RealShopping.shopMap.get(shopName).hasExit(l)){
+							l = RealShopping.shopMap.get(shopName).getCorrEntrance(l);
+							RealShopping.removePInv(player);
+							player.teleport(l.add(0.5, 0, 0.5));
+							player.sendMessage(ChatColor.GREEN + LangPack.YOULEFT + shopName);
+							return true;
+						} else {
+							if(cmd)	player.sendMessage(ChatColor.RED + LangPack.YOURENOTATTHEEXITOFASTORE);
+							return false;
+						}
 					} else {
-						if(cmd)	player.sendMessage(ChatColor.RED + LangPack.YOURENOTATTHEEXITOFASTORE);
+						player.sendMessage(ChatColor.RED + LangPack.YOUHAVENTPAIDFORALLYOURARTICLES);
 						return false;
 					}
-	
 				} else {
-					player.sendMessage(ChatColor.RED + LangPack.YOUHAVENTPAIDFORALLYOURARTICLES);
+					player.sendRawMessage(ChatColor.RED + "You can't do this while in a conversation. ");
+					player.sendRawMessage("All conversations can be aborted with " + ChatColor.DARK_PURPLE + "quit");//LANG
 					return false;
 				}
 			} else {
@@ -572,58 +583,52 @@ public class Shop {//TODO add load/save interface
 	
 	public static boolean enter(Player player, boolean cmd){
 		if(RealShopping.shopMap.size() > 0){
-			int i = 0;
-			Object[] keys = RealShopping.shopMap.keySet().toArray();
-			Location l = player.getLocation().getBlock().getLocation().clone();
-			Location ex = null;
-			for(;i<keys.length;i++){
-				if(RealShopping.shopMap.get(keys[i]).hasEntrance(l)){
-					ex = RealShopping.shopMap.get(keys[i]).getCorrExit(l);
-					break;
-				}
-			}
-			if(ex != null){//Enter shop
-				if(!RealShopping.shopMap.get(keys[i]).isBanned(player.getName().toLowerCase())) {
-					player.teleport(ex.add(0.5, 0, 0.5));
-					
-					RealShopping.PInvMap.put(player.getName(), new RSPlayerInventory(player, (String) keys[i]));
-					player.sendMessage(ChatColor.GREEN + LangPack.YOUENTERED + RealShopping.shopMap.get(keys[i]).getName());
-					
-					//Refill chests
-					Object[] chestArr = RealShopping.shopMap.get(keys[i]).getChests().keySet().toArray();
-					for(int ii = 0;ii < chestArr.length;ii++){
-						Block tempChest = player.getWorld().getBlockAt((Location) chestArr[ii]);
-						if(tempChest.getType() != Material.CHEST) tempChest.setType(Material.CHEST);
-		             	BlockState blockState = tempChest.getState();
-		             	if(blockState instanceof Chest)
-		             	{
-		             	    Chest chest = (Chest)blockState;
-		             	    chest.getBlockInventory().clear();
-		             	    ItemStack[] itemStack = new ItemStack[27];
-		             	    int k = 0;
-		             	    for(Integer[] jj:RealShopping.shopMap.get(keys[i]).getChests().get((Location) chestArr[ii])){
-		             	    	itemStack[k] = new MaterialData(jj[0],jj[1].byteValue())
-		             	    		.toItemStack((jj[2]==0)?Material.getMaterial(jj[0]).getMaxStackSize():jj[2]);
-		             	    	k++;
-		             	    }
-		             	    chest.getBlockInventory().setContents(itemStack);
-		             	}
+			Location l = player.getLocation().getBlock().getLocation().clone();	
+			Shop tempShop = RealShopping.isEntranceTo(l);
+			if(!PromptMaster.isConversing(player) && !RSPlayerListener.hasConversationListener(player)){
+				if(tempShop != null){//Enter shop
+					Location ex = tempShop.getCorrExit(l);
+					if(!tempShop.isBanned(player.getName().toLowerCase())){
+						player.teleport(ex.add(0.5, 0, 0.5));
+
+						RealShopping.addPInv(new RSPlayerInventory(player, tempShop.getName()));
+						player.sendMessage(ChatColor.GREEN + LangPack.YOUENTERED + tempShop.getName());
+						
+						//Refill chests
+						Location[] chestArr = tempShop.getChests().keySet().toArray(new Location[0]);
+						for(int i = 0;i < chestArr.length;i++){
+							Block tempChest = player.getWorld().getBlockAt(chestArr[i]);
+							if(tempChest.getType() != Material.CHEST) tempChest.setType(Material.CHEST);
+			             	BlockState blockState = tempChest.getState();
+			             	if(blockState instanceof Chest){
+			             	    Chest chest = (Chest)blockState;
+			             	    chest.getBlockInventory().clear();
+			             	    ItemStack[] itemStack = new ItemStack[27];
+			             	    int k = 0;
+			             	    for(Integer[] j:tempShop.getChests().get(chestArr[i])){
+			             	    	itemStack[k] = new MaterialData(j[0],j[1].byteValue())
+			             	    		.toItemStack((j[2]==0)?Material.getMaterial(j[0]).getMaxStackSize():j[2]);
+			             	    	k++;
+			             	    }
+			             	    chest.getBlockInventory().setContents(itemStack);
+			             	}
+						}
+						return true;
+					} else {
+						player.sendMessage(ChatColor.RED + LangPack.YOUAREBANNEDFROM + tempShop.getName());
+						return false;
 					}
-					return true;
 				} else {
-					player.sendMessage(ChatColor.RED + LangPack.YOUAREBANNEDFROM + keys[i]);
+					if(cmd) player.sendMessage(ChatColor.RED + LangPack.YOURENOTATTHEENTRANCEOFASTORE);
 					return false;
 				}
 			} else {
-				if(cmd){
-					player.sendMessage(ChatColor.RED + LangPack.YOURENOTATTHEENTRANCEOFASTORE);
-				}
+				player.sendRawMessage(ChatColor.RED + "You can't do this while in a conversation. ");
+				player.sendRawMessage("All conversations can be aborted with " + ChatColor.DARK_PURPLE + "quit");//LANG
 				return false;
 			}
 		} else {
-			if(cmd){
-				player.sendMessage(ChatColor.RED + LangPack.THEREARENOSTORESSET);
-			}
+			if(cmd) player.sendMessage(ChatColor.RED + LangPack.THEREARENOSTORESSET);
 			return false;
 		}
 	}

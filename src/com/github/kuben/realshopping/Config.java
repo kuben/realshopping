@@ -252,7 +252,7 @@ public class Config {
 					int i = 0;
 					while ((s = br.readLine()) != null){
 						if(i==0){
-							pW.println("Properties file for RealShopping v0.44");
+							pW.println("Properties file for RealShopping " + RealShopping.VERSION);
 							pW.println("## Do not edit above line!");
 							pW.println("## The rest of a line after a hashtag is a comment and will be ignored.");
 							pW.println("#");
@@ -362,7 +362,7 @@ public class Config {
 			String s = line.substring(foo, line.length()).split("#")[0].trim();
 			if(s.length() > HEADER.length() && s.substring(0, HEADER.length()).equals(HEADER)){//If header
 				version = Float.parseFloat(s.substring(HEADER.length()));
-				if(version == 0.44) return 1;
+				if(version == RealShopping.VERFLOAT) return 1;
 			} else {
 				if(s.equals("debug")){
 					debug = true;

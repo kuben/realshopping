@@ -1,5 +1,6 @@
 package com.github.kuben.realshopping.listeners;
 
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 
@@ -13,8 +14,8 @@ abstract class GeneralListener{
 	private Player player;
 	
 	public GeneralListener(Player player) throws RSListenerException{
-		if(RealShopping.PInvMap.containsKey(player.getName())){
-			shop = RealShopping.PInvMap.get(player.getName()).getShop();
+		if(RealShopping.hasPInv(player)){
+			shop = RealShopping.getPInv(player).getShop();
 			if((shop.getOwner().equals("@admin") && player.hasPermission("realshopping.rsset"))
 					|| shop.getOwner().equals(player.getName())){
 				this.player = player;
@@ -25,13 +26,39 @@ abstract class GeneralListener{
 	}
 	
 	public GeneralListener(Player player, String store) throws RSListenerException{//Isn't and shouldn't be in store
-		if(!RealShopping.PInvMap.containsKey(player.getName())){
+		if(!RealShopping.hasPInv(player)){
 			shop = RealShopping.shopMap.get(store);//Can be null at this point
 			//Doesn't check for permissions
 			this.player = player;
 			//Now adds itself to set, or throws exception if failing
 			if(!RSPlayerListener.addConversationListener(this)) throw new RSListenerException(player, Type.PLAYER_ALREADY_HAS_LISTENER);
 		} else throw new RSListenerException(player, Type.IN_SHOP);
+	}
+	
+	//Only for chest listeners as of 0.50
+	protected void blockChange(Location block, int id) {
+		Thread t = new Thread() {	
+			private Location block;
+			private int id;
+
+			public void run(){
+				try {
+					Thread.sleep(20);
+					 getPlayer().sendBlockChange(block, id, (byte) 0);
+					Thread.sleep(1000);//To be sure
+					getPlayer().sendBlockChange(block, id, (byte) 0);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			
+		    private Thread init(Location block, int id){
+		        this.block = block;
+		        this.id = id;
+		        return this;
+		    }
+		}.init(block,id);
+		t.start();
 	}
 	
 	Shop getShop(){ return shop; }

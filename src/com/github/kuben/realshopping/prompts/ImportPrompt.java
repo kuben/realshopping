@@ -156,6 +156,9 @@ class FinalPrompt extends MessagePrompt{
 			        }
 					if(RealShopping.getDefPricesSize() > 0) return ChatColor.GREEN + LangPack.IMPORTED + RealShopping.getDefPricesSize() + LangPack.PRICESASDEFAULT;
 					else return LangPack.ERRORCOULDNTIMPORTPRICES;
+				} catch (NoClassDefFoundError e){
+					return ChatColor.RED + "NoClassDefFoundError: " + ChatColor.RESET + "It seems like you don't have the apache poi libraries which are required to import from Excel files. " +
+							"You can find instructions on where and how to obtain them on the plugin page on BukkitDev.";
 				} catch (IOException e) {
 					e.printStackTrace();
 				} catch (Exception e) {

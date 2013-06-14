@@ -3,6 +3,7 @@ package com.github.kuben.realshopping.commands;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import com.github.kuben.realshopping.Config;
+import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.LangPack;
 
 class RealShoppingCommand extends RSCommand {
@@ -25,7 +26,7 @@ class RealShoppingCommand extends RSCommand {
 			return false;
 		}
 		int i = 0;
-		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "RealShopping [v0.44] - A shop plugin for Bukkit made by kuben0");i++;
+		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "RealShopping [" + RealShopping.VERSION + "] - A shop plugin for Bukkit made by kuben0");i++;
 		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "Loaded config settings:");i++;
 		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "enable-automatic-updates:"+Config.getAutoUpdateStr(Config.getAutoUpdate()));i++;
 		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "auto-protect-chests:"+Config.isAutoprotect());i++;

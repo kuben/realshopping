@@ -107,7 +107,7 @@ public class LangPack {
 	public static String YOUHAVENTBOUGHTANYTHING;
 	public static String THERESNOPACKAGEWITHTHEID;
 	public static String YOUHAVENTGOTANYITEMSWAITINGTOBEDELIVERED;
-	public static String THEBLOCKYOUARESTANDINGONISNTACHEST;
+	public static String THEBLOCKYOUSELECTEDISNTACHEST;
 	public static String THEREISA;
 	public static String PCNTOFFSALEAT;
 	public static String ONSALE;
@@ -318,7 +318,7 @@ public class LangPack {
 		YOUHAVENTBOUGHTANYTHING = "You haven't bought anything.";
 		THERESNOPACKAGEWITHTHEID = "There's no package with the id ";
 		YOUHAVENTGOTANYITEMSWAITINGTOBEDELIVERED = "You haven't got any items waiting to be delivered.";
-		THEBLOCKYOUARESTANDINGONISNTACHEST = "The block you are standing on isn't a chest.";
+		THEBLOCKYOUSELECTEDISNTACHEST = "The block you selected isn't a chest.";//TODO change xmls
 		TRYINGTOCHEATYOURWAYOUT = "Trying to cheat your way out??";
 		HAVEFUNINHELL = "Have fun in hell!";
 		ENTRANCEVARIABLESETTO = "Entrance variable set to: ";
@@ -631,7 +631,7 @@ public class LangPack {
 					else if(name.equals("YOUHAVENTBOUGHTANYTHING")) YOUHAVENTBOUGHTANYTHING = el.getAttribute("value");
 					else if(name.equals("THERESNOPACKAGEWITHTHEID")) THERESNOPACKAGEWITHTHEID = el.getAttribute("value");
 					else if(name.equals("YOUHAVENTGOTANYITEMSWAITINGTOBEDELIVERED")) YOUHAVENTGOTANYITEMSWAITINGTOBEDELIVERED = el.getAttribute("value");
-					else if(name.equals("THEBLOCKYOUARESTANDINGONISNTACHEST")) THEBLOCKYOUARESTANDINGONISNTACHEST = el.getAttribute("value");
+					else if(name.equals("THEBLOCKYOUSELECTEDISNTACHEST")) THEBLOCKYOUSELECTEDISNTACHEST = el.getAttribute("value");
 					else if(name.equals("THEREISA")) THEREISA = el.getAttribute("value");
 					else if(name.equals("PCNTOFFSALEAT")) PCNTOFFSALEAT = el.getAttribute("value");
 					else if(name.equals("ONSALE")) ONSALE = el.getAttribute("value");

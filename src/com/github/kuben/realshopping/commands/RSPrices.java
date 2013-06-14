@@ -23,8 +23,8 @@ class RSPrices extends RSCommand {
 	protected boolean execute() {
 		if(args.length == 0){
 			if(player != null){
-				if(RealShopping.PInvMap.get(player.getName()) != null) {
-					shop = RealShopping.PInvMap.get(player.getName()).getStore();
+				if(RealShopping.getPInv(player) != null) {
+					shop = RealShopping.getPInv(player).getStore();
 				} else {
 					sender.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
 					return false;
@@ -33,11 +33,11 @@ class RSPrices extends RSCommand {
 		} else if(args.length == 1){//May be STORE or PAGE 
 			if(args[0].matches("[0-9]+")){
 				if(player != null){
-					if(RealShopping.PInvMap.containsKey(player.getName())){
+					if(RealShopping.hasPInv(player)){
 						int i = Integer.parseInt(args[0]);
 						if(i > 0) {
 							page = i;
-							shop = RealShopping.PInvMap.get(player.getName()).getStore();
+							shop = RealShopping.getPInv(player).getStore();
 						}
 						else sender.sendMessage(ChatColor.RED + LangPack.THEPAGENUMBERMUSTBE1ORHIGHER);
 					} else {
@@ -53,8 +53,8 @@ class RSPrices extends RSCommand {
 		} else if(args.length == 2){//May be STORE PAGE or search ITEM
 			if(args[0].equalsIgnoreCase("search")){
 				if(player != null){
-					if(RealShopping.PInvMap.get(player.getName()) != null) {
-						return searchItem(RealShopping.shopMap.get(RealShopping.PInvMap.get(player.getName()).getStore())
+					if(RealShopping.getPInv(player) != null) {
+						return searchItem(RealShopping.shopMap.get(RealShopping.getPInv(player).getStore())
 								, RSUtils.pullPrice(args[1]));
 					} else {
 						sender.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);

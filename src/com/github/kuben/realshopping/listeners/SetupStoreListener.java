@@ -21,18 +21,19 @@ public class SetupStoreListener extends GeneralListener implements Appliable {
 	
 	private List<Location> entrances = new ArrayList<Location>();
 	private List<Location> exits = new ArrayList<Location>();
-	private Type type;
-	private String store;
+	private final Type type;
+	private final String store;
+	private final boolean admin;
 	
 	public enum Type {//Append and create the same
 		APPEND, DELETE
 	}
 
-	public SetupStoreListener(Player player, Type type, String store) throws RSListenerException {
+	public SetupStoreListener(Player player, Type type, String store, boolean admin) throws RSListenerException {
 		super(player, store);
 		this.type = type;
-		this.store = store;//TODO better way?
-		message();//TODO delay
+		this.store = store;
+		this.admin = admin;
 	}
 	
 	private void message(){
@@ -50,7 +51,7 @@ public class SetupStoreListener extends GeneralListener implements Appliable {
 			temp = event.getClickedBlock().getLocation().clone().add(0, 1, 0);
 		} else if(event.getAction() == Action.LEFT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_AIR){//Use coordinates
 			event.setCancelled(true);
-			temp = getPlayer().getLocation();
+			temp = getPlayer().getLocation().getBlock().getLocation();
 		}
 		if(temp != null){
 			if(entrances.size() > exits.size()){//Add exit
@@ -80,26 +81,28 @@ public class SetupStoreListener extends GeneralListener implements Appliable {
 	
 	public int apply(){
 		int r = 0;
-		if(type == Type.APPEND){
-			Shop tempShop = getShop();
-			if(tempShop == null){//Time to create a store
-				tempShop = new Shop(store, getPlayer().getWorld().getName(), getPlayer().getName());
-				RealShopping.shopMap.put(store, tempShop);
-			}
-			for(int i = 0;i < exits.size();i++){
-				try {
-					tempShop.addEntranceExit(entrances.get(i), exits.get(i));
+		if(exits.size() > 0){
+			if(type == Type.APPEND){
+				Shop tempShop = getShop();
+				if(tempShop == null){//Time to create a store
+					tempShop = new Shop(store, getPlayer().getWorld().getName(), admin?"@admin":getPlayer().getName());
+					RealShopping.shopMap.put(store, tempShop);
+				}
+				for(int i = 0;i < exits.size();i++){
+					try {
+						tempShop.addEntranceExit(entrances.get(i), exits.get(i));
+						r++;
+					} catch (RealShoppingException e) { }//Ignore
+				}	
+			} else {
+				for(int i = 0;i < exits.size();i++){
+					getShop().removeEntranceExit(entrances.get(i), exits.get(i));
 					r++;
-				} catch (RealShoppingException e) { }//Ignore
-			}	
-		} else {
-			for(int i = 0;i < exits.size();i++){
-				getShop().removeEntranceExit(entrances.get(i), exits.get(i));
-				r++;
+				}
 			}
+			RealShopping.updateEntrancesDb();
+			RSPlayerListener.killConversationListener(this);
 		}
-		RSPlayerListener.killConversationListener(this);
-		RealShopping.updateEntrancesDb();
 		return r;
 	}
 

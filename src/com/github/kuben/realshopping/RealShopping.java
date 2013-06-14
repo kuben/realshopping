@@ -67,22 +67,25 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import com.github.kuben.realshopping.RSEconomy;
+import com.github.kuben.realshopping.Shop;
 import com.github.kuben.realshopping.commands.RSCommandExecutor;
 import com.github.kuben.realshopping.exceptions.RealShoppingException;
 import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
 
-public class RealShopping extends JavaPlugin {//FIXME decided on equals
+public class RealShopping extends JavaPlugin {//TODO stores case sensitive, players case preserving
 	private Updater updater;
 	private StatUpdater statUpdater;
 	private Notificator notificatorThread;
 	
 	//Constants
 	public static final String MANDIR = "plugins/RealShopping/";
+	public static final String VERSION = "v0.44";
+	public static final float VERFLOAT = 0.44f;
 	
 	//Vars
-	public static Map<String, RSPlayerInventory> PInvMap;
-	public static Map<String, Shop> shopMap;//TODO Special two, decide at last
+	private static Set<RSPlayerInventory> PInvSet;//Changed to set
+	public static Map<String, Shop> shopMap;//TODO special mofo
 	
 	private static Map<EEPair, Shop> eePairs;
 	private static Map<Price, Integer[]> defPrices;
@@ -119,7 +122,7 @@ public class RealShopping extends JavaPlugin {//FIXME decided on equals
     	notificatorThread = null;
     	eePairs = new HashMap<EEPair, Shop>();
       	defPrices = new HashMap<Price, Integer[]>();
-    	PInvMap = new HashMap<String, RSPlayerInventory>();
+    	PInvSet = new HashSet<RSPlayerInventory>();
     	maxDurMap = new HashMap<Integer, Integer>();
     	sortedAliases = null;//Is initialized in initAliases
     	aliasesMap = new HashMap<String, Integer[]>(801);
@@ -266,7 +269,7 @@ public class RealShopping extends JavaPlugin {//FIXME decided on equals
 				}
 				fstream.close();
 				br.close();
-				if(version < 0.44)//Needs updating
+				if(version < VERFLOAT)//Needs updating
 					updateEntrancesDb();
 			}
 		} catch (FileNotFoundException e) {
@@ -318,6 +321,7 @@ public class RealShopping extends JavaPlugin {//FIXME decided on equals
      
     public void onDisable(){
 		try {
+			PromptMaster.abandonAllConversations();
 			//TODO disable executor
 			saveTemporaryFile(0);//Inventories
 			saveTemporaryFile(1);//Jailed
@@ -393,13 +397,13 @@ public class RealShopping extends JavaPlugin {//FIXME decided on equals
 
     public static void updateEntrancesDb(){
     	//Update file
-    	long supernigga = System.nanoTime();
+    	long tstamp = System.nanoTime();
 		try {
 			File f = new File(MANDIR + "shops.db");
 			if(!f.exists()) f.createNewFile();
 			PrintWriter pW = new PrintWriter(f);
 			Object[] keys = shopMap.keySet().toArray();
-			pW.println("Shops database for RealShopping v0.44");
+			pW.println("Shops database for RealShopping " + VERSION);
 			for(int i = 0;i<keys.length;i++){
 				Shop tempShop = shopMap.get(keys[i]);
 				pW.print(keys[i] + ":" + tempShop.getWorld() + ":" + tempShop.getOwner() + ":" + tempShop.getBuyFor()
@@ -436,7 +440,7 @@ public class RealShopping extends JavaPlugin {//FIXME decided on equals
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		System.out.println("Finished updating shops.db in " + (System.nanoTime() - supernigga) + "ns");//TODO
+		if(Config.debug) log.info("Finished updating shops.db in " + (System.nanoTime() - tstamp) + "ns");
     }
     
     private void initMaxDur(){
@@ -1189,7 +1193,7 @@ public class RealShopping extends JavaPlugin {//FIXME decided on equals
 					
 					if(notHeader)
 					if(what == 0){
-						PInvMap.put(s.split(";")[0].split("-")[0], new RSPlayerInventory(s.split(";")[1] ,s.split(";")[0].split("-")[1]));//Name - Pinv
+						PInvSet.add(new RSPlayerInventory(s));
 		    		} else if(what == 1){
 		    			jailedPlayers.put(s.split(";")[0], RSUtils.stringToLoc(s.split(";")[1], s.split(";")[2]));
 		    		} else if(what == 2){
@@ -1285,39 +1289,38 @@ public class RealShopping extends JavaPlugin {//FIXME decided on equals
     	String header;
 
     	try {
-    		String vStr = "v0.44";
     		if(what == 0){
-    			keys = PInvMap.keySet().toArray();//Player Map
+    			keys = PInvSet.toArray();
     			f = new File(MANDIR + "inventories.db");
-    			header = "Inventories database for RealShopping " + vStr;
+    			header = "Inventories database for RealShopping " + VERSION;
     		} else if(what == 1){
     			keys = jailedPlayers.keySet().toArray();
     			f = new File(MANDIR + "jailed.db");
-    			header = "Jailed players database for RealShopping " + vStr;
+    			header = "Jailed players database for RealShopping " + VERSION;
     		} else if(what == 2){
     			keys = forbiddenTpLocs.keySet().toArray();
     			f = new File(MANDIR + "allowedtplocs.db");
-    			header = "Allowed teleport locations for RealShopping " + vStr + " " + (tpLocBlacklist?"Blacklist":"Whitelist");
+    			header = "Allowed teleport locations for RealShopping " + VERSION + " " + (tpLocBlacklist?"Blacklist":"Whitelist");
     		} else if(what == 3){
     			keys = shopMap.keySet().toArray();
     			f = new File(MANDIR + "protectedchests.db");
-    			header = "Protected chests for RealShopping " + vStr;
+    			header = "Protected chests for RealShopping " + VERSION;
     		} else if(what == 4){
     			keys = shippedToCollect.keySet().toArray();//Map of players having shipped items
     			f = new File(MANDIR + "shipped.db");
-    			header = "Shipped Packages database for RealShopping " + vStr;
+    			header = "Shipped Packages database for RealShopping " + VERSION;
     		} else if(what == 5){
     			keys = shopMap.keySet().toArray();
     			f = new File(MANDIR + "toclaim.db");
-    			header = "Stolen items database for RealShopping " + vStr;
+    			header = "Stolen items database for RealShopping " + VERSION;
     		} else if(what == 6){
     			keys = shopMap.keySet().toArray();
     			f = new File(MANDIR + "stats.db");
-    			header = "Statistics database for RealShopping " + vStr;
+    			header = "Statistics database for RealShopping " + VERSION;
     		} else if(what == 7){
     			keys = notificator.keySet().toArray();
     			f = new File(MANDIR + "notifications.db");
-    			header = "Notifications database for RealShopping " + vStr;
+    			header = "Notifications database for RealShopping " + VERSION;
     		} else {
     			return false;
     		}
@@ -1330,7 +1333,7 @@ public class RealShopping extends JavaPlugin {//FIXME decided on equals
 				String line = "";
 				switch(what){
 					case 0:
-						line = keys[i] + "-" + PInvMap.get(keys[i]).getStore() + ";" + PInvMap.get(keys[i]).exportToString();
+						line = ((RSPlayerInventory)keys[i]).exportToString();
 						break;
 					case 1:
 						line = ((String)keys[i]) + ";" + jailedPlayers.get(keys[i]).getWorld().getName() + ";" + RSUtils.locAsString(jailedPlayers.get(keys[i]));
@@ -1382,12 +1385,53 @@ public class RealShopping extends JavaPlugin {//FIXME decided on equals
     	return false;
     }
     
+    public static void log(String msg){ log.info(msg); }//TODO start using this?
+    
 	/*
 	 * 
 	 * Getters and Setters
 	 * 
 	 */
+
+	public static String[] getPlayersInStore(String store){
+		String pString = "";
+		for(RSPlayerInventory pInv:PInvSet){
+			if(pInv.getStore().equals(store)){
+				if(!pString.equals("")) pString += ",";
+				pString += pInv.getPlayer();
+			}
+		}
+		return pString.split(",");
+	}
     
+	public static RSPlayerInventory getPInv(Player player){
+		for(RSPlayerInventory pInv:PInvSet)
+			if(pInv.getPlayer().equals(player.getName())) return pInv;
+		return null;
+	}
+	public static boolean addPInv(RSPlayerInventory pInv){ return PInvSet.add(pInv); }
+	public static boolean hasPInv(Player player){
+		for(RSPlayerInventory pInv:PInvSet)
+			if(pInv.getPlayer().equals(player.getName())) return true;
+		return false;
+	}
+	public static boolean removePInv(Player player){
+		for(RSPlayerInventory pInv:PInvSet)
+			if(pInv.getPlayer().equals(player.getName())){
+				PInvSet.remove(pInv);
+				return true;
+			}
+		return false;
+	}
+	public static boolean removePInv(String player){//Fuck this shit
+		for(RSPlayerInventory pInv:PInvSet)
+			if(pInv.getPlayer().equals(player)){
+				PInvSet.remove(pInv);
+				return true;
+			}
+		return false;
+	}
+
 	public Updater getUpdater() { return updater; }
 	public void setUpdater(Updater updater) { this.updater = updater; }
     
@@ -1402,12 +1446,12 @@ public class RealShopping extends JavaPlugin {//FIXME decided on equals
     public static List<String> getSortedAliases(){ return sortedAliases; }
     public static Map<String, Integer[]> getAliasesMap(){ return aliasesMap; }
     
-    public static boolean addEntranceExit(EEPair eePair, Shop shop){
+    protected static boolean addEntranceExit(EEPair eePair, Shop shop){
     	if(eePairs.containsKey(eePair)) return false;
     	eePairs.put(eePair, shop);
     	return true;
     }
-    public static boolean removeEntranceExit(Shop shop, Location en, Location ex){
+    protected static boolean removeEntranceExit(Shop shop, Location en, Location ex){
     	for(EEPair ee:eePairs.keySet()){
     		if(ee.hasEntrance(en) && ee.hasExit(ex) && eePairs.get(ee).equals(shop)){
     			eePairs.remove(ee);
@@ -1416,33 +1460,50 @@ public class RealShopping extends JavaPlugin {//FIXME decided on equals
     	}
     	return false;
     }
-    public static boolean hasEntrance(Shop shop, Location en){
+    protected static int clearEntrancesExits(Shop shop){
+    	Map<EEPair, Shop> tempPairs = new HashMap<EEPair, Shop>(eePairs);
+    	int i = 0;
+    	for(EEPair ee:tempPairs.keySet()){
+    		if(tempPairs.get(ee).equals(shop)){
+    			eePairs.remove(ee);
+    			i++;
+    		}
+    	}
+    	return i;
+    }
+    protected static boolean hasEntrance(Shop shop, Location en){
     	for(EEPair ee:eePairs.keySet()){
     		if(ee.hasEntrance(en) && eePairs.get(ee).equals(shop)) return true; 
     	}
     	return false;
     }
-    public static boolean hasExit(Shop shop, Location ex){
+    protected static boolean hasExit(Shop shop, Location ex){
     	for(EEPair ee:eePairs.keySet()){
     		if(ee.hasExit(ex) && eePairs.get(ee).equals(shop)) return true; 
     	}
     	return false;
     }
-    public static Location getRandomEntrance(Shop shop){
+    protected static Location getRandomEntrance(Shop shop){
     	for(EEPair ee:eePairs.keySet()){
     		if(eePairs.get(ee).equals(shop)) return ee.getEntrance();
     	}
     	return null;
     }
-    public static Location getEntrance(Shop shop, Location ex){
+    protected static Location getEntrance(Shop shop, Location ex){
     	for(EEPair ee:eePairs.keySet()){
     		if(ee.hasExit(ex) && eePairs.get(ee).equals(shop)) return ee.getEntrance(); 
     	}
     	return null;
     }
-    public static Location getExit(Shop shop, Location en){
+    protected static Location getExit(Shop shop, Location en){
     	for(EEPair ee:eePairs.keySet()){
     		if(ee.hasEntrance(en) && eePairs.get(ee).equals(shop)) return ee.getExit(); 
+    	}
+    	return null;
+    }
+    protected static Shop isEntranceTo(Location loc){
+    	for(EEPair ee:eePairs.keySet()){
+    		if(ee.getEntrance().equals(loc)) return eePairs.get(ee);
     	}
     	return null;
     }
@@ -1489,8 +1550,8 @@ public class RealShopping extends JavaPlugin {//FIXME decided on equals
     public static boolean hasPlayerExit(String player){ return playerExits.containsKey(player); }
     public static Location getPlayerEntrance(String player){ return playerEntrances.get(player); }
     public static Location getPlayerExit(String player){ return playerExits.get(player); }
-    
-    public static void jailPlayer(Player player){ jailedPlayers.put(player.getName(), shopMap.get(PInvMap.get(player.getName()).getStore()).getFirstE()); }
+  
+    public static void jailPlayer(Player player){ jailedPlayers.put(player.getName(), shopMap.get(getPInv(player).getStore()).getFirstE()); }
     
 	/*
 	 * 
@@ -1514,6 +1575,7 @@ public class RealShopping extends JavaPlugin {//FIXME decided on equals
 		onDisable();
 		onEnable();
     }
+
 
 }
 

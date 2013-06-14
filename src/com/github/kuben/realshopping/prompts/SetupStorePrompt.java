@@ -13,7 +13,7 @@ import com.github.kuben.realshopping.listeners.SetupStoreListener;
 import com.github.kuben.realshopping.listeners.SetupStoreListener.Type;
 import com.github.kuben.realshopping.listeners.RSPlayerListener;
 
-public class SetupPStorePrompt implements Prompt {//LANG
+public class SetupStorePrompt implements Prompt {//LANG
 	 
     public String getPromptText(ConversationContext context) {
     	try {
@@ -22,8 +22,8 @@ public class SetupPStorePrompt implements Prompt {//LANG
     		Player player = (Player) context.getForWhom();
         	if(ID.equals("first")){
             	String out = "";
-        		if(player.hasPermission("realshopping.rssetstores")){
-        			out = "This prompt will aid you in creating, extending or deleting your own player store. \n To continue, type any of the purple keywords.";
+        		if(player.hasPermission("realshopping.rsset")){
+        			out = "This prompt will aid you in creating, extending or deleting admin stores. \n To continue, type any of the purple keywords.";
         			context.setSessionData("ID", "second");//LANG
         		} else {
         			context.setSessionData("ID", "timetoquit");
@@ -65,7 +65,7 @@ public class SetupPStorePrompt implements Prompt {//LANG
             		if(!RealShopping.shopMap.containsKey(in)){
             			context.setSessionData("shop", in);
             			context.setSessionData("ID", "create_second");
-            			new SetupStoreListener(player, Type.APPEND, in, false);
+            			new SetupStoreListener(player, Type.APPEND, in, true);
             			return "The name " + ChatColor.GREEN + in + ChatColor.RESET + " is avaiable.";
             		} else {
             			context.setSessionData("ID", "second");
@@ -93,7 +93,7 @@ public class SetupPStorePrompt implements Prompt {//LANG
         			else return ChatColor.RED + "No entrances/exits selected.";
         		} else if(in.equalsIgnoreCase("cancel")){
         			RSPlayerListener.killConversationListener(player);
-        			new SetupStoreListener(player, Type.APPEND, (String)context.getSessionData("shop"), false);
+        			new SetupStoreListener(player, Type.APPEND, (String)context.getSessionData("shop"), true);
         			context.setSessionData("ID", "create_second");
         			return "Action aborted.";
         		}
@@ -110,7 +110,7 @@ public class SetupPStorePrompt implements Prompt {//LANG
             			if(RealShopping.shopMap.get(in).getOwner().equals(player.getName())){
                 			context.setSessionData("shop", in);
                 			context.setSessionData("ID", "append_second");
-                			new SetupStoreListener(player, Type.APPEND, in, false);
+                			new SetupStoreListener(player, Type.APPEND, in, true);
                 			return "You have chosen to append new entrances and exits to " + in + ".";
             			} else rtrn = ChatColor.RED + LangPack.YOUARENOTTHEOWNEROFTHISSTORE;
             		} else rtrn = ChatColor.RED + LangPack.STORE + in + LangPack.DOESNTEXIST;
@@ -154,7 +154,7 @@ public class SetupPStorePrompt implements Prompt {//LANG
             			if(RealShopping.shopMap.get(in).getOwner().equals(player.getName())){
                 			context.setSessionData("shop", in);
                 			context.setSessionData("ID", "delete_second");
-                			new SetupStoreListener(player, Type.DELETE, in, false);
+                			new SetupStoreListener(player, Type.DELETE, in, true);
                 			return "You have chosen to delete entrances and exits from " + in + ".";
             			} else rtrn = ChatColor.RED + LangPack.YOUARENOTTHEOWNEROFTHISSTORE;
             		} else rtrn = ChatColor.RED + LangPack.STORE + in + LangPack.DOESNTEXIST;

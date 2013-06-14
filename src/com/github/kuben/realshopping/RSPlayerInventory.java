@@ -34,12 +34,14 @@ public class RSPlayerInventory {
 
 	private Map<PItem, Integer> items;
 	private String store;//TODO switch to Shop
+	private String player;//String because should involve offline players too
 	
-	public RSPlayerInventory(Player p, String store){//Use when player is entering store
+	public RSPlayerInventory(Player player, String store){//Use when player is entering store
 		this.store = store;
+		this.player = player.getName();
 		
 		//Special Inv to PInv
-		Object[] obj = ArrayUtils.addAll(p.getInventory().getContents(), p.getInventory().getArmorContents());
+		Object[] obj = ArrayUtils.addAll(player.getInventory().getContents(), player.getInventory().getArmorContents());
 		ItemStack[] IS = new ItemStack[obj.length];
 		
 		for(int i = 0;i < obj.length;i++)
@@ -47,11 +49,12 @@ public class RSPlayerInventory {
 		items = invToPInv(IS);//Item - amount/dur
 	}
 	
-	public RSPlayerInventory(String invStr, String store){//Use to recover a PlayerInventory from string
+	public RSPlayerInventory(String importStr){//Use to recover a PlayerInventory from string
 		items = new HashMap<PItem, Integer>();//Item - amount/dur
-		this.store = store;
+		this.store = importStr.split(";")[0].split("-")[1];
+		this.player = importStr.split(";")[0].split("-")[0];
 
-		createInv(invStr);
+		createInv(importStr.split(";")[1]);
 	}
 	
 	public boolean update(){
@@ -247,7 +250,10 @@ public class RSPlayerInventory {
 	}
 	
 	private Map<PItem, Integer> invToPInv(){
-		Object[] obj = ArrayUtils.addAll(getOwner().getInventory().getContents(), getOwner().getInventory().getArmorContents());
+		//Guess it is safe to use getPlayerExact, because this will only be called with an online player.
+		//Will throw NullPointer otherwise
+		Object[] obj = ArrayUtils.addAll(Bukkit.getPlayerExact(player).getInventory().getContents()
+				, Bukkit.getPlayerExact(player).getInventory().getArmorContents());
 		ItemStack[] IS = new ItemStack[obj.length];
 		
 		for(int i = 0;i < obj.length;i++)
@@ -271,7 +277,7 @@ public class RSPlayerInventory {
 				s += "[" + ((Enchantment)en).getId() + ":" + pi.enchantments.get(en) + "]";
 			}
 		}
-		return s;
+		return player + "-" + store + ";" + s;
 	}
 	
 	public String getStore(){
@@ -281,6 +287,8 @@ public class RSPlayerInventory {
 	public Shop getShop(){
 		return RealShopping.shopMap.get(store);
 	}
+	
+	public String getPlayer(){ return player; }
 	
 	public boolean setStore(String store){
 		this.store = store;
@@ -333,14 +341,6 @@ public class RSPlayerInventory {
 			items.put(tempP, items.get(tempP) + amount);
 		} else items.put(tempP, amount);
 		return true;
-	}
-	
-	private Player getOwner(){//Will return null if THIS is removed from PInvMap
-		Object[] keys = RealShopping.PInvMap.keySet().toArray();
-		for(Object key:keys){
-			if(RealShopping.PInvMap.get(key).equals(this)) return Bukkit.getPlayer(key.toString());
-		}
-		return null;
 	}
 	
 	@Override

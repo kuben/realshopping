@@ -12,6 +12,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 import com.github.kuben.realshopping.RealShopping;
+import com.github.kuben.realshopping.LangPack;
 import com.github.kuben.realshopping.exceptions.RSListenerException;
 
 public class ChestListener extends GeneralListener implements Appliable {
@@ -32,13 +33,18 @@ public class ChestListener extends GeneralListener implements Appliable {
 		if(event.getAction() == Action.RIGHT_CLICK_BLOCK){//Add to selection
 			event.setCancelled(true);
 			Location l = event.getClickedBlock().getLocation();
-			if((type == Type.ADD || getShop().isChest(l)) && !selected.contains(l)){
-				selected.add(l);
-				getPlayer().sendBlockChange(l, Material.GOLD_BLOCK, (byte)0);
-				getPlayer().sendRawMessage(ChatColor.GREEN + "Block added to selection.");
-			} else {//TODO Add elseif block isn't chest
-				getPlayer().sendBlockChange(l, Material.GOLD_BLOCK, (byte)0);
+			int id = (type == Type.ADD)?Material.GOLD_BLOCK.getId():Material.IRON_BLOCK.getId();
+			if(!selected.contains(l)){
+				if(type == Type.ADD || getShop().isChest(l)){
+					selected.add(l);
+					getPlayer().sendRawMessage(ChatColor.GREEN + "Block added to selection.");
+					blockChange(l, id);
+				} else if(type == Type.REMOVE && !getShop().isChest(l)){
+					getPlayer().sendRawMessage(ChatColor.RED + LangPack.THEBLOCKYOUSELECTEDISNTACHEST);
+				}
+			} else {
 				getPlayer().sendRawMessage(ChatColor.RED + "Block already selected.");
+				blockChange(l, id);
 			}
 		} else if(event.getAction() == Action.LEFT_CLICK_BLOCK){//Remove from selection
 			event.setCancelled(true);
@@ -56,7 +62,7 @@ public class ChestListener extends GeneralListener implements Appliable {
 	
 	public int apply(){
 		for(Location l:selected){
-			getPlayer().sendBlockChange(l, l.getBlock().getTypeId(), (byte)0);
+			getPlayer().sendBlockChange(l, l.getBlock().getTypeId(), l.getBlock().getData());
 			if(type == Type.ADD) getShop().addChest(l);
 			else getShop().delChest(l);
 		}

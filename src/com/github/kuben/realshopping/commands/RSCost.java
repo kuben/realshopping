@@ -13,7 +13,7 @@ class RSCost extends RSPlayerCommand {
 
 	@Override
 	protected boolean execute() {
-		player.sendMessage(ChatColor.RED + LangPack.YOURARTICLESCOST + RealShopping.PInvMap.get(player.getName()).toPay()/100f + LangPack.UNIT);
+		player.sendMessage(ChatColor.RED + LangPack.YOURARTICLESCOST + RealShopping.getPInv(player).toPay()/100f + LangPack.UNIT);
 		return true;
 	}
 

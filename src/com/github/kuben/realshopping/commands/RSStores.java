@@ -12,6 +12,8 @@ import com.github.kuben.realshopping.Price;
 import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
+import com.github.kuben.realshopping.listeners.RSPlayerListener;
+import com.github.kuben.realshopping.prompts.PromptMaster;
 
 class RSStores extends RSCommand {
 
@@ -29,7 +31,7 @@ class RSStores extends RSCommand {
 			if(args.length == 0){
 				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rsstores store [buyfor %_OF_SELL_PRICE|collect [-c] [AMOUNT]|ban PLAYER|unban PLAYER|kick [-o] PLAYER|startsale %_OFF [ITEMID[:DATA][,ITEMID[:DATA][,ITEMID[:DATA]...]]]|endsale|notifications [on|off]|onchange [nothing|notify|changeprices] [TRESHOLD] [PERCENT]]");
 				sender.sendMessage("For help for a specific command, type: " + ChatColor.DARK_PURPLE + "/rsstores help COMMAND");
-			} if(args.length == 1){
+			} else if(args.length == 1){
 				sender.sendMessage(ChatColor.GREEN + LangPack.RSSTORESHELP + ChatColor.DARK_PURPLE + "buyfor, collect, ban, unban, kick, startsale, endsale, notifications, onchange");
 			} else {
 				if(args[1].equals("buyfor")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "buyfor %_OF_SELL_PRICE" + ChatColor.RESET + LangPack.BUYFORHELP);
@@ -107,7 +109,7 @@ class RSStores extends RSCommand {
 			if(!tempShop.getOwner().equalsIgnoreCase("@admin")){
 				if(cFlag){
 					if(Config.isAllowFillChests()){
-						if(!RealShopping.PInvMap.containsKey(player.getName()) || tempShop.getOwner().equals(player.getName())){
+						if(!RealShopping.hasPInv(player) || tempShop.getOwner().equals(player.getName())){
 							if(player.getLocation().getBlock().getState() instanceof Chest){
 								if(tempShop.hasStolenToClaim()){
 									if(amount == 0 || amount > 27) amount = 27;
@@ -123,7 +125,7 @@ class RSStores extends RSCommand {
 									player.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH + i + LangPack.ITEMS);
 									return true;
 								} else sender.sendMessage(ChatColor.RED + LangPack.NOTHINGTOCOLLECT);
-							} else sender.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUARESTANDINGONISNTACHEST);
+							} else sender.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUSELECTEDISNTACHEST);
 						} else sender.sendMessage(ChatColor.RED + LangPack.YOUCANTCOLLECT_YOUDONOTOWN);
 					} else {
 						sender.sendMessage(ChatColor.RED + LangPack.YOUCANTCOLLECT_SERVER);
@@ -187,18 +189,22 @@ class RSStores extends RSCommand {
 	
 	private boolean kick(){
 		if(args.length == 3){
- 			if(!RSUtils.getPlayersInStore(args[0].toLowerCase())[0].equals("")){
+ 			if(!RealShopping.getPlayersInStore(args[0].toLowerCase())[0].equals("")){
  				boolean cont = false;
- 				for(String tempP:RSUtils.getPlayersInStore(args[0].toLowerCase()))
+ 				for(String tempP:RealShopping.getPlayersInStore(args[0].toLowerCase()))//TODO better way
  					if(tempP.toLowerCase().equals(args[2].toLowerCase())){
  						cont = true;
  						break;
  					}
  				if(cont){
  					if(sender.getServer().getPlayerExact(args[2]) != null){
+ 						//Abandon conversations
+ 						if(RSPlayerListener.hasConversationListener(player)) RSPlayerListener.killConversationListener(player);
+ 						if(PromptMaster.isConversing(player)) PromptMaster.abandonConversation(player);
+ 						
  						RSUtils.returnStolen(sender.getServer().getPlayerExact(args[2]));
  						Location l = RealShopping.shopMap.get(args[0]).getFirstE();
- 						RealShopping.PInvMap.remove(sender.getServer().getPlayerExact(args[2]).getName());
+ 						RealShopping.removePInv(sender.getServer().getPlayerExact(args[2]));
  						sender.getServer().getPlayerExact(args[2]).teleport(l.add(0.5, 0, 0.5));
  						sender.sendMessage(ChatColor.GREEN + args[2] + LangPack.WASKICKEDFROMYOURSTORE);
  					} else sender.sendMessage(ChatColor.RED + LangPack.PLAYER + args[2] + LangPack.ISNTONLINEKICK);
@@ -206,16 +212,16 @@ class RSStores extends RSCommand {
  			} else sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTINYOURSTORE);
  			return true;
 		} else if(args.length == 4 && args[2].equalsIgnoreCase("-o")){
- 			if(!RSUtils.getPlayersInStore(args[0].toLowerCase())[0].equals("")){
+ 			if(!RealShopping.getPlayersInStore(args[0].toLowerCase())[0].equals("")){
  				if(sender.getServer().getOfflinePlayer(args[3]) != null){
      				boolean cont = false;
-     				for(String tempP:RSUtils.getPlayersInStore(args[0].toLowerCase()))
+     				for(String tempP:RealShopping.getPlayersInStore(args[0].toLowerCase()))
      					if(tempP.toLowerCase().equals(args[3].toLowerCase())){
      						cont = true;
      						break;
      					}
      				if(cont){
-     					RealShopping.PInvMap.remove(sender.getServer().getOfflinePlayer(args[3]).getName());
+     					RealShopping.removePInv(sender.getServer().getOfflinePlayer(args[3]).getName());
  						sender.sendMessage(ChatColor.GREEN + args[3] + LangPack.WASKICKEDFROMYOURSTORE);
      				} else sender.sendMessage(ChatColor.RED + LangPack.PLAYER + args[3] + LangPack.DOESNTEXIST);
      			} else sender.sendMessage(ChatColor.RED + LangPack.PLAYER + args[3] + LangPack.DOESNTEXIST);
@@ -360,8 +366,8 @@ class RSStores extends RSCommand {
 			sender.sendMessage(ChatColor.GREEN + LangPack.STORE + args[0] + ((RealShopping.shopMap.get(args[0]).getOwner().equalsIgnoreCase("@admin"))?"":LangPack.OWNEDBY + RealShopping.shopMap.get(args[0]).getOwner()));
 			if(RealShopping.shopMap.get(args[0]).getBuyFor() > 0) sender.sendMessage(ChatColor.GREEN + LangPack.BUYSFOR + RealShopping.shopMap.get(args[0]).getBuyFor() + LangPack.PCNTOFORIGINAL);
 			if(RealShopping.shopMap.get(args[0]).hasSales()) sender.sendMessage(ChatColor.GREEN + LangPack.HASA + RealShopping.shopMap.get(args[0]).getFirstSale() + LangPack.PCNTOFFSALERIGHTNOW);
-			if(!RSUtils.getPlayersInStore(args[0].toLowerCase())[0].equals("")){
-				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.PLAYERSINSTORE + "\n" + ChatColor.RESET + RSUtils.formatPlayerListToMess(RSUtils.getPlayersInStore(args[0].toLowerCase())));
+			if(!RealShopping.getPlayersInStore(args[0])[0].equals("")){
+				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.PLAYERSINSTORE + "\n" + ChatColor.RESET + RSUtils.formatPlayerListToMess(RealShopping.getPlayersInStore(args[0])));
 			}
 			sender.sendMessage(ChatColor.GREEN + "For help, type " + ChatColor.DARK_PURPLE + "/rsstores help");//LANG
 			return true;

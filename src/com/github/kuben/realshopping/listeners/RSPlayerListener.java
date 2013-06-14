@@ -58,6 +58,7 @@ import com.github.kuben.realshopping.LangPack;
 import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
+import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.kuben.realshopping.exceptions.RSListenerException;
 import com.github.kuben.realshopping.exceptions.RSListenerException.Type;
 
@@ -69,19 +70,17 @@ public class RSPlayerListener implements Listener {
 
 	public void onTeleport(PlayerTeleportEvent event){
 		Player player = event.getPlayer();
-		if(hasConversationListener(player)){
-			System.out.println("teport");
+		if(PromptMaster.isConversing(player) || hasConversationListener(player)){
 			event.setCancelled(true);
 			player.sendRawMessage(ChatColor.RED + "You can't teleport while in a conversation.");
-		} else
-		if(RealShopping.PInvMap.containsKey(player.getName()) && event.getCause() != TeleportCause.UNKNOWN){
-			if(!RealShopping.PInvMap.get(player.getName()).hasPaid()){
+		} else if(RealShopping.hasPInv(player) && event.getCause() != TeleportCause.UNKNOWN){
+			if(!RealShopping.getPInv(player).hasPaid()){
 				event.setCancelled(true);
 				RSUtils.punish(player);
 			} else {
 				if(RSUtils.allowTpOutOfStore(event.getTo())){
-					String shopName = RealShopping.PInvMap.get(player.getName()).getStore();
-					RealShopping.PInvMap.remove(player.getName());
+					String shopName = RealShopping.getPInv(player).getStore();
+					RealShopping.removePInv(player);
 					player.sendMessage(ChatColor.RED + LangPack.YOULEFT + shopName);
 				} else {
 					event.setCancelled(true);
@@ -91,24 +90,23 @@ public class RSPlayerListener implements Listener {
 		}
 	}
 
-	
 	@EventHandler (priority = EventPriority.HIGH)
 	public void onDropItem(PlayerDropItemEvent event){
-		if(Config.isDisableDrop()) if(RealShopping.PInvMap.containsKey(event.getPlayer().getName())){
+		if(Config.isDisableDrop()) if(RealShopping.hasPInv(event.getPlayer())){
 			event.setCancelled(true);
 			event.getPlayer().sendMessage(ChatColor.RED + LangPack.YOUCANNOTDROPITEMS_);
 		}
 	}
 	@EventHandler (priority = EventPriority.HIGH)
 	public void onBucketEvent(PlayerBucketEmptyEvent event){
-		if(Config.isDisableBuckets()) if(RealShopping.PInvMap.containsKey(event.getPlayer().getName())){
+		if(Config.isDisableBuckets()) if(RealShopping.hasPInv(event.getPlayer())){
 			event.setCancelled(true);
 			event.getPlayer().sendMessage(ChatColor.RED + LangPack.YOUCANNOTEMPTYBUCKETS_);
 		}
 	}
 	@EventHandler (priority = EventPriority.HIGH)
 	public void onPreCraft(CraftItemEvent event){
-		if(Config.isDisableCrafting()) if(RealShopping.PInvMap.containsKey(event.getWhoClicked().getName())){
+		if(Config.isDisableCrafting()) if(RealShopping.hasPInv((Player) event.getWhoClicked())){
 			event.setCancelled(true);
 			Bukkit.getPlayerExact(event.getWhoClicked().getName()).sendMessage(ChatColor.RED + LangPack.YOUCANNOTCRAFTITEMS_);
 		}
@@ -124,7 +122,7 @@ public class RSPlayerListener implements Listener {
 				if(event.hasBlock())
 					if(b.getType() == Material.GLASS || b.getType() == Material.THIN_GLASS) {
 						if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
-							if(RealShopping.PInvMap.containsKey(player.getName())){
+							if(RealShopping.hasPInv(player)){
 								if(player.hasPermission("realshopping.rsexit")) event.setCancelled(Shop.exit(player, false));
 							} else {
 								if(player.hasPermission("realshopping.rsenter")) event.setCancelled(Shop.enter(player, false));
@@ -133,7 +131,7 @@ public class RSPlayerListener implements Listener {
 					} else if(Config.isEnableDoors() && (b.getType() == Material.WOODEN_DOOR || b.getType() == Material.IRON_DOOR_BLOCK)) {
 						if(event.getAction() == Action.RIGHT_CLICK_BLOCK && !canOpenDoor(b.getLocation())){
 							event.setCancelled(true);
-							if(RealShopping.PInvMap.containsKey(player.getName())){
+							if(RealShopping.hasPInv(player)){
 								if(player.hasPermission("realshopping.rsexit")){
 									Shop.exit(player, false);
 								}
@@ -144,8 +142,8 @@ public class RSPlayerListener implements Listener {
 							}
 						}
 					} else if(b.getType() == Material.OBSIDIAN) {
-						if(RealShopping.PInvMap.containsKey(player.getName())){
-							if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.STEP){//TODO well looks like no problem
+						if(RealShopping.hasPInv(player)){
+							if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.STEP){
 								if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
 									if(player.hasPermission("realshopping.rspay")){
 										Inventory[] carts = null;
@@ -158,7 +156,7 @@ public class RSPlayerListener implements Listener {
 										event.setCancelled(Shop.pay(player, carts));
 									}
 								} else if(event.getAction() == Action.LEFT_CLICK_BLOCK) if(player.hasPermission("realshopping.rscost")){
-									if(RealShopping.PInvMap.containsKey(player.getName())){
+									if(RealShopping.hasPInv(player)){
 										event.setCancelled(true);
 										Inventory[] carts = null;
 										if(Config.isAllowFillChests() && Config.isCartEnabledW(player.getWorld().getName())){
@@ -167,7 +165,7 @@ public class RSPlayerListener implements Listener {
 											for(int i = 0;i < SM.length;i++)
 												carts[i] = SM[i].getInventory();
 										}
-										player.sendMessage(LangPack.YOURARTICLESCOST + RealShopping.PInvMap.get(player.getName()).toPay(carts)/100f + LangPack.UNIT);
+										player.sendMessage(LangPack.YOURARTICLESCOST + RealShopping.getPInv(player).toPay(carts)/100f + LangPack.UNIT);
 									} else {
 										player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
 									}
@@ -191,7 +189,7 @@ public class RSPlayerListener implements Listener {
 							} else if(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.BROWN_MUSHROOM){
 								if(Config.isEnableSelling()){
 									if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
-										if(RealShopping.shopMap.get(RealShopping.PInvMap.get(player.getName()).getStore()).getBuyFor() > 0){
+										if(RealShopping.shopMap.get(RealShopping.getPInv(player).getStore()).getBuyFor() > 0){
 											Inventory tempInv = Bukkit.createInventory(null, 36, LangPack.SELLTOSTORE);
 											player.openInventory(tempInv);
 										} else player.sendMessage(ChatColor.RED + LangPack.NOTBUYINGFROMPLAYERS);
@@ -201,7 +199,7 @@ public class RSPlayerListener implements Listener {
 						}
 					}
 			}
-			if(RealShopping.PInvMap.containsKey(player.getName()) && event.getItem() != null && RealShopping.isForbiddenInStore(event.getItem().getTypeId()))
+			if(RealShopping.hasPInv(player) && event.getItem() != null && RealShopping.isForbiddenInStore(event.getItem().getTypeId()))
 				if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR){
 					player.sendMessage(ChatColor.RED + LangPack.YOUCANTUSETHATITEMINSTORE);
 					event.setUseItemInHand(Result.DENY);
@@ -217,11 +215,11 @@ public class RSPlayerListener implements Listener {
 		Player player = event.getPlayer();
 
 		if(event.getRightClicked() instanceof ItemFrame) {
-			if(RealShopping.PInvMap.containsKey(player.getName())
+			if(RealShopping.hasPInv(player)
 				&& player.hasPermission("realshopping.rsprices")
 				&& ((ItemFrame)event.getRightClicked()).getItem().getType() == Material.PAPER){
 					event.setCancelled(true);
-					Shop.prices(player, 1, RealShopping.PInvMap.get(player.getName()).getStore());
+					Shop.prices(player, 1, RealShopping.getPInv(player).getStore());
 				}
 					
 		}
@@ -229,13 +227,13 @@ public class RSPlayerListener implements Listener {
 	
     @EventHandler(priority = EventPriority.HIGH)
     public void onInventoryOpenEvent(InventoryOpenEvent event){
-    	if(Config.isDisableEnderchests()) if(RealShopping.PInvMap.containsKey(event.getPlayer().getName()) && event.getInventory().getType() == InventoryType.ENDER_CHEST){
+    	if(Config.isDisableEnderchests()) if(RealShopping.hasPInv((Player) event.getPlayer()) && event.getInventory().getType() == InventoryType.ENDER_CHEST){
 			event.setCancelled(true);
 			((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + LangPack.YOUCANNOTOPENENDERCHESTS_);
     		return;
     	}
         if (event.getInventory().getHolder() instanceof Chest){
-        	if(!RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//If player is not in store
+        	if(!RealShopping.hasPInv((Player) event.getPlayer())){//If player is not in store
         		if(RSUtils.isChestProtected(((Chest) event.getInventory().getHolder()).getLocation())){
         			event.setCancelled(true);
         			((Chest) event.getInventory().getHolder()).getInventory().getViewers().remove(event.getPlayer());
@@ -243,7 +241,7 @@ public class RSPlayerListener implements Listener {
         		}
         	}
         } else if (event.getInventory().getHolder() instanceof DoubleChest){
-        	if(!RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//If player is not in store
+        	if(!RealShopping.hasPInv((Player) event.getPlayer())){//If player is not in store
         		if(RSUtils.isChestProtected(((Chest)((DoubleChest) event.getInventory().getHolder()).getLeftSide()).getLocation())
         		| RSUtils.isChestProtected(((Chest)((DoubleChest) event.getInventory().getHolder()).getRightSide()).getLocation())){
         			event.setCancelled(true);
@@ -259,7 +257,7 @@ public class RSPlayerListener implements Listener {
 		Player player = (Player) event.getPlayer();
 		if(!launchConversationListener(player, event)){//Redirects event if player is in conversation, otherwise as usual
 	        if (event.getInventory().getTitle().equals(LangPack.SELLTOSTORE)){//TODO consider if this is a good idea, Probably isn't. Create own class extending inventory???
-	        	if(RealShopping.PInvMap.containsKey(event.getPlayer().getName())){//If player is in store
+	        	if(RealShopping.hasPInv((Player) event.getPlayer())){//If player is in store
 	        		Shop.sellToStore((Player) event.getPlayer(), event.getInventory().getContents());
 	        	}
 	        }

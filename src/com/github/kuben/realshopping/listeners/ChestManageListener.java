@@ -11,6 +11,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 
+import com.github.kuben.realshopping.LangPack;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.exceptions.RSListenerException;
 import com.github.kuben.realshopping.exceptions.RSListenerException.Type;
@@ -34,13 +35,13 @@ public class ChestManageListener extends GeneralListener implements SignalReceiv
 			if(getShop().isChest(l)){
 				if (!selected.contains(l)){
 					selected.add(l);
-					getPlayer().sendBlockChange(l, Material.GOLD_BLOCK, (byte)0);
+					blockChange(l, Material.GOLD_BLOCK.getId());
 					getPlayer().sendRawMessage(ChatColor.GREEN + "Block added to selection.");
 				} else {
-					getPlayer().sendBlockChange(l, Material.GOLD_BLOCK, (byte)0);
+					blockChange(l, Material.GOLD_BLOCK.getId());
 					getPlayer().sendRawMessage(ChatColor.RED + "Block already selected.");
 				}
-			} //TODO else if not chest
+			} else getPlayer().sendRawMessage(ChatColor.RED + LangPack.THEBLOCKYOUSELECTEDISNTACHEST);
 		}
 	}
 	
@@ -88,7 +89,7 @@ public class ChestManageListener extends GeneralListener implements SignalReceiv
 	int selclear(){
 		int i = 0;
 		for(Location l:selected){
-			getPlayer().sendBlockChange(l, l.getBlock().getTypeId(), (byte)0);
+			getPlayer().sendBlockChange(l, l.getBlock().getTypeId(), l.getBlock().getData());
 			i++;
 		}
 		selected.clear();

@@ -18,9 +18,9 @@ class RSProtect extends RSPlayerCommand {
 
 	@Override
 	protected boolean execute() {
-		if(RealShopping.PInvMap.containsKey(player.getName())){
+		if(RealShopping.hasPInv(player)){
 			if(args.length == 1 & args[0].equalsIgnoreCase("add")){				
-					Shop tempShop = RealShopping.shopMap.get(RealShopping.PInvMap.get(player.getName()).getStore());
+					Shop tempShop = RealShopping.shopMap.get(RealShopping.getPInv(player).getStore());
 					BlockState bs = player.getLocation().getBlock().getState();
 					if(bs instanceof Chest | bs instanceof DoubleChest){
 						if(tempShop.isProtectedChest(bs.getLocation())){
@@ -32,10 +32,10 @@ class RSProtect extends RSPlayerCommand {
 							return true;
 					}
 				} else {
-					player.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUARESTANDINGONISNTACHEST);
+					player.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUSELECTEDISNTACHEST);
 				}
 			} else if(args.length == 1 & args[0].equalsIgnoreCase("remove")){
-					Shop tempShop = RealShopping.shopMap.get(RealShopping.PInvMap.get(player.getName()).getStore());
+					Shop tempShop = RealShopping.shopMap.get(RealShopping.getPInv(player).getStore());
 					BlockState bs = player.getLocation().getBlock().getState();
 					if(tempShop.isProtectedChest(bs.getLocation())){
 						tempShop.removeProtectedChest(bs.getLocation());

@@ -8,7 +8,6 @@ import com.github.kuben.realshopping.LangPack;
 import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
-import com.github.kuben.realshopping.exceptions.RSListenerException;
 import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.kuben.realshopping.prompts.PromptMaster.PromptType;
 
@@ -22,8 +21,8 @@ class RSSetChests extends RSPlayerCommand {
 
 	@Override
 	protected boolean execute() {
-		if(RealShopping.PInvMap.containsKey(player.getName())){
-			tempShop = RealShopping.shopMap.get(RealShopping.PInvMap.get(player.getName()).getStore());
+		if(RealShopping.hasPInv(player)){
+			tempShop = RealShopping.shopMap.get(RealShopping.getPInv(player).getStore());
 			if(tempShop.getOwner().equals("@admin")){
 				if (args.length == 1 && args[0].equalsIgnoreCase("prompt")){
 					return PromptMaster.createConversation(PromptType.CHOOSE_CHESTS, player);
@@ -66,8 +65,6 @@ class RSSetChests extends RSPlayerCommand {
 			}
 		} catch (NumberFormatException e){
 			sender.sendMessage(ChatColor.RED + LangPack.ONEORMOREOFTHEITEMIDSWERENOTINTEGERS + args[1]);
-		} catch (RSListenerException e){
-			//TODO
 		}
 		return false;
 	}
@@ -85,8 +82,6 @@ class RSSetChests extends RSPlayerCommand {
 			}
 		} catch (NumberFormatException e){
 			sender.sendMessage(ChatColor.RED + LangPack.ONEORMOREOFTHEITEMIDSWERENOTINTEGERS + args[1]);
-		} catch (RSListenerException e){
-			//TODO
 		}
 		return false;
 	}
@@ -101,7 +96,7 @@ class RSSetChests extends RSPlayerCommand {
 			} else if(args.length == 1){
 				sender.sendMessage(ChatColor.GREEN + "Manages self-refilling chests (admin-stores only). Use the prompt argument for a guide, or the other arguments to manage chests manually. You can get more help about each of these arguments: " + ChatColor.DARK_PURPLE + "prompt, create, del, additems, delitems");
 			} else {
-				if(args[1].equals("prompt")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "prompt" + ChatColor.RESET + ". Starts an interactive prompt.");
+				if(args[1].equals("prompt")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "prompt" + ChatColor.RESET + ". Starts an interactive prompt. All conversations can be aborted with " + ChatColor.DARK_PURPLE + "quit");
 				else if(args[1].equals("create")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "create" + ChatColor.RESET
 						+ ". The block you stand on becomes a self-refilling chest. It will update when someone enters the store.");
 				else if(args[1].equals("del")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "del" + ChatColor.RESET

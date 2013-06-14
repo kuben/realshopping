@@ -4,10 +4,12 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 
 import com.github.kuben.realshopping.LangPack;
-import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
+import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.exceptions.RealShoppingException;
+import com.github.kuben.realshopping.prompts.PromptMaster;
+import com.github.kuben.realshopping.prompts.PromptMaster.PromptType;
 
 class RSSet extends RSPlayerCommand {
 
@@ -17,44 +19,49 @@ class RSSet extends RSPlayerCommand {
 
 	@Override
 	protected boolean execute() {
-		if (args.length == 1 && args[0].equalsIgnoreCase("entrance")){
-			RealShopping.setEntrance(player);
-			player.sendMessage(ChatColor.RED + LangPack.ENTRANCEVARIABLESETTO + RealShopping.getEntrance());
-			return true;
-		} else if (args.length == 1 && args[0].equalsIgnoreCase("exit")){
-			RealShopping.setExit(player);
-			player.sendMessage(ChatColor.RED + LangPack.EXITVARIABLESETTO + RealShopping.getExit());
-			return true;
-		} else if (args.length == 2 && args[0].equalsIgnoreCase("createstore")){
-			if(args[1].equals("help")){
-				sender.sendMessage(ChatColor.RED + LangPack.YOUCANTNAMEASTORETHAT);
+		if(!RealShopping.hasPInv(player)){
+			if (args.length == 1 && args[0].equalsIgnoreCase("prompt")){
+				return PromptMaster.createConversation(PromptType.SETUP_STORE, player);
+			} else if (args.length == 1 && args[0].equalsIgnoreCase("entrance")){
+				RealShopping.setEntrance(player);
+				player.sendMessage(ChatColor.GREEN + LangPack.ENTRANCEVARIABLESETTO + RSUtils.locAsString(RealShopping.getEntrance()));
 				return true;
-			}
-			if(RealShopping.hasEntrance()){
-				if(RealShopping.hasExit()){//TODO test if blank store doesn't cause crash
-			    	if(!RealShopping.shopMap.containsKey(args[1])){//Create
-			    		RealShopping.shopMap.put(args[1], new Shop(args[1], player.getWorld().getName(), "@admin"));
-			    	}
-			    	try {
-				    	RealShopping.shopMap.get(args[1]).addEntranceExit(RealShopping.getEntrance(), RealShopping.getExit());
-				    	RealShopping.updateEntrancesDb();
-						player.sendMessage(ChatColor.RED + args[1] + LangPack.WASCREATED);
-			    	} catch(RealShoppingException e){
-			    		player.sendMessage(ChatColor.RED + "This entrance and exit pair is already used.");//LANG
-			    	}
+			} else if (args.length == 1 && args[0].equalsIgnoreCase("exit")){
+				RealShopping.setExit(player);
+				player.sendMessage(ChatColor.GREEN + LangPack.EXITVARIABLESETTO + RSUtils.locAsString(RealShopping.getExit()));
+				return true;
+			} else if (args.length == 2 && args[0].equalsIgnoreCase("createstore")){
+				if(RealShopping.hasEntrance()){
+					if(RealShopping.hasExit()){
+						if(args[1].equals("help")){
+							sender.sendMessage(ChatColor.RED + LangPack.YOUCANTNAMEASTORETHAT);
+							return true;
+						}
+				    	if(!RealShopping.shopMap.containsKey(args[1])){//Create
+				    		RealShopping.shopMap.put(args[1], new Shop(args[1], player.getWorld().getName(), "@admin"));
+				    	}
+				    	try {
+					    	RealShopping.shopMap.get(args[1]).addEntranceExit(RealShopping.getEntrance(), RealShopping.getExit());
+					    	RealShopping.updateEntrancesDb();
+							player.sendMessage(ChatColor.RED + args[1] + LangPack.WASCREATED);
+				    	} catch(RealShoppingException e){
+				    		player.sendMessage(ChatColor.RED + "This entrance and exit pair is already used.");//LANG
+				    	}
+						return true;
+					} else player.sendMessage(ChatColor.RED + LangPack.THERSNOEXITSET);
+				} else player.sendMessage(ChatColor.RED + LangPack.THERESNOENTRANCESET);
+			} else if (args.length == 2 && args[0].equalsIgnoreCase("delstore")){
+				if(RealShopping.shopMap.containsKey(args[1])){
+					if(RealShopping.getPlayersInStore(args[1])[0].equals("")){
+						RealShopping.shopMap.get(args[1]).clearEntrancesExits();
+						RealShopping.shopMap.remove(args[1]);
+						player.sendMessage(ChatColor.RED + args[1] + LangPack.WASREMOVED);
+						RealShopping.updateEntrancesDb();
+					} else player.sendMessage(ChatColor.RED + LangPack.STORENOTEMPTY);
 					return true;
-				} else player.sendMessage(ChatColor.RED + LangPack.THERSNOEXITSET);
-			} else player.sendMessage(ChatColor.RED + LangPack.THERESNOENTRANCESET);
-		} else if (args.length == 2 && args[0].equalsIgnoreCase("delstore")){
-			if(RealShopping.shopMap.containsKey(args[1])){
-				if(RSUtils.getPlayersInStore(args[1].toLowerCase())[0].equals("")){
-					RealShopping.shopMap.remove(args[1]);
-					player.sendMessage(ChatColor.RED + args[1] + LangPack.WASREMOVED);
-					RealShopping.updateEntrancesDb();
-				} else player.sendMessage(ChatColor.RED + LangPack.STORENOTEMPTY);
-				return true;
-			} else player.sendMessage(ChatColor.RED + args[1] + LangPack.WASNTFOUND);
-		}
+				} else player.sendMessage(ChatColor.RED + args[1] + LangPack.WASNTFOUND);
+			}
+		} else player.sendMessage(ChatColor.RED + "You can't use this command inside a store.");//LANG
 		return false;
 	}
 	
@@ -68,7 +75,7 @@ class RSSet extends RSPlayerCommand {
 			} else if(args.length == 1){
 				sender.sendMessage("Creates or deletes player owned stores, as well as entrances/exits to them. Use the prompt argument for a guide, or the other arguments to create stores manually. You can get more help about each of these arguments: " + ChatColor.DARK_PURPLE + "prompt, entrance, exit, createstore, delstore, delen");
 			} else {
-				if(args[1].equals("prompt")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "prompt" + ChatColor.RESET + ". Starts an interactive prompt.");
+				if(args[1].equals("prompt")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "prompt" + ChatColor.RESET + ".  Starts an interactive prompt. All conversations can be aborted with " + ChatColor.DARK_PURPLE + "quit");
 				else if(args[1].equals("entrance")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "entrance" + ChatColor.RESET
 						+ ". Stores the location of the block you stand on to an entrance variable.");
 				else if(args[1].equals("exit")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "exit" + ChatColor.RESET

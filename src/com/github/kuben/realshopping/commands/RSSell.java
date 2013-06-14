@@ -17,9 +17,9 @@ class RSSell extends RSPlayerCommand {
 
 	@Override
 	protected boolean execute() {
-		if(RealShopping.PInvMap.containsKey(player.getName())){
+		if(RealShopping.hasPInv(player)){
 			if(Config.isEnableSelling()){
-				if(RealShopping.shopMap.get(RealShopping.PInvMap.get(player.getName()).getStore()).getBuyFor() > 0){
+				if(RealShopping.shopMap.get(RealShopping.getPInv(player).getStore()).getBuyFor() > 0){
 					Inventory tempInv = Bukkit.createInventory(null, 36, LangPack.SELLTOSTORE);
 					player.openInventory(tempInv);
 					return true;	

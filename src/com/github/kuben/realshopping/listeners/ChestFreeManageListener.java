@@ -36,20 +36,19 @@ public class ChestFreeManageListener extends GeneralListener implements Appliabl
 		}
 	}
 	
-	void onCloseChest(InventoryCloseEvent event){//TODO make sure it's all
+	void onCloseChest(InventoryCloseEvent event){
 		Inventory i = event.getInventory();
 		if(i.getType() == InventoryType.CHEST && i.getHolder() instanceof Chest){
 			Location l = ((Chest)i.getHolder()).getLocation();
 			if(getShop().isChest(l)){
 				toUpdate.put(l, i);
-				System.out.println(i + "  " + i.getClass().toString());
 			}
 		}
 	}
 
 	public int apply(){
 		for(Location l:toUpdate.keySet()){
-			if(getShop().isChest(l)) getShop().setChestContents(l, toUpdate.get(l));//TODO make sure not have to clone
+			if(getShop().isChest(l)) getShop().setChestContents(l, toUpdate.get(l));
 		}
 		RSPlayerListener.killConversationListener(this);
 		RealShopping.updateEntrancesDb();

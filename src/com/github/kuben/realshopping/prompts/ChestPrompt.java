@@ -24,7 +24,7 @@ public class ChestPrompt implements Prompt {//TODO fix permissions and search co
     	String ID = (String) context.getSessionData("ID");
 		Player player = (Player) context.getForWhom();
     	if(ID.equals("first")){
-        	Shop tempShop = RealShopping.shopMap.get(RealShopping.PInvMap.get(player.getName()).getStore());
+        	Shop tempShop = RealShopping.shopMap.get(RealShopping.getPInv(player).getStore());
         	context.setSessionData("shop",tempShop);
         	String out = "";
     		if(tempShop.getOwner().equals("@admin")){
@@ -39,7 +39,8 @@ public class ChestPrompt implements Prompt {//TODO fix permissions and search co
     		context.setSessionData("ID", "third");
     		return "What do you want to do, " + ChatColor.LIGHT_PURPLE + "create" + ChatColor.RESET + " new chests or "
     				+ ChatColor.LIGHT_PURPLE + "delete" + ChatColor.RESET + " or "
-    				+ ChatColor.LIGHT_PURPLE + "manage" + ChatColor.RESET + " existing ones?";
+    				+ ChatColor.LIGHT_PURPLE + "manage"  + ChatColor.RESET + " or "
+    				+ ChatColor.LIGHT_PURPLE + "freemanage" + ChatColor.RESET + " existing ones?";
     	} else if(ID.equals("third")){
     		try {
         		if(in.equalsIgnoreCase("create")){
@@ -121,6 +122,7 @@ public class ChestPrompt implements Prompt {//TODO fix permissions and search co
 	    			RSPlayerListener.sendSignalToConversationListener(player, SIGNAL.SEL_CLEAR);
 	    			return "Cleared selection.";
 	    		} else if(in.equalsIgnoreCase("done")){
+	    			RSPlayerListener.sendSignalToConversationListener(player, SIGNAL.SEL_CLEAR);//Clear selection to reset block changes
 	    			RSPlayerListener.killConversationListener(player);
 	    			context.setSessionData("ID", "second");
 	    			return "Quit managing chests.";
@@ -136,7 +138,7 @@ public class ChestPrompt implements Prompt {//TODO fix permissions and search co
     			 int res = RSPlayerListener.finishConversationListener(player);
     			 context.setSessionData("ID", "second");
     			 return "Updated contents of " + res + " chests.";
-    		 } else if(in.equalsIgnoreCase("abort")){//TODO cancel?  TODO add to acceptInput
+    		 } else if(in.equalsIgnoreCase("cancel")){
     			 RSPlayerListener.killConversationListener(player);
     			 context.setSessionData("ID", "second");
     			 return "Action aborted";
@@ -169,16 +171,22 @@ public class ChestPrompt implements Prompt {//TODO fix permissions and search co
 			context.setSessionData("COM", in);
 			context.setSessionData("ID", "rollback");
 		}
-		if(context.getSessionData("ID").equals("manage") && !in.equalsIgnoreCase("done") && !in.equalsIgnoreCase("additems") && !in.equalsIgnoreCase("delitems")
-				 && !in.equalsIgnoreCase("clear") && !in.equalsIgnoreCase("selall") && !in.equalsIgnoreCase("selclear")){
+		if(context.getSessionData("ID").equals("manage") && !in.equalsIgnoreCase("done") && !in.split(" ")[0].equalsIgnoreCase("additems")
+				&& !in.split(" ")[0].equalsIgnoreCase("delitems") && !in.equalsIgnoreCase("clear") && !in.equalsIgnoreCase("selall")
+				&& !in.equalsIgnoreCase("selclear")){
 			context.setSessionData("BACKTO", "manage");
+			context.setSessionData("COM", in);
+			context.setSessionData("ID", "rollback");
+		}
+		if(context.getSessionData("ID").equals("free") && !in.equalsIgnoreCase("done") && !in.equalsIgnoreCase("cancel")){
+			context.setSessionData("BACKTO", "free");
 			context.setSessionData("COM", in);
 			context.setSessionData("ID", "rollback");
 		}
 		context.setSessionData("data", in);
 		return this;
 	}
-
+	
 	public boolean blocksForInput(ConversationContext context) {
 		Object ID = context.getSessionData("ID");
 		if(ID.equals("timetoquit") || ID.equals("rollback") || ID.equals("second")) return false;

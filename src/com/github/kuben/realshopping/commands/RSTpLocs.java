@@ -7,6 +7,7 @@ import org.bukkit.command.CommandSender;
 
 import com.github.kuben.realshopping.LangPack;
 import com.github.kuben.realshopping.RSUtils;
+import com.github.kuben.realshopping.commands.blockUpdater;
 import com.github.kuben.realshopping.RealShopping;
 
 class RSTpLocs extends RSPlayerCommand {
