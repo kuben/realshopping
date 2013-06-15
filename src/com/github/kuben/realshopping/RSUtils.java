@@ -16,6 +16,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.StorageMinecart;
 import org.bukkit.inventory.ItemStack;
 
+import com.github.kuben.realshopping.PItem;
 @SuppressWarnings("deprecation")
 public class RSUtils {
 
@@ -406,7 +407,7 @@ public class RSUtils {
 
 	public static boolean collectShipped(Location l, Player p, int id) {
 		if(l.getBlock().getState() instanceof Chest){
-			if(RealShopping.hasPInv(p) || RealShopping.shopMap.get(RealShopping.getPInv(p).getStore()).getOwner().equals(p.getName())){
+			if(!RealShopping.hasPInv(p) || RealShopping.shopMap.get(RealShopping.getPInv(p).getStore()).getOwner().equals(p.getName())){
 				if(RealShopping.hasShippedToCollect(p.getName())){
 					if(RealShopping.getShippedToCollectAmount(p.getName()) >= id){
 						boolean cont = false;
@@ -423,7 +424,7 @@ public class RSUtils {
 									i++;
 								}
 							}
-	
+
 							if(Config.getZoneArray()[i].getPercent() == -1)
 								cost = (int) (Config.getZoneArray()[i].getCost()*100);
 							else {

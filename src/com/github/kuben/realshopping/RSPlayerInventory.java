@@ -349,7 +349,7 @@ public class RSPlayerInventory {
 	}
 }
 
-final class PItem{
+final class PItem {
 	
 	final int type;
 	final byte data;

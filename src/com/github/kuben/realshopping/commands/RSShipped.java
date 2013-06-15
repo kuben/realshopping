@@ -27,12 +27,12 @@ class RSShipped extends RSPlayerCommand {
 				return true;
 			} else sender.sendMessage(ChatColor.RED + LangPack.YOUDONTHAVEANYPACKAGESTOPICKUP);
 		} else if(args.length == 1 && args[0].equalsIgnoreCase("collect")){
-			Location l = new Location(player.getWorld(), player.getLocation().getBlockX(), player.getLocation().getBlockY() - 1, player.getLocation().getBlockZ());
+			Location l = new Location(player.getWorld(), player.getLocation().getBlockX(), player.getLocation().subtract(0, 0.875, 0).getBlockY(), player.getLocation().getBlockZ());
 			return RSUtils.collectShipped(l, player, 1);
-			} else if(args.length == 1 && args[0].equalsIgnoreCase("inspect")){
+		} else if(args.length == 1 && args[0].equalsIgnoreCase("inspect")){
 			sender.sendMessage(ChatColor.RED + LangPack.YOUHAVETOSPECIFYTHEID_);
 		} else if(args.length == 2 && args[0].equalsIgnoreCase("collect")){
-			Location l = new Location(player.getWorld(), player.getLocation().getBlockX(), player.getLocation().getBlockY() - 1, player.getLocation().getBlockZ());
+			Location l = new Location(player.getWorld(), player.getLocation().getBlockX(), player.getLocation().subtract(0, 0.875, 0).getBlockY(), player.getLocation().getBlockZ());
 			try {
 				return RSUtils.collectShipped(l, player, Integer.parseInt(args[1]));
 			} catch (NumberFormatException e){

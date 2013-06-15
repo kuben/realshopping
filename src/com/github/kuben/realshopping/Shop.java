@@ -147,7 +147,6 @@ public class Shop {//TODO add load/save interface
 		if(chests.containsKey(l)){
 			if(i != null){
 				chests.get(l).clear();
-				System.out.println("setting chest contents");
 				for(ItemStack iS:i.getContents()){
 					if(iS != null){
 						int am = iS.getAmount();

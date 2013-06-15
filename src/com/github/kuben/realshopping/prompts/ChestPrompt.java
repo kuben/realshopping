@@ -57,7 +57,7 @@ public class ChestPrompt implements Prompt {//TODO fix permissions and search co
         			new ChestManageListener(player);
         			context.setSessionData("ID", "manage");
         			return "You have chosen to manage existing chests. Left-click a chest to choose it. Commands "
-        			+ ChatColor.DARK_PURPLE + "additems" + ChatColor.RESET + ", " + ChatColor.DARK_PURPLE + "delitems"
+        			+ ChatColor.DARK_PURPLE + "additems" + ChatColor.DARK_BLUE + "ITEMS.." + ChatColor.RESET + ", " + ChatColor.DARK_PURPLE + "delitems" + ChatColor.DARK_BLUE + "ITEMS.."
         			+ ChatColor.RESET + " and " + ChatColor.DARK_PURPLE + "clear" + ChatColor.RESET + " apply to all chosen chests. "
         			+ LangPack.TYPE + ChatColor.DARK_PURPLE + "selclear" + ChatColor.RESET + " to clear the selection of chests or "
         			+ ChatColor.DARK_PURPLE + "selall" + ChatColor.RESET + " to select all. Exit with "

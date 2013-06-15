@@ -80,12 +80,12 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 	
 	//Constants
 	public static final String MANDIR = "plugins/RealShopping/";
-	public static final String VERSION = "v0.44";
-	public static final float VERFLOAT = 0.44f;
+	public static final String VERSION = "v0.50";
+	public static final float VERFLOAT = 0.50f;
 	
 	//Vars
 	private static Set<RSPlayerInventory> PInvSet;//Changed to set
-	public static Map<String, Shop> shopMap;//TODO special mofo
+	public static Map<String, Shop> shopMap;//TODO
 	
 	private static Map<EEPair, Shop> eePairs;
 	private static Map<Price, Integer[]> defPrices;
@@ -1423,7 +1423,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 			}
 		return false;
 	}
-	public static boolean removePInv(String player){//Fuck this shit
+	public static boolean removePInv(String player){
 		for(RSPlayerInventory pInv:PInvSet)
 			if(pInv.getPlayer().equals(player)){
 				PInvSet.remove(pInv);

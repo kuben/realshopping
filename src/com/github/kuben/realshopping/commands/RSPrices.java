@@ -80,6 +80,7 @@ class RSPrices extends RSCommand {
 	}
 	
 	private boolean searchItem(Shop shop, Price price){
+		boolean noMatches = true;
 		if(price.getData() != -1){//Item with specific data value requested
 			int cost = shop.getPrice(price);
 			String onSlStr = "";
@@ -88,6 +89,7 @@ class RSPrices extends RSCommand {
 				cost *= pcnt/100f;
 				onSlStr = ChatColor.GREEN + LangPack.ONSALE;
 			}
+			noMatches = false;
 			sender.sendMessage(ChatColor.BLUE + "" + price + " " + Material.getMaterial(price.getType()) + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
 			return true;
 		}
@@ -103,8 +105,13 @@ class RSPrices extends RSCommand {
 						cost *= pcnt/100f;
 					onSlStr = ChatColor.GREEN + LangPack.ONSALE;
 				}
+				noMatches = false;
 				sender.sendMessage(ChatColor.BLUE + "" + p + " " + Material.getMaterial(p.getType()) + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
 			}
+		}
+		if(noMatches){
+			Material m = Material.getMaterial(price.getType());
+			sender.sendMessage(ChatColor.RED + "No matches for " + ChatColor.DARK_RED + (m == null?price.getType():m));
 		}
 		return true;
 	}
