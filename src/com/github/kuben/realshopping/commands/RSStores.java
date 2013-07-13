@@ -253,7 +253,7 @@ class RSStores extends RSCommand {
 								if(keys.length > 0){
 									int i = 0, j = 0;
 									for(;i < keys.length;i++){
-										Price tempP = RSUtils.pullPrice(keys[i]);
+										Price tempP = RSUtils.pullPrice(keys[i],this.player);
 										if(tempShop.hasPrice(tempP) || tempShop.hasPrice(tempP.stripOffData())){
 											tempShop.addSale(tempP, pcnt);
 											j++;

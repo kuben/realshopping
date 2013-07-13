@@ -24,12 +24,16 @@ class RSSetPrices extends RSCommand {
 	
 	private boolean add(){
 		try {
-			Object[] o = RSUtils.pullPriceCostMinMax(arg);
+			Object[] o = RSUtils.pullPriceCostMinMax(arg,this.player);
 			Price p = (Price)o[0];
 			Integer[] i = (Integer[])o[1];
 			String dString = p.getData()>-1?"("+p.getData()+")":"";
+                        String name = Material.getMaterial(p.getType()).toString();
+                        if(p.hasDisplayName())
+                                name = p.getDisplayName();
+                        if(i[0] < 0 ) return false;
 			shop.setPrice(p, i[0]);
-			sender.sendMessage(ChatColor.GREEN + LangPack.PRICEFOR + Material.getMaterial(p.getType()) + dString + LangPack.SETTO + i[0]/100f + LangPack.UNIT);
+                        sender.sendMessage(ChatColor.GREEN + LangPack.PRICEFOR + name + dString + LangPack.SETTO + i[0]/100f + LangPack.UNIT);
 			if(i.length > 1){//Also set min max
 				shop.setMinMax(p, i[1], i[2]);
 				sender.sendMessage(ChatColor.GREEN + LangPack.SETMINIMALANDMAXIMALPRICESFOR + Material.getMaterial(p.getType()) + dString);
@@ -50,11 +54,11 @@ class RSSetPrices extends RSCommand {
 
 	private boolean del(){
 		try {
-			Price p = RSUtils.pullPrice(arg);
+			Price p = RSUtils.pullPrice(arg,this.player);
 			String dString = p.getData()>-1?"("+p.getData()+")":"";
 			if(shop.hasPrice(p)){
 				shop.removePrice(p);
-				sender.sendMessage(ChatColor.RED + LangPack.REMOVEDPRICEFOR + Material.getMaterial(p.getType()) + dString);
+				sender.sendMessage(ChatColor.RED + LangPack.REMOVEDPRICEFOR + p.formattedString() + dString);
 				return true;
 			} else {
 				sender.sendMessage(ChatColor.RED + LangPack.COULDNTFINDPRICEFOR + Material.getMaterial(p.getType()) + dString);
@@ -100,7 +104,7 @@ class RSSetPrices extends RSCommand {
 	}
 	
 	private boolean showMinMax(){
-		Price p = RSUtils.pullPrice(arg);
+		Price p = RSUtils.pullPrice(arg,this.player);
 		String dString = p.getData()>-1?"("+p.getData()+")":"";
 		if(shop.hasMinMax(p)){
 			sender.sendMessage(ChatColor.GREEN + LangPack.STORE + store + LangPack.HASAMINIMALPRICEOF + shop.getMin(p)/100f + LangPack.UNIT
@@ -110,7 +114,7 @@ class RSSetPrices extends RSCommand {
 	}
 	
 	private boolean clearMinMax(){
-		Price p = RSUtils.pullPrice(arg);
+		Price p = RSUtils.pullPrice(arg,this.player);
 		String dString = p.getData()>-1?"("+p.getData()+")":"";
 		if(shop.hasMinMax(p)){
 			shop.clearMinMax(p);
@@ -121,7 +125,7 @@ class RSSetPrices extends RSCommand {
 	
 	private boolean setMinMax(){
 		try {
-			Object[] o = RSUtils.pullPriceMinMax(arg);
+			Object[] o = RSUtils.pullPriceMinMax(arg,this.player);
 			Price p = (Price)o[0];
 			Integer[] i = (Integer[])o[1];
 			shop.setMinMax(p, i[0], i[1]);

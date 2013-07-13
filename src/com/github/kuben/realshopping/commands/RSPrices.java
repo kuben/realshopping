@@ -55,7 +55,7 @@ class RSPrices extends RSCommand {
 				if(player != null){
 					if(RealShopping.getPInv(player) != null) {
 						return searchItem(RealShopping.shopMap.get(RealShopping.getPInv(player).getStore())
-								, RSUtils.pullPrice(args[1]));
+								, RSUtils.pullPrice(args[1],this.player));
 					} else {
 						sender.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
 						return false;
@@ -73,7 +73,7 @@ class RSPrices extends RSCommand {
 				}	
 			}
 		} else if (args.length > 2 && args[1].equalsIgnoreCase("search")){//Has to be STORE search ITEM
-			return searchItem(RealShopping.shopMap.get(args[0]), RSUtils.pullPrice(args[2]));
+			return searchItem(RealShopping.shopMap.get(args[0]), RSUtils.pullPrice(args[2],this.player));
 		}
 		
 		return Shop.prices(sender, page, shop);
@@ -89,8 +89,7 @@ class RSPrices extends RSCommand {
 				cost *= pcnt/100f;
 				onSlStr = ChatColor.GREEN + LangPack.ONSALE;
 			}
-			noMatches = false;
-			sender.sendMessage(ChatColor.BLUE + "" + price + " " + Material.getMaterial(price.getType()) + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
+			sender.sendMessage(ChatColor.BLUE + "" + price.formattedString() + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
 			return true;
 		}
 		Map<Price, Integer> tempMap = shop.getPrices();
@@ -110,8 +109,7 @@ class RSPrices extends RSCommand {
 			}
 		}
 		if(noMatches){
-			Material m = Material.getMaterial(price.getType());
-			sender.sendMessage(ChatColor.RED + "No matches for " + ChatColor.DARK_RED + (m == null?price.getType():m));
+			sender.sendMessage(ChatColor.RED + "No matches for " + ChatColor.DARK_RED + price.formattedString());
 		}
 		return true;
 	}

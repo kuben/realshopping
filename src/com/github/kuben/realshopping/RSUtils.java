@@ -16,7 +16,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.StorageMinecart;
 import org.bukkit.inventory.ItemStack;
 
-import com.github.kuben.realshopping.PItem;
+import org.bukkit.inventory.Inventory;
 @SuppressWarnings("deprecation")
 public class RSUtils {
 
@@ -92,42 +92,73 @@ public class RSUtils {
 		return id;
 	}
 
-	public static Price pullPrice(String str){//No commas on this one
-		String s = parseAliases(str);
-		if(s.contains(":")){
-			return new Price(Integer.parseInt(s.split(":")[0]),Integer.parseInt(s.split(":")[1]));
-		} else return new Price(Integer.parseInt(s));
+	public static Price pullPrice(String str, Player ply){//No commas on this one
+                String[] s = new String[2];
+                if(parseAliases(str).contains(":"))
+                    s = parseAliases(str).split(":");
+                else {
+                    s[0] = parseAliases(str);
+                    s[1] = "0";
+                }
+                byte data = Byte.parseByte(s[1]);
+                int id = Integer.parseInt(s[0]);
+                if(id == -1) {
+                    if(ply.getItemInHand().hasItemMeta())
+                        return new Price(ply.getItemInHand());
+                    id=ply.getItemInHand().getTypeId();
+                    data = ply.getItemInHand().getData().getData();
+                }
+		if(s.length > 1){
+			return new Price(id,data);
+		} else return new Price(id);
 	}
 
 	/*
 	 * Returns object containing Price, cost and eventual minmax
 	 * o[0] = Price, o[1] = Integer[] priceminmax
 	 */
-	public static Object[] pullPriceCostMinMax(String str){//No commas on this one
-		String s[] = parseAliases(str).split(":");
+	public static Object[] pullPriceCostMinMax(String str, Player ply){//No commas on this one
+                String s[] = parseAliases(str).split(":");
 		Price p = null;
 		Integer i[] = null;
-		if(s.length > 3)//Has minmax
+                
+                if(s.length > 3) //Has minmax
 			i = new Integer[]{(int)(Float.parseFloat(s[s.length-3])*100), (int)(Float.parseFloat(s[s.length-2])*100), (int)(Float.parseFloat(s[s.length-1])*100)};
-		else
+                else if(s.length > 1)
 			i = new Integer[]{(int)(Float.parseFloat(s[s.length-1])*100)};
-		if(s.length == 3 | s.length == 5)//Has data
-			p = new Price(Integer.parseInt(s[0]),Integer.parseInt(s[1]));
-		else p = new Price(Integer.parseInt(s[0]));
-		return new Object[]{p, i};
+                else i = new Integer[]{-1};
+                
+                int id = Integer.parseInt(s[0]);
+                byte data = 0;
+                if( id == -1) { //control that I want hand held item
+                        if(ply.getItemInHand().hasItemMeta()){
+                            p = new Price(ply.getItemInHand());
+                            return new Object[]{p, i};
+                        }
+                        id=ply.getItemInHand().getTypeId();
+                }
+		if(s.length > 2)
+                    data = Byte.parseByte(s[1]);
+                p = new Price(id, data);
+                return new Object[]{p, i};
 	}
 	
 	/*
 	 * Returns object containing Price and minmax
 	 * o[0] = Price, o[1] = Integer[] minmax
 	 */
-	public static Object[] pullPriceMinMax(String str){//No commas on this one
+	public static Object[] pullPriceMinMax(String str, Player ply){//No commas on this one
 		String s[] = parseAliases(str).split(":");
 		Price p = null;
 		Integer i[] = new Integer[]{(int)(Float.parseFloat(s[s.length-2])*100), (int)(Float.parseFloat(s[s.length-1])*100)};
-		if(s.length > 3)//Has data
-			p = new Price(Integer.parseInt(s[0]),Integer.parseInt(s[1]));
-		else p = new Price(Integer.parseInt(s[0]));
+		int id = Integer.parseInt(s[0]); 
+                if( id == -1) { //control that I want hand held item
+                        p = new Price(ply.getItemInHand());
+                        return new Object[]{p,i};
+                }
+                if(s.length > 3)//Has data
+			p = new Price(id,Byte.parseByte(s[1]));
+		else p = new Price(id);
 		return new Object[]{p, i};
 	}
 	
@@ -307,24 +338,24 @@ public class RSUtils {
 		
 		ItemStack[] cartInv = sM.getInventory().getContents();//Items in shopping cart
 		
-		Map<PItem, Integer> bought = new HashMap<PItem, Integer>();
-		
-		if(RealShopping.getPInv(p).hasItems()){
+		Map<ItemStack, Integer> bought = new HashMap<>();
+                RSPlayerInventory pinv = RealShopping.getPInv(p);
+		Shop tempshop = RealShopping.shopMap.get(pinv.getStore());
+		if(pinv.hasItems()){
 			for(int i = 0;i < cartInv.length;i++){
 				ItemStack x = cartInv[i];
 				if(x != null){
 					int type = x.getTypeId();
-					if(RealShopping.shopMap.get(RealShopping.getPInv(p).getStore()).hasPrice(new Price(type))
-							|| RealShopping.shopMap.get(RealShopping.getPInv(p).getStore()).hasPrice(new Price(type, x.getData().getData()))){//Something in cart has a price
-						if(RealShopping.getPInv(p).hasItem(x)){//Player owns item
+                                        Price pit = new Price(x);
+					if(tempshop.hasPrice(pit)){//Something in cart has a price
+						if(pinv.hasItem(x)){//Player owns item
 							int amount = (RealShopping.isTool(type)?RealShopping.getMaxDur(type) - x.getDurability():x.getAmount());
-							PItem tempPI = new PItem(x);
 							
-							if(bought.containsKey(tempPI)) amount += bought.get(tempPI);
-							if(amount > RealShopping.getPInv(p).getAmount(tempPI))
-								bought.put(tempPI, RealShopping.getPInv(p).getAmount(tempPI));
+							if(bought.containsKey(x)) amount += bought.get(x);
+							if(amount > pinv.getAmount(x))
+								bought.put(x, pinv.getAmount(x));
 							else
-								bought.put(tempPI, amount);
+								bought.put(x, amount);
 						}
 					}
 				}
@@ -334,7 +365,7 @@ public class RSUtils {
 				p.sendMessage(ChatColor.RED + LangPack.YOUCANTSHIPANEMPTYCART);
 				return true;
 			}
-			Map<PItem, Integer> bought2 = new HashMap<PItem, Integer>(bought);
+			Map<ItemStack, Integer> bought2 = new HashMap<>(bought);
 			
 			//Remove bought items from carts inventory
 			ItemStack[] newCartInv = new ItemStack[cartInv.length];
@@ -342,63 +373,49 @@ public class RSUtils {
 			for(int i = 0;i < cartInv.length;i++){
 				ItemStack x = cartInv[i];
 				if(x != null){
-					PItem tempPI = new PItem(x);
-					if(bought.containsKey(tempPI)){//Has bought item
-						int diff = bought.get(tempPI) - (RealShopping.isTool(x.getTypeId())?RealShopping.getMaxDur(x.getTypeId()) - x.getDurability():x.getAmount());
+					//PItem tempPI = new PItem(x);
+					if(bought.containsKey(x)){//Has bought item
+						int diff = bought.get(x) - (RealShopping.isTool(x.getTypeId())?RealShopping.getMaxDur(x.getTypeId()) - x.getDurability():x.getAmount());
 						if(diff > 0){//If + then even more bought left
-							if(diff > 0) bought.put(tempPI, diff);
+							if(diff > 0) bought.put(x, diff);
 							boughtIS[i] = x.clone();
 							x = null;
 						} else if(diff == 0) {//If zero
 							if(RealShopping.isTool(x.getTypeId())){
-								if(x.getDurability()  - bought.get(tempPI) < RealShopping.getMaxDur(x.getTypeId())){
-									x.setDurability((short)(x.getDurability() - bought.get(tempPI)));// - ?
+								if(x.getDurability()  - bought.get(x) < RealShopping.getMaxDur(x.getTypeId())){
+									x.setDurability((short)(x.getDurability() - bought.get(x)));// - ?
 									boughtIS[i] = new ItemStack(x);
-									boughtIS[i].setDurability(bought.get(tempPI).shortValue());
+									boughtIS[i].setDurability(bought.get(x).shortValue());
 								} else x = null;
 							} else {
 								boughtIS[i] = new ItemStack(x);
-								boughtIS[i].setAmount(bought.get(tempPI));
+								boughtIS[i].setAmount(bought.get(x));
 								x = null;
 							}
-							bought.remove(tempPI);
+							bought.remove(x);
 						}
 					}
 				}
 				newCartInv[i] = x;
 			}
 			sM.getInventory().setContents(newCartInv);
-			
 			if(!bought.isEmpty()){ RealShopping.log.info("Error #802"); System.out.println(bought);}
 			
 			//Calculate cost
-			//TODO why is this code repeated without getting its own function?
 			int toPay = 0;
-			Object[] keys = bought2.keySet().toArray();
-	
-			for(int i = 0;i < keys.length;i++){
-				PItem key = (PItem) keys[i];
-				Shop tempShop = RealShopping.shopMap.get(RealShopping.getPInv(p).getStore());
-				int amount = bought2.get(key);
-				int cost = -1;
-				if(tempShop.hasPrice(new Price(key.type))) cost = tempShop.getPrice(new Price(key.type));
-				if(tempShop.hasPrice(new Price(key.type, key.data))) cost = tempShop.getPrice(new Price(key.type, key.data));
-				if(tempShop.hasSale(new Price(key.type)) || tempShop.hasSale(new Price(key.type, key.data))){//There is a sale on that item.
-					int pcnt = -1;
-					if(tempShop.hasSale(new Price(key.type))) pcnt = 100 - tempShop.getSale(new Price(key.type));
-					if(tempShop.hasSale(new Price(key.type, key.data))) pcnt = 100 - tempShop.getSale(new Price(key.type, key.data));
-					cost *= pcnt/100f;
-				}
-				toPay += cost * (RealShopping.isTool(key.type)?(double)amount / (double)RealShopping.getMaxDur(key.type):amount);//Convert items durability to item amount
-			}
+			ItemStack[] keys = (ItemStack[])bought2.keySet().toArray();
+                        
+                        Inventory[] cartinv = new Inventory[1];
+                        cartinv[0] = sM.getInventory();
+			toPay = pinv.toPay(cartinv);
 			
 			//Ship
 			RealShopping.addShippedToCollect(p.getName(), new ShippedPackage(boughtIS, toPay, sM.getLocation()));
 			p.sendMessage(ChatColor.GREEN + LangPack.PACKAGEWAITINGTOBEDELIVERED);
 
 			//Update player inv
-			for(int i = 0;i < keys.length;i++){
-				RealShopping.getPInv(p).removeItem((PItem)keys[i], bought2.get(keys[i]));
+			for(ItemStack is:keys){
+				pinv.removeItem(is, bought2.get(is));
 			}
 		} else p.sendMessage(ChatColor.RED + LangPack.YOUHAVENTBOUGHTANYTHING);
 	
@@ -527,8 +544,8 @@ public class RSUtils {
 	}
 
 	public static void returnStolen(Player p){
-		Map<PItem, Integer> stolen = RealShopping.getPInv(p).getStolen();
-		Map<PItem, Integer> stolen2 = new HashMap<PItem, Integer>(stolen);
+		Map<Price, Integer> stolen = RealShopping.getPInv(p).getStolen();
+		Map<Price, Integer> stolen2 = new HashMap<>(stolen);
 	
 		//Remove stolen items from players inventory
 		ItemStack[][] playerInv = new ItemStack[][]{p.getInventory().getContents(), p.getInventory().getArmorContents()};
@@ -537,7 +554,7 @@ public class RSUtils {
 		for(int i = 0;i < playerInv[j].length;i++){
 			ItemStack x = playerInv[j][i];
 			if(x != null){
-				PItem tempPI = new PItem(x);
+				Price tempPI = new Price(x);
 				if(stolen.containsKey(tempPI)){//Has stolen item
 					int diff = stolen.get(tempPI) - (RealShopping.isTool(x.getTypeId())?RealShopping.getMaxDur(x.getTypeId()) - x.getDurability():x.getAmount());
 					if(diff >= 0){//If + then even more stolen left
@@ -560,36 +577,35 @@ public class RSUtils {
 		
 		String own = RealShopping.shopMap.get(RealShopping.getPInv(p).getStore()).getOwner();
 		if(!own.equals("@admin")){//Return items if player store.
-			Object[] keyss = stolen2.keySet().toArray();
-			for(int i = 0;i < keyss.length;i++){
-				int type = ((PItem) keyss[i]).type;
-				ItemStack tempIS = ((PItem) keyss[i]).toItemStack();
-				if(RealShopping.isTool(type)){
-					if(stolen2.get(keyss[i]) > RealShopping.getMaxDur(type))
-						while(RealShopping.getMaxDur(type) < stolen2.get(keyss[i])){//If more than one stack/full tool
+			Price[] keyss = (Price[])stolen2.keySet().toArray();
+			for(Price key:keyss){
+				ItemStack tempIS = key.toItemStack();
+				if(RealShopping.isTool(key.getType())){
+					if(stolen2.get(key) > RealShopping.getMaxDur(key.getType()))
+						while(RealShopping.getMaxDur(key.getType()) < stolen2.get(key)){//If more than one stack/full tool
 							RealShopping.shopMap.get(RealShopping.getPInv(p).getStore()).addStolenToClaim(tempIS.clone());
-							stolen2.put((PItem) keyss[i], stolen2.get(keyss[i]) - RealShopping.getMaxDur(type));
+							stolen2.put(key, stolen2.get(key) - RealShopping.getMaxDur(key.getType()));
 						}
-					tempIS.setDurability((short) (RealShopping.getMaxDur(type) - stolen2.get(keyss[i])));
+					tempIS.setDurability((short) (RealShopping.getMaxDur(key.getType()) - stolen2.get(key)));
 					RealShopping.shopMap.get(RealShopping.getPInv(p).getStore()).addStolenToClaim(tempIS);
 				} else {
-					if(stolen2.get(keyss[i]) > Material.getMaterial(type).getMaxStackSize())
-						while(Material.getMaterial(type).getMaxStackSize() < stolen2.get(keyss[i])){//If more than one stack/full tool
+					if(stolen2.get(key) > Material.getMaterial(key.getType()).getMaxStackSize())
+						while(Material.getMaterial(key.getType()).getMaxStackSize() < stolen2.get(key)){//If more than one stack/full tool
 							ItemStack tempIStemp = tempIS.clone();
-							tempIStemp.setAmount(Material.getMaterial(type).getMaxStackSize());
+							tempIStemp.setAmount(Material.getMaterial(key.getType()).getMaxStackSize());
 							RealShopping.shopMap.get(RealShopping.getPInv(p).getStore()).addStolenToClaim(tempIStemp);
-							stolen2.put((PItem) keyss[i], stolen2.get(keyss[i]) - Material.getMaterial(type).getMaxStackSize());
+							stolen2.put(key, stolen2.get(key) - Material.getMaterial(key.getType()).getMaxStackSize());
 						}
-					tempIS.setAmount(stolen2.get(keyss[i]));
+					tempIS.setAmount(stolen2.get(key));
 					RealShopping.shopMap.get(RealShopping.getPInv(p).getStore()).addStolenToClaim(tempIS);
 				}
 			}
 		}
 	}
 
-	public static Map<PItem, Integer> joinMaps(Map<PItem,Integer> uno, Map<PItem,Integer> dos){//Preserves old values
-		PItem[] keys = dos.keySet().toArray(new PItem[0]);
-		for(PItem o:keys){
+	public static Map<Price, Integer> joinMaps(Map<Price,Integer> uno, Map<Price,Integer> dos){//Preserves old values
+		Price[] keys = dos.keySet().toArray(new Price[0]);
+		for(Price o:keys){
 			if(uno.containsKey(o)) uno.put(o, uno.get(o) + dos.get(o));
 			else uno.put(o, dos.get(o));
 		}

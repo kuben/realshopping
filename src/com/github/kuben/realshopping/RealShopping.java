@@ -25,7 +25,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,18 +36,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 import net.h31ix.updater.Updater;
 
@@ -60,18 +52,17 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.MaterialData;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import com.github.kuben.realshopping.RSEconomy;
-import com.github.kuben.realshopping.Shop;
 import com.github.kuben.realshopping.commands.RSCommandExecutor;
 import com.github.kuben.realshopping.exceptions.RealShoppingException;
 import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
+import com.github.stengun.realshopping.PriceParser;
+import java.util.Arrays;
+import org.bukkit.inventory.meta.ItemMeta;
 
 public class RealShopping extends JavaPlugin {//TODO stores case sensitive, players case preserving
 	private Updater updater;
@@ -80,8 +71,8 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 	
 	//Constants
 	public static final String MANDIR = "plugins/RealShopping/";
-	public static final String VERSION = "v0.50";
-	public static final float VERFLOAT = 0.50f;
+	public static final String VERSION = "v0.55";
+	public static final float VERFLOAT = 0.55f;
 	
 	//Vars
 	private static Set<RSPlayerInventory> PInvSet;//Changed to set
@@ -282,12 +273,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 		
 		
 		try {
-			f = new File(MANDIR + "prices.xml");
-			if(!f.exists()){
-				f.createNewFile();
-			} else {
-				new PricesParser().parseDocument(f);
-			}
+			PriceParser.loadPriceMap(shopMap);
 		} catch (Exception e){
 			e.printStackTrace();
 			log.info("Failed while reading prices.xml");
@@ -318,80 +304,36 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 		}
 		log.info(LangPack.REALSHOPPINGINITIALIZED);
     }
-     
+    @Override
     public void onDisable(){
-		try {
-			PromptMaster.abandonAllConversations();
-			//TODO disable executor
-			saveTemporaryFile(0);//Inventories
-			saveTemporaryFile(1);//Jailed
-			saveTemporaryFile(2);//TpLocs
-			saveTemporaryFile(3);//Protected chests
-			saveTemporaryFile(4);//Shipped Packages
-			saveTemporaryFile(5);//toClaim
-			saveTemporaryFile(6);//Stats
-			saveTemporaryFile(7);//Notifications
-			RSEconomy.export();//This will only happen if econ is null
-			
-			if(notificatorThread != null) notificatorThread.running = false;
-			if(statUpdater != null) statUpdater.running = false;
-			
-			//Write prices to xml
+        try {
+                PromptMaster.abandonAllConversations();
+                //TODO disable executor
+                saveTemporaryFile(0);//Inventories
+                saveTemporaryFile(1);//Jailed
+                saveTemporaryFile(2);//TpLocs
+                saveTemporaryFile(3);//Protected chests
+                saveTemporaryFile(4);//Shipped Packages
+                saveTemporaryFile(5);//toClaim
+                saveTemporaryFile(6);//Stats
+                saveTemporaryFile(7);//Notifications
+                RSEconomy.export();//This will only happen if econ is null
 
-			File f = new File(MANDIR+"prices.xml");//Reset file
-			if(f.exists()) f.delete();
-			
-			DocumentBuilderFactory dbfac = DocumentBuilderFactory.newInstance();
-	        DocumentBuilder docBuilder = dbfac.newDocumentBuilder();
-	        Document doc = docBuilder.newDocument();
-	            
+                if(notificatorThread != null) notificatorThread.running = false;
+                if(statUpdater != null) statUpdater.running = false;
+                PriceParser.savePriceMap(shopMap);
+                //Write prices to xml
 
-	        Element root = doc.createElement("prices");
-	        doc.appendChild(root);
-	        doc.appendChild(doc.createComment("If you want to manually edit this file, do it when your server is down. Your changes won't be saved otherwise!"));
-	           
-	        Map<Price, Integer[]> tempMap;
-	        Object[] keys = shopMap.keySet().toArray();
-	        for(int i = 0;i < keys.length;i++){	
-	        	Element shop = doc.createElement("shop");
-	        	shop.setAttribute("name", shopMap.get(keys[i]).getName());
-	        	root.appendChild(shop);
-	            	
-	            tempMap = shopMap.get(keys[i]).getPricesMap();
-	          	Object[] ids = tempMap.keySet().toArray();
-	           	for(int j = 0;j < ids.length;j++){
-	           		Element item = doc.createElement("item");
-	                item.setAttribute("id", ids[j].toString());
-	                Integer[] p = tempMap.get(ids[j]);
-	                item.setAttribute("cost", (((float)p[0])/100) + "");//Save as decimal numbers
-	                if(p.length == 3){
-	                	item.setAttribute("min", (((float)p[1])/100) + "");
-	                	item.setAttribute("max", (((float)p[2])/100) + "");
-	                }
-	                shop.appendChild(item);
-	           	}
-	        }
-	        
-	        DOMSource source = new DOMSource(doc);
 
-	        PrintStream ps = new PrintStream(MANDIR+"prices.xml");
-	        StreamResult result = new StreamResult(ps);
-	        
-	        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-	        Transformer transformer = transformerFactory.newTransformer();
-	        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-	        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-
-            transformer.transform(source, result);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
-		} catch (TransformerConfigurationException e) {
-			e.printStackTrace();
-		} catch (TransformerException e) {
-			e.printStackTrace();
-		}
+            } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+            } catch (ParserConfigurationException e) {
+                    e.printStackTrace();
+            } catch (TransformerConfigurationException e) {
+                    e.printStackTrace();
+            } catch (TransformerException e) {
+                    e.printStackTrace();
+            }
     	log.info(LangPack.REALSHOPPINGDISABLED);
     }
 
@@ -534,6 +476,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     }
 
     private void initAliases(){
+        aliasesMap.put("hand", new Integer[]{-1});
     	aliasesMap.put("stone", new Integer[]{1});
     	aliasesMap.put("grass", new Integer[]{2});
     	aliasesMap.put("dirt", new Integer[]{3});
@@ -1628,12 +1571,30 @@ class PricesParser extends DefaultHandler {
 	}
 
 	//Event Handlers
+         @Override
 	public void startElement(String a, String b, String name, Attributes attr) throws SAXException {
 		if(name.equalsIgnoreCase("shop")){
 			shopList.add(attr.getValue("name"));
 			mapList.add(new HashMap<Price, Integer[]>());
 			index ++;
 		} else if(name.equalsIgnoreCase("item")){
+                        String[] idval = attr.getValue("id").split(":");
+                        ItemStack itm = new MaterialData(Integer.parseInt(idval[0]),Byte.parseByte(idval[1])).toItemStack();
+                        ItemMeta imet = Bukkit.getItemFactory().getItemMeta(itm.getType());
+                        imet = Bukkit.getItemFactory().asMetaFor(imet, itm);
+                        if(attr.getValue("item","name") != null) {
+                            imet.setDisplayName(attr.getValue("name"));
+                            itm.setItemMeta(imet);
+                        }
+                        if(attr.getValue("lore") != null){
+                            String[] lores;
+                            if(attr.getValue("lore").contains(":"))
+                                lores = attr.getValue("lore").split(":");
+                            else lores = new String[]{attr.getValue("lore")};
+                            List<String> lorelist = new ArrayList<>();
+                            lorelist.addAll(Arrays.asList(lores));
+                            imet.setLore(lorelist);
+                        }
 			if(attr.getValue("cost") != null){
 				Integer f[];
 				if(attr.getValue("min") != null && attr.getValue("max") != null){
@@ -1643,11 +1604,11 @@ class PricesParser extends DefaultHandler {
 				} else {
 					f = new Integer[]{(int) (Float.parseFloat(attr.getValue("cost"))*100)};
 				}
-				mapList.get(index).put(new Price(attr.getValue("id")), f);
+				mapList.get(index).put(new Price(itm), f);
 			}
 		}
 	}
-
+        @Override
 	public void endElement(String a, String b, String name) throws SAXException {
 		if (name.equalsIgnoreCase("prices")){
 			for(int i = 0;i<shopList.size();i++){

@@ -257,8 +257,8 @@ public class RSPlayerListener implements Listener {
 		Player player = (Player) event.getPlayer();
 		if(!launchConversationListener(player, event)){//Redirects event if player is in conversation, otherwise as usual
 	        if (event.getInventory().getTitle().equals(LangPack.SELLTOSTORE)){//TODO consider if this is a good idea, Probably isn't. Create own class extending inventory???
-	        	if(RealShopping.hasPInv((Player) event.getPlayer())){//If player is in store
-	        		Shop.sellToStore((Player) event.getPlayer(), event.getInventory().getContents());
+	        	if(RealShopping.hasPInv(player)){//If player is in store
+	        		Shop.sellToStore(player, event.getInventory().getContents());
 	        	}
 	        }
 		}

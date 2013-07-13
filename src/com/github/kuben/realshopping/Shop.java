@@ -41,7 +41,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.MaterialData;
 
-import com.github.kuben.realshopping.RSPlayerInventory;
 import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.kuben.realshopping.exceptions.RealShoppingException;
@@ -198,8 +197,8 @@ public class Shop {//TODO add load/save interface
 	
 	public boolean hasPrices(){ return !prices.isEmpty(); }
 	public boolean hasPrice(Price p) { return prices.containsKey(p); }
-	public Integer getPrice(Price p) { Integer[] r = prices.get(p); return (r==null?null:r[0]); }
-	public Map<Price, Integer> getPrices() {
+        public Integer getPrice(Price p) { Integer[] r = prices.get(p); return (r==null?0:r[0]); }
+        public Map<Price, Integer> getPrices() {
 		Map<Price, Integer> temp = new HashMap<Price, Integer>();
 		for(Price p:prices.keySet().toArray(new Price[0]))
 			temp.put(p, prices.get(p)[0]);
@@ -241,10 +240,13 @@ public class Shop {//TODO add load/save interface
 	private Map<Price, Integer> sale = new HashMap<Price, Integer>();
 	public boolean hasSales(){ return !sale.isEmpty(); }
 	public boolean hasSale(Price p){ return sale.containsKey(p); }
-	public void clearSales() { sale.clear(); }
+        public void clearSales() { sale.clear(); }
 	public Integer getFirstSale(){ return (Integer) sale.values().toArray()[0]; }
-	public Integer getSale(Price p) { return sale.get(p); }
-	public void addSale(Price p, int pcnt) { sale.put(p, pcnt); }
+	public Integer getSale(Price p) { 
+            if(hasSale(p)) return sale.get(p); 
+            return 0;
+        }
+        public void addSale(Price p, int pcnt) { sale.put(p, pcnt); }
 	public void setSale(Map<Price, Integer> sale) { this.sale = sale; }
 	
 	/*
@@ -325,11 +327,7 @@ public class Shop {//TODO add load/save interface
 		String s = "";
 		for(Statistic stat:stats){
 			s += ";"+stat.getTime()+":"+stat.isBought()+":";
-			s += stat.getItem().type + ":" + stat.getAmount() + (stat.getItem().data > 0?":"+stat.getItem().data:"");
-			Object[] ench = stat.getItem().enchantments.keySet().toArray();
-			for(Object en:ench){
-				s += "[" + ((Enchantment)en).getId() + ":" + stat.getItem().enchantments.get(en) + "]";
-			}
+			stat.getItem().toString(stat.getAmount());
 		}
 		return s;
 	}
@@ -366,34 +364,32 @@ public class Shop {//TODO add load/save interface
 		Shop tempShop = RealShopping.shopMap.get(RealShopping.getPInv(p).getStore());
 		if(Config.isEnableSelling() && RealShopping.hasPInv(p) && tempShop.getBuyFor() > 0){
 			int payment = 0;
-			List<ItemStack> sold = new ArrayList<ItemStack>();
-			for(int i = 0;i < iS.length;i++){//Calculate cost and check if player owns items
-				if(iS[i] != null){
-	    			int type = iS[i].getTypeId();
-	    			int data = iS[i].getData().getData();
-	    			if(tempShop.hasPrice(new Price(type)) || tempShop.hasPrice(new Price(type, data))){//Something in inventory has a price
-	    				int amount = ((RealShopping.isTool(type))?RealShopping.getMaxDur(type) - iS[i].getDurability():iS[i].getAmount());
-	    				
-	    				int soldAm = amount;
-	    				for(ItemStack tempSld:sold)
-	    					if(tempSld.getTypeId() == iS[i].getTypeId()) soldAm += ((RealShopping.isTool(type))?RealShopping.getMaxDur(type) - iS[i].getDurability():iS[i].getAmount());
-	
-	    				if(RealShopping.getPInv(p).getAmount(iS[i]) >= soldAm){
-	    					int cost = -1;
-	    					if(tempShop.hasPrice(new Price(type))) cost = tempShop.getPrice(new Price(type));
-	    					if(tempShop.hasPrice(new Price(type, data))) cost = tempShop.getPrice(new Price(type, data));
-	    					if(tempShop.hasSale(new Price(type)) || tempShop.hasSale(new Price(type, data))){//There is a sale on that item.
-	    						int pcnt = -1;
-	    						if(tempShop.hasSale(new Price(type))) pcnt = 100 - tempShop.getSale(new Price(type));
-	    						if(tempShop.hasSale(new Price(type, data)))  pcnt = 100 - tempShop.getSale(new Price(type, data));
-	        					cost *= pcnt/100f;
-	        				}
-	      					cost *= tempShop.getBuyFor()/100f;
-	
-	    					sold.add(iS[i]);
-	        				payment += cost * (RealShopping.isTool(type)?(double)amount / (double)RealShopping.getMaxDur(type):amount);//Convert items durability to item amount
-	    				}
-	    			}
+			List<ItemStack> sold = new ArrayList<>();
+			for(ItemStack ist:iS){//Calculate cost and check if player owns items
+				if(ist != null){
+                                    Price itm = new Price(ist);
+                                    if(tempShop.hasPrice(itm)){//Something in inventory has a price
+                                            int amount = ((RealShopping.isTool(ist.getTypeId()))?RealShopping.getMaxDur(ist.getTypeId()) - ist.getDurability():ist.getAmount());
+
+                                            int soldAm = amount;
+                                            for(ItemStack tempSld:sold)
+                                                    if(tempSld.getTypeId() == itm.getType()) soldAm += ((RealShopping.isTool(itm.getType()))?RealShopping.getMaxDur(itm.getType()) - ist.getDurability():ist.getAmount());
+
+                                            if(RealShopping.getPInv(p).getAmount(ist) >= soldAm){
+                                                    int cost = 0;
+                                                    if(tempShop.hasPrice(itm)) cost = tempShop.getPrice(itm);
+                                                    //There is a sale on that item.
+                                                    int pcnt = 0;
+                                                    if(tempShop.hasSale(itm)){
+                                                        pcnt = 100 - tempShop.getSale(itm);
+                                                        cost *= pcnt/100f;
+                                                    }
+                                                    cost *= tempShop.getBuyFor()/100f;
+
+                                                    sold.add(ist);
+                                                    payment += cost * (RealShopping.isTool(itm.getType())?(double)amount / (double)RealShopping.getMaxDur(itm.getType()):amount);//Convert items durability to item amount
+                                            }
+                                    }
 				}
 			}
 			boolean cont = false;
@@ -402,10 +398,10 @@ public class Shop {//TODO add load/save interface
 				if(RSEconomy.getBalance(own) >= payment/100f){
 					RSEconomy.deposit(p.getName(), payment/100f);
 					RSEconomy.withdraw(own, payment/100f);//If player owned store, withdraw from owner
-					p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sold.size() + LangPack.ITEMSFOR + payment/100f + LangPack.UNIT);
-					if(tempShop.allowsNotifications()) RealShopping.sendNotification(own, LangPack.YOURSTORE + tempShop.getName() + LangPack.BOUGHTSTUFFFOR + payment/100f + LangPack.UNIT + LangPack.FROM + p.getName());
+                                        if(!sold.isEmpty()) p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sold.size() + LangPack.ITEMSFOR + payment/100f + LangPack.UNIT);
+					if(tempShop.allowsNotifications() && !sold.isEmpty()) RealShopping.sendNotification(own, LangPack.YOURSTORE + tempShop.getName() + LangPack.BOUGHTSTUFFFOR + payment/100f + LangPack.UNIT + LangPack.FROM + p.getName());
 					for(ItemStack key:sold){
-						if(Config.isEnableAI()) tempShop.addStat(new Statistic(new PItem(key), key.getAmount(), false));
+						if(Config.isEnableAI()) tempShop.addStat(new Statistic(new Price(key), key.getAmount(), false));
 						RealShopping.getPInv(p).removeItem(key, key.getAmount());
 					}
 					cont = true;
@@ -473,7 +469,7 @@ public class Shop {//TODO add load/save interface
 	 								cost *= pcnt/100f;
 	 		 						onSlStr = ChatColor.GREEN + LangPack.ONSALE;
 	 		 					}
-	 		 					sender.sendMessage(ChatColor.BLUE + "" + keys[i] + " " + Material.getMaterial(keys[i].getType()) + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
+	 		 					sender.sendMessage(ChatColor.BLUE + "" + keys[i].formattedString() + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
 	 		 				}
 	 		 				sender.sendMessage(ChatColor.RED + LangPack.MOREITEMSONPAGE + (page + 1));
 	 					} else {//Last page
@@ -487,7 +483,7 @@ public class Shop {//TODO add load/save interface
 	 								cost *= pcnt/100f;
 	 		 						onSlStr = ChatColor.GREEN + LangPack.ONSALE;
 	 		 					}
-	 		 					sender.sendMessage(ChatColor.BLUE + "" + keys[i] + " " + Material.getMaterial(keys[i].getType()) + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
+	 		 					sender.sendMessage(ChatColor.BLUE + "" + keys[i].formattedString() + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
 	 		 				}
 	 					}
 	 				} else {
@@ -520,11 +516,11 @@ public class Shop {//TODO add load/save interface
 						if(RealShopping.shopMap.get(shopName).allowsNotifications()) RealShopping.sendNotification(RealShopping.shopMap.get(shopName).getOwner(), player.getName()
 								+ LangPack.BOUGHTSTUFFFOR + toPay/100f + LangPack.UNIT + LangPack.FROMYOURSTORE + shopName + ".");
 					}
-					Map<PItem, Integer> bought = RealShopping.getPInv(player).getBought(invs);
+					Map<Price, Integer> bought = RealShopping.getPInv(player).getBought(invs);
 					
 					if(Config.isEnableAI()){
-						PItem[] keys = bought.keySet().toArray(new PItem[0]);
-						for(PItem key:keys){
+						Price[] keys = bought.keySet().toArray(new Price[0]);
+						for(Price key:keys){
 							RealShopping.shopMap.get(shopName).addStat(new Statistic(key, bought.get(key), true));
 						}
 					}
@@ -690,12 +686,12 @@ final class EEPair {//An entrance and exit
 
 final class Statistic {
 	
-	final private PItem item;
+	final private Price item;
 	final private int amount;
 	final private long timestamp;
 	final private boolean bought;
 	
-	public Statistic(PItem item, int amount, boolean bought){
+	public Statistic(Price item, int amount, boolean bought){
 		this.item = item;
 		this.amount = amount;
 		this.timestamp = System.currentTimeMillis();
@@ -706,16 +702,16 @@ final class Statistic {
 		this.timestamp = Long.parseLong(imp.split("\\[")[0].split(":")[0]);
 		this.bought = Boolean.parseBoolean(imp.split("\\[")[0].split(":")[1]);
 		Byte data = 0;
-		Map<Enchantment, Integer> enchs = new HashMap<Enchantment, Integer>();
+		Map<Enchantment, Integer> enchs = new HashMap<>();
 		if(imp.split("\\[")[0].split(":").length > 4) data = Byte.parseByte(imp.split("\\[")[0].split(":")[4]);
 		for(int i = 1;i < imp.split("\\[").length;i++){
 			enchs.put(Enchantment.getById(Integer.parseInt(imp.split("\\[")[i].split("\\]")[0].split(":")[0])), Integer.parseInt(imp.split("\\[")[i].split("\\]")[0].split(":")[1]));
 		}
-		this.item = new PItem(Integer.parseInt(imp.split(":")[2]), data, enchs);
+		this.item = new Price(Integer.parseInt(imp.split(":")[2]), data);
 		this.amount = Integer.parseInt(imp.split("\\[")[0].split(":")[3]);
 	}
 
-	public PItem getItem() {
+	public Price getItem() {
 		return item;
 	}
 
