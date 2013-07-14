@@ -9,8 +9,8 @@ public class RealShoppingException extends Exception {
 		EEPAIR_ALREADY_EXISTS
 	}
 	
-	public RealShoppingException(Type type){
-		super((type==Type.EEPAIR_ALREADY_EXISTS)?"This entrance/exit pair already exists.":"Nigga");
+	public RealShoppingException(Type type){//No translation
+		super((type==Type.EEPAIR_ALREADY_EXISTS)?"This entrance/exit pair already exists.":"");
 		this.type = type;
 	}
 

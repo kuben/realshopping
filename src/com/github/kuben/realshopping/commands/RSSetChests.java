@@ -92,19 +92,21 @@ class RSSetChests extends RSPlayerCommand {
 		if(args.length == 0 || args[0].equalsIgnoreCase("help")){
 			if(args.length == 0){
 				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rssetchests prompt|create|del|additems|delitems [ITEMID[:DATA[:AMOUNT]]][*X][,(more items)]");
-				sender.sendMessage("For help for a specific command, type: " + ChatColor.DARK_PURPLE + "/rssetchests help COMMAND");
+				sender.sendMessage(LangPack.FOR_HELP_FOR_A_SPECIFIC_COMMAND_TYPE_ + ChatColor.LIGHT_PURPLE + "/rssetchests help " + ChatColor.DARK_PURPLE + "COMMAND");
 			} else if(args.length == 1){
-				sender.sendMessage(ChatColor.GREEN + "Manages self-refilling chests (admin-stores only). Use the prompt argument for a guide, or the other arguments to manage chests manually. You can get more help about each of these arguments: " + ChatColor.DARK_PURPLE + "prompt, create, del, additems, delitems");
+				sender.sendMessage(LangPack.RSSETCHESTSHELP + LangPack.YOU_CAN_GET_MORE_HELP_ABOUT_
+						+ ChatColor.LIGHT_PURPLE + "prompt, create, del, additems, delitems");
 			} else {
-				if(args[1].equals("prompt")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "prompt" + ChatColor.RESET + ". Starts an interactive prompt. All conversations can be aborted with " + ChatColor.DARK_PURPLE + "quit");
-				else if(args[1].equals("create")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "create" + ChatColor.RESET
-						+ ". The block you stand on becomes a self-refilling chest. It will update when someone enters the store.");
-				else if(args[1].equals("del")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "del" + ChatColor.RESET
-						+ ". The block you stand on ceases to be a self-refilling chest. It will update when someone enters the store.");
-				else if(args[1].equals("additems")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "additems [ITEMID[:DATA[:AMOUNT]][*X][,ITEMID[:DATA[:AMOUNT]]][*X][,...]]" + ChatColor.RESET
-						+ ". Adds items to the chest. Multiple items are separated with commas. Add more of the same item by multiplying it with a number. If you omit the data and/or amount field they will default to 1 and a full stack.");
-				else if(args[1].equals("delitems")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "delitems [ITEMID[:DATA]][*X][,ITEMID[:DATA]][*X][,...]" + ChatColor.RESET
-						+ ". Deletes the first items from the chest, which match the item IDs and data fields of the arguments. It will not delete more items than specified. Stack size is not taken into consideration.");
+				if(args[1].equals("prompt")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "prompt" + ChatColor.RESET + LangPack.RSSETCHESTSHELP
+						+ LangPack.ALL_CONVERSATIONS_CAN_BE_ABORTED_WITH_ + ChatColor.DARK_PURPLE + "quit");
+				else if(args[1].equals("create")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "create"
+						+ ChatColor.RESET + LangPack.RSSETCHESTSCREATEHELP);
+				else if(args[1].equals("del")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "del"
+						+ ChatColor.RESET + LangPack.RSSETCHESTSDELHELP);
+				else if(args[1].equals("additems")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "additems [ITEMID[:DATA[:AMOUNT]][*X] [,MORE_ITEMS.. [,...]]"
+						+ ChatColor.RESET + LangPack.RSSETCHESTSADDITEMSHELP);
+				else if(args[1].equals("delitems")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "delitems [ITEMID[:DATA]][*X] [,MORE_ITEMS.. [,...]]"
+						+ ChatColor.RESET + LangPack.RSSETCHESTSDELITEMSHELP);
 			}
 			return true;
 		}

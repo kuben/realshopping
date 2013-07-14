@@ -50,12 +50,12 @@ public class PromptMaster {
 	}
 	public static void abandonAllConversations(){//Used by onDisable()
 		if(!convs.isEmpty()){
-			RealShopping.log("Abandoning conversations..");
+			RealShopping.log(LangPack.ABANDONING_CONVERSATIONS);
 			for(Player p:convs.keySet()){
 				convs.get(p).abandon();
 			}
 			convs.clear();
-			RealShopping.log("Conversations abandoned.");
+			RealShopping.log(LangPack.CONVERSATIONS_ABANDONED);
 		}
 	}
 	
@@ -147,7 +147,7 @@ class RSConversationAbandonedListener implements ConversationAbandonedListener {
 							+ "[RealShopping] " + ChatColor.WHITE + LangPack.QUITCONVERSATION);
 				else {
 					((Conversable)((Conversation)event.getSource()).getForWhom()).sendRawMessage(ChatColor.LIGHT_PURPLE
-							+ "[RealShopping] " + ChatColor.WHITE + "Quit conversation for unknown reason.");//LANG
+							+ "[RealShopping] " + ChatColor.WHITE + LangPack.QUIT_CONVERSATION_FOR_UNKNOWN_REASON);
 				}
 			}
 		}

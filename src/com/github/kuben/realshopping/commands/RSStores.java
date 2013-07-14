@@ -29,29 +29,32 @@ class RSStores extends RSCommand {
 		//Check if help was asked for
 		if(args.length == 0 || args[0].equalsIgnoreCase("help")){
 			if(args.length == 0){
-				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rsstores store [buyfor %_OF_SELL_PRICE|collect [-c] [AMOUNT]|ban PLAYER|unban PLAYER|kick [-o] PLAYER|startsale %_OFF [ITEMID[:DATA][,ITEMID[:DATA][,ITEMID[:DATA]...]]]|endsale|notifications [on|off]|onchange [nothing|notify|changeprices] [TRESHOLD] [PERCENT]]");
-				sender.sendMessage("For help for a specific command, type: " + ChatColor.DARK_PURPLE + "/rsstores help COMMAND");
+				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rsstores store [buyfor ...|collect ...|ban ...|unban ...|kick ...|startsale ...|endsale|notifications ...|onchange ...");
+				sender.sendMessage(LangPack.FOR_HELP_FOR_A_SPECIFIC_COMMAND_TYPE_ + ChatColor.LIGHT_PURPLE + "/rsstores help " + ChatColor.DARK_PURPLE + "COMMAND");
 			} else if(args.length == 1){
-				sender.sendMessage(ChatColor.GREEN + LangPack.RSSTORESHELP + ChatColor.DARK_PURPLE + "buyfor, collect, ban, unban, kick, startsale, endsale, notifications, onchange");
+				sender.sendMessage(ChatColor.GREEN + LangPack.RSSTORESHELP + LangPack.YOU_CAN_GET_MORE_HELP_ABOUT_
+						+ ChatColor.LIGHT_PURPLE + "buyfor, collect, ban, unban, kick, startsale, endsale, notifications, onchange");
 			} else {
-				if(args[1].equals("buyfor")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "buyfor %_OF_SELL_PRICE" + ChatColor.RESET + LangPack.BUYFORHELP);
-				else if(args[1].equals("collect")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "collect [-c] [AMOUNT]" + ChatColor.RESET
+				if(args[1].equals("buyfor")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "buyfor %_OF_SELL_PRICE" + ChatColor.RESET + LangPack.BUYFORHELP);
+				else if(args[1].equals("collect")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "collect [-c] [" + ChatColor.DARK_PURPLE + "AMOUNT" + ChatColor.LIGHT_PURPLE + "]" + ChatColor.RESET
 						+ LangPack.COLLECTHELP);
-				else if(args[1].equals("ban")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "ban PLAYER" + ChatColor.RESET
+				else if(args[1].equals("ban")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "ban " + ChatColor.DARK_PURPLE + "PLAYER" + ChatColor.RESET
 						+ LangPack.BANHELP);
-				else if(args[1].equals("unban")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "unban PLAYER" + ChatColor.RESET
+				else if(args[1].equals("unban")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "unban " + ChatColor.DARK_PURPLE + "PLAYER" + ChatColor.RESET
 						+ LangPack.UNBANHELP);
-				else if(args[1].equals("kick")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "kick [-o] PLAYER" + ChatColor.RESET
+				else if(args[1].equals("kick")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "kick [-o] " + ChatColor.DARK_PURPLE + "PLAYER" + ChatColor.RESET
 						+ LangPack.KICKHELP);
-				else if(args[1].equals("startsale")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "startsale %_OFF [ITEM(S)]" + ChatColor.RESET
-						+ LangPack.STARTSALEHELP + ChatColor.DARK_PURPLE + 
-						"ITEMID[:DATA]" + ChatColor.RESET + LangPack.STARTSALEHELP2);
-				else if(args[1].equals("endsale")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "endsale" + ChatColor.RESET
+				else if(args[1].equals("startsale")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "startsale " + ChatColor.DARK_PURPLE + "%_OFF" + ChatColor.LIGHT_PURPLE
+						+ " [" + ChatColor.DARK_PURPLE + "ITEM(S)" + ChatColor.LIGHT_PURPLE + "]" + ChatColor.RESET + LangPack.STARTSALEHELP
+						+ ChatColor.DARK_PURPLE + 	"ITEMID" + ChatColor.LIGHT_PURPLE + "[:" + ChatColor.DARK_PURPLE + "DATA" + ChatColor.LIGHT_PURPLE +"]"
+						+ ChatColor.RESET + LangPack.STARTSALEHELP2);
+				else if(args[1].equals("endsale")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "endsale" + ChatColor.RESET
 						+ LangPack.ENDSALEHELP);
-				else if(args[1].equals("notifications")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "notifications [on|off]" + ChatColor.RESET
-    							+ LangPack.NOTIFICATIONSHELP);
-				else if(args[1].equals("onchange")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "onchange [nothing|notify TRESHOLD|changeprices TRESHOLD PERCENT]"
-    							+ ChatColor.RESET + LangPack.ONCHANGEHELP);
+				else if(args[1].equals("notifications")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "notifications [on|off]" + ChatColor.RESET
+    					+ LangPack.NOTIFICATIONSHELP);
+				else if(args[1].equals("onchange")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "onchange [nothing|notify " + ChatColor.DARK_PURPLE + "TRESHOLD"
+    					+ ChatColor.LIGHT_PURPLE + "|changeprices " + ChatColor.DARK_PURPLE + "TRESHOLD PERCENT" + ChatColor.LIGHT_PURPLE + "]"
+    					+ ChatColor.RESET + LangPack.ONCHANGEHELP);
 			}
 			return true;
 		}
@@ -369,7 +372,7 @@ class RSStores extends RSCommand {
 			if(!RealShopping.getPlayersInStore(args[0])[0].equals("")){
 				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.PLAYERSINSTORE + "\n" + ChatColor.RESET + RSUtils.formatPlayerListToMess(RealShopping.getPlayersInStore(args[0])));
 			}
-			sender.sendMessage(ChatColor.GREEN + "For help, type " + ChatColor.DARK_PURPLE + "/rsstores help");//LANG
+			sender.sendMessage(ChatColor.GREEN + LangPack.FORHELPTYPE + ChatColor.LIGHT_PURPLE + "/rsstores help");
 			return true;
 		} else if(isOwner || player == null){
 			if(args[1].equalsIgnoreCase("collect")){

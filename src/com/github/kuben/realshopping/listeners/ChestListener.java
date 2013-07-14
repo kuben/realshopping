@@ -37,13 +37,13 @@ public class ChestListener extends GeneralListener implements Appliable {
 			if(!selected.contains(l)){
 				if(type == Type.ADD || getShop().isChest(l)){
 					selected.add(l);
-					getPlayer().sendRawMessage(ChatColor.GREEN + "Block added to selection.");
+					getPlayer().sendRawMessage(ChatColor.GREEN + LangPack.BLOCK_ADDED_TO_SELECTION);
 					blockChange(l, id);
 				} else if(type == Type.REMOVE && !getShop().isChest(l)){
 					getPlayer().sendRawMessage(ChatColor.RED + LangPack.THEBLOCKYOUSELECTEDISNTACHEST);
 				}
 			} else {
-				getPlayer().sendRawMessage(ChatColor.RED + "Block already selected.");
+				getPlayer().sendRawMessage(ChatColor.RED + LangPack.BLOCK_ALREADY_SELECTED);
 				blockChange(l, id);
 			}
 		} else if(event.getAction() == Action.LEFT_CLICK_BLOCK){//Remove from selection
@@ -52,10 +52,10 @@ public class ChestListener extends GeneralListener implements Appliable {
 			if(selected.contains(l)){
 				selected.remove(l);
 				getPlayer().sendBlockChange(l, l.getBlock().getTypeId(), (byte)0);
-				getPlayer().sendRawMessage(ChatColor.GREEN + "Block removed from selection.");
+				getPlayer().sendRawMessage(ChatColor.GREEN + LangPack.BLOCK_REMOVED_FROM_SELECTION);
 			} else {
 				getPlayer().sendBlockChange(l, l.getBlock().getTypeId(), (byte)0);
-				getPlayer().sendRawMessage(ChatColor.RED + "Block wasn't selected.");
+				getPlayer().sendRawMessage(ChatColor.RED + LangPack.BLOCK_WASNT_SELECTED);
 			}
 		}
 	}

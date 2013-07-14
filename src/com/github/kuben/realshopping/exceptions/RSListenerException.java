@@ -15,7 +15,7 @@ public class RSListenerException extends Exception {
 		, LISTENER_MISMATCH, SIGNAL_MISMATCH, RETURN_VALUE_MISMATCH;
 	}
 	
-	public RSListenerException(Player player, Type type){
+	public RSListenerException(Player player, Type type){//No translation
 		super((type==Type.NOT_IN_SHOP) ? "Player " + player + " is not in a store.":
 			(type==Type.NOT_ALLOWED_MANAGE) ? "Player " + player + " is not allowed to manage store " + RealShopping.getPInv(player).getShop().getName():
 			(type==Type.PLAYER_ALREADY_HAS_LISTENER) ? "Player " + player + " is already in an conversation.":

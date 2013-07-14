@@ -65,7 +65,9 @@ class RSShipped extends RSPlayerCommand {
 		//Check if help was asked for
 		if(args.length > 0 && args[0].equalsIgnoreCase("help")){
 			sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rsshipped [collect [ID] | inspect ID]");
-			sender.sendMessage("Manages shipped items. Use without arguments to see what packages you have to collect. Use with the inspect argument to inspect a package, and use collect while standing on a chest to collect the items.");
+			sender.sendMessage(LangPack.RSSHIPPEDHELP + ChatColor.LIGHT_PURPLE + "inspect"
+					+ ChatColor.RESET + LangPack.RSSHIPPEDHELP2 + ChatColor.LIGHT_PURPLE + "collect"
+					+ ChatColor.RESET + LangPack.RSSHIPPEDHELP3);
 			return true;
 		}
 		return null;

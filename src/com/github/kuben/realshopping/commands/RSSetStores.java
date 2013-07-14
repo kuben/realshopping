@@ -55,7 +55,7 @@ class RSSetStores extends RSPlayerCommand {
 					    		RealShopping.updateEntrancesDb();
 					    		player.sendMessage(ChatColor.GREEN + args[1] + LangPack.WASCREATED);
 							} catch (RealShoppingException e) {
-								player.sendMessage(ChatColor.RED + "This entrance and exit pair is already used.");//LANG
+								player.sendMessage(ChatColor.RED + LangPack.THIS_ENTRANCE_AND_EXIT_PAIR_IS_ALREADY_USED);
 							}
 				    	} else {
 				    		player.sendMessage(ChatColor.RED + LangPack.YOUARENOTTHEOWNEROFTHISSTORE);
@@ -77,31 +77,33 @@ class RSSetStores extends RSPlayerCommand {
 				} else player.sendMessage(ChatColor.RED + args[1] + LangPack.WASNTFOUND);
 			}
 			return true;
-		} else player.sendMessage(ChatColor.RED + "You can't use this command inside a store.");//LANG
+		} else player.sendMessage(ChatColor.RED + LangPack.YOU_CANT_USE_THIS_COMMAND_INSIDE_A_STORE);
 		return false;
 	}
 
 	@Override
 	protected Boolean help(){
 		//Check if help was asked for
-		if(args.length == 0 || args[0].equalsIgnoreCase("help")){//LANG
+		if(args.length == 0 || args[0].equalsIgnoreCase("help")){
 			if(args.length == 0){
 				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rssetstores prompt|entrance|exit|createstore|delstore [NAME]");
-				sender.sendMessage("For help for a specific command, type: " + ChatColor.DARK_PURPLE + "/rssetstores help COMMAND");
+				sender.sendMessage(LangPack.FOR_HELP_FOR_A_SPECIFIC_COMMAND_TYPE_ + ChatColor.LIGHT_PURPLE + "/rssetstores help " + ChatColor.DARK_PURPLE + "COMMAND");
 			} else if(args.length == 1){
-				sender.sendMessage("Creates or deletes player owned stores, as well as entrances/exits to them. Use the prompt argument for a guide, or the other arguments to create stores manually. You can get more help about each of these arguments: " + ChatColor.DARK_PURPLE + "prompt, entrance, exit, createstore, delstore, delen");
+				sender.sendMessage(LangPack.RSSETSTORESHELP + LangPack.YOU_CAN_GET_MORE_HELP_ABOUT_
+						+ ChatColor.LIGHT_PURPLE + "prompt, entrance, exit, createstore, delstore, delen");
 			} else {
-				if(args[1].equals("prompt")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "prompt" + ChatColor.RESET + ". Starts an interactive prompt. All conversations can be aborted with " + ChatColor.DARK_PURPLE + "quit");
-				else if(args[1].equals("entrance")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "entrance" + ChatColor.RESET
-						+ ". Stores the location of the block you stand on to an entrance variable.");
-				else if(args[1].equals("exit")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "exit" + ChatColor.RESET
-						+ ". Stores the location of the block you stand on to an exit variable.");
-				else if(args[1].equals("createstore")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "createstore NAME" + ChatColor.RESET
-						+ ". If no store by that name exists, this command creates it with the entrance and exit set. If a store already exists (and belongs to you) then the entrance and exit pair get appended to it.");
-				else if(args[1].equals("delstore")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "delstore NAME" + ChatColor.RESET
-						+ ". Wipes the named store off the face of the earth, along with settings and prices. Use with care.");
-				else if(args[1].equals("delen")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "delen" + ChatColor.RESET
-						+ ". Deletes the entrance and exit pair which you most recently have set with entrance and exit. You can only remove matching entrances and exits.");
+				if(args[1].equals("prompt")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "prompt" + ChatColor.RESET + LangPack.STARTS_AN_INTERACTIVE_PROMPT
+						+ LangPack.ALL_CONVERSATIONS_CAN_BE_ABORTED_WITH_ + ChatColor.DARK_PURPLE + "quit");
+				else if(args[1].equals("entrance")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "entrance"
+						+ ChatColor.RESET + LangPack.RSSETENTRANCEHELP);
+				else if(args[1].equals("exit")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "exit"
+						+ ChatColor.RESET + LangPack.RSSETEXITHELP);
+				else if(args[1].equals("createstore")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "createstore NAME"
+						+ ChatColor.RESET + LangPack.RSSETCREATEHELP);
+				else if(args[1].equals("delstore")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "delstore NAME"
+						+ ChatColor.RESET + LangPack.RSSETDELSTOREHELP);
+				else if(args[1].equals("delen")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "delen"
+						+ ChatColor.RESET + LangPack.RSSETDELENHELP);
 			}
 			return true;
 		}
