@@ -195,18 +195,29 @@ class RSSetPrices extends RSCommand {
 			if(args.length == 0){
 				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rssetprices add|del|defaults|copy|clear [STORE] (ITEM_ID[:DATA][:COST][:MIN:MAX])|[COPY_FROM]");
 				sender.sendMessage(" OR /rssetprices showminmax|clearminmax|setminmax [STORE] [ITEM_ID[:DATA]:MIN:MAX]]");
-				sender.sendMessage("For help for a specific command, type: " + ChatColor.DARK_PURPLE + "/rssetchests help COMMAND");
+				sender.sendMessage(LangPack.FOR_HELP_FOR_A_SPECIFIC_COMMAND_TYPE_ + ChatColor.LIGHT_PURPLE + "/rssetprices help " + ChatColor.DARK_PURPLE + "COMMAND");
 			} else if(args.length == 1){
-				sender.sendMessage(ChatColor.GREEN + "Sets prices for all kinds of stores. When used in the targeted store, the STORE argument is not necessary. You can get more help about each of these arguments: " + ChatColor.DARK_PURPLE + "add, del, defaults, copy, clear, showminmax, clearminmax, setminmax");
+				sender.sendMessage(LangPack.RSSETHELP + ChatColor.DARK_PURPLE + "STORE" + ChatColor.RESET + LangPack.RSSETPRICESHELP2
+						+ LangPack.YOU_CAN_GET_MORE_HELP_ABOUT_ + ChatColor.LIGHT_PURPLE + "add, del, defaults, copy, clear, showminmax, clearminmax, setminmax");
 			} else {
-				if(args[1].equals("add")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "add [STORE] ITEM_ID[:DATA]:COST[:MIN:MAX]" + ChatColor.RESET + ". Sets the price for the specified item to COST. The other commands have more documentation on the MIN and MAX commands.");
-				else if(args[1].equals("del")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "del [STORE] ITEM_ID[:DATA]" + ChatColor.RESET + ". Deletes the price of an item.");
-				else if(args[1].equals("defaults")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "defaults [STORE]" + ChatColor.RESET + ". Imports the default server prices to your store. Default prices are imported with the /rsimport command.");
-				else if(args[1].equals("copy")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "copy [STORE] [COPY_FROM]" + ChatColor.RESET + ". Copies the prices from COPY_FROM to your store. If you skip the COPY_FROM argument, the lowest price for every item in every store is copied.");
-				else if(args[1].equals("clear")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "clear [STORE]" + ChatColor.RESET + ". Clears all prices from the store.");
-				else if(args[1].equals("showminmax")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "showminmax [STORE] ITEM_ID" + ChatColor.RESET + ". Shows the currently set minimal and maximal price for the item.");
-				else if(args[1].equals("clearminmax")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "clearminmax [STORE] ITEM_ID" + ChatColor.RESET + ". Clears the currently set minimal and maximal price for the item. ");
-				else if(args[1].equals("setminmax")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "setminmax [STORE] ITEM_ID:MIN:MAX" + ChatColor.RESET + ". Sets the minimal and maximal price for the item. Data values are not currently supported. ");
+				if(args[1].equals("add")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "add [STORE] ITEM_ID[:DATA]:COST[:MIN:MAX]"
+						+ ChatColor.RESET + LangPack.RSSETPRICESADDHELP + ChatColor.DARK_PURPLE + "COST" + ChatColor.RESET + LangPack.RSSETPRICESADDHELP2
+						+ ChatColor.DARK_PURPLE + "MAX" + ChatColor.RESET + LangPack.AND_ + ChatColor.DARK_PURPLE + LangPack.ARGUMENTS);
+				else if(args[1].equals("del")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "del [STORE] ITEM_ID[:DATA]"
+						+ ChatColor.RESET + LangPack.RSSETPRICESDELHELP);
+				else if(args[1].equals("defaults")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "defaults [STORE]"
+						+ ChatColor.RESET + LangPack.RSSETPRICESDEFAUTLSHELP + ChatColor.LIGHT_PURPLE + "/rsimport");
+				else if(args[1].equals("copy")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "copy [STORE] [COPY_FROM]"
+						+ ChatColor.RESET + LangPack.RSSETPRICESCOPYHELP + ChatColor.DARK_PURPLE + "COPY_FROM" + ChatColor.RESET + LangPack.RSSETPRICESCOPYHELP2
+						+ ChatColor.DARK_PURPLE + "COPY_FROM" + ChatColor.RESET + LangPack.RSSETPRICESCOPYHELP3);
+				else if(args[1].equals("clear")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "clear [STORE]"
+						+ ChatColor.RESET + LangPack.RSSETPRICESCLEARHELP);
+				else if(args[1].equals("showminmax")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "showminmax [STORE] ITEM_ID"
+						+ ChatColor.RESET + LangPack.RSSETPRICESSHOWMMHELP);
+				else if(args[1].equals("clearminmax")) sender.sendMessage(LangPack.USAGE +ChatColor.LIGHT_PURPLE + "clearminmax [STORE] ITEM_ID"
+						+ ChatColor.RESET + LangPack.RSSETPRICESCLEARMMHELP);
+				else if(args[1].equals("setminmax")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "setminmax [STORE] ITEM_ID:MIN:MAX"
+						+ ChatColor.RESET + LangPack.RSSETPRICESSETMMHELP);
 			}
 			return true;
 		}

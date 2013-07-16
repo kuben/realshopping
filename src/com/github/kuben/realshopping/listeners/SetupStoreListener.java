@@ -38,10 +38,10 @@ public class SetupStoreListener extends GeneralListener implements Appliable {
 	
 	private void message(){
 		if(entrances.size() > exits.size()){
-			if(type == Type.APPEND) getPlayer().sendRawMessage("Please select exit " + ChatColor.DARK_GREEN + "#" + (exits.size()+1));
-			else getPlayer().sendRawMessage("Please select the exit linked to entrance  " + ChatColor.DARK_GREEN + "#" + (exits.size()+1));
+			if(type == Type.APPEND) getPlayer().sendRawMessage(LangPack.PLEASE_SELECT_EXIT_ + ChatColor.DARK_GREEN + "#" + (exits.size()+1));
+			else getPlayer().sendRawMessage(LangPack.PLEASE_SELECT_THE_EXIT_LINKED_TO_ENTRANCE_ + ChatColor.DARK_GREEN + "#" + (exits.size()+1));
 		} else
-			getPlayer().sendRawMessage("Please select entrance " + ChatColor.DARK_GREEN + "#" + (entrances.size()+1));
+			getPlayer().sendRawMessage(LangPack.PLEASE_SELECT_ENTRANCE_ + ChatColor.DARK_GREEN + "#" + (entrances.size()+1));
 	}
 	
 	private void onInteract(PlayerInteractEvent event){
@@ -57,22 +57,22 @@ public class SetupStoreListener extends GeneralListener implements Appliable {
 			if(entrances.size() > exits.size()){//Add exit
 				if(type == Type.APPEND){
 					exits.add(temp);
-					getPlayer().sendRawMessage(ChatColor.GREEN + LangPack.ADDED + ChatColor.DARK_PURPLE + RSUtils.locAsString(temp) + ChatColor.RESET + " to exits list.");	
+					getPlayer().sendRawMessage(ChatColor.GREEN + LangPack.ADDED + ChatColor.DARK_PURPLE + RSUtils.locAsString(temp) + ChatColor.RESET + LangPack.TO_EXITS_LIST);
 				} else {
 					if(getShop().getCorrExit(entrances.get(entrances.size()-1)).equals(temp)){
 						exits.add(temp);
-						getPlayer().sendRawMessage(ChatColor.GREEN + LangPack.ADDED + ChatColor.DARK_PURPLE + RSUtils.locAsString(temp) + ChatColor.RESET + " to exits list.");	
-					} else getPlayer().sendRawMessage(ChatColor.DARK_PURPLE + RSUtils.locAsString(temp) + ChatColor.RED + " is not an exit to the last entrance.");
+						getPlayer().sendRawMessage(ChatColor.GREEN + LangPack.ADDED + ChatColor.DARK_PURPLE + RSUtils.locAsString(temp) + ChatColor.RESET + LangPack.TO_EXITS_LIST);
+					} else getPlayer().sendRawMessage(ChatColor.DARK_PURPLE + RSUtils.locAsString(temp) + ChatColor.RED + LangPack.IS_NOT_AN_EXIT_TO_THE_LAST_ENTRANCE);
 				}
 			} else {//Add entrance
 				if(type == Type.APPEND){
 					entrances.add(temp);
-					getPlayer().sendRawMessage(ChatColor.GREEN + LangPack.ADDED + ChatColor.DARK_PURPLE + RSUtils.locAsString(temp) + ChatColor.RESET + " to entrances list.");
+					getPlayer().sendRawMessage(ChatColor.GREEN + LangPack.ADDED + ChatColor.DARK_PURPLE + RSUtils.locAsString(temp) + ChatColor.RESET + LangPack.TO_ENTRANCES_LIST);
 				} else {
 					if(getShop().hasEntrance(temp)){
 						entrances.add(temp);
-						getPlayer().sendRawMessage(ChatColor.GREEN + LangPack.ADDED + ChatColor.DARK_PURPLE + RSUtils.locAsString(temp) + ChatColor.RESET + " to entrances list.");
-					} else getPlayer().sendRawMessage(ChatColor.DARK_PURPLE + RSUtils.locAsString(temp) + ChatColor.RED + " is not an entrance to " + getShop().getName());
+						getPlayer().sendRawMessage(ChatColor.GREEN + LangPack.ADDED + ChatColor.DARK_PURPLE + RSUtils.locAsString(temp) + ChatColor.RESET + LangPack.TO_ENTRANCES_LIST);
+					} else getPlayer().sendRawMessage(ChatColor.DARK_PURPLE + RSUtils.locAsString(temp) + ChatColor.RED + LangPack.IS_NOT_AN_ENTRANCE_TO_ + getShop().getName());
 				}
 			}
 			message();

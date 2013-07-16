@@ -114,31 +114,26 @@ class RSTpLocs extends RSPlayerCommand {
 	@Override
 	protected Boolean help(){
 		//Check if help was asked for
-		if(args.length == 0 || args[0].equalsIgnoreCase("help")){//LANG
+		if(args.length == 0 || args[0].equalsIgnoreCase("help")){
 			if(args.length == 0){
 				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rstplocs setwhitelistmode|setblacklistmode|add RADIUS|remove|highlight");
-				sender.sendMessage("For help for a specific command, type: " + ChatColor.DARK_PURPLE + "/rstplocs help COMMAND");
+				sender.sendMessage(LangPack.FOR_HELP_FOR_A_SPECIFIC_COMMAND_TYPE_ + ChatColor.LIGHT_PURPLE + "/rstplocs help " + ChatColor.DARK_PURPLE + "COMMAND");
 			} else if(args.length == 1){
-				sender.sendMessage("Makes it possible for users to teleport to certain allowed areas from a store, if they have paid for their items. Either you can whitelist some areas and ban all the others, or blacklist some and allow all other. Only make it possible to teleport to areas where there are no stores! You can get more help about each of these arguments: " + ChatColor.DARK_PURPLE + "setwhitelistmode, setblacklistmode, add, remove, highlight");
+				sender.sendMessage(LangPack.RSTPLOCSHELP + LangPack.YOU_CAN_GET_MORE_HELP_ABOUT_ + ChatColor.LIGHT_PURPLE + "setwhitelistmode, setblacklistmode, add, remove, highlight");
 			} else {
 				if(args[1].equals("setwhitelistmode")){
-					sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "setwhitelistmode" + ChatColor.RESET
-						+ ". Sets the mode used to whitelist (default). This means that listed areas are allowed to teleport to, and all others are banned.");
-					sender.sendMessage("When changing modes, areas are not deleted. They remain in the list and just go from being banned to unbanned and vice versa");
-				}
-				else if(args[1].equals("setblacklistmode")){
-					sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "setblacklistmode" + ChatColor.RESET
-						+ ". Sets the mode used to blacklist. This means that listed areas are not allowed to teleport to. Other areas are allowed.");
-					sender.sendMessage("When changing modes, areas are not deleted. They remain in the list and just go from being banned to unbanned and vice versa");
-				}
-				else if(args[1].equals("add")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "add RADIUS" + ChatColor.RESET
-						+ ". Creates a spheric area around where you are standing with the radius RADIUS. The area will be added to the white- or blacklist.");
-				else if(args[1].equals("remove")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "remove" + ChatColor.RESET
-						+ ". Deletes the area with the center on the point where you are standing. If you have trouble finding it, use the highlight option.");
+					sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "setwhitelistmode" + ChatColor.RESET + LangPack.RSTPLOCSWHITEHELP);
+					sender.sendMessage(LangPack.RSTPLOCSLISTHELP);
+				} else if(args[1].equals("setblacklistmode")){
+					sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "setblacklistmode" + ChatColor.RESET + LangPack.RSTPLOCSBLACKHELP);
+					sender.sendMessage(LangPack.RSTPLOCSLISTHELP);
+				} else if(args[1].equals("add")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "add " + ChatColor.DARK_PURPLE + "RADIUS"
+						+ ChatColor.RESET + LangPack.RSTPLOCSADDHELP + ChatColor.DARK_PURPLE + "RADIUS" + ChatColor.RESET + LangPack.RSTPLOCSADDHELP2);
+				else if(args[1].equals("remove")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "remove"
+						+ ChatColor.RESET + LangPack.RSTPLOCSDELHELP);
 				else if(args[1].equals("highlight")){
-					sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "highlight" + ChatColor.RESET
-						+ ". Changes the centers of the five nearest areas to wool blocks for five seconds and only you to see. Each wool color corresponds to a radius lenght:");
-					sender.sendMessage("White - radius is 1, Light Gray - radius is < 5, Gray - radius is < 10, Black - radius is < 15, Red - radius is < 25, Orange - radius is < 35, Yellow - radius is < 50, Lime - radius is < 75, Green - radius is < 100, Cyan - radius is < 125, Light - radius is < 150, Blue - radius is < 175, Purple - radius is < 200, Magenta - radius is < 250, Pink Wool - is < 500, Brown Wool - is 500 or more");
+					sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "highlight" + ChatColor.RESET + LangPack.RSTPLOCSHIGHHELP);
+					sender.sendMessage("White - radius is 1, Light Gray - radius is < 5, Gray - radius is < 10, Black - radius is < 15, Red - radius is < 25, Orange - radius is < 35, Yellow - radius is < 50, Lime - radius is < 75, Green - radius is < 100, Cyan - radius is < 125, Light - radius is < 150, Blue - radius is < 175, Purple - radius is < 200, Magenta - radius is < 250, Pink Wool - is < 500, Brown Wool - is 500 or more");//TODO maybe translate and color
 					/* White - radius is 1, Light Gray - radius is < 5
 					 * , Gray - radius is < 10
 					 * , Black - radius is < 15

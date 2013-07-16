@@ -1,20 +1,4 @@
-Changes since v0.44
+Changes since v0.50
 
-Besides a rewrite of a lot of stuff, RealShopping 0.50 comes with a few new, but important features. 
-The smaller improvements which I originally had planned for 0.50 are postponed to 0.51, but here's 
-what you get in this version:
-
-* Added search option to /rsprices. Instead of browsing through several pages of prices you can now 
-search for the item you need.
-* Added aliases - Six hundred of them! That's more than enough for every item ID and data value 
-combination. Instead of typing item IDs when executing commands you can write the name of the item, 
-and the plugin will recongnize it. For a complete list and more detailed instructions, see the 
-plugin page.
-* Added interactive prompts for /rsset, /rssetstores and /rssetchests. This simplifies creating 
-stores (especially ones with many entrances) and managing self-refilling chests. In case something 
-goes wrong, all prompts can be aborted with quit.
-* Added free manage mode to the /rssetchests prompt. Open a chest, put items in, and close it. The 
-chest contents will be permanently updated.
-* Added the multiplication sign to additems and delitems in /rssetchests. If you want to add the same 
-item stack several times in a row to a chest, you can type it once and put a multiplication sign 
-followed by a number behind. Examples are on the plugin page.
+* Updated LangPack in code.
+* Updated Swedish and English .xml files.

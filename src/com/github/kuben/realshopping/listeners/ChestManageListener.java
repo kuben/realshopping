@@ -36,10 +36,10 @@ public class ChestManageListener extends GeneralListener implements SignalReceiv
 				if (!selected.contains(l)){
 					selected.add(l);
 					blockChange(l, Material.GOLD_BLOCK.getId());
-					getPlayer().sendRawMessage(ChatColor.GREEN + "Block added to selection.");
+					getPlayer().sendRawMessage(ChatColor.GREEN + LangPack.BLOCK_ADDED_TO_SELECTION);
 				} else {
 					blockChange(l, Material.GOLD_BLOCK.getId());
-					getPlayer().sendRawMessage(ChatColor.RED + "Block already selected.");
+					getPlayer().sendRawMessage(ChatColor.RED + LangPack.BLOCK_ALREADY_SELECTED);
 				}
 			} else getPlayer().sendRawMessage(ChatColor.RED + LangPack.THEBLOCKYOUSELECTEDISNTACHEST);
 		}

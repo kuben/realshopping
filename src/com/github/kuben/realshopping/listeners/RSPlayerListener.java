@@ -72,7 +72,8 @@ public class RSPlayerListener implements Listener {
 		Player player = event.getPlayer();
 		if(PromptMaster.isConversing(player) || hasConversationListener(player)){
 			event.setCancelled(true);
-			player.sendRawMessage(ChatColor.RED + "You can't teleport while in a conversation.");
+			player.sendRawMessage(ChatColor.DARK_PURPLE + "[RealShopping] "
+			+ ChatColor.RED + LangPack.YOU_CANT_TELEPORT_WHILE_IN_A_CONVERSATION);
 		} else if(RealShopping.hasPInv(player) && event.getCause() != TeleportCause.UNKNOWN){
 			if(!RealShopping.getPInv(player).hasPaid()){
 				event.setCancelled(true);

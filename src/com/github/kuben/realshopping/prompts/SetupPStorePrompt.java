@@ -13,7 +13,7 @@ import com.github.kuben.realshopping.listeners.SetupStoreListener;
 import com.github.kuben.realshopping.listeners.SetupStoreListener.Type;
 import com.github.kuben.realshopping.listeners.RSPlayerListener;
 
-public class SetupPStorePrompt implements Prompt {//LANG
+public class SetupPStorePrompt implements Prompt {
 	 
     public String getPromptText(ConversationContext context) {
     	try {
@@ -23,32 +23,32 @@ public class SetupPStorePrompt implements Prompt {//LANG
         	if(ID.equals("first")){
             	String out = "";
         		if(player.hasPermission("realshopping.rssetstores")){
-        			out = "This prompt will aid you in creating, extending or deleting your own player store. \n To continue, type any of the purple keywords.";
-        			context.setSessionData("ID", "second");//LANG
+        			out = LangPack.THIS_PROMPT_WILL_AID_YOU_IN__PLAYER_STORE_ + "\n" + LangPack.TO_CONTINUE_TYPE_ANY_OF_THE_PURPLE_KEYWORDS;
+        			context.setSessionData("ID", "second");
         		} else {
         			context.setSessionData("ID", "timetoquit");
-        			out = ChatColor.RED + "You don't have the right permissions to do this.";
+        			out = ChatColor.RED + LangPack.YOU_DONT_HAVE_THE_RIGHT_PERMISSIONS_TO_DO_THIS;
         		}
         		return out;
         	} else if(ID.equals("second")){
         		context.setSessionData("ID", "third");
-        		return "What do you want to do, " + ChatColor.LIGHT_PURPLE + "create" + ChatColor.RESET + " a new store "
+        		return LangPack.WHAT_DO_YOU_WANT_TO_DO_ + ChatColor.LIGHT_PURPLE + "create" + ChatColor.RESET + LangPack.A_NEW_STORE_
         				+ ChatColor.LIGHT_PURPLE + "append" + ChatColor.RESET + "/" + ChatColor.LIGHT_PURPLE + "delete"
-        				+ ChatColor.RESET + " entrances and exits or "
-        				+ ChatColor.LIGHT_PURPLE + "wipeout" + ChatColor.RESET + " an existing store?";
+        				+ ChatColor.RESET + LangPack.ENTRANCES_AND_EXITS_OR_
+        				+ ChatColor.LIGHT_PURPLE + "wipeout" + ChatColor.RESET + LangPack.AN_EXISTING_STORE;
         	} else if(ID.equals("third")){
            		if(in.equalsIgnoreCase("create")){
            			context.setSessionData("ID", "create_name");
-           			return "You have chosen to create a new store. What do you want to name it?";
+           			return LangPack.YOU_HAVE_CHOSEN_TO_CREATE_A_NEW_STORE_;
            		} else if(in.equalsIgnoreCase("append")){
            			context.setSessionData("ID", "append_name");
-           			return "You have chosen to append entrances and exits to an existing store. Type the name of the store you want to edit.";
+           			return LangPack.YOU_HAVE_CHOSEN_TO_APPEND_NEW_EE_TO_;
            		} else if(in.equalsIgnoreCase("delete")){
            			context.setSessionData("ID", "delete_name");
-           			return "You have chosen to delete entrances and exits from an existing store. Type the name of the store you want to edit.";
+           			return LangPack.YOU_HAVE_CHOSEN_TO_DELETE_EE_FROM_;
            		} else if(in.equalsIgnoreCase("wipeout")){
            			context.setSessionData("ID", "wipeout_name");
-            		return "You have chosen to wipe out a store. Type the name of the store you want to delete.";
+            		return LangPack.YOU_HAVE_CHOSEN_TO_WIPE_OUT_A_STORE_;
             	}	
         	}
         	
@@ -66,10 +66,10 @@ public class SetupPStorePrompt implements Prompt {//LANG
             			context.setSessionData("shop", in);
             			context.setSessionData("ID", "create_second");
             			new SetupStoreListener(player, Type.APPEND, in, false);
-            			return "The name " + ChatColor.GREEN + in + ChatColor.RESET + " is avaiable.";
+            			return LangPack.THE_NAME_ + ChatColor.GREEN + in + ChatColor.RESET + LangPack.IS_AVAILABLE;
             		} else {
             			context.setSessionData("ID", "second");
-            			return ChatColor.RED + "That name is already taken.";
+            			return ChatColor.RED + LangPack.THAT_NAME_IS_ALREADY_TAKEN;
             		}	
         		} catch(RSListenerException e){
         			if(e.getType() == RSListenerException.Type.PLAYER_ALREADY_HAS_LISTENER){
@@ -77,25 +77,25 @@ public class SetupPStorePrompt implements Prompt {//LANG
         				return ChatColor.RED + "Error: A listener is already active for you.";
         			} else if(e.getType() == RSListenerException.Type.IN_SHOP){
         				context.setSessionData("ID", "timetoquit");
-        				return ChatColor.RED + "You can't use this inside a store.";
+        				return ChatColor.RED + LangPack.YOU_CANT_USE_THIS_INSIDE_A_STORE;
         			} else e.printStackTrace();
         		}
         	} else if(ID.equals("create_second") && context.getSessionData("shop") != null){
         		context.setSessionData("ID", "create_third");
-    			return "Right-click a block to select it as entrance/exit, or left-click in the air to use your coordinates."
-    				+ " Type " + ChatColor.LIGHT_PURPLE + "done" + ChatColor.RESET + " when done, or "
-    				+ ChatColor.LIGHT_PURPLE + "cancel" + ChatColor.RESET + " to start over (with the entrances).";
+    			return LangPack.RIGHTCLICK_A_BLOCK_TO_SELECT_IT_AS_EE_
+    				+ LangPack.TYPE + ChatColor.LIGHT_PURPLE + "done" + ChatColor.RESET + LangPack.WHEN_DONE_OR_
+    				+ ChatColor.LIGHT_PURPLE + "cancel" + ChatColor.RESET + LangPack.TO_START_OVER_;
         	} else if(ID.equals("create_third") && context.getSessionData("shop") != null){
         		if(in.equalsIgnoreCase("done")){
         			int res = RSPlayerListener.finishConversationListener(player);
         			context.setSessionData("ID", "second");
-        			if(res > 0) return "Created store " + context.getSessionData("shop") + " with " + res + " entrance/exit pairs.";
-        			else return ChatColor.RED + "No entrances/exits selected.";
+        			if(res > 0) return LangPack.CREATED_STORE_ + context.getSessionData("shop") + LangPack.WITH + res + LangPack.EE_PAIRS;
+        			else return ChatColor.RED + LangPack.NO_EE_SELECTED;
         		} else if(in.equalsIgnoreCase("cancel")){
         			RSPlayerListener.killConversationListener(player);
         			new SetupStoreListener(player, Type.APPEND, (String)context.getSessionData("shop"), false);
         			context.setSessionData("ID", "create_second");
-        			return "Action aborted.";
+        			return LangPack.ACTION_ABORTED;
         		}
         	}
         	
@@ -111,7 +111,7 @@ public class SetupPStorePrompt implements Prompt {//LANG
                 			context.setSessionData("shop", in);
                 			context.setSessionData("ID", "append_second");
                 			new SetupStoreListener(player, Type.APPEND, in, false);
-                			return "You have chosen to append new entrances and exits to " + in + ".";
+                			return LangPack.YOU_HAVE_CHOSEN_TO_APPEND_NEW_EE_TO_ + in + ".";
             			} else rtrn = ChatColor.RED + LangPack.YOUARENOTTHEOWNEROFTHISSTORE;
             		} else rtrn = ChatColor.RED + LangPack.STORE + in + LangPack.DOESNTEXIST;
         			context.setSessionData("ID", "second");
@@ -122,24 +122,24 @@ public class SetupPStorePrompt implements Prompt {//LANG
         				return ChatColor.RED + "Error: A listener is already active for you.";
         			} else if(e.getType() == RSListenerException.Type.IN_SHOP){
         				context.setSessionData("ID", "timetoquit");
-        				return ChatColor.RED + "You can't use this inside a store.";
+        				return ChatColor.RED + LangPack.YOU_CANT_USE_THIS_INSIDE_A_STORE;
         			} else e.printStackTrace();
         		}
         	} else if(ID.equals("append_second") && context.getSessionData("shop") != null){
         		context.setSessionData("ID", "append_third");
-    			return "Right-click a block to select it as entrance/exit, or left-click in the air to use your coordinates."
-    				+ " Type " + ChatColor.LIGHT_PURPLE + "done" + ChatColor.RESET + " when done, or "
-    				+ ChatColor.LIGHT_PURPLE + "cancel" + ChatColor.RESET + " to cancel.";
+    			return LangPack.RIGHTCLICK_A_BLOCK_TO_SELECT_IT_AS_EE_
+    				+ LangPack.TYPE + ChatColor.LIGHT_PURPLE + "done" + ChatColor.RESET + LangPack.WHEN_DONE_OR_
+    				+ ChatColor.LIGHT_PURPLE + "cancel" + ChatColor.RESET + LangPack.TOCANCEL;
         	} else if(ID.equals("append_third") && context.getSessionData("shop") != null){
         		if(in.equalsIgnoreCase("done")){
         			int res = RSPlayerListener.finishConversationListener(player);
         			context.setSessionData("ID", "second");
-        			if(res > 0) return "Appended " + res + " entrance/exit pairs to store "  + context.getSessionData("shop") + ".";
-        			else return ChatColor.RED + "No entrances/exits selected.";
+        			if(res > 0) return LangPack.APPENDED_ + res + LangPack.EE_PAIRS_TO_STORE_  + context.getSessionData("shop") + ".";
+        			else return ChatColor.RED + LangPack.NO_EE_SELECTED;
         		} else if(in.equalsIgnoreCase("cancel")){
         			RSPlayerListener.killConversationListener(player);
         			context.setSessionData("ID", "second");
-        			return "Action aborted.";
+        			return LangPack.ACTION_ABORTED;
         		}
         	}
         	
@@ -155,7 +155,7 @@ public class SetupPStorePrompt implements Prompt {//LANG
                 			context.setSessionData("shop", in);
                 			context.setSessionData("ID", "delete_second");
                 			new SetupStoreListener(player, Type.DELETE, in, false);
-                			return "You have chosen to delete entrances and exits from " + in + ".";
+                			return LangPack.YOU_HAVE_CHOSEN_TO_DELETE_EE_FROM_ + in + ".";
             			} else rtrn = ChatColor.RED + LangPack.YOUARENOTTHEOWNEROFTHISSTORE;
             		} else rtrn = ChatColor.RED + LangPack.STORE + in + LangPack.DOESNTEXIST;
         			context.setSessionData("ID", "second");
@@ -166,24 +166,24 @@ public class SetupPStorePrompt implements Prompt {//LANG
         				return ChatColor.RED + "Error: A listener is already active for you.";
         			} else if(e.getType() == RSListenerException.Type.IN_SHOP){
         				context.setSessionData("ID", "timetoquit");
-        				return ChatColor.RED + "You can't use this inside a store.";
+        				return ChatColor.RED + LangPack.YOU_CANT_USE_THIS_INSIDE_A_STORE;
         			} else e.printStackTrace();
         		}
         	} else if(ID.equals("delete_second") && context.getSessionData("shop") != null){
         		context.setSessionData("ID", "delete_third");
-    			return "Right-click a block to select it as entrance/exit, or left-click in the air to use your coordinates."
-        			+ " Type " + ChatColor.LIGHT_PURPLE + "done" + ChatColor.RESET + " when done, or "
-    				+ ChatColor.LIGHT_PURPLE + "cancel" + ChatColor.RESET + " to cancel.";
+    			return LangPack.RIGHTCLICK_A_BLOCK_TO_SELECT_IT_AS_EE_
+        			+ " Type " + ChatColor.LIGHT_PURPLE + "done" + ChatColor.RESET + LangPack.WHEN_DONE_OR_
+    				+ ChatColor.LIGHT_PURPLE + "cancel" + ChatColor.RESET + LangPack.TOCANCEL;
         	} else if(ID.equals("delete_third") && context.getSessionData("shop") != null){
         		if(in.equalsIgnoreCase("done")){
         			int res = RSPlayerListener.finishConversationListener(player);
         			context.setSessionData("ID", "second");
-        			if(res > 0) return "Deleted " + res + " entrance/exit pairs from store "  + context.getSessionData("shop") + ".";
-        			else return ChatColor.RED + "No entrances/exits selected.";
+        			if(res > 0) return LangPack.DELETED_ + res + LangPack.EE_PAIRS_FROM_STORE_ + context.getSessionData("shop") + ".";
+        			else return ChatColor.RED + LangPack.NO_EE_SELECTED;
         		} else if(in.equalsIgnoreCase("cancel")){
         			RSPlayerListener.killConversationListener(player);
         			context.setSessionData("ID", "second");
-        			return "Action aborted.";
+        			return LangPack.ACTION_ABORTED;
         		}
         	}
         	
@@ -197,15 +197,15 @@ public class SetupPStorePrompt implements Prompt {//LANG
         			if(RealShopping.shopMap.get(in).getOwner().equals(player.getName())){
             			context.setSessionData("shop", in);
             			context.setSessionData("ID", "wipeout_second");
-            			return "Do you really want to delete " + ChatColor.DARK_AQUA + in + ChatColor.RESET
-            					+ " and all its entrances, chests and prices.";
+            			return LangPack.DO_YOU_REALLY_WANT_TO_DELETE_ + ChatColor.DARK_AQUA + in + ChatColor.RESET
+            					+ LangPack.AND_ALL_ITS_;
         			} else rtrn = ChatColor.RED + LangPack.YOUARENOTTHEOWNEROFTHISSTORE;
         		} else rtrn = ChatColor.RED + LangPack.STORE + in + LangPack.DOESNTEXIST;
     			context.setSessionData("ID", "second");
     			return rtrn;
         	} else if(ID.equals("wipeout_second") && context.getSessionData("shop") != null){
         		context.setSessionData("ID", "wipeout_confirm");
-    			return ChatColor.LIGHT_PURPLE + "yes" + ChatColor.RESET + " or " + ChatColor.LIGHT_PURPLE + "no";
+    			return ChatColor.LIGHT_PURPLE + "yes" + ChatColor.RESET + LangPack.OR_ + ChatColor.LIGHT_PURPLE + "no";
         	} else if(ID.equals("wipeout_confirm") && context.getSessionData("shop") != null){
         		if(in.equalsIgnoreCase("yes")){
         			String rtrn = "";
@@ -214,7 +214,7 @@ public class SetupPStorePrompt implements Prompt {//LANG
         				if(RealShopping.getPlayersInStore(tempShop.getName())[0].equals("")){
         					tempShop.clearEntrancesExits();
         					RealShopping.shopMap.remove(tempShop.getName());
-        					rtrn = ChatColor.GREEN + "Deleted " + ChatColor.DARK_AQUA + context.getSessionData("shop") + ChatColor.GREEN + " .";
+        					rtrn = ChatColor.GREEN + LangPack.DELETED_ + ChatColor.DARK_AQUA + context.getSessionData("shop") + ChatColor.GREEN + " .";
         					RealShopping.updateEntrancesDb();
         				} else rtrn = ChatColor.RED + LangPack.STORENOTEMPTY;
         			} else rtrn = ChatColor.DARK_RED + "Error #2001";
@@ -228,7 +228,7 @@ public class SetupPStorePrompt implements Prompt {//LANG
         	
         	else if(ID.equals("rollback")){
          		context.setSessionData("ID", context.getSessionData("BACKTO"));
-         		return ChatColor.DARK_PURPLE + "" + context.getSessionData("COM") + ChatColor.RED + " is not an accepted argument.";
+         		return ChatColor.LIGHT_PURPLE + "" + context.getSessionData("COM") + ChatColor.RED + LangPack.IS_NOT_AN_ACCEPTED_ARGUMENT;
          	}
         	
         	context.setSessionData("ID", "timetoquit");

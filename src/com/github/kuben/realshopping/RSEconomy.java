@@ -223,9 +223,9 @@ class StatUpdater extends Thread {
 									else if(Config.getStatTimespan() == 2592000) sinceStr =  LangPack.LASTMONTH;
 									else sinceStr = new Date(Config.getStatTimespan()).toString();
 									if(diff >= tempShop.getChangeTreshold()) RealShopping.sendNotification(tempShop.getOwner(), LangPack.YOURSTORE + s + LangPack.ISNOWTHE
-									+ RSUtils.formatNum(provMap.get(s).get(i)) + " (" + ChatColor.GREEN + "+" + diff + ChatColor.RESET + LangPack.SINCE+ sinceStr +LangPack.PROVIDEROF + Material.getMaterial(i));
+									+ RSUtils.formatNum(provMap.get(s).get(i)) + " (" + ChatColor.GREEN + "+" + diff + ChatColor.RESET + LangPack.SINCE+ sinceStr + ")" + LangPack.PROVIDEROF + Material.getMaterial(i));
 									else if(diff <= tempShop.getChangeTreshold()*-1) RealShopping.sendNotification(tempShop.getOwner(), LangPack.YOURSTORE + s + LangPack.ISNOWTHE
-									+ RSUtils.formatNum(provMap.get(s).get(i)) + " (" + ChatColor.RED + diff + ChatColor.RESET + LangPack.SINCE + sinceStr +LangPack.PROVIDEROF + Material.getMaterial(i));
+									+ RSUtils.formatNum(provMap.get(s).get(i)) + " (" + ChatColor.RED + diff + ChatColor.RESET + LangPack.SINCE + sinceStr + ")" + LangPack.PROVIDEROF + Material.getMaterial(i));
 									if(tempShop.getNotifyChanges() == 2 && diff != 0){
 										if(tempShop.hasPrice(new Price(i))){
 											int newPrice = (int) (tempShop.getPrice(new Price(i)));
@@ -244,8 +244,8 @@ class StatUpdater extends Thread {
 										}
 									}
 								} else {
-									RealShopping.sendNotification(tempShop.getOwner(), LangPack.YOURSTORE + s + LangPack.WENTFROMBEINGTHE + oldProvMap.get(s).get(i)
-											+ LangPack.THPROVIDEROF + Material.getMaterial(i) + LangPack.TONOTSELLINGANY);
+									RealShopping.sendNotification(tempShop.getOwner(), LangPack.YOURSTORE + s + LangPack.WENTFROMBEINGTHE
+									+ RSUtils.formatNum(oldProvMap.get(s).get(i)) + LangPack.PROVIDEROF + Material.getMaterial(i) + LangPack.TONOTSELLINGANY);
 								}
 							}
 						}

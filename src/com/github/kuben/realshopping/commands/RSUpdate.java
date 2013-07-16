@@ -80,17 +80,18 @@ class RSUpdate extends RSCommand {
 	@Override
 	protected Boolean help(){
 		//Check if help was asked for
-		if(args.length == 0 || args[0].equalsIgnoreCase("help")){//LANG
+		if(args.length == 0 || args[0].equalsIgnoreCase("help")){
 			if(args.length == 0){
 				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rsupdate update|info");
-				sender.sendMessage("For help for a specific command, type: " + ChatColor.DARK_PURPLE + "/rsupdate help COMMAND");
+				sender.sendMessage(LangPack.FOR_HELP_FOR_A_SPECIFIC_COMMAND_TYPE_ + ChatColor.LIGHT_PURPLE
+						+ "/rsupdate help " + ChatColor.DARK_PURPLE + "COMMAND");
 			} else if(args.length == 1){
-				sender.sendMessage("Updates RealShopping to the latest version, if such permissions have been given you in the config. You can get more help about each of these arguments: " + ChatColor.DARK_PURPLE + "update, info");
+				sender.sendMessage(LangPack.RSUPDATEHELP + ChatColor.LIGHT_PURPLE + "update, info");
 			} else {
-				if(args[1].equals("update")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "update" + ChatColor.RESET
-						+ ". Updates to the newest version. You need to reload the server after this command.");
-				else if(args[1].equals("info")) sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "info" + ChatColor.RESET
-						+ ". Prints the description of the newest version of RealShopping.");
+				if(args[1].equals("update")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "update"
+						+ ChatColor.RESET + LangPack.RSUPDATEUPDATEHELP);
+				else if(args[1].equals("info")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "info"
+						+ ChatColor.RESET + LangPack.RSUPDATEINFOHELP + "RealShopping.");
 			}
 			return true;
 		}

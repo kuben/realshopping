@@ -55,7 +55,9 @@ class RSProtect extends RSPlayerCommand {
 		//Check if help was asked for
 		if(args.length == 0 || args[0].equalsIgnoreCase("help")){
 			sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rsprotect add|remove");
-			sender.sendMessage(ChatColor.GREEN + "Makes chests protected, so they cannot be opened from outside the store. Use when neccecary. Add makes a chest protected, and remove unmakes it.");
+			sender.sendMessage(LangPack.RSPROTECTHELP + ChatColor.LIGHT_PURPLE + "add"
+					+ ChatColor.RESET + LangPack.RSPROTECTHELP2 + ChatColor.LIGHT_PURPLE + "remove"
+					+ ChatColor.RESET + LangPack.RSPROTECTHELP3);
 			return true;
 		}
 		return null;

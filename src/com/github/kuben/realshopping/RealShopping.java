@@ -180,7 +180,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     						newUpdate = getUpdater().getLatestVersionString() + LangPack.OFRE_UPDATECOMMAND;
 	    			else
     						newUpdate = getUpdater().getLatestVersionString()
-    						+ LangPack.OFRE_UPDATEINFO;
+    						+ LangPack.OFRE_UPDATEINFO + ChatColor.LIGHT_PURPLE + "/rsupdate info";
 	    			log.info(newUpdate);
 				}
 			}

@@ -16,6 +16,7 @@ import org.bukkit.inventory.Inventory;
 
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.exceptions.RSListenerException;
+import com.github.kuben.realshopping.LangPack;
 
 public class ChestFreeManageListener extends GeneralListener implements Appliable {
 	
@@ -31,7 +32,7 @@ public class ChestFreeManageListener extends GeneralListener implements Appliabl
 			Location l = event.getClickedBlock().getLocation();
 			if(toUpdate.containsKey(l)){
 				toUpdate.remove(l);
-				event.getPlayer().sendRawMessage(ChatColor.GREEN + "Changes undone.");
+				event.getPlayer().sendRawMessage(ChatColor.GREEN + LangPack.CHANGES_UNDONE);
 			}
 		}
 	}

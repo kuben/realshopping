@@ -562,8 +562,8 @@ public class Shop {//TODO add load/save interface
 						return false;
 					}
 				} else {
-					player.sendRawMessage(ChatColor.RED + "You can't do this while in a conversation. ");
-					player.sendRawMessage("All conversations can be aborted with " + ChatColor.DARK_PURPLE + "quit");//LANG
+					player.sendRawMessage(ChatColor.RED + LangPack.YOU_CANT_DO_THIS_WHILE_IN_A_CONVERSATION);
+					player.sendRawMessage(LangPack.ALL_CONVERSATIONS_CAN_BE_ABORTED_WITH_ + ChatColor.DARK_PURPLE + "quit");
 					return false;
 				}
 			} else {
@@ -618,8 +618,8 @@ public class Shop {//TODO add load/save interface
 					return false;
 				}
 			} else {
-				player.sendRawMessage(ChatColor.RED + "You can't do this while in a conversation. ");
-				player.sendRawMessage("All conversations can be aborted with " + ChatColor.DARK_PURPLE + "quit");//LANG
+				player.sendRawMessage(ChatColor.RED + LangPack.YOU_CANT_DO_THIS_WHILE_IN_A_CONVERSATION);
+				player.sendRawMessage(LangPack.ALL_CONVERSATIONS_CAN_BE_ABORTED_WITH_ + ChatColor.DARK_PURPLE + "quit");
 				return false;
 			}
 		} else {

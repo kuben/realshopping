@@ -80,8 +80,8 @@ public class ImportPrompt extends ValidatingPrompt {
         				else chosen = Plist[num -1 - Mlist.length].getPath();
         				context.setSessionData("file", chosen);
     				    context.setSessionData("final", true);
-        				return ChatColor.GREEN + "Chosen file " + chosen + ". "
-        						+ ChatColor.WHITE + "Type " + ChatColor.LIGHT_PURPLE + "u" + ChatColor.WHITE + LangPack.TOIMPORT_USERDEFINED_ +
+        				return ChatColor.GREEN + LangPack.CHOSENFILE + chosen + ". "
+        						+ ChatColor.WHITE + LangPack.TYPE + ChatColor.LIGHT_PURPLE + "u" + ChatColor.WHITE + LangPack.TOIMPORT_USERDEFINED_ +
         						ChatColor.LIGHT_PURPLE + "p" + ChatColor.WHITE + LangPack.TOIMPORT_PROPOSITION_;
         			} else return LangPack.WRONGFILECHOSEN;
         		}

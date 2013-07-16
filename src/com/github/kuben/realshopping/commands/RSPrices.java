@@ -45,7 +45,7 @@ class RSPrices extends RSCommand {
 					}
 				} else sender.sendMessage(ChatColor.RED + LangPack.YOUHAVETOUSETHESTOREARGUMENTWHENEXECUTINGTHISCOMMANDFROMCONSOLE);
 			} else if(args[0].equalsIgnoreCase("search")){
-				sender.sendMessage("You have to search for a specific item.");
+				sender.sendMessage(ChatColor.RED + LangPack.YOU_HAVE_TO_SEARCH_FOR_A_SPECIFIC_ITEM);
 				return false;
 			} else {
 				shop = args[0];
@@ -109,7 +109,12 @@ class RSPrices extends RSCommand {
 			}
 		}
 		if(noMatches){
+<<<<<<< HEAD
 			sender.sendMessage(ChatColor.RED + "No matches for " + ChatColor.DARK_RED + price.formattedString());
+=======
+			Material m = Material.getMaterial(price.getType());
+			sender.sendMessage(ChatColor.RED + LangPack.NO_MATCHES_FOR_ + ChatColor.DARK_RED + (m == null?price.getType():m));
+>>>>>>> 808839293a2f90729b643926818236567d3df7ce
 		}
 		return true;
 	}
@@ -117,10 +122,11 @@ class RSPrices extends RSCommand {
 	@Override
 	protected Boolean help(){
 		//Check if help was asked for
-		if(args.length > 0 && args[0].equalsIgnoreCase("help")){//LANG
+		if(args.length > 0 && args[0].equalsIgnoreCase("help")){
 			sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rsprices [STORE] [PAGE|search ITEM]");
-			sender.sendMessage("Displays a list of prices in a store. The STORE argument is optional when inside a store, and PAGE is only needed when not displaying the first page.");
-			sender.sendMessage("Type search followed by the ID of an item to look for all prices of it.");
+			sender.sendMessage(LangPack.RSPRICESHELP + ChatColor.DARK_PURPLE + "STORE"
+					+ ChatColor.RESET + LangPack.RSPRICESHELP2 + ChatColor.LIGHT_PURPLE + "PAGE"
+					+ ChatColor.RESET + LangPack.RSPRICESHELP3);
 			return true;
 		}
 		return null;
