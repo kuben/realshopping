@@ -50,12 +50,12 @@ public class PromptMaster {
 	}
 	public static void abandonAllConversations(){//Used by onDisable()
 		if(!convs.isEmpty()){
-			RealShopping.log(LangPack.ABANDONING_CONVERSATIONS);
+			RealShopping.loginfo(LangPack.ABANDONING_CONVERSATIONS);
 			for(Player p:convs.keySet()){
 				convs.get(p).abandon();
 			}
 			convs.clear();
-			RealShopping.log(LangPack.CONVERSATIONS_ABANDONED);
+			RealShopping.loginfo(LangPack.CONVERSATIONS_ABANDONED);
 		}
 	}
 	

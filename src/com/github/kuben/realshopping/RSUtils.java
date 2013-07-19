@@ -13,7 +13,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.StorageMinecart;
+import org.bukkit.entity.minecart.StorageMinecart;
 import org.bukkit.inventory.ItemStack;
 
 import org.bukkit.inventory.Inventory;
@@ -119,14 +119,22 @@ public class RSUtils {
 	 */
 	public static Object[] pullPriceCostMinMax(String str, Player ply){//No commas on this one
                 String s[] = parseAliases(str).split(":");
-		Price p = null;
+		String desc = null;
+                Price p = null;
 		Integer i[] = null;
-                
-                if(s.length > 3) //Has minmax
-			i = new Integer[]{(int)(Float.parseFloat(s[s.length-3])*100), (int)(Float.parseFloat(s[s.length-2])*100), (int)(Float.parseFloat(s[s.length-1])*100)};
-                else if(s.length > 1)
-			i = new Integer[]{(int)(Float.parseFloat(s[s.length-1])*100)};
-                else i = new Integer[]{-1};
+                switch(s.length){
+                    case 5:
+                        desc = s[5];
+                    case 4:
+                        i = new Integer[]{(int)(Float.parseFloat(s[s.length-3])*100), (int)(Float.parseFloat(s[s.length-2])*100), (int)(Float.parseFloat(s[s.length-1])*100)};
+                        break;
+                    case 2:
+                        i = new Integer[]{(int)(Float.parseFloat(s[s.length-1])*100)};
+                        break;
+                    default:
+                        i = new Integer[]{-1};
+                        break;
+                }
                 
                 int id = Integer.parseInt(s[0]);
                 byte data = 0;
@@ -140,6 +148,7 @@ public class RSUtils {
 		if(s.length > 2)
                     data = Byte.parseByte(s[1]);
                 p = new Price(id, data);
+                p.setDescription(desc);
                 return new Object[]{p, i};
 	}
 	

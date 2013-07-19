@@ -20,7 +20,6 @@
 package com.github.kuben.realshopping;
 
 import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -31,17 +30,7 @@ public final class Price {
 	private int type;
 	private byte data;
         private int metahash;
-        private String display_name;
-	
-//        public Price(ItemMeta meta, int type) {
-//                this(meta,type,Byte.parseByte("-1"));
-//        }
-//        
-//        public Price(ItemMeta meta, int type, byte data) {
-//                this(type,data);
-//                this.metahash = meta.hashCode();
-//
-//        }
+        private String description;
         
 	public Price(int type){
             this(type,Byte.parseByte("0"));
@@ -50,26 +39,32 @@ public final class Price {
 	public Price(int type, byte data){
             this(new MaterialData(type, data).toItemStack());
 	}
-        public Price(int type, byte data, String displayname, int metahash){
+        public Price(int type, byte data, int metahash){
             this.type = type;
             this.data = data;
-            this.display_name = displayname;
             this.metahash = metahash;
+            this.description = null;
         }
         
         public Price(ItemStack itm) {
-            this(itm.getTypeId(),itm.getData().getData(),null,0);
+            this(itm.getTypeId(),itm.getData().getData(),0);
             if(itm.hasItemMeta()){
                 ItemMeta meta = itm.getItemMeta();
-                if(this.type == Material.WRITTEN_BOOK.getId()) this.display_name = ((BookMeta)meta).getTitle();
                 this.metahash = meta.hashCode();
-                if(meta.hasDisplayName()) this.display_name = meta.getDisplayName();
             }
         }
-        @Deprecated
+        /**
+         * Constructs a price object from a string.
+         * The string must be formatted as follows:
+         * ID:data:metahash:description
+         * @param s A string representing price object
+         */
 	public Price(String s){
-		this.type = Integer.parseInt(s.split(":")[0]);
-		this.data = s.split(":").length==1?-1:Byte.parseByte(s.split(":")[1]);
+            String[] tmp = s.split(":");
+            this.type = Integer.parseInt(tmp[0]);
+            this.data = tmp.length==1?-1:Byte.parseByte(tmp[1]);
+            this.metahash = Integer.parseInt(tmp[2]);
+            this.description = tmp[3];
 	}
         
         public ItemStack toItemStack(){
@@ -77,12 +72,16 @@ public final class Price {
 		return tempIS;
 	}
         
-        public String getDisplayName(){
-            return display_name;
+        public String getDescription(){
+            return description;
         }
         
-        public boolean hasDisplayName(){
-            return display_name != null;
+        public void setDescription(String s){
+            this.description = s;
+        }
+        
+        public boolean hasDescription(){
+            return description != null;
         }
         
         public int getType() {
@@ -105,21 +104,21 @@ public final class Price {
          */
         public String formattedString(){
             String s = type+(data > 0?":"+data:"")+" "+Material.getMaterial(type).toString();
-            s += (display_name != null ? " - "+display_name:"");
+            s += (description != null ? " - "+description:"");
             return s;
         }
         public String toString(int amount) {
             String s = "";
                 s += getType() + ":" + amount + (getData() > 0?":"+getData():"");
-                if(hasDisplayName()){
-                    s+="[Name:"+this.display_name+"]";
+                if(hasDescription()){
+                    s+=":"+this.description;
                 }
                 return s;
         }
         
 	@Override
 	public String toString() {
-                return type+":"+data;
+            return (hasDescription()?type+":"+data+":"+metahash+":"+description:type+":"+data+":"+metahash);
 	}
 	
 	@Override

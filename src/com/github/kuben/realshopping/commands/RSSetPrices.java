@@ -29,8 +29,6 @@ class RSSetPrices extends RSCommand {
 			Integer[] i = (Integer[])o[1];
 			String dString = p.getData()>-1?"("+p.getData()+")":"";
                         String name = Material.getMaterial(p.getType()).toString();
-                        if(p.hasDisplayName())
-                                name = p.getDisplayName();
                         if(i[0] < 0 ) return false;
 			shop.setPrice(p, i[0]);
                         sender.sendMessage(ChatColor.GREEN + LangPack.PRICEFOR + name + dString + LangPack.SETTO + i[0]/100f + LangPack.UNIT);

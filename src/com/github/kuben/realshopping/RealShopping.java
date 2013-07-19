@@ -62,6 +62,7 @@ import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.stengun.realshopping.PriceParser;
 import java.util.Arrays;
+import java.util.logging.Level;
 import org.bukkit.inventory.meta.ItemMeta;
 
 public class RealShopping extends JavaPlugin {//TODO stores case sensitive, players case preserving
@@ -71,8 +72,8 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 	
 	//Constants
 	public static final String MANDIR = "plugins/RealShopping/";
-	public static final String VERSION = "v0.55";
-	public static final float VERFLOAT = 0.55f;
+	public static final String VERSION = "v0.51";
+	public static final float VERFLOAT = 0.51f;
 	
 	//Vars
 	private static Set<RSPlayerInventory> PInvSet;//Changed to set
@@ -1322,13 +1323,13 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 			}
 			pW.close();
     	} catch(Exception e){
-    		log.info("Failed while saving " + f.getName());
+    		RealShopping.loginfo("Failed while saving " + f.getName());
     		e.printStackTrace();
     	}
     	return false;
     }
     
-    public static void log(String msg){ log.info(msg); }//TODO start using this?
+    public static void loginfo(String msg){ log.log(Level.INFO,msg); }//TODO start using this?
     
 	/*
 	 * 
@@ -1480,12 +1481,12 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 		shippedToCollect.get(player).add(pack);
     }
     
-	public static void setEntrance(Player player) { entrance = player.getLocation().getBlock().getLocation(); }//TODO Rename?
-	public static void setExit(Player player) { exit = player.getLocation().getBlock().getLocation(); }
+    public static void setEntrance(Player player) { entrance = player.getLocation().getBlock().getLocation(); }//TODO Rename?
+    public static void setExit(Player player) { exit = player.getLocation().getBlock().getLocation(); }
     public static boolean hasEntrance(){ return !entrance.equals(""); }
     public static boolean hasExit(){ return !exit.equals(""); }
     public static Location getEntrance() { return entrance; }
-	public static Location getExit() { return exit; }
+    public static Location getExit() { return exit; }
     
     public static Location addPlayerEntrance(Player player){ return playerEntrances.put(player.getName(), player.getLocation().getBlock().getLocation()); }
     public static Location addPlayerExit(Player player){ return playerExits.put(player.getName(), player.getLocation().getBlock().getLocation()); }

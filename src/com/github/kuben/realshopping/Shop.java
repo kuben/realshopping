@@ -193,13 +193,13 @@ public class Shop {//TODO add load/save interface
 	 * Map stores pennies from 0.44 on
 	 */
 	
-	private Map<Price, Integer[]> prices = new HashMap<Price, Integer[]>();//Price array [0] is price, [1] is min and [2] is maxprice
+	private Map<Price, Integer[]> prices = new HashMap<>();//Price array [0] is price, [1] is min and [2] is maxprice
 	
 	public boolean hasPrices(){ return !prices.isEmpty(); }
 	public boolean hasPrice(Price p) { return prices.containsKey(p); }
         public Integer getPrice(Price p) { Integer[] r = prices.get(p); return (r==null?0:r[0]); }
         public Map<Price, Integer> getPrices() {
-		Map<Price, Integer> temp = new HashMap<Price, Integer>();
+		Map<Price, Integer> temp = new HashMap<>();
 		for(Price p:prices.keySet().toArray(new Price[0]))
 			temp.put(p, prices.get(p)[0]);
 		return temp;
@@ -226,7 +226,7 @@ public class Shop {//TODO add load/save interface
 			return true;
 		}
 		if(!RealShopping.shopMap.containsKey(store)) return false;
-		prices = new HashMap<Price, Integer[]>(RealShopping.shopMap.get(store).prices);
+		prices = new HashMap<>(RealShopping.shopMap.get(store).prices);
 		return true;
 	}
 	public void setPrices(Map<Price, Integer[]> prices) { this.prices = prices; }
@@ -237,7 +237,7 @@ public class Shop {//TODO add load/save interface
 	 * 
 	 */
 	
-	private Map<Price, Integer> sale = new HashMap<Price, Integer>();
+	private Map<Price, Integer> sale = new HashMap<>();
 	public boolean hasSales(){ return !sale.isEmpty(); }
 	public boolean hasSale(Price p){ return sale.containsKey(p); }
         public void clearSales() { sale.clear(); }
@@ -254,7 +254,7 @@ public class Shop {//TODO add load/save interface
 	 * Statistics
 	 * 
 	 */
-	private Set<Statistic> stats = new HashSet<Statistic>();
+	private Set<Statistic> stats = new HashSet<>();
 	
 	public Set<Statistic> getStats() {
 		return stats;
@@ -310,17 +310,17 @@ public class Shop {//TODO add load/save interface
 	}
 	
 	public String exportToClaim(){
-		String s = "";
-		for(ItemStack tempIS:stolenToClaim){
-			if(tempIS != null) {
-				s += "," + tempIS.getTypeId() + ":" + tempIS.getAmount() + ":" + tempIS.getDurability() + ":" + tempIS.getData().getData();
-				Object[] ench = tempIS.getEnchantments().keySet().toArray();
-				for(Object en:ench){
-					s += ":" + ((Enchantment)en).getId() + ";" + tempIS.getEnchantments().get(en);
-				}
-			}
-		}
-		return (s.length() > 0)?s.substring(1):"";
+            String s = "";
+            for(ItemStack tempIS:stolenToClaim){
+                if(tempIS != null) {
+                    s += "," + tempIS.getTypeId() + ":" + tempIS.getAmount() + ":" + tempIS.getDurability() + ":" + tempIS.getData().getData();
+                    Price p = new Price(tempIS);
+                    for(Price tmp:prices.keySet()){ //TODO maybe a better way to do this?
+                        if(tmp.equals(p) && tmp.hasDescription()) s+= ":"+tmp.getDescription();
+                    }
+                }
+            }
+            return (s.length() > 0)?s.substring(1):"";
 	}
 	
 	public String exportStats(){
@@ -338,7 +338,7 @@ public class Shop {//TODO add load/save interface
 	}
 	
 	private Map<Price, Integer[]> getLowestPrices(){
-		Map<Price, Integer[]> tempMap = new HashMap<Price, Integer[]>();
+		Map<Price, Integer[]> tempMap = new HashMap<>();
 		String[] keys = RealShopping.shopMap.keySet().toArray(new String[0]);
 		for(String s:keys){
 			if(!s.equals(name)){
@@ -681,53 +681,5 @@ final class EEPair {//An entrance and exit
 		} else if (!exit.equals(other.exit))
 			return false;
 		return true;
-	}
-}
-
-final class Statistic {
-	
-	final private Price item;
-	final private int amount;
-	final private long timestamp;
-	final private boolean bought;
-	
-	public Statistic(Price item, int amount, boolean bought){
-		this.item = item;
-		this.amount = amount;
-		this.timestamp = System.currentTimeMillis();
-		this.bought = bought;
-	}
-	
-	public Statistic(String imp){
-		this.timestamp = Long.parseLong(imp.split("\\[")[0].split(":")[0]);
-		this.bought = Boolean.parseBoolean(imp.split("\\[")[0].split(":")[1]);
-		Byte data = 0;
-		Map<Enchantment, Integer> enchs = new HashMap<>();
-		if(imp.split("\\[")[0].split(":").length > 4) data = Byte.parseByte(imp.split("\\[")[0].split(":")[4]);
-		for(int i = 1;i < imp.split("\\[").length;i++){
-			enchs.put(Enchantment.getById(Integer.parseInt(imp.split("\\[")[i].split("\\]")[0].split(":")[0])), Integer.parseInt(imp.split("\\[")[i].split("\\]")[0].split(":")[1]));
-		}
-		this.item = new Price(Integer.parseInt(imp.split(":")[2]), data);
-		this.amount = Integer.parseInt(imp.split("\\[")[0].split(":")[3]);
-	}
-
-	public Price getItem() {
-		return item;
-	}
-
-	public int getAmount() {
-		return amount;
-	}
-	
-	public long getTime() {
-		return timestamp;
-	}
-	
-	public boolean isBought() {
-		return bought;
-	}
-	
-	public String toString(){
-		return (bought?"bought ":"sold ") + item.toString() + " x" + amount;
 	}
 }

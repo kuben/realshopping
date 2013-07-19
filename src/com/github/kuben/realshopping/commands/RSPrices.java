@@ -109,12 +109,7 @@ class RSPrices extends RSCommand {
 			}
 		}
 		if(noMatches){
-<<<<<<< HEAD
-			sender.sendMessage(ChatColor.RED + "No matches for " + ChatColor.DARK_RED + price.formattedString());
-=======
-			Material m = Material.getMaterial(price.getType());
-			sender.sendMessage(ChatColor.RED + LangPack.NO_MATCHES_FOR_ + ChatColor.DARK_RED + (m == null?price.getType():m));
->>>>>>> 808839293a2f90729b643926818236567d3df7ce
+                    sender.sendMessage(ChatColor.RED + "No matches for " + ChatColor.DARK_RED + price.formattedString());
 		}
 		return true;
 	}
