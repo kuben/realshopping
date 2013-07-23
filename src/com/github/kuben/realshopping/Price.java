@@ -21,7 +21,6 @@ package com.github.kuben.realshopping;
 
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.MaterialData;
 
@@ -81,7 +80,7 @@ public final class Price {
         }
         
         public boolean hasDescription(){
-            return description != null;
+            return !(description == null || description.equals("") || description.isEmpty());
         }
         
         public int getType() {

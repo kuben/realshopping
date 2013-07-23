@@ -119,25 +119,28 @@ public class RSUtils {
 	 */
 	public static Object[] pullPriceCostMinMax(String str, Player ply){//No commas on this one
                 String s[] = parseAliases(str).split(":");
-		String desc = null;
                 Price p = null;
 		Integer i[] = null;
+                byte data = 0;
+                
+                //ID:[DATA]:PRICE:[MIN]:[MAX]
                 switch(s.length){
                     case 5:
-                        desc = s[5];
+                        data = Byte.parseByte(s[1]);
                     case 4:
                         i = new Integer[]{(int)(Float.parseFloat(s[s.length-3])*100), (int)(Float.parseFloat(s[s.length-2])*100), (int)(Float.parseFloat(s[s.length-1])*100)};
                         break;
+                    case 3:
+                        data = Byte.parseByte(s[1]);
                     case 2:
-                        i = new Integer[]{(int)(Float.parseFloat(s[s.length-1])*100)};
+                        i = new Integer[]{(int)(Float.parseFloat(s[s.length - 1])*100)};
                         break;
                     default:
                         i = new Integer[]{-1};
                         break;
                 }
-                
                 int id = Integer.parseInt(s[0]);
-                byte data = 0;
+
                 if( id == -1) { //control that I want hand held item
                         if(ply.getItemInHand().hasItemMeta()){
                             p = new Price(ply.getItemInHand());
@@ -146,9 +149,7 @@ public class RSUtils {
                         id=ply.getItemInHand().getTypeId();
                 }
 		if(s.length > 2)
-                    data = Byte.parseByte(s[1]);
                 p = new Price(id, data);
-                p.setDescription(desc);
                 return new Object[]{p, i};
 	}
 	

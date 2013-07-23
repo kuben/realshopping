@@ -15,6 +15,7 @@ import com.github.kuben.realshopping.Shop;
 class RSSetPrices extends RSCommand {
 
 	private String arg = "";
+        private String description = "";
 	private String store = "";
 	private Shop shop = null;
 	
@@ -30,11 +31,14 @@ class RSSetPrices extends RSCommand {
 			String dString = p.getData()>-1?"("+p.getData()+")":"";
                         String name = Material.getMaterial(p.getType()).toString();
                         if(i[0] < 0 ) return false;
+                        p.setDescription(this.description);
 			shop.setPrice(p, i[0]);
                         sender.sendMessage(ChatColor.GREEN + LangPack.PRICEFOR + name + dString + LangPack.SETTO + i[0]/100f + LangPack.UNIT);
 			if(i.length > 1){//Also set min max
 				shop.setMinMax(p, i[1], i[2]);
-				sender.sendMessage(ChatColor.GREEN + LangPack.SETMINIMALANDMAXIMALPRICESFOR + Material.getMaterial(p.getType()) + dString);
+				sender.sendMessage(ChatColor.GREEN + LangPack.SETMINIMALANDMAXIMALPRICESFOR 
+                                        + (p.hasDescription()?p.getDescription():Material.getMaterial(p.getType()))
+                                        + dString);
 			}
 			return true;
 		} catch (NumberFormatException e) {
@@ -138,53 +142,83 @@ class RSSetPrices extends RSCommand {
 
 	@Override
 	protected boolean execute() {
-		if(args.length > 0){
-			boolean isPlayer = player != null && RealShopping.hasPInv(player);
-			if(args[0].equalsIgnoreCase("add")//STORE ID:DATA:COST:MIN:MAX
-					|| args[0].equalsIgnoreCase("del")//STORE ID:DATA 
-					|| args[0].equalsIgnoreCase("showminmax")//STORE PRICE
-					|| args[0].equalsIgnoreCase("clearminmax")//STORE PRICE
-					|| args[0].equalsIgnoreCase("setminmax")){//STORE PRICE:MIN:MAX
-				if(args.length < 3 && isPlayer){
-					store = RealShopping.getPInv(player).getStore();
-					arg = args[1];
-				} else {
-					store = args[1];
-					arg = args[2];
-				}
-			} else if(args[0].equalsIgnoreCase("copy")){//STORE STORE
-				if(args.length < 2 && isPlayer){
-					store = RealShopping.getPInv(player).getStore();
-				} else if(args.length == 2){
-					store = args[1];
-				} else if(args.length > 2) {
-					store = args[1];
-					arg = args[2];
-				}
-			} else if(args[0].equalsIgnoreCase("clear") || args[0].equalsIgnoreCase("defaults")){//STORE
-				if(args.length == 1 && isPlayer) store = RealShopping.getPInv(player).getStore();
-				else if(args.length > 1) store = args[1];
-			}
-			
-    		if(!store.equals("")){
-    			if(RealShopping.shopMap.containsKey(store)){
-    				shop = RealShopping.shopMap.get(store);
-        			if(player == null || (shop.getOwner().equals(player.getName()) || player.hasPermission("realshopping.rsset"))){//If player is owner OR has admin perms
-        				if(args[0].equalsIgnoreCase("add")) return add();
-        				else if(args[0].equalsIgnoreCase("del")) return del();
-        				else if(args[0].equalsIgnoreCase("copy")) return copy();
-        				else if(args[0].equalsIgnoreCase("clear")) return clear();
-        				else if(args[0].equalsIgnoreCase("defaults")) return defaults();
-        				else if(args[0].equalsIgnoreCase("showminmax")) return showMinMax();
-        				else if(args[0].equalsIgnoreCase("clearminmax")) return clearMinMax();
-        				else if(args[0].equalsIgnoreCase("setminmax")) return setMinMax();
-        			} else sender.sendMessage(ChatColor.RED + LangPack.YOUARENTPERMITTEDTOEMANAGETHISSTORE);
-				} else {
-					sender.sendMessage(ChatColor.RED + store + LangPack.DOESNTEXIST);
-				}
-    		}
-		}
-		return false;
+            if(args.length > 0){
+                boolean isPlayer = player != null && RealShopping.hasPInv(player);
+                int startargs = 1;
+                //preliminar control of arguments. We must say if setprices contains the store argument.
+                // and the command will be in the form STORE ARGS, where args can be colon separated or single words.
+                // we need to know where to pick args if the store is specified.
+                if(argsContainStore(args)){
+                    store = args[1];
+                    startargs = 2;
+                }
+                else store = RealShopping.getPInv(player).getStore();
+
+                if(store.equals("") || !RealShopping.shopMap.containsKey(store) || !isPlayer){
+                    sender.sendMessage(ChatColor.RED + (isPlayer?LangPack.YOUHAVETOUSETHESTOREARGUMENTWHENEXECUTINGTHISCOMMANDFROMCONSOLE:store + LangPack.DOESNTEXIST));
+                    return false;
+                }
+                shop = RealShopping.shopMap.get(store);
+                arg = args[startargs];
+                //This trick will avoid the use of a second switch case
+                if((!shop.getOwner().equals(player.getName()) || !player.hasPermission("realshopping.rsset"))){
+                    sender.sendMessage(ChatColor.RED + LangPack.YOUARENTPERMITTEDTOEMANAGETHISSTORE);
+                    return false;
+                }
+
+                switch(args[0]){
+                    case "add":
+                        if(startargs < args.length-1){
+                            for(int i = startargs+1;i<args.length;i++){
+                                this.description += args[i];
+                            }
+                        }
+                        return add();
+                    case "del":
+                        return del();
+                    case "showminmax":
+                        return showMinMax();
+                    case "setminmax":
+                        return setMinMax();
+                    case "clearminmax":
+                        return clearMinMax();
+                    case "copy":
+                        if(args.length > 2) return copy();
+                        break;
+                    case "clear":
+                        return clear();
+                    case "defaults":
+                        return defaults();
+                    default:
+                        break;
+                }
+//			if(args[0].equalsIgnoreCase("add")//STORE ID:DATA:COST:MIN:MAX COMMENT
+//					|| args[0].equalsIgnoreCase("del")//STORE ID:DATA 
+//					|| args[0].equalsIgnoreCase("showminmax")//STORE PRICE
+//					|| args[0].equalsIgnoreCase("clearminmax")//STORE PRICE
+//					|| args[0].equalsIgnoreCase("setminmax")){//STORE PRICE:MIN:MAX
+//				if(args.length < 3 && isPlayer){
+//					store = RealShopping.getPInv(player).getStore();
+//					arg = args[1];
+//				} else {
+//					store = args[1];
+//					arg = args[2];
+//				}
+//			} else if(args[0].equalsIgnoreCase("copy")){//STORE STORE
+//				if(args.length < 2 && isPlayer){
+//					store = RealShopping.getPInv(player).getStore();
+//				} else if(args.length == 2){
+//					store = args[1];
+//				} else if(args.length > 2) {
+//					store = args[1];
+//					arg = args[2];
+//				}
+//			} else if(args[0].equalsIgnoreCase("clear") || args[0].equalsIgnoreCase("defaults")){//STORE
+//				if(args.length == 1 && isPlayer) store = RealShopping.getPInv(player).getStore();
+//				else if(args.length > 1) store = args[1];
+//			}
+            }
+            return false;
 	}
 
 	protected Boolean help(){
@@ -198,28 +232,55 @@ class RSSetPrices extends RSCommand {
 				sender.sendMessage(LangPack.RSSETHELP + ChatColor.DARK_PURPLE + "STORE" + ChatColor.RESET + LangPack.RSSETPRICESHELP2
 						+ LangPack.YOU_CAN_GET_MORE_HELP_ABOUT_ + ChatColor.LIGHT_PURPLE + "add, del, defaults, copy, clear, showminmax, clearminmax, setminmax");
 			} else {
-				if(args[1].equals("add")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "add [STORE] ITEM_ID[:DATA]:COST[:MIN:MAX]"
+                            switch(args[1]){
+                                case "add":
+                                    sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "add [STORE] ITEM_ID[:DATA]:COST[:MIN:MAX]"
 						+ ChatColor.RESET + LangPack.RSSETPRICESADDHELP + ChatColor.DARK_PURPLE + "COST" + ChatColor.RESET + LangPack.RSSETPRICESADDHELP2
 						+ ChatColor.DARK_PURPLE + "MAX" + ChatColor.RESET + LangPack.AND_ + ChatColor.DARK_PURPLE + LangPack.ARGUMENTS);
-				else if(args[1].equals("del")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "del [STORE] ITEM_ID[:DATA]"
+                                    break;
+                                case "del":
+                                    sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "del [STORE] ITEM_ID[:DATA]"
 						+ ChatColor.RESET + LangPack.RSSETPRICESDELHELP);
-				else if(args[1].equals("defaults")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "defaults [STORE]"
+                                    break;
+                                case "defaults":
+                                    sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "defaults [STORE]"
 						+ ChatColor.RESET + LangPack.RSSETPRICESDEFAUTLSHELP + ChatColor.LIGHT_PURPLE + "/rsimport");
-				else if(args[1].equals("copy")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "copy [STORE] [COPY_FROM]"
+                                    break;
+                                case "copy":
+                                    sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "copy [STORE] [COPY_FROM]"
 						+ ChatColor.RESET + LangPack.RSSETPRICESCOPYHELP + ChatColor.DARK_PURPLE + "COPY_FROM" + ChatColor.RESET + LangPack.RSSETPRICESCOPYHELP2
 						+ ChatColor.DARK_PURPLE + "COPY_FROM" + ChatColor.RESET + LangPack.RSSETPRICESCOPYHELP3);
-				else if(args[1].equals("clear")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "clear [STORE]"
+                                    break;
+                                case "clear":
+                                    sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "clear [STORE]"
 						+ ChatColor.RESET + LangPack.RSSETPRICESCLEARHELP);
-				else if(args[1].equals("showminmax")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "showminmax [STORE] ITEM_ID"
+                                    break;
+                                case "showminmax":
+                                    sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "showminmax [STORE] ITEM_ID"
 						+ ChatColor.RESET + LangPack.RSSETPRICESSHOWMMHELP);
-				else if(args[1].equals("clearminmax")) sender.sendMessage(LangPack.USAGE +ChatColor.LIGHT_PURPLE + "clearminmax [STORE] ITEM_ID"
+                                    break;
+                                case "clearminmax":
+                                    sender.sendMessage(LangPack.USAGE +ChatColor.LIGHT_PURPLE + "clearminmax [STORE] ITEM_ID"
 						+ ChatColor.RESET + LangPack.RSSETPRICESCLEARMMHELP);
-				else if(args[1].equals("setminmax")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "setminmax [STORE] ITEM_ID:MIN:MAX"
+                                    break;
+                                case "setminmax":
+                                    sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "setminmax [STORE] ITEM_ID:MIN:MAX"
 						+ ChatColor.RESET + LangPack.RSSETPRICESSETMMHELP);
+                                default:
+                                    break;
+                            }
 			}
 			return true;
 		}
 		return null;
 	}
+        
+//this method can be expanded to a more comprehensive syntax check.
+    private boolean argsContainStore(String[] args) {
+        if(args.length > 2){ // Maybe
+            return !(args[1].contains(":") || args[1].contains(",") || args[1].contains(".") || args[1].contains(";") || args[1].contains(" "));
+        }
+        return false;
+    }
 	
 }

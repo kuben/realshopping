@@ -167,7 +167,7 @@ public class PriceParser {
             itemdata = Byte.parseByte(price.getAttribute("id").split(":")[1]);
         }
         metahash = Integer.parseInt(price.getElementsByTagName("meta").item(0).getTextContent());
-        if(price.getElementsByTagName("name").getLength()!=0) desc = price.getElementsByTagName("description").item(0).getTextContent();
+        if(price.getElementsByTagName("description").getLength()!=0) desc = price.getElementsByTagName("description").item(0).getTextContent();
 
         Price p = new Price(itemid,itemdata,metahash);
         p.setDescription(desc);
