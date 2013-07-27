@@ -164,7 +164,7 @@ class RSSetPrices extends RSCommand {
                 return false;
             }
 
-            switch(args[0]){
+            switch(args[0].toLowerCase()){
                 case "add":
                     if(startargs < args.length-1){
                         for(int i = startargs+1;i<args.length;i++){
@@ -206,7 +206,7 @@ class RSSetPrices extends RSCommand {
                 sender.sendMessage(LangPack.RSSETHELP + ChatColor.DARK_PURPLE + "STORE" + ChatColor.RESET + LangPack.RSSETPRICESHELP2
                                     + LangPack.YOU_CAN_GET_MORE_HELP_ABOUT_ + ChatColor.LIGHT_PURPLE + "add, del, defaults, copy, clear, showminmax, clearminmax, setminmax");
             } else {
-                switch(args[1]){
+                switch(args[1].toLowerCase()){
                     case "add":
                         sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "add [STORE] ITEM_ID[:DATA]:COST[:MIN:MAX]"
                                     + ChatColor.RESET + LangPack.RSSETPRICESADDHELP + ChatColor.DARK_PURPLE + "COST" + ChatColor.RESET + LangPack.RSSETPRICESADDHELP2
