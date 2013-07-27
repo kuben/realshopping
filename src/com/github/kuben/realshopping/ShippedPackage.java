@@ -22,7 +22,6 @@ package com.github.kuben.realshopping;
 import java.util.Date;
 
 import org.bukkit.Location;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 
 public class ShippedPackage{
@@ -63,18 +62,14 @@ public class ShippedPackage{
 	}
 	
 	public String exportContents(){
-		String s = "";
-		for(ItemStack tempIS:contents){
-			if(tempIS == null) s += ",null";
-			else {
-				s += "," + tempIS.getTypeId() + ":" + tempIS.getAmount() + ":" + tempIS.getDurability() + ":" + tempIS.getData().getData();
-				Object[] ench = tempIS.getEnchantments().keySet().toArray();
-				for(Object en:ench){
-					s += ":" + ((Enchantment)en).getId() + ";" + tempIS.getEnchantments().get(en);
-				}
-			}
-		}
-		return (s.length() > 0)?s.substring(1):"";
+            String s = "";
+            for(ItemStack tempIS:contents){
+                    if(tempIS == null) s += ",null";
+                    else {
+                        s += "," + tempIS.getType() +":"+ tempIS.getData().getData() + ":"+ tempIS.getAmount() + ":" + tempIS.getDurability();
+                    }
+            }
+            return (s.length() > 0)?s.substring(1):"";
 	}
 	
 	@Override

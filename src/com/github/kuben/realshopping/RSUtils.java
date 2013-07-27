@@ -41,7 +41,7 @@ public class RSUtils {
 		return s;
 	}
 
-	/*
+	/**
 	 * Accepts and parses item descriptors (for chests)
 	 * Supports aliases, data values, stack sizes and multiple items.
 	 * 
@@ -49,108 +49,104 @@ public class RSUtils {
 	 */
 	
 	public static int[][] pullItems(String str) throws NumberFormatException {
-		String[] strs = new String[27];
-		int l = 0;
-		for(String s:str.split(",")){//Repeat for every item
-			int m = 1, i = 0;//m is multiplier, i is how many times the loop has multiplied
-			if(s.contains("*")) m = Integer.parseInt(s.split("\\*")[1]);
-			while(i < m && l < 27){//Add as many times as requested
-				strs[l] = s.split("\\*")[0];
-				l++;
-				i++;
-			}
-			if(i >= 27) break;
-		}
-		int[][] ids = new int[l][3];
-		for(int i = 0;i < l;i++){
-			int[] id = pullItem(strs[i]);
-			ids[i][0] = id[0];
-			if(id.length > 1) ids[i][1] = id[1];
-			else ids[i][1] = 0;
-			if(id.length > 2) ids[i][2] = id[2];
-			else ids[i][2] = 0;//Full stack
-		}
-		return ids;
+            String[] strs = new String[27];
+            int l = 0;
+            for(String s:str.split(",")){//Repeat for every item
+                int m = 1, i = 0;//m is multiplier, i is how many times the loop has multiplied
+                if(s.contains("*")) m = Integer.parseInt(s.split("\\*")[1]);
+                while(i < m && l < 27){//Add as many times as requested
+                    strs[l] = s.split("\\*")[0];
+                    l++;
+                    i++;
+                }
+                if(i >= 27) break;
+            }
+            int[][] ids = new int[l][3];
+            for(int i = 0;i < l;i++){
+                int[] id = pullItem(strs[i]);
+                ids[i][0] = id[0];
+                if(id.length > 1) ids[i][1] = id[1];
+                else ids[i][1] = 0;
+                if(id.length > 2) ids[i][2] = id[2];
+                else ids[i][2] = 0;//Full stack
+            }
+            return ids;
 	}
-	/*
+	/**
 	 * Accepts and parses any single item descriptor
 	 * Supports aliases, data values and stack sizes.
 	 * Does not parse mulitple items ( , ) or ( * )
 	 * 
-	 * Return an array the same size as the amount of ' : '
+	 * @return An array of the same size as the amount of ' : '
 	 */
 	public static int[] pullItem(String str) throws NumberFormatException {
-		String s = parseAliases(str);//Check for aliases
-		
-		//Parse resulting string
-		int[] id = new int[s.split(":").length];
-		int i = 0;
-		for(String ss:s.split(":")){
-			id[i] = Integer.parseInt(ss);
-			i++;
-		}
-		return id;
+            String s = parseAliases(str);//Check for aliases
+
+            //Parse resulting string
+            int[] id = new int[s.split(":").length];
+            int i = 0;
+            for(String ss:s.split(":")){
+                    id[i] = Integer.parseInt(ss);
+                    i++;
+            }
+            return id;
 	}
 
 	public static Price pullPrice(String str, Player ply){//No commas on this one
-                String[] s = new String[2];
-                if(parseAliases(str).contains(":"))
-                    s = parseAliases(str).split(":");
-                else {
-                    s[0] = parseAliases(str);
-                    s[1] = "0";
-                }
-                byte data = Byte.parseByte(s[1]);
-                int id = Integer.parseInt(s[0]);
-                if(id == -1) {
-                    if(ply.getItemInHand().hasItemMeta())
-                        return new Price(ply.getItemInHand());
-                    id=ply.getItemInHand().getTypeId();
-                    data = ply.getItemInHand().getData().getData();
-                }
-		if(s.length > 1){
-			return new Price(id,data);
-		} else return new Price(id);
+            String[] s = new String[2];
+            if(parseAliases(str).contains(":"))
+                s = parseAliases(str).split(":");
+            else {
+                s[0] = parseAliases(str);
+                s[1] = "0";
+            }
+            byte data = Byte.parseByte(s[1]);
+            int id = Integer.parseInt(s[0]);
+            if(id == -1) {
+                return new Price(ply.getItemInHand());
+            }
+            if(s.length > 1){
+                    return new Price(id,data);
+            } else return new Price(id);
 	}
 
-	/*
-	 * Returns object containing Price, cost and eventual minmax
-	 * o[0] = Price, o[1] = Integer[] priceminmax
+	/**
+         * Builds an object[] containing Price, cost and eventual minmax
+	 * It structure is o[0] = Price, o[1] = Integer[].
+         * The Integer[] contains cost in [0] and, if present, min and max in [1] and [2].
+         * @return Array object with Price and Integer[] of costs, min and max.
 	 */
 	public static Object[] pullPriceCostMinMax(String str, Player ply){//No commas on this one
-                String s[] = parseAliases(str).split(":");
-                Price p = null;
-		Integer i[] = null;
-                byte data = 0;
-                
-                //ID:[DATA]:PRICE:[MIN]:[MAX]
-                switch(s.length){
-                    case 5:
-                        data = Byte.parseByte(s[1]);
-                    case 4:
-                        i = new Integer[]{(int)(Float.parseFloat(s[s.length-3])*100), (int)(Float.parseFloat(s[s.length-2])*100), (int)(Float.parseFloat(s[s.length-1])*100)};
-                        break;
-                    case 3:
-                        data = Byte.parseByte(s[1]);
-                    case 2:
-                        i = new Integer[]{(int)(Float.parseFloat(s[s.length - 1])*100)};
-                        break;
-                    default:
-                        i = new Integer[]{-1};
-                        break;
-                }
-                int id = Integer.parseInt(s[0]);
+            String[] s = parseAliases(str).split(":");
+            Price p = null;
+            Integer[] i = null;
+            byte data = 0;
 
-                if( id == -1) { //control that I want hand held item
-                        if(ply.getItemInHand().hasItemMeta()){
-                            p = new Price(ply.getItemInHand());
-                            return new Object[]{p, i};
-                        }
-                        id=ply.getItemInHand().getTypeId();
-                }
-		if(s.length > 2)
+            //ID:[DATA]:PRICE:[MIN]:[MAX]
+            switch(s.length){
+                case 5:
+                    data = Byte.parseByte(s[1]);
+                case 4:
+                    i = new Integer[]{(int)(Float.parseFloat(s[s.length-3])*100), (int)(Float.parseFloat(s[s.length-2])*100), (int)(Float.parseFloat(s[s.length-1])*100)};
+                    break;
+                case 3:
+                    data = Byte.parseByte(s[1]);
+                case 2:
+                    i = new Integer[]{(int)(Float.parseFloat(s[s.length - 1])*100)};
+                    break;
+                case 1:
+                    return null;
+                default:
+                    i = new Integer[]{-1};
+                    break;
+            }
+            int id = Integer.parseInt(s[0]);
+
+            if( id == -1) 
+                p = new Price(ply.getItemInHand());
+            else 
                 p = new Price(id, data);
-                return new Object[]{p, i};
+            return new Object[]{p, i};
 	}
 	
 	/*
@@ -290,7 +286,11 @@ public class RSUtils {
 		}
 		return sString.substring(1).split(",");
 	}
-
+        /**
+         * We check for minecarts near the pay block.
+         * @param l Location where to check for shopping carts.
+         * @return An array containing all storage carts found.
+         */
 	public static StorageMinecart[] checkForCarts(Location l){
 		Location[] aL = new Location[]{	l.clone().subtract(0, 1, 0)		// [6][7][8]
 										, l.clone().subtract(-1, 1, 0)	// [5][0][1]
@@ -351,132 +351,124 @@ public class RSUtils {
 		Map<ItemStack, Integer> bought = new HashMap<>();
                 RSPlayerInventory pinv = RealShopping.getPInv(p);
 		Shop tempshop = RealShopping.shopMap.get(pinv.getStore());
+                
 		if(pinv.hasItems()){
-			for(int i = 0;i < cartInv.length;i++){
-				ItemStack x = cartInv[i];
-				if(x != null){
-					int type = x.getTypeId();
-                                        Price pit = new Price(x);
-					if(tempshop.hasPrice(pit)){//Something in cart has a price
-						if(pinv.hasItem(x)){//Player owns item
-							int amount = (RealShopping.isTool(type)?RealShopping.getMaxDur(type) - x.getDurability():x.getAmount());
-							
-							if(bought.containsKey(x)) amount += bought.get(x);
-							if(amount > pinv.getAmount(x))
-								bought.put(x, pinv.getAmount(x));
-							else
-								bought.put(x, amount);
-						}
-					}
-				}
-			}
+                    for(ItemStack x:cartInv){
+                        if(x != null){
+                            if(tempshop.hasPrice(new Price(x))){//Something in cart has a price
+                                if(pinv.hasItem(x)){ //Player owns this item (bought)
+                                    int amount = (RealShopping.isTool(x.getTypeId())?1:x.getAmount());
+                                    if(bought.containsKey(x))
+                                        amount += bought.get(x);
+                                    if(amount > pinv.getAmount(x))
+                                        bought.put(x, pinv.getAmount(x));
+                                    else
+                                        bought.put(x, amount);
+                                }
+                            }
+                        }
+                    }
 			
-			if(bought.isEmpty()){
-				p.sendMessage(ChatColor.RED + LangPack.YOUCANTSHIPANEMPTYCART);
-				return true;
-			}
-			Map<ItemStack, Integer> bought2 = new HashMap<>(bought);
-			
-			//Remove bought items from carts inventory
-			ItemStack[] newCartInv = new ItemStack[cartInv.length];
-			ItemStack[] boughtIS = new ItemStack[cartInv.length];
-			for(int i = 0;i < cartInv.length;i++){
-				ItemStack x = cartInv[i];
-				if(x != null){
-					//PItem tempPI = new PItem(x);
-					if(bought.containsKey(x)){//Has bought item
-						int diff = bought.get(x) - (RealShopping.isTool(x.getTypeId())?RealShopping.getMaxDur(x.getTypeId()) - x.getDurability():x.getAmount());
-						if(diff > 0){//If + then even more bought left
-							if(diff > 0) bought.put(x, diff);
-							boughtIS[i] = x.clone();
-							x = null;
-						} else if(diff == 0) {//If zero
-							if(RealShopping.isTool(x.getTypeId())){
-								if(x.getDurability()  - bought.get(x) < RealShopping.getMaxDur(x.getTypeId())){
-									x.setDurability((short)(x.getDurability() - bought.get(x)));// - ?
-									boughtIS[i] = new ItemStack(x);
-									boughtIS[i].setDurability(bought.get(x).shortValue());
-								} else x = null;
-							} else {
-								boughtIS[i] = new ItemStack(x);
-								boughtIS[i].setAmount(bought.get(x));
-								x = null;
-							}
-							bought.remove(x);
-						}
-					}
-				}
-				newCartInv[i] = x;
-			}
-			sM.getInventory().setContents(newCartInv);
-			if(!bought.isEmpty()){ RealShopping.log.info("Error #802"); System.out.println(bought);}
-			
-			//Calculate cost
-			int toPay = 0;
-			ItemStack[] keys = (ItemStack[])bought2.keySet().toArray();
-                        
-                        Inventory[] cartinv = new Inventory[1];
-                        cartinv[0] = sM.getInventory();
-			toPay = pinv.toPay(cartinv);
-			
-			//Ship
-			RealShopping.addShippedToCollect(p.getName(), new ShippedPackage(boughtIS, toPay, sM.getLocation()));
-			p.sendMessage(ChatColor.GREEN + LangPack.PACKAGEWAITINGTOBEDELIVERED);
+                    if(bought.isEmpty()){
+                        p.sendMessage(ChatColor.RED + LangPack.YOUCANTSHIPANEMPTYCART);
+                        return true;
+                    }
+                    
+                    
+                    Map<ItemStack, Integer> bought2 = new HashMap<>(bought);
 
-			//Update player inv
-			for(ItemStack is:keys){
-				pinv.removeItem(is, bought2.get(is));
-			}
+                    //Remove bought items from carts inventory
+                    ItemStack[] newCartInv = new ItemStack[cartInv.length];
+                    ItemStack[] boughtIS = new ItemStack[cartInv.length];
+                    for(int i = 0;i < cartInv.length;i++){
+                        ItemStack x = cartInv[i];
+                        if(x != null){
+                            if(!bought.containsKey(x)){
+                                newCartInv[i] = x;
+                                continue;
+                            }
+                            int diff = bought.get(x) - (RealShopping.isTool(x.getTypeId())?1:x.getAmount());
+                            if(diff > 0){//If + then even more bought left
+                                if(diff > 0) bought.put(x, diff);
+                                boughtIS[i] = x.clone();
+                            } else if(diff == 0) {//If zero
+                                boughtIS[i] = new ItemStack(x);
+                                boughtIS[i].setAmount(bought.get(x));
+                                x = null;
+                                bought.remove(x);
+                            }
+                        }
+                    }
+                    sM.getInventory().setContents(newCartInv);
+                    if(!bought.isEmpty()){ RealShopping.log.info("Error #802"); System.out.println(bought);}
+
+                    //Calculate cost (?? this is strange, because it identifies items only if already bought)
+                    int toPay = 0;
+                    Object[] keys = bought2.keySet().toArray();
+
+                    Inventory[] cartinv = new Inventory[1];
+                    cartinv[0] = sM.getInventory();
+                    toPay = pinv.toPay(cartinv);
+
+                    //Ship
+                    RealShopping.addShippedToCollect(p.getName(), new ShippedPackage(boughtIS, toPay, sM.getLocation()));
+                    p.sendMessage(ChatColor.GREEN + LangPack.PACKAGEWAITINGTOBEDELIVERED);
+
+                    //Update player inv
+                    for(Object k:keys){
+                        ItemStack is = (ItemStack)k;
+                        pinv.removeItem(is, bought2.get(is));
+                    }
 		} else p.sendMessage(ChatColor.RED + LangPack.YOUHAVENTBOUGHTANYTHING);
 	
 		return true;
 	}
 
 	public static boolean collectShipped(Location l, Player p, int id) {
-		if(l.getBlock().getState() instanceof Chest){
-			if(!RealShopping.hasPInv(p) || RealShopping.shopMap.get(RealShopping.getPInv(p).getStore()).getOwner().equals(p.getName())){
-				if(RealShopping.hasShippedToCollect(p.getName())){
-					if(RealShopping.getShippedToCollectAmount(p.getName()) >= id){
-						boolean cont = false;
-						int cost = 0;
-						if(Config.getZoneArray().length > 0){
-							int i = 0;
-							if(p.getLocation().getWorld().equals(RealShopping.getShippedToCollect(p.getName(), id - 1).getLocationSent().getWorld())){//Same world
-								double dist = p.getLocation().distance(RealShopping.getShippedToCollect(p.getName(), id - 1).getLocationSent());
-								while(i < Config.getZoneArray().length && dist > Config.getZoneArray()[i].getBounds() && dist != -1){
-									i++;
-								}
-							} else {
-								while(i < Config.getZoneArray().length && Config.getZoneArray()[i].getBounds() > -1){
-									i++;
-								}
-							}
+            if(l.getBlock().getState() instanceof Chest){
+                if(!RealShopping.hasPInv(p) || RealShopping.shopMap.get(RealShopping.getPInv(p).getStore()).getOwner().equals(p.getName())){
+                    if(RealShopping.hasShippedToCollect(p.getName())){
+                        if(RealShopping.getShippedToCollectAmount(p.getName()) >= id){
+                            boolean cont = false;
+                            int cost = 0;
+                            if(Config.getZoneArray().length > 0){
+                                int i = 0;
+                                if(p.getLocation().getWorld().equals(RealShopping.getShippedToCollect(p.getName(), id - 1).getLocationSent().getWorld())){//Same world
+                                    double dist = p.getLocation().distance(RealShopping.getShippedToCollect(p.getName(), id - 1).getLocationSent());
+                                    while(i < Config.getZoneArray().length && dist > Config.getZoneArray()[i].getBounds() && dist != -1){
+                                            i++;
+                                    }
+                                } else {
+                                    while(i < Config.getZoneArray().length && Config.getZoneArray()[i].getBounds() > -1){
+                                        i++;
+                                    }
+                                }
 
-							if(Config.getZoneArray()[i].getPercent() == -1)
-								cost = (int) (Config.getZoneArray()[i].getCost()*100);
-							else {
-								cost = (int) (RealShopping.getShippedToCollect(p.getName(), id - 1).getCost() * Config.getZoneArray()[i].getPercent()/100f);
-							}
-							if(RSEconomy.getBalance(p.getName()) >= cost/100f) cont = true;
-						} else cont = true;
-						
-						if(cont){
-							RSEconomy.withdraw(p.getName(), cost/100f);
-							p.sendMessage(ChatColor.GREEN + "" + cost/100f + LangPack.UNIT + LangPack.WITHDRAWNFROMYOURACCOUNT);
-							ItemStack[] contents = ((Chest)l.getBlock().getState()).getBlockInventory().getContents();
-							for(ItemStack tempIS:contents) if(tempIS != null) p.getWorld().dropItem(p.getLocation(), tempIS);
-							
-							((Chest)l.getBlock().getState()).getBlockInventory().setContents(RealShopping.getShippedToCollect(p.getName(), id - 1).getContents());
-							p.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH);
-							p.sendMessage(formatItemStackToMess(RealShopping.getShippedToCollect(p.getName(), id - 1).getContents()));
-							RealShopping.removeShippedToCollect(p.getName(), id - 1);
-							return true;
-						} else p.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOPAYTHEDELIVERYFEEOF + cost);
-					} else p.sendMessage(ChatColor.RED + LangPack.THERESNOPACKAGEWITHTHEID + id);
-				} else p.sendMessage(ChatColor.RED + LangPack.YOUHAVENTGOTANYITEMSWAITINGTOBEDELIVERED);
-			} else p.sendMessage(ChatColor.RED + LangPack.YOUCANTCOLLECT_YOUDONOTOWN);
-		} else p.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUSELECTEDISNTACHEST);
-		return false;
+                                if(Config.getZoneArray()[i].getPercent() == -1)
+                                        cost = (int) (Config.getZoneArray()[i].getCost()*100);
+                                else {
+                                        cost = (int) (RealShopping.getShippedToCollect(p.getName(), id - 1).getCost() * Config.getZoneArray()[i].getPercent()/100f);
+                                }
+                                if(RSEconomy.getBalance(p.getName()) >= cost/100f) cont = true;
+                            } else cont = true;
+
+                            if(cont){
+                                RSEconomy.withdraw(p.getName(), cost/100f);
+                                p.sendMessage(ChatColor.GREEN + "" + cost/100f + LangPack.UNIT + LangPack.WITHDRAWNFROMYOURACCOUNT);
+                                ItemStack[] contents = ((Chest)l.getBlock().getState()).getBlockInventory().getContents();
+                                for(ItemStack tempIS:contents) if(tempIS != null) p.getWorld().dropItem(p.getLocation(), tempIS);
+
+                                ((Chest)l.getBlock().getState()).getBlockInventory().setContents(RealShopping.getShippedToCollect(p.getName(), id - 1).getContents());
+                                p.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH);
+                                p.sendMessage(formatItemStackToMess(RealShopping.getShippedToCollect(p.getName(), id - 1).getContents()));
+                                RealShopping.removeShippedToCollect(p.getName(), id - 1);
+                                return true;
+                            } else p.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOPAYTHEDELIVERYFEEOF + cost);
+                        } else p.sendMessage(ChatColor.RED + LangPack.THERESNOPACKAGEWITHTHEID + id);
+                    } else p.sendMessage(ChatColor.RED + LangPack.YOUHAVENTGOTANYITEMSWAITINGTOBEDELIVERED);
+                } else p.sendMessage(ChatColor.RED + LangPack.YOUCANTCOLLECT_YOUDONOTOWN);
+            } else p.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUSELECTEDISNTACHEST);
+            return false;
 	}
 	
 	/*
