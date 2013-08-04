@@ -614,6 +614,22 @@ public class RSUtils {
         }
     }
 
+
+	public static int getTimeInt(String s){//In seconds
+		if(s.equals("hour")) return 3600;
+		else if(s.equals("day")) return 86400;
+		else if(s.equals("week")) return 604800;
+		else if(s.equals("month")) return 2592000;
+		else return Integer.parseInt(s);
+	}
+
+	public static String getTimeString(int t){
+		if(t == 3600) return "hour";
+		else if(t == 86400) return "day";
+		else if(t == 604800) return "week";
+		else if(t == 2592000) return "month";
+		else return t + "";
+	}
 }
 
 class StringLengthComparator implements Comparator<String>{

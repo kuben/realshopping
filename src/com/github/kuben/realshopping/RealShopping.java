@@ -73,6 +73,8 @@ import com.github.kuben.realshopping.exceptions.RealShoppingException;
 import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
 
+//TODO better storing of database files
+
 public class RealShopping extends JavaPlugin {//TODO stores case sensitive, players case preserving
 	private Updater updater;
 	private StatUpdater statUpdater;
@@ -87,6 +89,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 	private static Set<RSPlayerInventory> PInvSet;//Changed to set
 	public static Map<String, Shop> shopMap;//TODO
 	
+	public static Map<String, PSetting> playerSettings;
 	private static Map<EEPair, Shop> eePairs;
 	private static Map<Price, Integer[]> defPrices;
 	private static Map<Integer, Integer> maxDurMap;
@@ -120,6 +123,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     	setUpdater(null);
     	statUpdater = null;
     	notificatorThread = null;
+    	playerSettings = new HashMap<String, PSetting>();
     	eePairs = new HashMap<EEPair, Shop>();
       	defPrices = new HashMap<Price, Integer[]>();
     	PInvSet = new HashSet<RSPlayerInventory>();
@@ -155,6 +159,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     		getCommand("rscost").setExecutor(cmdExe);
     		getCommand("rssell").setExecutor(cmdExe);
     		getCommand("rsprices").setExecutor(cmdExe);
+    		getCommand("rsme").setExecutor(cmdExe);
     		getCommand("rsstores").setExecutor(cmdExe);
     		getCommand("rsset").setExecutor(cmdExe);
     		getCommand("rssetstores").setExecutor(cmdExe);
@@ -301,6 +306,8 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 		loadTemporaryFile(5);
 		loadTemporaryFile(6);
 		loadTemporaryFile(7);
+		//TODO load psettings and load default prices
+		//TODO modify default prices
 		
 		f = new File(MANDIR + "langpacks/");
 		if(!f.exists()) f.mkdir();
@@ -1404,6 +1411,18 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 		return pString.split(",");
 	}
     
+	public static PSetting getPlayerSettings(Player p){
+		if(!playerSettings.containsKey(p.getName())) playerSettings.put(p.getName(), new PSetting());
+		return playerSettings.get(p.getName());
+	}
+
+	public static String getPSettingPlayer(PSetting ps){
+		for(String p:playerSettings.keySet().toArray(new String[0])){
+			if(playerSettings.get(p) == ps) return p;
+		}
+		return null;
+	}
+	
 	public static RSPlayerInventory getPInv(Player player){
 		for(RSPlayerInventory pInv:PInvSet)
 			if(pInv.getPlayer().equals(player.getName())) return pInv;

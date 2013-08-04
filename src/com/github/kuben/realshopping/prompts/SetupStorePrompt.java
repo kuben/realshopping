@@ -65,7 +65,7 @@ public class SetupStorePrompt implements Prompt {
             		if(!RealShopping.shopMap.containsKey(in)){
             			context.setSessionData("shop", in);
             			context.setSessionData("ID", "create_second");
-            			new SetupStoreListener(player, Type.APPEND, in, false);
+            			new SetupStoreListener(player, Type.APPEND, in, true);
             			return LangPack.THE_NAME_ + ChatColor.GREEN + in + ChatColor.RESET + LangPack.IS_AVAILABLE;
             		} else {
             			context.setSessionData("ID", "second");
@@ -93,7 +93,7 @@ public class SetupStorePrompt implements Prompt {
         			else return ChatColor.RED + LangPack.NO_EE_SELECTED;
         		} else if(in.equalsIgnoreCase("cancel")){
         			RSPlayerListener.killConversationListener(player);
-        			new SetupStoreListener(player, Type.APPEND, (String)context.getSessionData("shop"), false);
+        			new SetupStoreListener(player, Type.APPEND, (String)context.getSessionData("shop"), true);
         			context.setSessionData("ID", "create_second");
         			return LangPack.ACTION_ABORTED;
         		}
@@ -110,7 +110,7 @@ public class SetupStorePrompt implements Prompt {
             			if(RealShopping.shopMap.get(in).getOwner().equals(player.getName())){
                 			context.setSessionData("shop", in);
                 			context.setSessionData("ID", "append_second");
-                			new SetupStoreListener(player, Type.APPEND, in, false);
+                			new SetupStoreListener(player, Type.APPEND, in, true);
                 			return LangPack.YOU_HAVE_CHOSEN_TO_APPEND_NEW_EE_TO_ + in + ".";
             			} else rtrn = ChatColor.RED + LangPack.YOUARENOTTHEOWNEROFTHISSTORE;
             		} else rtrn = ChatColor.RED + LangPack.STORE + in + LangPack.DOESNTEXIST;
@@ -154,7 +154,7 @@ public class SetupStorePrompt implements Prompt {
             			if(RealShopping.shopMap.get(in).getOwner().equals(player.getName())){
                 			context.setSessionData("shop", in);
                 			context.setSessionData("ID", "delete_second");
-                			new SetupStoreListener(player, Type.DELETE, in, false);
+                			new SetupStoreListener(player, Type.DELETE, in, true);
                 			return LangPack.YOU_HAVE_CHOSEN_TO_DELETE_EE_FROM_ + in + ".";
             			} else rtrn = ChatColor.RED + LangPack.YOUARENOTTHEOWNEROFTHISSTORE;
             		} else rtrn = ChatColor.RED + LangPack.STORE + in + LangPack.DOESNTEXIST;
@@ -194,7 +194,7 @@ public class SetupStorePrompt implements Prompt {
         	else if(ID.equals("wipeout_name")){
         		String rtrn;
         		if(RealShopping.shopMap.containsKey(in)){
-        			if(RealShopping.shopMap.get(in).getOwner().equals(player.getName())){
+        			if(RealShopping.shopMap.get(in).getOwner().equals("@admin")){
             			context.setSessionData("shop", in);
             			context.setSessionData("ID", "wipeout_second");
             			return LangPack.DO_YOU_REALLY_WANT_TO_DELETE_ + ChatColor.DARK_AQUA + in + ChatColor.RESET
