@@ -30,10 +30,9 @@ import org.bukkit.inventory.ItemStack;
 
 public class RSPlayerInventory {
 
-    private Map<Price, Integer> items;
+    private Map<Price, Integer> items,bought;
     private String store;//TODO switch to Shop
     private String player;//String because should involve offline players too
-
     public RSPlayerInventory(Player player, String store){//Use when player is entering store
             this.store = store;
             this.player = player.getName();
@@ -44,10 +43,12 @@ public class RSPlayerInventory {
             for(int i = 0;i < obj.length;i++)
                     IS[i] = (ItemStack) obj[i];
             items = invToPInv(IS);//Item - amount/dur
+            bought = new HashMap<>();
     }
 
     public RSPlayerInventory(String importStr){//Use to recover a PlayerInventory from string
             items = new HashMap<>();//Item - amount/dur
+            bought = new HashMap<>();
             this.store = importStr.split(";")[0].split("-")[1];
             this.player = importStr.split(";")[0].split("-")[0];
             createInv(importStr.split(";")[1]);
@@ -137,42 +138,58 @@ public class RSPlayerInventory {
         return toPay;
     }
     
-    public Map<Price, Integer> getBought(Inventory[] invs){
-    	Map<Price, Integer> bought = new HashMap<>();
+    public void addBought(Price p, Integer amount){
+        bought.put(p, amount);
+    }
+    
+    public void delBought(Price p){
+        bought.remove(p);
+    }
+    /**
+     * Gives Bought items since the player entered the shop.
+     * @return A map with Item - Amount
+     */
+    public Map<Price, Integer> getBought(){
+        return bought;
+    }
+    
+    /**
+     * Gets bought items that waits to be paid.
+     * @param invs
+     * @return 
+     */
+    public Map<Price, Integer> getBoughtWait(Inventory[] invs){
     	Shop tempShop = RealShopping.shopMap.get(store);
-		if(tempShop.hasPrices()){//If shop has prices
-			Map<Price, Integer> newInv = invToPInv();
-			
-			//Old inv = items
-			
-			if(invs != null){
-				for(int i = 0;i < invs.length;i++){
-					Map<Price, Integer> tempInv = invToPInv(invs[i]);
-					newInv = RSUtils.joinMaps(newInv, tempInv);
-				}
-			}
+        if(tempShop.hasPrices()){//If shop has prices
+            Map<Price, Integer> newInv = invToPInv();
 
-			Object[] keys = newInv.keySet().toArray();
+            //Old inv = items
 
-			for(Object k:keys){
-                                Price key = (Price)k;
-				if(tempShop.hasPrice(key)) {//Something in inventory has a price
-					int amount = newInv.get(key);
-					if(items.containsKey(key)) {
-						int oldAm = items.get(key);
-						if(oldAm > amount){//More items before than now
-							amount = 0;
-						} else {//More items now
-							amount -= oldAm;
-						}
-					}
-					if(bought.containsKey(key)) bought.put(key, amount + bought.get(key));
-					else bought.put(key, amount);
-				}
-			}
-		}
-		
-		return bought;
+            if(invs != null){
+                for(int i = 0;i < invs.length;i++){
+                    Map<Price, Integer> tempInv = invToPInv(invs[i]);
+                    newInv = RSUtils.joinMaps(newInv, tempInv);
+                }
+            }
+
+            for(Price key:newInv.keySet()){
+                if(tempShop.hasPrice(key)) {//Something in inventory has a price
+                    int amount = newInv.get(key);
+                    if(items.containsKey(key)) {
+                        int oldAm = items.get(key);
+                        if(oldAm > amount){//More items before than now
+                                amount = 0;
+                        } else {//More items now
+                                amount -= oldAm;
+                        }
+                    }
+                    if(bought.containsKey(key)) bought.put(key, amount + bought.get(key));
+                    else bought.put(key, amount);
+                }
+            }
+        }
+
+        return bought;
     }
 	
     public Map<Price, Integer> getStolen(){

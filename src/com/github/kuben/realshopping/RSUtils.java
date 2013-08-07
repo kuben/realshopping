@@ -1,7 +1,10 @@
 package com.github.kuben.realshopping;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -16,7 +19,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.minecart.StorageMinecart;
 import org.bukkit.inventory.ItemStack;
 
-import org.bukkit.inventory.Inventory;
 @SuppressWarnings("deprecation")
 public class RSUtils {
 
@@ -345,80 +347,90 @@ public class RSUtils {
 		//Get bought items in cart
 		
 		//Old inv = items
+            
+		List<ItemStack> cartInv = new LinkedList<>();
+		for(ItemStack i:sM.getInventory().getContents()){
+                    if(i!= null) cartInv.add(i);
+                }
 		
-		ItemStack[] cartInv = sM.getInventory().getContents();//Items in shopping cart
-		
-		Map<ItemStack, Integer> bought = new HashMap<>();
                 RSPlayerInventory pinv = RealShopping.getPInv(p);
 		Shop tempshop = RealShopping.shopMap.get(pinv.getStore());
-                
-		if(pinv.hasItems()){
-                    for(ItemStack x:cartInv){
-                        if(x != null){
-                            if(tempshop.hasPrice(new Price(x))){//Something in cart has a price
-                                if(pinv.hasItem(x)){ //Player owns this item (bought)
-                                    int amount = (RealShopping.isTool(x.getTypeId())?1:x.getAmount());
-                                    if(bought.containsKey(x))
-                                        amount += bought.get(x);
-                                    if(amount > pinv.getAmount(x))
-                                        bought.put(x, pinv.getAmount(x));
-                                    else
-                                        bought.put(x, amount);
-                                }
-                            }
+                Map<Price, Integer> bought = pinv.getBought();
+                //The shipment is invalid when cart is empty.
+		if(cartInv.isEmpty() || bought.isEmpty()){
+                    p.sendMessage(ChatColor.RED + LangPack.YOUCANTSHIPANEMPTYCART);
+                    return true;
+                }
+                // I take note on every item bought from the player.
+                if(!bought.isEmpty()){
+                    List<ItemStack> rem = new ArrayList<>();
+                    for(ItemStack i:cartInv){
+                        if(i == null) continue;
+                        Price x = new Price(i);
+                        if(tempshop.hasPrice(x) && bought.containsKey(x)){ //Player owns this item (bought)
+                            int amount = bought.get(x) + (RealShopping.isTool(i.getTypeId())?1:i.getAmount());
+                            if(amount > pinv.getAmount(x))
+                                bought.put(x, pinv.getAmount(x));
+                            else
+                                bought.put(x, amount);
+                            rem.add(i);
                         }
                     }
-			
-                    if(bought.isEmpty()){
-                        p.sendMessage(ChatColor.RED + LangPack.YOUCANTSHIPANEMPTYCART);
-                        return true;
-                    }
+                    cartInv.removeAll(rem);
                     
+                    sM.getInventory().setContents(cartInv.toArray(new ItemStack[0]));
                     
-                    Map<ItemStack, Integer> bought2 = new HashMap<>(bought);
-
-                    //Remove bought items from carts inventory
-                    ItemStack[] newCartInv = new ItemStack[cartInv.length];
-                    ItemStack[] boughtIS = new ItemStack[cartInv.length];
-                    for(int i = 0;i < cartInv.length;i++){
-                        ItemStack x = cartInv[i];
-                        if(x != null){
-                            if(!bought.containsKey(x)){
-                                newCartInv[i] = x;
-                                continue;
-                            }
-                            int diff = bought.get(x) - (RealShopping.isTool(x.getTypeId())?1:x.getAmount());
-                            if(diff > 0){//If + then even more bought left
-                                if(diff > 0) bought.put(x, diff);
-                                boughtIS[i] = x.clone();
-                            } else if(diff == 0) {//If zero
-                                boughtIS[i] = new ItemStack(x);
-                                boughtIS[i].setAmount(bought.get(x));
-                                x = null;
-                                bought.remove(x);
-                            }
-                        }
-                    }
-                    sM.getInventory().setContents(newCartInv);
-                    if(!bought.isEmpty()){ RealShopping.log.info("Error #802"); System.out.println(bought);}
-
-                    //Calculate cost (?? this is strange, because it identifies items only if already bought)
-                    int toPay = 0;
-                    Object[] keys = bought2.keySet().toArray();
-
-                    Inventory[] cartinv = new Inventory[1];
-                    cartinv[0] = sM.getInventory();
-                    toPay = pinv.toPay(cartinv);
-
                     //Ship
-                    RealShopping.addShippedToCollect(p.getName(), new ShippedPackage(boughtIS, toPay, sM.getLocation()));
+                    RealShopping.addShippedToCollect(p.getName(), new ShippedPackage(rem.toArray(new ItemStack[0]), 0, sM.getLocation()));
                     p.sendMessage(ChatColor.GREEN + LangPack.PACKAGEWAITINGTOBEDELIVERED);
 
                     //Update player inv
-                    for(Object k:keys){
-                        ItemStack is = (ItemStack)k;
-                        pinv.removeItem(is, bought2.get(is));
+                    for(Price is:bought.keySet()){
+                        pinv.removeItem(is, bought.get(is));
                     }
+//                    
+//                    Map<ItemStack, Integer> bought2 = new HashMap<>(bought);
+//
+//                    //Remove bought items from carts inventory
+//                    ItemStack[] newCartInv = new ItemStack[cartInv.length];
+//                    ItemStack[] boughtIS = new ItemStack[cartInv.length];
+//                    for(int i = 0;i < cartInv.length;i++){
+//                        ItemStack x = cartInv[i];
+//                        if(x != null){
+//                            if(!bought.containsKey(x)){
+//                                newCartInv[i] = x;
+//                                continue;
+//                            }
+//                            int diff = bought.get(x) - (RealShopping.isTool(x.getTypeId())?1:x.getAmount());
+//                            if(diff > 0){//If + then even more bought left
+//                                if(diff > 0) bought.put(x, diff);
+//                                boughtIS[i] = x.clone();
+//                            } else if(diff == 0) {//If zero
+//                                boughtIS[i] = new ItemStack(x);
+//                                boughtIS[i].setAmount(bought.get(x));
+//                                x = null;
+//                                bought.remove(x);
+//                            }
+//                        }
+//                    }
+//                    sM.getInventory().setContents(newCartInv);
+//                    if(!bought.isEmpty()){ RealShopping.log.info("Error #802"); System.out.println(bought);}
+//
+//                    //Calculate cost (?? this is strange, because it identifies items only if already bought)
+//                    int toPay = 0;
+//
+//                    Inventory[] cartinv = new Inventory[1];
+//                    cartinv[0] = sM.getInventory();
+//                    toPay = pinv.toPay(cartinv);
+//
+//                    //Ship
+//                    RealShopping.addShippedToCollect(p.getName(), new ShippedPackage(boughtIS, toPay, sM.getLocation()));
+//                    p.sendMessage(ChatColor.GREEN + LangPack.PACKAGEWAITINGTOBEDELIVERED);
+//
+//                    //Update player inv
+//                    for(ItemStack is:bought.keySet()){
+//                        pinv.removeItem(is, bought2.get(is));
+//                    }
 		} else p.sendMessage(ChatColor.RED + LangPack.YOUHAVENTBOUGHTANYTHING);
 	
 		return true;

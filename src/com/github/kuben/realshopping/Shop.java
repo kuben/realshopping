@@ -514,29 +514,28 @@ public class Shop {//TODO add load/save interface
                             int toPay = RealShopping.getPInv(player).toPay(invs);
                             if(toPay==0) return false;
                             if(RSEconomy.getBalance(player.getName()) < toPay/100f) {
-                                    player.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOBUYTHINGSFOR + toPay/100f + LangPack.UNIT);
-                                    return true;
-                            } else {
-                                    RSEconomy.withdraw(player.getName(), toPay/100f);
-                                    if(!RealShopping.shopMap.get(shopName).getOwner().equals("@admin")){
-                                            RSEconomy.deposit(RealShopping.shopMap.get(shopName).getOwner(), toPay/100f);//If player owned store, pay player
-                                            if(RealShopping.shopMap.get(shopName).allowsNotifications()) RealShopping.sendNotification(RealShopping.shopMap.get(shopName).getOwner(), player.getName()
-                                                            + LangPack.BOUGHTSTUFFFOR + toPay/100f + LangPack.UNIT + LangPack.FROMYOURSTORE + shopName + ".");
-                                    }
-                                    Map<Price, Integer> bought = RealShopping.getPInv(player).getBought(invs);
-
-                                    if(Config.isEnableAI()){
-                                            Price[] keys = bought.keySet().toArray(new Price[0]);
-                                            for(Price key:keys){
-                                                    RealShopping.shopMap.get(shopName).addStat(new Statistic(key, bought.get(key), true));
-                                            }
-                                    }
-
-                                    if(invs != null) RealShopping.getPInv(player).update(invs);
-                                    else RealShopping.getPInv(player).update();
-                                    player.sendMessage(ChatColor.GREEN + LangPack.YOUBOUGHTSTUFFFOR + toPay/100f + LangPack.UNIT);
-                                    return true;
+                                player.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOBUYTHINGSFOR + toPay/100f + LangPack.UNIT);
+                                return true;
                             }
+                            RSEconomy.withdraw(player.getName(), toPay/100f);
+                            if(!RealShopping.shopMap.get(shopName).getOwner().equals("@admin")){
+                                RSEconomy.deposit(RealShopping.shopMap.get(shopName).getOwner(), toPay/100f);//If player owned store, pay player
+                                if(RealShopping.shopMap.get(shopName).allowsNotifications()) RealShopping.sendNotification(RealShopping.shopMap.get(shopName).getOwner(), player.getName()
+                                                + LangPack.BOUGHTSTUFFFOR + toPay/100f + LangPack.UNIT + LangPack.FROMYOURSTORE + shopName + ".");
+                            }
+                            Map<Price, Integer> bought = RealShopping.getPInv(player).getBoughtWait(invs);
+
+                            if(Config.isEnableAI()){
+                                Price[] keys = bought.keySet().toArray(new Price[0]);
+                                for(Price key:keys){
+                                    RealShopping.shopMap.get(shopName).addStat(new Statistic(key, bought.get(key), true));
+                                }
+                            }
+
+                            if(invs != null) RealShopping.getPInv(player).update(invs);
+                            else RealShopping.getPInv(player).update();
+                            player.sendMessage(ChatColor.GREEN + LangPack.YOUBOUGHTSTUFFFOR + toPay/100f + LangPack.UNIT);
+                            return true;
                     } else {
                             player.sendMessage(ChatColor.RED + LangPack.THEREARENOPRICESSETFORTHISSTORE);
                             return true;

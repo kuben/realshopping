@@ -55,8 +55,14 @@ import com.github.kuben.realshopping.commands.RSCommandExecutor;
 import com.github.kuben.realshopping.exceptions.RealShoppingException;
 import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
+import com.github.stengun.realshopping.ShippedSerialization;
 import com.github.stengun.realshopping.PriceParser;
+import java.util.LinkedList;
 import java.util.logging.Level;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 public class RealShopping extends JavaPlugin {//TODO stores case sensitive, players case preserving
 	private Updater updater;
@@ -1087,7 +1093,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
             while ((s = br.readLine()) != null){
                     boolean notHeader = true;
 
-                    if(version == 0 && s.length() > header.length() && s.substring(0, header.length()).equals(header)){
+                    if(what != TempFiles.SHIPPEDPACKAGES && version == 0 && s.length() > header.length() && s.substring(0, header.length()).equals(header)){
                             notHeader = false;
                             String vStr = s.substring(header.length());
                             if(what == TempFiles.TPLOCS){
@@ -1099,6 +1105,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 
                     if(!notHeader) break;
                     switch(what){
+                        //TODO convert load with object stream
                         case INVENTORIES:
                             PInvSet.add(new RSPlayerInventory(s));
                             break;
@@ -1115,40 +1122,19 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                                                     ,Double.parseDouble(s.split(";")[1].split(",")[3])));
                             break;
                         case SHIPPEDPACKAGES:
-                            if(version >= 0.32){
-                                String[] parts = s.split(";");
-                                shippedToCollect.put(parts[0], new ArrayList<ShippedPackage>());
-                                
-                                Integer cost = Integer.parseInt(parts[1]);
-                                Location loc = new Location(getServer().getWorld(parts[2])
-                                                    ,Integer.parseInt(parts[3].split(",")[0])
-                                                    ,Integer.parseInt(parts[3].split(",")[1])
-                                                    ,Integer.parseInt(parts[3].split(",")[2]));
-                                
-                                long timeStamp = Long.parseLong(parts[4]);
-                                ItemStack[] iS = new ItemStack[27];
-                                String[] parsed = parts[5].split(",");
-                                //TODO We must find a way to serialize an itemstack.
-                                for(String item:parsed){
-                                    
-
-                                    //Contents
-                                    for(int j = 0;j < parts[1].split(",").length;j++){
-                                        ItemStack tempIS;
-                                        
-                                        if(parts[1].split(",")[j].equals("null")) tempIS = null;
-                                        else {
-                                            String s1[] = parts[1].split(",")[j].split(":");
-                                            tempIS = new MaterialData(Integer.parseInt(s1[0]), Byte.parseByte(s1[3])).toItemStack(Integer.parseInt(s1[1]));
-                                            tempIS.setDurability(Short.parseShort(s1[2]));
-                                            for(int k = 4;k < parts[1].split(",")[j].split(":").length;k++){
-                                                    tempIS.addEnchantment(Enchantment.getById(Integer.parseInt(parts[1].split(",")[j].split(":")[k].split(";")[0])), Integer.parseInt(parts[1].split(",")[j].split(":")[k].split(";")[1]));
-                                            }
-                                            iS[j] = tempIS;
-                                        }
+                            YamlConfiguration conf = new YamlConfiguration();
+                            try {
+                                conf.load(f);
+                                for(String pl:conf.getKeys(false)){
+                                    List<ShippedPackage> packs = new LinkedList<>();
+                                    ConfigurationSection players = conf.getConfigurationSection(pl);
+                                    for(String pkg:players.getKeys(false)){
+                                        packs.add(ShippedSerialization.loadShippedPackage(players.getConfigurationSection(pkg)));
                                     }
-                                    shippedToCollect.get(s.split("\\[")[0]).add(new ShippedPackage(iS, cost, loc, timeStamp));
+                                    shippedToCollect.put(pl, packs);
                                 }
+                            } catch (InvalidConfigurationException ex) {
+                                Logger.getLogger(RealShopping.class.getName()).log(Level.SEVERE, null, ex);
                             }
                             break;
                         case TOCLAIM:
@@ -1261,52 +1247,52 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         PrintWriter pW;
         pW = new PrintWriter(f);
         for(int i = 0;i < keys.length;i++){
-            if(i == 0) pW.println(header);
+            if(what != TempFiles.SHIPPEDPACKAGES && i == 0) pW.println(header);
             String line = "";
             switch(what){
-                    case INVENTORIES:
-                            line = ((RSPlayerInventory)keys[i]).exportToString();
-                            break;
-                    case JAILED:
-                            line = ((String)keys[i]) + ";" + jailedPlayers.get(keys[i]).getWorld().getName() + ";" + RSUtils.locAsString(jailedPlayers.get(keys[i]));
-                            break;
-                    case TPLOCS:
-                            line = ((Location)keys[i]).getWorld().getName() + ";" + RSUtils.locAsString((Location)keys[i]) + ";" + forbiddenTpLocs.get(keys[i]);
-                            break;
-                    case PROTECTEDCHESTS:
-                            String protStr = shopMap.get(keys[i]).exportProtectedToString();
-                            if(!protStr.equals("")) line = ((String) keys[i]) + ";" + protStr;
-                            break;
-                    case SHIPPEDPACKAGES:
-                            Object[] shippedpkgs = shippedToCollect.get(keys[i]).toArray();
-                            if(shippedpkgs.length > 0){
-                                    line = keys[i].toString();
-                                    for(int j = 0;j < shippedpkgs.length;j++){
-                                            ShippedPackage tempSP = (ShippedPackage)shippedpkgs[j];
-                                            line += "[" + tempSP.getCost() + ":" + tempSP.getLocationSent().getWorld().getName() + ";"
-                                            + RSUtils.locAsString(tempSP.getLocationSent()) + ":" + tempSP.getDateSent();
-                                            line += "]" + tempSP.exportContents();
-                                    }
-                            }
-                            break;
-                    case TOCLAIM:
-                            String exportedStr = shopMap.get(keys[i]).exportToClaim();
-                            if(!exportedStr.equals(""))	line = keys[i] + "," + exportedStr;
-                            break;
-                    case STATS:
-                            String statStr = shopMap.get(keys[i]).exportStats();
-                            if(!statStr.equals(""))	line = keys[i] + statStr;
-                            break;
-                    case NOTIFICATIONS:
-                            String s = "";
-                            for(String ss:notificator.get(keys[i])){
-                                    s += "\""+ss;
-                            }
-                            if(!s.equals("")) line = keys[i]+s;
-                            break;
-                    default:
-                            return;
-                }
+                //TODO convert saves with object stream.
+                case INVENTORIES:
+                    line = ((RSPlayerInventory)keys[i]).exportToString();
+                    break;
+                case JAILED:
+                    line = ((String)keys[i]) + ";" + jailedPlayers.get((String)keys[i]).getWorld().getName() + ";" + RSUtils.locAsString(jailedPlayers.get((String)keys[i]));
+                    break;
+                case TPLOCS:
+                    line = ((Location)keys[i]).getWorld().getName() + ";" + RSUtils.locAsString((Location)keys[i]) + ";" + forbiddenTpLocs.get((Location)keys[i]);
+                    break;
+                case PROTECTEDCHESTS:
+                    String protStr = shopMap.get((String)keys[i]).exportProtectedToString();
+                    if(!protStr.equals("")) line = ((String) keys[i]) + ";" + protStr;
+                    break;
+                case SHIPPEDPACKAGES:
+                    FileConfiguration conf = getConfig();
+                    for(String s:shippedToCollect.keySet()){
+                        ConfigurationSection player = conf.createSection(s);
+                        for(ShippedPackage pkg:shippedToCollect.get(s)){
+                            ConfigurationSection date = player.createSection(Long.toString(pkg.getDateSent()));
+                            ShippedSerialization.saveShippedPackage(pkg, date);
+                        }                        
+                    }
+                    conf.save(f);
+                    break;
+                case TOCLAIM:
+                    String exportedStr = shopMap.get((String)keys[i]).exportToClaim();
+                    if(!exportedStr.equals(""))	line = keys[i] + "," + exportedStr;
+                    break;
+                case STATS:
+                    String statStr = shopMap.get((String)keys[i]).exportStats();
+                    if(!statStr.equals(""))	line = keys[i] + statStr;
+                    break;
+                case NOTIFICATIONS:
+                    String s = "";
+                    for(String ss:notificator.get((String)keys[i])){
+                            s += "\""+ss;
+                    }
+                    if(!s.equals("")) line = keys[i]+s;
+                    break;
+                default:
+                    return;
+            }
             if(!line.equals("")) pW.println(line);
         }
         pW.close();

@@ -19,17 +19,26 @@
 
 package com.github.kuben.realshopping;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import org.bukkit.Bukkit;
 
 import org.bukkit.Location;
+import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.inventory.ItemStack;
 
-public class ShippedPackage{
+public class ShippedPackage implements Serializable{
 	
-	private ItemStack[] contents;
+	private transient ItemStack[] contents;
 	private int cost;
 	private long dateSent;
-	private Location locationSent;
+	private transient Location locationSent;
 	
 	public ShippedPackage(ItemStack[] contents, int cost, Location locationSent){
 		this.contents = contents;
@@ -48,6 +57,10 @@ public class ShippedPackage{
 	public ItemStack[] getContents(){
 		return contents;
 	}
+        
+        public void setContents(ItemStack[] itms){
+            contents = itms;
+        }
 	
 	public long getDateSent(){
 		return dateSent;
@@ -60,7 +73,7 @@ public class ShippedPackage{
 	public Location getLocationSent(){
 		return locationSent;
 	}
-	
+	@Deprecated
 	public String exportContents(){
             String s = "";
             for(ItemStack tempIS:contents){
@@ -71,7 +84,9 @@ public class ShippedPackage{
             }
             return (s.length() > 0)?s.substring(1):"";
 	}
-	
+        
+
+        
 	@Override
 	public String toString(){
 		String s = LangPack.SHIPPEDPACKAGESENT + new Date(dateSent) + LangPack.FROM
@@ -82,4 +97,5 @@ public class ShippedPackage{
 		}
 		return s;
 	}
+        
 }
