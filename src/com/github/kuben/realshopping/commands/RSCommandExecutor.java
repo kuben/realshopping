@@ -27,6 +27,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import com.github.kuben.realshopping.Config;
 import com.github.kuben.realshopping.LangPack;
 import com.github.kuben.realshopping.RealShopping;
 
@@ -56,6 +57,7 @@ public class RSCommandExecutor implements CommandExecutor {
 			else if(cmd.getName().equalsIgnoreCase("rsprices")) return new RSPrices(sender, args).exec();
 			else if(cmd.getName().equalsIgnoreCase("rssell")) return new RSSell(sender, args).exec();
 			else if(cmd.getName().equalsIgnoreCase("rsstores")) return new RSStores(sender, args).exec();
+			else if(cmd.getName().equalsIgnoreCase("rsme")) return new RSMe(sender, args).exec();
 			else if(cmd.getName().equalsIgnoreCase("rssetprices")) return new RSSetPrices(sender, args).exec();
 			else if(cmd.getName().equalsIgnoreCase("rssetchests")) return new RSSetChests(sender, args).exec();
 			else if(cmd.getName().equalsIgnoreCase("rssetstores")) return new RSSetStores(sender, args).exec();
@@ -68,7 +70,7 @@ public class RSCommandExecutor implements CommandExecutor {
 			else if(cmd.getName().equalsIgnoreCase("realshopping")) return new RealShoppingCommand(sender, args).exec();
 			else if(cmd.getName().equalsIgnoreCase("rsimport")) return new RSImport(sender, args).exec();
 		} catch(Exception e){
-			//Nothing
+			if(Config.debug == true) e.printStackTrace();
 		}
     	return false;
 	}

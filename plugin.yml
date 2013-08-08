@@ -33,6 +33,11 @@ commands:
       usage: /rssell OR right click obsidian with a brown mushroom on top.
       permission: realshopping.rssell
       permission-message: You don't have permission to use this command
+   rsme:
+      description: Manages every players own settings/
+      usage: /rsme addfav|delfav STORE OR /rsme set SETTING [VALUE] OR /rsme setone STORE SETTING [VALUE|default]
+      permission: realshopping.rsme
+      permission-message: You don't have permission to use this command
    rsstores:
       description: Manages your stores (and admin stores if you have permission).
       usage: /rsstores store [buyfor %_OF_SELL_PRICE|collect [-c] [AMOUNT]|ban PLAYER|unban PLAYER|kick [-o] PLAYER|startsale %_OFF [ITEMID[:DATA][,ITEMID[:DATA][,ITEMID[:DATA]...]]]|endsale|notifications [on|off]|onchange [nothing|notify|changeprices] [TRESHOLD] [PERCENT]]

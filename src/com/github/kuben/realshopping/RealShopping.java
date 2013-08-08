@@ -31,9 +31,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -45,6 +47,10 @@ import net.h31ix.updater.Updater;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -55,14 +61,10 @@ import com.github.kuben.realshopping.commands.RSCommandExecutor;
 import com.github.kuben.realshopping.exceptions.RealShoppingException;
 import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
-import com.github.stengun.realshopping.ShippedSerialization;
 import com.github.stengun.realshopping.PriceParser;
-import java.util.LinkedList;
-import java.util.logging.Level;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
+import com.github.stengun.realshopping.ShippedSerialization;
+
+//TODO better storing of database files
 
 public class RealShopping extends JavaPlugin {//TODO stores case sensitive, players case preserving
 	private Updater updater;
@@ -78,6 +80,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 	private static Set<RSPlayerInventory> PInvSet;//Changed to set
 	public static Map<String, Shop> shopMap;//TODO
 	
+	public static Map<String, PSetting> playerSettings;
 	private static Map<EEPair, Shop> eePairs;
 	private static Map<Price, Integer[]> defPrices;
 	private static Map<Integer, Integer> maxDurMap;
@@ -111,7 +114,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     	setUpdater(null);
     	statUpdater = null;
     	notificatorThread = null;
-    	eePairs = new HashMap<>();
+    	playerSettings = new HashMap<String, PSetting>();
       	defPrices = new HashMap<>();
     	PInvSet = new HashSet<>();
     	maxDurMap = new HashMap<>();
@@ -138,27 +141,28 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     	newUpdate = "";
 
     	if(!smallReload){
-            getServer().getPluginManager().registerEvents(new RSPlayerListener(), this);
-            RSCommandExecutor cmdExe = new RSCommandExecutor(this);
-            getCommand("rsenter").setExecutor(cmdExe);
-            getCommand("rsexit").setExecutor(cmdExe);
-            getCommand("rspay").setExecutor(cmdExe);
-            getCommand("rscost").setExecutor(cmdExe);
-            getCommand("rssell").setExecutor(cmdExe);
-            getCommand("rsprices").setExecutor(cmdExe);
-            getCommand("rsstores").setExecutor(cmdExe);
-            getCommand("rsset").setExecutor(cmdExe);
-            getCommand("rssetstores").setExecutor(cmdExe);
-            getCommand("rssetprices").setExecutor(cmdExe);
-            getCommand("rssetchests").setExecutor(cmdExe);
-            getCommand("rsshipped").setExecutor(cmdExe);
-            getCommand("rstplocs").setExecutor(cmdExe);
-            getCommand("rsunjail").setExecutor(cmdExe);
-            getCommand("rsreload").setExecutor(cmdExe);
-            getCommand("rsprotect").setExecutor(cmdExe);
-            getCommand("rsupdate").setExecutor(cmdExe);
-            getCommand("rsimport").setExecutor(cmdExe);
-            getCommand("realshopping").setExecutor(cmdExe);
+    		getServer().getPluginManager().registerEvents(new RSPlayerListener(), this);
+    		RSCommandExecutor cmdExe = new RSCommandExecutor(this);
+    		getCommand("rsenter").setExecutor(cmdExe);
+    		getCommand("rsexit").setExecutor(cmdExe);
+    		getCommand("rspay").setExecutor(cmdExe);
+    		getCommand("rscost").setExecutor(cmdExe);
+    		getCommand("rssell").setExecutor(cmdExe);
+    		getCommand("rsprices").setExecutor(cmdExe);
+    		getCommand("rsme").setExecutor(cmdExe);
+    		getCommand("rsstores").setExecutor(cmdExe);
+    		getCommand("rsset").setExecutor(cmdExe);
+    		getCommand("rssetstores").setExecutor(cmdExe);
+    		getCommand("rssetprices").setExecutor(cmdExe);
+    		getCommand("rssetchests").setExecutor(cmdExe);
+    		getCommand("rsshipped").setExecutor(cmdExe);
+    		getCommand("rstplocs").setExecutor(cmdExe);
+    		getCommand("rsunjail").setExecutor(cmdExe);
+    		getCommand("rsreload").setExecutor(cmdExe);
+    		getCommand("rsprotect").setExecutor(cmdExe);
+    		getCommand("rsupdate").setExecutor(cmdExe);
+    		getCommand("rsimport").setExecutor(cmdExe);
+    		getCommand("realshopping").setExecutor(cmdExe);
     	}
 
             working = "";
@@ -287,6 +291,8 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 		loadTemporaryFile(TempFiles.TOCLAIM);
 		loadTemporaryFile(TempFiles.STATS);
                 loadTemporaryFile(TempFiles.NOTIFICATIONS);
+		//TODO load psettings and load default prices
+		//TODO modify default prices
 		
 		f = new File(MANDIR + "langpacks/");
 		if(!f.exists()) f.mkdir();
@@ -1375,6 +1381,18 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 		return pString.split(",");
 	}
     
+	public static PSetting getPlayerSettings(Player p){
+		if(!playerSettings.containsKey(p.getName())) playerSettings.put(p.getName(), new PSetting());
+		return playerSettings.get(p.getName());
+	}
+
+	public static String getPSettingPlayer(PSetting ps){
+		for(String p:playerSettings.keySet().toArray(new String[0])){
+			if(playerSettings.get(p) == ps) return p;
+		}
+		return null;
+	}
+	
 	public static RSPlayerInventory getPInv(Player player){
 		for(RSPlayerInventory pInv:PInvSet)
 			if(pInv.getPlayer().equals(player.getName())) return pInv;
