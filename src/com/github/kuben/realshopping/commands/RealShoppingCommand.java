@@ -61,9 +61,9 @@ class RealShoppingCommand extends RSCommand {
 		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "keep-stolen-items-after-punish:"+Config.isKeepstolen());i++;
 		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "punishment:"+Config.getPunishment());i++;
 		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "enable-automatic-store-management:"+Config.isEnableAI());i++;
-		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "stat-updater-frequency:"+Config.getTimeString(Config.getUpdateFreq()));i++;
-		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "statistics-timespan:"+Config.getTimeString(Config.getStatTimespan()));i++;
-		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "clean-stats-older-than:"+Config.getTimeString(Config.getCleanStatsOld()));i++;
+		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "stat-updater-frequency:"+RSUtils.getTimeString(Config.getUpdateFreq()));i++;
+		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "statistics-timespan:"+RSUtils.getTimeString(Config.getStatTimespan()));i++;
+		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "clean-stats-older-than:"+RSUtils.getTimeString(Config.getCleanStatsOld()));i++;
 		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "allow-filling-chests:"+Config.isAllowFillChests());i++;
 		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "notificatior-update-frequency:"+Config.getNotTimespan());i++;
 		if(pg < 3) sender.sendMessage(ChatColor.DARK_PURPLE + "realshopping " + (pg + 1) + LangPack.FOR_MORE);

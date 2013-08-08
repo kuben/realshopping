@@ -19,18 +19,26 @@
 
 package com.github.kuben.realshopping;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import org.bukkit.Bukkit;
 
 import org.bukkit.Location;
-import org.bukkit.enchantments.Enchantment;
+import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.inventory.ItemStack;
 
-public class ShippedPackage{
+public class ShippedPackage implements Serializable{
 	
-	private ItemStack[] contents;
+	private transient ItemStack[] contents;
 	private int cost;
 	private long dateSent;
-	private Location locationSent;
+	private transient Location locationSent;
 	
 	public ShippedPackage(ItemStack[] contents, int cost, Location locationSent){
 		this.contents = contents;
@@ -49,6 +57,10 @@ public class ShippedPackage{
 	public ItemStack[] getContents(){
 		return contents;
 	}
+        
+        public void setContents(ItemStack[] itms){
+            contents = itms;
+        }
 	
 	public long getDateSent(){
 		return dateSent;
@@ -61,22 +73,20 @@ public class ShippedPackage{
 	public Location getLocationSent(){
 		return locationSent;
 	}
-	
+	@Deprecated
 	public String exportContents(){
-		String s = "";
-		for(ItemStack tempIS:contents){
-			if(tempIS == null) s += ",null";
-			else {
-				s += "," + tempIS.getTypeId() + ":" + tempIS.getAmount() + ":" + tempIS.getDurability() + ":" + tempIS.getData().getData();
-				Object[] ench = tempIS.getEnchantments().keySet().toArray();
-				for(Object en:ench){
-					s += ":" + ((Enchantment)en).getId() + ";" + tempIS.getEnchantments().get(en);
-				}
-			}
-		}
-		return (s.length() > 0)?s.substring(1):"";
+            String s = "";
+            for(ItemStack tempIS:contents){
+                    if(tempIS == null) s += ",null";
+                    else {
+                        s += "," + tempIS.getType() +":"+ tempIS.getData().getData() + ":"+ tempIS.getAmount() + ":" + tempIS.getDurability();
+                    }
+            }
+            return (s.length() > 0)?s.substring(1):"";
 	}
-	
+        
+
+        
 	@Override
 	public String toString(){
 		String s = LangPack.SHIPPEDPACKAGESENT + new Date(dateSent) + LangPack.FROM
@@ -87,4 +97,5 @@ public class ShippedPackage{
 		}
 		return s;
 	}
+        
 }

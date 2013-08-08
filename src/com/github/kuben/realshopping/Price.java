@@ -20,69 +20,82 @@
 package com.github.kuben.realshopping;
 
 import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.MaterialData;
-
+/**
+ * This class represents a price for an item inside the store.
+ * The price must be unique for custom items (the ones that have a different ItemMeta()).
+ * This class also stores the hint (if present) of this item when printing prices with /rsprices.
+ * @author stengun
+ */
         
 public final class Price {
 	private int type;
 	private byte data;
         private int metahash;
-        private String display_name;
-	
-//        public Price(ItemMeta meta, int type) {
-//                this(meta,type,Byte.parseByte("-1"));
-//        }
-//        
-//        public Price(ItemMeta meta, int type, byte data) {
-//                this(type,data);
-//                this.metahash = meta.hashCode();
-//
-//        }
+        private String description;
         
 	public Price(int type){
             this(type,Byte.parseByte("0"));
 	}
-	
 	public Price(int type, byte data){
             this(new MaterialData(type, data).toItemStack());
 	}
-        public Price(int type, byte data, String displayname, int metahash){
+        public Price(int type, byte data, int metahash){
             this.type = type;
             this.data = data;
-            this.display_name = displayname;
             this.metahash = metahash;
+            this.description = null;
         }
-        
+        /**
+         * Correctly builds a Price from an itemstack.
+         * This constructor is preferred when building a new Price.
+         * @param itm Itemstack from where taking the values.
+         */
         public Price(ItemStack itm) {
-            this(itm.getTypeId(),itm.getData().getData(),null,0);
-            if(itm.hasItemMeta()){
-                ItemMeta meta = itm.getItemMeta();
-                if(this.type == Material.WRITTEN_BOOK.getId()) this.display_name = ((BookMeta)meta).getTitle();
-                this.metahash = meta.hashCode();
-                if(meta.hasDisplayName()) this.display_name = meta.getDisplayName();
+            this(itm.getTypeId(),itm.getData().getData(),0);
+            if(itm.hasItemMeta()) this.metahash = itm.getItemMeta().hashCode();
+            if(RealShopping.isTool(itm.getTypeId())){ // Prototype for different Durability on items.
+                final int prime = 31;
+                this.metahash = (this.metahash + (itm.getDurability() * prime))*prime;
             }
         }
-        @Deprecated
+        /**
+         * Constructs a price object from a string.
+         * The string must be formatted as follows:
+         * ID:data:metahash[:description]
+         * @param s A string representing a price object.
+         */
 	public Price(String s){
-		this.type = Integer.parseInt(s.split(":")[0]);
-		this.data = s.split(":").length==1?-1:Byte.parseByte(s.split(":")[1]);
+            String[] tmp = s.split(":");
+            this.type = Integer.parseInt(tmp[0]);
+            this.data = Byte.parseByte(tmp[1]);
+            this.metahash = Integer.parseInt(tmp[2]);
+            if(tmp.length >3){
+                this.description = tmp[3];
+            }
 	}
-        
+        /**
+         * This method creates a dummy itemstack of this object.
+         * Use only in situations where you need an itemstack and a presence of ItemMeta is irrelevant.
+         * @return Dummy itemstack object.
+         */
         public ItemStack toItemStack(){
 		ItemStack tempIS = new MaterialData(type, data).toItemStack();
 		return tempIS;
 	}
         
-        public String getDisplayName(){
-            return display_name;
+        public String getDescription(){
+            return description;
         }
         
-        public boolean hasDisplayName(){
-            return display_name != null;
+        public void setDescription(String s){
+            this.description = s;
+        }
+        
+        public boolean hasDescription(){
+            return !(description == null || description.equals("") || description.isEmpty());
         }
         
         public int getType() {
@@ -92,34 +105,38 @@ public final class Price {
 	public byte getData() {
 		return data;
 	}
-
+@Deprecated
 	public Price stripOffData(){
 		return new Price(type);
 	}
 	
-        /*
-         * Returns a item standard formatted string like
-         * ID:DATA NAME
-         * where NAME can be the display name (if present) of item 
-         * or else the material type.
+        /**
+         * Returns a standard formatted string like
+         * ID:DATA MATNAME [- NAME]
+         * where MATNAME is the material name, NAME can be the hint string (if present) of that item.
+         * @return Display formatted string for this object.
          */
         public String formattedString(){
-            String s = type+(data > 0?":"+data:"")+" "+Material.getMaterial(type).toString();
-            s += (display_name != null ? " - "+display_name:"");
-            return s;
+            return type+(data > 0?":"+data:"")+" "+Material.getMaterial(type).toString() + (hasDescription() ? " - "+description:"");
         }
+        /**
+         * Formats this object with a stat formatted string with amount.
+         * The format will be:
+         * ID:DATA:AMOUNT[:DESCRIPTION]
+         * @param amount amount of that item.
+         * @return this formatted object.
+         */
         public String toString(int amount) {
-            String s = "";
-                s += getType() + ":" + amount + (getData() > 0?":"+getData():"");
-                if(hasDisplayName()){
-                    s+="[Name:"+this.display_name+"]";
-                }
-                return s;
+            return toString() + amount;
         }
         
+        /**
+         * Returns a string that represents this Price object and that can be parsed by Price(String ) constructor.
+         * @return Constructor ready string for this object.
+         */
 	@Override
 	public String toString() {
-                return type+":"+data;
+            return type+":"+data+":"+metahash+(hasDescription()?":"+description:"");
 	}
 	
 	@Override

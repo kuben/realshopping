@@ -1,6 +1,6 @@
 /*
  * RealShopping Bukkit plugin for Minecraft
- * Copyright 2013 Roberto Benfatto
+ * Copyright 2013 Jakub Fojt
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,17 +44,24 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
 /**
- * 
  * Price.xml parser implemented with DOM xml parser.
  * This class is a replacement for realshopping's SAX parser, implemented for parsing prices.xml.
- * this class uses the same code as original realshopping saver, it's only recoded to fit new save format.
+ * The save format is created to give the ability to save the new Price structure.
  * @author stengun
  */
 public class PriceParser {
     static final String outputEncoding ="UTF-8";
     
     //Static utils
+    /**
+     * Loads a saved shop/price map from a file.
+     * @param shopmap Map of all shops where to save prices.
+     * @throws ParserConfigurationException
+     * @throws SAXException
+     * @throws IOException 
+     */
     public static void loadPriceMap(Map<String,Shop> shopmap) throws ParserConfigurationException, SAXException, IOException{
         File f = new File(MANDIR+"prices.xml");
         if(!f.exists()){
@@ -75,7 +82,14 @@ public class PriceParser {
             parseShop((Element)shops.item(i),shopmap);
         }
     }
-    
+    /**
+     * Saves to file the entire shop/price map.
+     * @param shopmap Map where to take shops and prices.
+     * @throws ParserConfigurationException
+     * @throws FileNotFoundException
+     * @throws TransformerConfigurationException
+     * @throws TransformerException 
+     */
     public static void savePriceMap(Map<String, Shop> shopmap) throws ParserConfigurationException, FileNotFoundException, TransformerConfigurationException, TransformerException {
         File f = new File(MANDIR+"prices.xml");//Reset file
         //if(f.exists()) f.delete();
@@ -100,7 +114,7 @@ public class PriceParser {
             for(Object obj:ids){
                 Price obitm = (Price)obj;
                 Element item = doc.createElement("item");
-                item.setAttribute("id", obitm.toString());
+                item.setAttribute("id", obitm.getType()+":"+obitm.getData());
                 Integer[] p = shopPrices.get(obitm);
                 item.setAttribute("cost", (((float)p[0])/100) + "");//Save as decimal numbers
                 if(p.length == 3){
@@ -112,9 +126,9 @@ public class PriceParser {
                 metahash.setTextContent((Integer.toString(obitm.getMetaHash())));
                 item.appendChild(metahash);
                 
-                if(obitm.hasDisplayName()){
-                    Element itemname = doc.createElement("name");
-                    itemname.setTextContent(obitm.getDisplayName());
+                if(obitm.hasDescription()){
+                    Element itemname = doc.createElement("description");
+                    itemname.setTextContent(obitm.getDescription());
                     item.appendChild(itemname);
                 }
                 shop.appendChild(item);
@@ -135,7 +149,7 @@ public class PriceParser {
         transformer.transform(source, result);
     }
     
-    // Private members
+    // Private membes
     private static void parseShop(Element shop, Map<String,Shop> shopmap){
         if(shopmap.get(shop.getAttribute("name")) == null) return;
         NodeList prices = shop.getElementsByTagName("item");
@@ -152,7 +166,7 @@ public class PriceParser {
         Integer[] itemcost;
         int itemid = 0;
         byte itemdata = -1;
-        String dispname = null;
+        String desc = null;
         int metahash;
         
         //costs setting
@@ -167,9 +181,10 @@ public class PriceParser {
             itemdata = Byte.parseByte(price.getAttribute("id").split(":")[1]);
         }
         metahash = Integer.parseInt(price.getElementsByTagName("meta").item(0).getTextContent());
-        if(price.getElementsByTagName("name").getLength()!=0) dispname = price.getElementsByTagName("name").item(0).getTextContent();
+        if(price.getElementsByTagName("description").getLength()!=0) desc = price.getElementsByTagName("description").item(0).getTextContent();
 
-        Price p = new Price(itemid,itemdata,dispname,metahash);
+        Price p = new Price(itemid,itemdata,metahash);
+        p.setDescription(desc);
         return new Object[]{p,itemcost};
     }
 }

@@ -230,13 +230,13 @@ public class Config {
 					pW.println("enable-automatic-store-management:"+enableAI);
 					notInConfig -= ENABLEAI;
 				} if(notInConfig >= UPDATEFREQ){
-					pW.println("stat-updater-frequency:"+getTimeString(updateFreq));
+					pW.println("stat-updater-frequency:"+RSUtils.getTimeString(updateFreq));
 					notInConfig -= UPDATEFREQ;
 				} if(notInConfig >= STATTIMESPAN){
-					pW.println("statistics-timespan:"+getTimeString(statTimespan));
+					pW.println("statistics-timespan:"+RSUtils.getTimeString(statTimespan));
 					notInConfig -= STATTIMESPAN;
 				} if(notInConfig >= CLEANSTATSOLD){
-					pW.println("clean-stats-older-than:"+getTimeString(cleanStatsOld));
+					pW.println("clean-stats-older-than:"+RSUtils.getTimeString(cleanStatsOld));
 					notInConfig -= CLEANSTATSOLD;
 				}
 				pW.close();
@@ -489,13 +489,13 @@ public class Config {
 					enableAI = Boolean.parseBoolean(s.split(":")[1]);
 					return ENABLEAI;
 				} else if(s.split(":")[0].equals("stat-updater-frequency")){
-					updateFreq = getTimeInt(s.split(":")[1]);
+					updateFreq = RSUtils.getTimeInt(s.split(":")[1]);
 					return UPDATEFREQ;
 				} else if(s.split(":")[0].equals("statistics-timespan")){
-					statTimespan = getTimeInt(s.split(":")[1]);
+					statTimespan = RSUtils.getTimeInt(s.split(":")[1]);
 					return STATTIMESPAN;
 				} else if(s.split(":")[0].equals("clean-stats-older-than")){
-					cleanStatsOld = getTimeInt(s.split(":")[1]);
+					cleanStatsOld = RSUtils.getTimeInt(s.split(":")[1]);
 					return CLEANSTATSOLD;
 				} else if(s.split(":")[0].equals("notificatior-update-frequency")){
 					notTimespan = Integer.parseInt(s.split(":")[1]);
@@ -515,22 +515,6 @@ public class Config {
 		else return "false";//No automatic updates at all
 	}
 	
-	public static String getTimeString(int t){
-		if(t == 3600) return "hour";
-		else if(t == 86400) return "day";
-		else if(t == 604800) return "week";
-		else if(t == 2592000) return "month";
-		else return t + "";
-	}
-	
-	static int getTimeInt(String s){
-		if(s.equals("hour")) return 3600;
-		else if(s.equals("day")) return 86400;
-		else if(s.equals("week")) return 604800;
-		else if(s.equals("month")) return 2592000;
-		else return Integer.parseInt(s);
-	}
-
 	public static boolean isKeepstolen() { return keepstolen; }
 	public static boolean isEnableSelling() { return enableSelling; }
 	public static boolean isAutoprotect() { return autoprotect; }
