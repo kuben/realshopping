@@ -32,7 +32,7 @@ import org.bukkit.block.DoubleChest;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.StorageMinecart;
+import org.bukkit.entity.minecart.StorageMinecart;
 import org.bukkit.event.Event;
 import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
@@ -258,8 +258,8 @@ public class RSPlayerListener implements Listener {
 		Player player = (Player) event.getPlayer();
 		if(!launchConversationListener(player, event)){//Redirects event if player is in conversation, otherwise as usual
 	        if (event.getInventory().getTitle().equals(LangPack.SELLTOSTORE)){//TODO consider if this is a good idea, Probably isn't. Create own class extending inventory???
-	        	if(RealShopping.hasPInv((Player) event.getPlayer())){//If player is in store
-	        		Shop.sellToStore((Player) event.getPlayer(), event.getInventory().getContents());
+	        	if(RealShopping.hasPInv(player)){//If player is in store
+	        		Shop.sellToStore(player, event.getInventory().getContents());
 	        	}
 	        }
 		}

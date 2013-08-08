@@ -234,47 +234,47 @@ class RSStores extends RSCommand {
 	}
 	
 	private boolean startsale(){
-		try {
-			int pcnt = Integer.parseInt(args[2]);
-			if(pcnt < 100){
-				if(pcnt > 0){
-					Shop tempShop = RealShopping.shopMap.get(args[0]);
-					if(tempShop != null){
-						if(tempShop.hasPrices()){
-							tempShop.clearSales();
-							if(args.length == 3){
-								Price[] keys = tempShop.getPrices().keySet().toArray(new Price[0]);
-								int i = 0;
-								for(;i < keys.length;i++){
-									tempShop.addSale(keys[i], pcnt);
-								}
-								if(pcnt > 0) sender.sendMessage(ChatColor.GREEN + "" + pcnt + LangPack.PCNTOFF + i + LangPack.ITEMS);
-								else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);
-								return true;
-							} else {//If args.length > 3
-								String[] keys = args[3].split(",");
-								if(keys.length > 0){
-									int i = 0, j = 0;
-									for(;i < keys.length;i++){
-										Price tempP = RSUtils.pullPrice(keys[i]);
-										if(tempShop.hasPrice(tempP) || tempShop.hasPrice(tempP.stripOffData())){
-											tempShop.addSale(tempP, pcnt);
-											j++;
-										}
-									}
-									if(pcnt > 0) sender.sendMessage(ChatColor.GREEN + "" + pcnt + LangPack.PCNTOFF + j + LangPack.ITEMS);
-									else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);
-									return true;
-								} else sender.sendMessage(ChatColor.RED + args[3] + LangPack.ISNOTAVALIDARGUMENT);
-							}
-						} else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);	
-					} else sender.sendMessage(ChatColor.RED + LangPack.STORE + args[0] + LangPack.DOESNTEXIST);
-				} else sender.sendMessage(ChatColor.RED + LangPack.YOUCANTUSEAVALUEOF0ORLESS);
-			} else  sender.sendMessage(ChatColor.RED + LangPack.YOUCANTUSEAVALUEOF100ORMORE);
-		} catch(NumberFormatException e){
-			sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTANINTEGER);
-		}
-		return false;
+            try {
+                int pcnt = Integer.parseInt(args[2]);
+                if(pcnt < 100){
+                    if(pcnt > 0){
+                        Shop tempShop = RealShopping.shopMap.get(args[0]);
+                        if(tempShop != null){
+                            if(tempShop.hasPrices()){
+                                tempShop.clearSales();
+                                if(args.length == 3){
+                                    Price[] keys = tempShop.getPrices().keySet().toArray(new Price[0]);
+                                    int i = 0;
+                                    for(;i < keys.length;i++){
+                                        tempShop.addSale(keys[i], pcnt);
+                                    }
+                                    if(pcnt > 0) sender.sendMessage(ChatColor.GREEN + "" + pcnt + LangPack.PCNTOFF + i + LangPack.ITEMS);
+                                    else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);
+                                    return true;
+                                } else {//If args.length > 3
+                                    String[] keys = args[3].split(",");
+                                    if(keys.length > 0){
+                                        int i = 0, j = 0;
+                                        for(;i < keys.length;i++){
+                                            Price tempP = RSUtils.pullPrice(keys[i],this.player);
+                                            if(tempShop.hasPrice(tempP) || tempShop.hasPrice(tempP.stripOffData())){
+                                                tempShop.addSale(tempP, pcnt);
+                                                j++;
+                                            }
+                                        }
+                                        if(pcnt > 0) sender.sendMessage(ChatColor.GREEN + "" + pcnt + LangPack.PCNTOFF + j + LangPack.ITEMS);
+                                        else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);
+                                        return true;
+                                    } else sender.sendMessage(ChatColor.RED + args[3] + LangPack.ISNOTAVALIDARGUMENT);
+                                }
+                            } else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);	
+                        } else sender.sendMessage(ChatColor.RED + LangPack.STORE + args[0] + LangPack.DOESNTEXIST);
+                    } else sender.sendMessage(ChatColor.RED + LangPack.YOUCANTUSEAVALUEOF0ORLESS);
+                } else  sender.sendMessage(ChatColor.RED + LangPack.YOUCANTUSEAVALUEOF100ORMORE);
+            } catch(NumberFormatException e){
+                sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTANINTEGER);
+            }
+            return false;
 	}
 	
 	private boolean endsale(){

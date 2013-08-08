@@ -40,7 +40,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 public class RSEconomy {
 
     private static Economy econ;//Vault economy
-	private static Map<String, Long> accounts = new HashMap<String, Long>();//Stores pennies
+	private static Map<String, Long> accounts = new HashMap<>();//Stores pennies
 	//Simple and lightweight economy
 
 	public static double getBalance(String p){
@@ -168,9 +168,9 @@ class StatUpdater extends Thread {
 			Statistic[] sKeys = RealShopping.shopMap.get(s).getStats().toArray(new Statistic[0]);
 			for(Statistic stat:sKeys){
 				if((System.currentTimeMillis()/1000) - Config.getStatTimespan() < stat.getTime()/1000 && stat.isBought()){//Only past <timespan> and only bought
-					if(!statsMap.containsKey(stat.getItem().type)) statsMap.put(stat.getItem().type, new TreeMap<String, Integer>());
-					if(!statsMap.get(stat.getItem().type).containsKey(s)) statsMap.get(stat.getItem().type).put(s, 0);
-					statsMap.get(stat.getItem().type).put(s, statsMap.get(stat.getItem().type).get(s) + stat.getAmount());
+					if(!statsMap.containsKey(stat.getItem().getType())) statsMap.put(stat.getItem().getType(), new TreeMap<String, Integer>());
+					if(!statsMap.get(stat.getItem().getType()).containsKey(s)) statsMap.get(stat.getItem().getType()).put(s, 0);
+					statsMap.get(stat.getItem().getType()).put(s, statsMap.get(stat.getItem().getType()).get(s) + stat.getAmount());
 				} else
 				if((System.currentTimeMillis()/1000) - Math.max(Config.getCleanStatsOld(), Math.max(Config.getStatTimespan(), Config.getUpdateFreq())) > stat.getTime()/1000){
 					RealShopping.shopMap.get(s).removeStat(stat);	
