@@ -165,108 +165,108 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     		getCommand("realshopping").setExecutor(cmdExe);
     	}
 
-   		working = "";
-   		tpLocBlacklist = true;
-        
-   		PromptMaster.initialize(this);
-   		RSEconomy.setupEconomy();
-		Config.initialize();
-		if(Config.getAutoUpdate() > 0){
-			if(Config.getAutoUpdate() == 5){
-				setUpdater(new Updater(this, "realshopping", this.getFile(), Updater.UpdateType.DEFAULT, true));
-				if(getUpdater().getResult() == Updater.UpdateResult.SUCCESS){
-					log.info(LangPack.REALSHOPPINGUPDATEDTO + getUpdater().getLatestVersionString() + LangPack.RESTARTTHESERVER_VERSION);
-				}
-			} else {
-				setUpdater(new Updater(this, "realshopping", this.getFile(), Updater.UpdateType.NO_DOWNLOAD, true));
-				if(getUpdater().getResult() == Updater.UpdateResult.UPDATE_AVAILABLE){
-	    			if(Config.getAutoUpdate() > 2)
-    						newUpdate = getUpdater().getLatestVersionString() + LangPack.OFRE_UPDATECOMMAND;
-	    			else
-    						newUpdate = getUpdater().getLatestVersionString()
-    						+ LangPack.OFRE_UPDATEINFO + ChatColor.LIGHT_PURPLE + "/rsupdate info";
-	    			log.info(newUpdate);
-				}
-			}
-		}
-		
-		File f;
-		FileInputStream fstream;
-		BufferedReader br;
-		try {
-			f = new File(MANDIR + "shops.db");
-			if(!f.exists()){
-				f.createNewFile();
-			} else {
-				fstream = new FileInputStream(f);
-				br = new BufferedReader(new InputStreamReader(fstream));
-				String s;
-				String header = "Shops database for RealShopping v";
-				Float version = 0f;
-				boolean notHeader = true;
-				while ((s = br.readLine()) != null){// Read shops.db
-					notHeader = true;
-					if(version == 0 && s.length() > header.length() && s.substring(0, header.length()).equals(header)){
-						version = Float.parseFloat(s.substring(header.length()));
-						notHeader = false;
-					}
-					if(notHeader) {
-    					String[] tS = s.split(";")[0].split(":");
-    		    		shopMap.put(tS[0], new Shop(tS[0], tS[1], (version >= 0.20)?tS[2]:"@admin"));
-    		    		if(version >= 0.30) shopMap.get(tS[0]).setBuyFor(Integer.parseInt(tS[3]));
-    		    		if(version >= 0.40){
-    		    			byte notifyByte = 0;
-    		    			if(tS[4].equals("notify")) notifyByte = 1;
-    		    			else if(tS[4].equals("change")) notifyByte = 2;
-    		    			shopMap.get(tS[0]).setNotifyChanges(notifyByte);
-    		    			shopMap.get(tS[0]).setChangeTreshold(Integer.parseInt(tS[5]));
-    		    			shopMap.get(tS[0]).setChangePercent(Integer.parseInt(tS[6]));
-    		    			shopMap.get(tS[0]).setAllowNotifications(Boolean.parseBoolean(tS[7]));
-    		    		}
-    					for(int i = (version >= 0.40)?8:(version >= 0.30)?4:(version >= 0.20)?3:2;i < tS.length;i++){//The entrances + exits
-    						String[] tSS = tS[i].split(",");
-    			    		Location en = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[0]),Integer.parseInt(tSS[1]), Integer.parseInt(tSS[2]));
-    			    		Location ex = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[3]),Integer.parseInt(tSS[4]), Integer.parseInt(tSS[5]));
-    			    		try { shopMap.get(tS[0]).addEntranceExit(en, ex); } catch (RealShoppingException e) { }//Ignore
-    					}
-    					for(int i = 1;i < s.split(";").length;i++){//There are chests
-    						Location l = new Location(getServer().getWorld(tS[1]), Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[0])
-    														, Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[1])
-    														, Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[2]));
-    						shopMap.get(tS[0]).addChest(l);
-    						String idS = s.split(";")[i].split("\\[")[1].split("\\]")[0];
-    						if(!idS.split(",")[0].trim().equals("")){
-    							int[][] ids = new int[idS.split(",").length][3];
-    							for(int j = 0;j < ids.length;j++){//The chests
-    								if(idS.split(",")[j].contains(":")){
-    									ids[j][0] = Integer.parseInt(idS.split(",")[j].split(":")[0].trim());
-    									ids[j][1] = Integer.parseInt(idS.split(",")[j].split(":")[1].trim());
-        								if(idS.split(",")[j].split(":").length > 2)
-        									ids[j][2] = Integer.parseInt(idS.split(",")[j].split(":")[2].trim());
-        								else ids[j][2] = 0;
-    								} else {
-    									ids[j][0] = Integer.parseInt(idS.split(",")[j].trim());
-    									ids[j][1] = 0;
-    									ids[j][2] = 0;
-    								}
-    							}
-    							shopMap.get(tS[0]).addChestItem(l, ids);
-    						}
-    					}
-    					int bIdx = s.indexOf("BANNED_");
-    					if(bIdx > -1){//There are banned players
-    						String[] banned = s.substring(bIdx + 7).split(",");
-    						for(int i = 0;i < banned.length;i++){
-    							shopMap.get(tS[0]).addBanned(banned[i]);
-    						}
-    					}
-					}
-				}
-				fstream.close();
-				br.close();
-				if(version < VERFLOAT)//Needs updating
-					updateEntrancesDb();
-			}
+            working = "";
+            tpLocBlacklist = true;
+
+            PromptMaster.initialize(this);
+            RSEconomy.setupEconomy();
+            Config.initialize();
+            if(Config.getAutoUpdate() > 0){
+                    if(Config.getAutoUpdate() == 5){
+                            setUpdater(new Updater(this, "realshopping", this.getFile(), Updater.UpdateType.DEFAULT, true));
+                            if(getUpdater().getResult() == Updater.UpdateResult.SUCCESS){
+                                    log.info(LangPack.REALSHOPPINGUPDATEDTO + getUpdater().getLatestVersionString() + LangPack.RESTARTTHESERVER_VERSION);
+                            }
+                    } else {
+                            setUpdater(new Updater(this, "realshopping", this.getFile(), Updater.UpdateType.NO_DOWNLOAD, true));
+                            if(getUpdater().getResult() == Updater.UpdateResult.UPDATE_AVAILABLE){
+                            if(Config.getAutoUpdate() > 2)
+                                            newUpdate = getUpdater().getLatestVersionString() + LangPack.OFRE_UPDATECOMMAND;
+                            else
+                                            newUpdate = getUpdater().getLatestVersionString()
+                                            + LangPack.OFRE_UPDATEINFO + ChatColor.LIGHT_PURPLE + "/rsupdate info";
+                            log.info(newUpdate);
+                            }
+                    }
+            }
+
+            File f;
+            FileInputStream fstream;
+            BufferedReader br;
+            try {
+                    f = new File(MANDIR + "shops.db");
+                    if(!f.exists()){
+                            f.createNewFile();
+                    } else {
+                            fstream = new FileInputStream(f);
+                            br = new BufferedReader(new InputStreamReader(fstream));
+                            String s;
+                            String header = "Shops database for RealShopping v";
+                            Float version = 0f;
+                            boolean notHeader = true;
+                            while ((s = br.readLine()) != null){// Read shops.db
+                                    notHeader = true;
+                                    if(version == 0 && s.length() > header.length() && s.substring(0, header.length()).equals(header)){
+                                            version = Float.parseFloat(s.substring(header.length()));
+                                            notHeader = false;
+                                    }
+                                    if(notHeader) {
+                                    String[] tS = s.split(";")[0].split(":");
+                            shopMap.put(tS[0], new Shop(tS[0], tS[1], (version >= 0.20)?tS[2]:"@admin"));
+                            if(version >= 0.30) shopMap.get(tS[0]).setBuyFor(Integer.parseInt(tS[3]));
+                            if(version >= 0.40){
+                                    byte notifyByte = 0;
+                                    if(tS[4].equals("notify")) notifyByte = 1;
+                                    else if(tS[4].equals("change")) notifyByte = 2;
+                                    shopMap.get(tS[0]).setNotifyChanges(notifyByte);
+                                    shopMap.get(tS[0]).setChangeTreshold(Integer.parseInt(tS[5]));
+                                    shopMap.get(tS[0]).setChangePercent(Integer.parseInt(tS[6]));
+                                    shopMap.get(tS[0]).setAllowNotifications(Boolean.parseBoolean(tS[7]));
+                            }
+                                    for(int i = (version >= 0.40)?8:(version >= 0.30)?4:(version >= 0.20)?3:2;i < tS.length;i++){//The entrances + exits
+                                            String[] tSS = tS[i].split(",");
+                                    Location en = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[0]),Integer.parseInt(tSS[1]), Integer.parseInt(tSS[2]));
+                                    Location ex = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[3]),Integer.parseInt(tSS[4]), Integer.parseInt(tSS[5]));
+                                    try { shopMap.get(tS[0]).addEntranceExit(en, ex); } catch (RealShoppingException e) { }//Ignore
+                                    }
+                                    for(int i = 1;i < s.split(";").length;i++){//There are chests
+                                            Location l = new Location(getServer().getWorld(tS[1]), Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[0])
+                                                                                                            , Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[1])
+                                                                                                            , Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[2]));
+                                            shopMap.get(tS[0]).addChest(l);
+                                            String idS = s.split(";")[i].split("\\[")[1].split("\\]")[0];
+                                            if(!idS.split(",")[0].trim().equals("")){
+                                                    int[][] ids = new int[idS.split(",").length][3];
+                                                    for(int j = 0;j < ids.length;j++){//The chests
+                                                            if(idS.split(",")[j].contains(":")){
+                                                                    ids[j][0] = Integer.parseInt(idS.split(",")[j].split(":")[0].trim());
+                                                                    ids[j][1] = Integer.parseInt(idS.split(",")[j].split(":")[1].trim());
+                                                                    if(idS.split(",")[j].split(":").length > 2)
+                                                                            ids[j][2] = Integer.parseInt(idS.split(",")[j].split(":")[2].trim());
+                                                                    else ids[j][2] = 0;
+                                                            } else {
+                                                                    ids[j][0] = Integer.parseInt(idS.split(",")[j].trim());
+                                                                    ids[j][1] = 0;
+                                                                    ids[j][2] = 0;
+                                                            }
+                                                    }
+                                                    shopMap.get(tS[0]).addChestItem(l, ids);
+                                            }
+                                    }
+                                    int bIdx = s.indexOf("BANNED_");
+                                    if(bIdx > -1){//There are banned players
+                                            String[] banned = s.substring(bIdx + 7).split(",");
+                                            for(int i = 0;i < banned.length;i++){
+                                                    shopMap.get(tS[0]).addBanned(banned[i]);
+                                            }
+                                    }
+                                    }
+                            }
+                            fstream.close();
+                            br.close();
+                            if(version < VERFLOAT)//Needs updating
+                                    updateEntrancesDb();
+                    }
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			log.info("Failed while reading shops.db");
@@ -296,7 +296,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 		
 		f = new File(MANDIR + "langpacks/");
 		if(!f.exists()) f.mkdir();
-    	LangPack.initialize(Config.getLangpack());
+                LangPack.initialize(Config.getLangpack());
 		initForbiddenInStore();
 		initMaxDur();
 		initAliases();
