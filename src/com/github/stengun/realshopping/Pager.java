@@ -1,6 +1,5 @@
 package com.github.stengun.realshopping;
 
-import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,19 +44,34 @@ public class Pager extends Thread{
         wait();
     }
     
+    /**
+     * Tells this thread to wake up and check for page flip.
+     */
     public synchronized void push(){
         notify();
     }
     
+    /**
+     * This method sets the time in milliseconds that we must wait before resetting pages to default.
+     * @param time Time in milliseconds.
+     */
     public void setTime(long time){
         this.time = time;
     }
     
+    /**
+     * Gets the current page we're viewing.
+     * @return page number, starting from 1.
+     */
     public int getPage(){
         return page;
     }
-    
+    /**
+     * Tells this tread to stop.
+     * @param stop true if we want the thread to stop.
+     */
     public void setStop(boolean stop){
         this.stop = stop;
+        push();
     }
 }

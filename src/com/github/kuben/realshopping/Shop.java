@@ -297,7 +297,7 @@ public class Shop {//TODO add load/save interface
     
     /*
      * 
-     * Player timer threads
+     * Player timer threads for page flipping.
      * 
      */
     
@@ -309,8 +309,8 @@ public class Shop {//TODO add load/save interface
     
     private static void removePager(String player){
         Pager pg = timers.get(player);
+        if(pg == null) return;
         pg.setStop(true);
-        pg.push();
         try {
             pg.join(5000);
         } catch (InterruptedException ex) {
@@ -329,7 +329,6 @@ public class Shop {//TODO add load/save interface
         if(timers.containsKey(player)){
             Pager pg = timers.get(player);
             pg.setStop(true);
-            pg.push();
             try {
                 pg.join(5000);
             } catch (InterruptedException ex) {
