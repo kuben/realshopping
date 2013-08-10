@@ -53,6 +53,7 @@ class RSSetPrices extends RSCommand {
     }
 
     private boolean del(){
+        
         try {
             Price p = RSUtils.pullPrice(arg,this.player);
             String dString = p.getData()>-1?"("+p.getData()+")":"";
@@ -157,7 +158,7 @@ class RSSetPrices extends RSCommand {
                 return false;
             }
             shop = RealShopping.shopMap.get(store);
-            arg = args[startargs];
+            if(arg.length() > 1) arg = args[startargs];
             //This trick will avoid the use of a second switch case
             if((!shop.getOwner().equals(player.getName()) || !player.hasPermission("realshopping.rsset"))){
                 sender.sendMessage(ChatColor.RED + LangPack.YOUARENTPERMITTEDTOEMANAGETHISSTORE);
