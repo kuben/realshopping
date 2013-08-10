@@ -61,10 +61,11 @@ import com.github.kuben.realshopping.Shop;
 import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.kuben.realshopping.exceptions.RSListenerException;
 import com.github.kuben.realshopping.exceptions.RSListenerException.Type;
+import com.github.stengun.realshopping.Pager;
 
 @SuppressWarnings("deprecation")
 public class RSPlayerListener implements Listener {
-	private static Set<GeneralListener> listenerSet = new HashSet<GeneralListener>();
+	private static Set<GeneralListener> listenerSet = new HashSet<>();
 	
 	@EventHandler (priority = EventPriority.HIGH)
 
@@ -213,17 +214,18 @@ public class RSPlayerListener implements Listener {
 
 	@EventHandler (priority = EventPriority.HIGH)
 	public void onInteractEntity(PlayerInteractEntityEvent event){
-		Player player = event.getPlayer();
+            Player player = event.getPlayer();
 
-		if(event.getRightClicked() instanceof ItemFrame) {
-			if(RealShopping.hasPInv(player)
-				&& player.hasPermission("realshopping.rsprices")
-				&& ((ItemFrame)event.getRightClicked()).getItem().getType() == Material.PAPER){
-					event.setCancelled(true);
-					Shop.prices(player, 1, RealShopping.getPInv(player).getStore());
-				}
-					
-		}
+            if(event.getRightClicked() instanceof ItemFrame) {
+                if(RealShopping.hasPInv(player) && player.hasPermission("realshopping.rsprices") && ((ItemFrame)event.getRightClicked()).getItem().getType() == Material.PAPER)
+                {
+                    event.setCancelled(true);
+                    Pager pg = Shop.getPager(player.getName());
+                    pg.push();
+                    Shop.prices(player, pg.getPage(), RealShopping.getPInv(player).getStore());
+                }
+
+            }
 	}
 	
     @EventHandler(priority = EventPriority.HIGH)

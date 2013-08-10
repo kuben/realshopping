@@ -25,6 +25,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.bukkit.ChatColor;
@@ -44,6 +46,7 @@ import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.kuben.realshopping.exceptions.RealShoppingException;
 import com.github.kuben.realshopping.exceptions.RealShoppingException.Type;
+import com.github.stengun.realshopping.Pager;
 
 public class Shop {//TODO add load/save interface
 	
@@ -66,7 +69,6 @@ public class Shop {//TODO add load/save interface
     private int changeTreshold = 1;
     private int changePercent = 5;
     private boolean allowNotifications = true;
-
     /*
      * 
      * Getters and Setters
@@ -293,6 +295,51 @@ public class Shop {//TODO add load/save interface
     public boolean removeProtectedChest(Location chest){ return protectedChests.remove(chest); }
 
     
+    /*
+     * 
+     * Player timer threads
+     * 
+     */
+    
+    private static Map<String,Pager> timers = new HashMap<>();
+    
+    public static Pager getPager(String player){
+        return timers.get(player);
+    }
+    
+    private static void removePager(String player){
+        Pager pg = timers.get(player);
+        pg.setStop(true);
+        pg.push();
+        try {
+            pg.join(5000);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Shop.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        timers.remove(player);
+    }
+    
+    /**
+     * This method allows for safe pager add.
+     * If a pager is present it will be stopped and replaced with the new pager.
+     * @param player
+     * @param pager 
+     */
+    private static void addPager(String player){
+        if(timers.containsKey(player)){
+            Pager pg = timers.get(player);
+            pg.setStop(true);
+            pg.push();
+            try {
+                pg.join(5000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Shop.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        Pager pager = new Pager();
+        pager.start();
+        timers.put(player, pager);
+    }
     // ------- MISC
     
     /**
@@ -311,6 +358,7 @@ public class Shop {//TODO add load/save interface
     /**
      * Exports a string with all stolen items that are waiting to be collected.
      * @return 
+     * @Deprecated
      */
     public String exportToClaim(){
         String s = "";
@@ -546,6 +594,12 @@ public class Shop {//TODO add load/save interface
             return false;
     }
 
+    /**
+     * This method is called when a player exits from the store.
+     * @param player The player who's going to exit.
+     * @param cmd true if this method was called from <b>/rsexit</b> command.
+     * @return True if the player exited, false otherwise.
+     */
     public static boolean exit(Player player, boolean cmd){
             if(RealShopping.hasPInv(player)){
                     if(RealShopping.shopMap.size() > 0){
@@ -556,6 +610,7 @@ public class Shop {//TODO add load/save interface
                                             if(RealShopping.shopMap.get(shopName).hasExit(l)){
                                                     l = RealShopping.shopMap.get(shopName).getCorrEntrance(l);
                                                     RealShopping.removePInv(player);
+                                                    removePager(player.getName());
                                                     player.teleport(l.add(0.5, 0, 0.5));
                                                     player.sendMessage(ChatColor.GREEN + LangPack.YOULEFT + shopName);
                                                     return true;
@@ -583,55 +638,55 @@ public class Shop {//TODO add load/save interface
     }
 
     public static boolean enter(Player player, boolean cmd){
-            if(RealShopping.shopMap.size() > 0){
-                    Location l = player.getLocation().getBlock().getLocation().clone();	
-                    Shop tempShop = RealShopping.isEntranceTo(l);
-                    if(!PromptMaster.isConversing(player) && !RSPlayerListener.hasConversationListener(player)){
-                            if(tempShop != null){//Enter shop
-                                    Location ex = tempShop.getCorrExit(l);
-                                    if(!tempShop.isBanned(player.getName().toLowerCase())){
-                                            player.teleport(ex.add(0.5, 0, 0.5));
+        if(RealShopping.shopMap.size() > 0){
+            Location l = player.getLocation().getBlock().getLocation().clone();	
+            Shop tempShop = RealShopping.isEntranceTo(l);
+            if(!PromptMaster.isConversing(player) && !RSPlayerListener.hasConversationListener(player)){
+                if(tempShop != null){//Enter shop
+                    Location ex = tempShop.getCorrExit(l);
+                    if(!tempShop.isBanned(player.getName().toLowerCase())){
+                        player.teleport(ex.add(0.5, 0, 0.5));
 
-                                            RealShopping.addPInv(new RSPlayerInventory(player, tempShop.getName()));
-                                            player.sendMessage(ChatColor.GREEN + LangPack.YOUENTERED + tempShop.getName());
+                        RealShopping.addPInv(new RSPlayerInventory(player, tempShop.getName()));
+                        player.sendMessage(ChatColor.GREEN + LangPack.YOUENTERED + tempShop.getName());
 
-                                            //Refill chests
-                                            Location[] chestArr = tempShop.getChests().keySet().toArray(new Location[0]);
-                                            for(int i = 0;i < chestArr.length;i++){
-                                                    Block tempChest = player.getWorld().getBlockAt(chestArr[i]);
-                                                    if(tempChest.getType() != Material.CHEST) tempChest.setType(Material.CHEST);
-                                    BlockState blockState = tempChest.getState();
-                                    if(blockState instanceof Chest){
-                                        Chest chest = (Chest)blockState;
-                                        chest.getBlockInventory().clear();
-                                        ItemStack[] itemStack = new ItemStack[27];
-                                        int k = 0;
-                                        for(Integer[] j:tempShop.getChests().get(chestArr[i])){
-                                            itemStack[k] = new MaterialData(j[0],j[1].byteValue())
-                                                    .toItemStack((j[2]==0)?Material.getMaterial(j[0]).getMaxStackSize():j[2]);
-                                            k++;
-                                        }
-                                        chest.getBlockInventory().setContents(itemStack);
-                                    }
-                                            }
-                                            return true;
-                                    } else {
-                                            player.sendMessage(ChatColor.RED + LangPack.YOUAREBANNEDFROM + tempShop.getName());
-                                            return false;
-                                    }
-                            } else {
-                                    if(cmd) player.sendMessage(ChatColor.RED + LangPack.YOURENOTATTHEENTRANCEOFASTORE);
-                                    return false;
+                        //Refill chests
+                        Location[] chestArr = tempShop.getChests().keySet().toArray(new Location[0]);
+                        for(int i = 0;i < chestArr.length;i++){
+                            Block tempChest = player.getWorld().getBlockAt(chestArr[i]);
+                            if(tempChest.getType() != Material.CHEST) tempChest.setType(Material.CHEST);
+                            BlockState blockState = tempChest.getState();
+                            if(blockState instanceof Chest){
+                                Chest chest = (Chest)blockState;
+                                chest.getBlockInventory().clear();
+                                ItemStack[] itemStack = new ItemStack[27];
+                                int k = 0;
+                                for(Integer[] j:tempShop.getChests().get(chestArr[i])){
+                                    itemStack[k] = new MaterialData(j[0],j[1].byteValue()).toItemStack((j[2]==0)?Material.getMaterial(j[0]).getMaxStackSize():j[2]);
+                                    k++;
+                                }
+                                chest.getBlockInventory().setContents(itemStack);
                             }
+                        }
+                        addPager(player.getName());
+                        return true;
                     } else {
-                            player.sendRawMessage(ChatColor.RED + LangPack.YOU_CANT_DO_THIS_WHILE_IN_A_CONVERSATION);
-                            player.sendRawMessage(LangPack.ALL_CONVERSATIONS_CAN_BE_ABORTED_WITH_ + ChatColor.DARK_PURPLE + "quit");
-                            return false;
+                        player.sendMessage(ChatColor.RED + LangPack.YOUAREBANNEDFROM + tempShop.getName());
+                        return false;
                     }
-            } else {
-                    if(cmd) player.sendMessage(ChatColor.RED + LangPack.THEREARENOSTORESSET);
+                } else {
+                    if(cmd) player.sendMessage(ChatColor.RED + LangPack.YOURENOTATTHEENTRANCEOFASTORE);
                     return false;
+                }
+            } else {
+                player.sendRawMessage(ChatColor.RED + LangPack.YOU_CANT_DO_THIS_WHILE_IN_A_CONVERSATION);
+                player.sendRawMessage(LangPack.ALL_CONVERSATIONS_CAN_BE_ABORTED_WITH_ + ChatColor.DARK_PURPLE + "quit");
+                return false;
             }
+        } else {
+            if(cmd) player.sendMessage(ChatColor.RED + LangPack.THEREARENOSTORESSET);
+            return false;
+        }
     }
 }
 
