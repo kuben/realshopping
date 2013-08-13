@@ -618,12 +618,12 @@ public class RSUtils {
 	}
 
 	public static Map<Price, Integer> joinMaps(Map<Price,Integer> uno, Map<Price,Integer> dos){//Preserves old values
-		Price[] keys = dos.keySet().toArray(new Price[0]);
-		for(Price o:keys){
-			if(uno.containsKey(o)) uno.put(o, uno.get(o) + dos.get(o));
-			else uno.put(o, dos.get(o));
-		}
-		return uno;
+            Map<Price, Integer> retval = new HashMap<>(uno);
+            for(Price p:dos.keySet()){
+                if(retval.containsKey(p)) retval.put(p, retval.get(p) + dos.get(p));
+                else retval.put(p, dos.get(p));
+            }
+            return retval;
 	}
 	
     public static String formatNum(int value) {

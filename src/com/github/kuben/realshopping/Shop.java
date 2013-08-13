@@ -555,42 +555,45 @@ public class Shop {//TODO add load/save interface
          }
 
     public static boolean pay(Player player, Inventory[] invs){
-            if(RealShopping.hasPInv(player)){
-                    String shopName = RealShopping.getPInv(player).getStore();
-                    if(RealShopping.shopMap.get(shopName).hasPrices()) {
-                            int toPay = RealShopping.getPInv(player).toPay(invs);
-                            if(toPay==0) return false;
-                            if(RSEconomy.getBalance(player.getName()) < toPay/100f) {
-                                player.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOBUYTHINGSFOR + toPay/100f + LangPack.UNIT);
-                                return true;
-                            }
-                            RSEconomy.withdraw(player.getName(), toPay/100f);
-                            if(!RealShopping.shopMap.get(shopName).getOwner().equals("@admin")){
-                                RSEconomy.deposit(RealShopping.shopMap.get(shopName).getOwner(), toPay/100f);//If player owned store, pay player
-                                if(RealShopping.shopMap.get(shopName).allowsNotifications()) RealShopping.sendNotification(RealShopping.shopMap.get(shopName).getOwner(), player.getName()
-                                                + LangPack.BOUGHTSTUFFFOR + toPay/100f + LangPack.UNIT + LangPack.FROMYOURSTORE + shopName + ".");
-                            }
-                            Map<Price, Integer> bought = RealShopping.getPInv(player).getBoughtWait(invs);
-
-                            if(Config.isEnableAI()){
-                                Price[] keys = bought.keySet().toArray(new Price[0]);
-                                for(Price key:keys){
-                                    RealShopping.shopMap.get(shopName).addStat(new Statistic(key, bought.get(key), true));
-                                }
-                            }
-
-                            if(invs != null) RealShopping.getPInv(player).update(invs);
-                            else RealShopping.getPInv(player).update();
-                            player.sendMessage(ChatColor.GREEN + LangPack.YOUBOUGHTSTUFFFOR + toPay/100f + LangPack.UNIT);
-                            return true;
-                    } else {
-                            player.sendMessage(ChatColor.RED + LangPack.THEREARENOPRICESSETFORTHISSTORE);
-                            return true;
+        if(RealShopping.hasPInv(player)){
+            RSPlayerInventory pinv = RealShopping.getPInv(player);
+            Shop shop = pinv.getShop();
+            if(shop.hasPrices()) {
+                int toPay = pinv.toPay(invs);
+                if(toPay==0) return false;
+                if(RSEconomy.getBalance(player.getName()) < toPay/100f) {
+                    player.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOBUYTHINGSFOR + toPay/100f + LangPack.UNIT);
+                    return true;
+                }
+                RSEconomy.withdraw(player.getName(), toPay/100f);
+                if(!shop.getOwner().equals("@admin")){
+                    RSEconomy.deposit(shop.getOwner(), toPay/100f);//If player owned store, pay player
+                    if(shop.allowsNotifications()) RealShopping.sendNotification(shop.getOwner(), player.getName()
+                                    + LangPack.BOUGHTSTUFFFOR + toPay/100f + LangPack.UNIT + LangPack.FROMYOURSTORE + shop.getName() + ".");
+                }
+                Map<Price, Integer> bought = pinv.getBoughtWait(invs);
+                for(Price p:bought.keySet()){
+                    pinv.addBought(p, bought.get(p));
+                }
+                
+                if(Config.isEnableAI()){
+                    for(Price key:bought.keySet()){
+                        shop.addStat(new Statistic(key, bought.get(key), true));
                     }
+                }
+
+//                if(invs != null) pinv.update(invs);
+//                else pinv.update();
+                player.sendMessage(ChatColor.GREEN + LangPack.YOUBOUGHTSTUFFFOR + toPay/100f + LangPack.UNIT);
+                return true;
             } else {
-                    player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
+                player.sendMessage(ChatColor.RED + LangPack.THEREARENOPRICESSETFORTHISSTORE);
+                return true;
             }
-            return false;
+        } else {
+            player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
+        }
+        return false;
     }
 
     /**
@@ -600,40 +603,40 @@ public class Shop {//TODO add load/save interface
      * @return True if the player exited, false otherwise.
      */
     public static boolean exit(Player player, boolean cmd){
-            if(RealShopping.hasPInv(player)){
-                    if(RealShopping.shopMap.size() > 0){
-                            if(!PromptMaster.isConversing(player) && !RSPlayerListener.hasConversationListener(player)){
-                                    if(RealShopping.getPInv(player).hasPaid() || player.getGameMode() == GameMode.CREATIVE){
-                                            String shopName = RealShopping.getPInv(player).getStore();
-                                            Location l = player.getLocation().getBlock().getLocation().clone();
-                                            if(RealShopping.shopMap.get(shopName).hasExit(l)){
-                                                    l = RealShopping.shopMap.get(shopName).getCorrEntrance(l);
-                                                    RealShopping.removePInv(player);
-                                                    removePager(player.getName());
-                                                    player.teleport(l.add(0.5, 0, 0.5));
-                                                    player.sendMessage(ChatColor.GREEN + LangPack.YOULEFT + shopName);
-                                                    return true;
-                                            } else {
-                                                    if(cmd)	player.sendMessage(ChatColor.RED + LangPack.YOURENOTATTHEEXITOFASTORE);
-                                                    return false;
-                                            }
-                                    } else {
-                                            player.sendMessage(ChatColor.RED + LangPack.YOUHAVENTPAIDFORALLYOURARTICLES);
-                                            return false;
-                                    }
-                            } else {
-                                    player.sendRawMessage(ChatColor.RED + LangPack.YOU_CANT_DO_THIS_WHILE_IN_A_CONVERSATION);
-                                    player.sendRawMessage(LangPack.ALL_CONVERSATIONS_CAN_BE_ABORTED_WITH_ + ChatColor.DARK_PURPLE + "quit");
-                                    return false;
-                            }
-                    } else {
-                            player.sendMessage(ChatColor.RED + LangPack.THEREARENOSTORESSET);
+        if(RealShopping.hasPInv(player)){
+            if(RealShopping.shopMap.size() > 0){
+                if(!PromptMaster.isConversing(player) && !RSPlayerListener.hasConversationListener(player)){
+                    if(RealShopping.getPInv(player).hasPaid() || player.getGameMode() == GameMode.CREATIVE){
+                        Shop shop = RealShopping.getPInv(player).getShop();
+                        Location l = player.getLocation().getBlock().getLocation().clone();
+                        if(shop.hasExit(l)){
+                            l = shop.getCorrEntrance(l);
+                            RealShopping.removePInv(player);
+                            removePager(player.getName());
+                            player.teleport(l.add(0.5, 0, 0.5));
+                            player.sendMessage(ChatColor.GREEN + LangPack.YOULEFT + shop.getName());
+                            return true;
+                        } else {
+                            if(cmd)	player.sendMessage(ChatColor.RED + LangPack.YOURENOTATTHEEXITOFASTORE);
                             return false;
+                        }
+                    } else {
+                        player.sendMessage(ChatColor.RED + LangPack.YOUHAVENTPAIDFORALLYOURARTICLES);
+                        return false;
                     }
-            } else {
-                    player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
+                } else {
+                    player.sendRawMessage(ChatColor.RED + LangPack.YOU_CANT_DO_THIS_WHILE_IN_A_CONVERSATION);
+                    player.sendRawMessage(LangPack.ALL_CONVERSATIONS_CAN_BE_ABORTED_WITH_ + ChatColor.DARK_PURPLE + "quit");
                     return false;
+                }
+            } else {
+                player.sendMessage(ChatColor.RED + LangPack.THEREARENOSTORESSET);
+                return false;
             }
+        } else {
+            player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
+            return false;
+        }
     }
 
     public static boolean enter(Player player, boolean cmd){

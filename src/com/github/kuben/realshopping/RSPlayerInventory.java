@@ -37,15 +37,19 @@ public class RSPlayerInventory {
             this.store = store;
             this.player = player.getName();
             //Special Inv to PInv
-            Object[] obj = ArrayUtils.addAll(player.getInventory().getContents(), player.getInventory().getArmorContents());
-            ItemStack[] IS = new ItemStack[obj.length];
-
-            for(int i = 0;i < obj.length;i++)
-                    IS[i] = (ItemStack) obj[i];
+            ItemStack[] IS = (ItemStack[]) ArrayUtils.addAll(player.getInventory().getContents(), player.getInventory().getArmorContents());
             items = invToPInv(IS);//Item - amount/dur
             bought = new HashMap<>();
     }
-
+    
+    public RSPlayerInventory(String player, String store, Map<Price,Integer> bought, Map<Price,Integer> items){
+        this.player = player;
+        this.store = store;
+        this.bought = bought;
+        this.items = items;
+    }
+    
+    @Deprecated
     public RSPlayerInventory(String importStr){//Use to recover a PlayerInventory from string
             items = new HashMap<>();//Item - amount/dur
             bought = new HashMap<>();
@@ -61,33 +65,34 @@ public class RSPlayerInventory {
     }
 
     public boolean update(Inventory[] invs){
-		items.clear();
-		items = invToPInv();
-		
-		if(invs != null)
-			for(int i = 0;i < invs.length;i++)
-				items = RSUtils.joinMaps(items, invToPInv(invs[i]));
-		
-		return true;	
-	}
+        items.clear();
+        items = invToPInv();
+
+        if(invs != null){
+            for(Inventory i:invs){
+                items = RSUtils.joinMaps(items, invToPInv(i));
+            }
+        }
+        return true;	
+    }
 	
     public boolean hasPaid(){
-		Map<Price, Integer> newInv = invToPInv();
+        Map<Price, Integer> newInv = invToPInv();
 
-		//Old inv = items
-		Shop tempshop = RealShopping.shopMap.get(store);
-		Object[] keys = newInv.keySet().toArray();
-		boolean hasPaid = true;
-		if(tempshop.hasPrices())//If there are prices for store.
-			for(Object k:keys){
-                                Price key = (Price)k;
-				if(tempshop.hasPrice(key)) {//If item has price
-					hasPaid = items.containsKey(key);
-                                        if(hasPaid && newInv.get(key) > items.get(key))
-                                            hasPaid = false;
-                                }
-			}
-		return hasPaid;
+        //Old inv = items + bought.
+        Map<Price, Integer> contents = RSUtils.joinMaps(bought, items);
+        Shop tempshop = RealShopping.shopMap.get(store);
+        if(!tempshop.hasPrices()) return true;
+        
+        for(Price key:newInv.keySet()){
+            if(tempshop.hasPrice(key)) {
+                if(contents.containsKey(key) && contents.get(key) >= newInv.get(key)){
+                    continue;
+                }
+                return false;
+            }
+        }
+        return true;
     }
     
     public int toPay(){
@@ -137,6 +142,10 @@ public class RSPlayerInventory {
 
         return toPay;
     }
+
+    public Map<Price, Integer> getItems() {
+        return RSUtils.joinMaps(items, bought);
+    }
     
     public void addBought(Price p, Integer amount){
         bought.put(p, amount);
@@ -144,6 +153,10 @@ public class RSPlayerInventory {
     
     public void delBought(Price p){
         bought.remove(p);
+    }
+    
+    public void resetBought(){
+        bought = new HashMap<>();
     }
     /**
      * Gives Bought items since the player entered the shop.
@@ -160,8 +173,10 @@ public class RSPlayerInventory {
      */
     public Map<Price, Integer> getBoughtWait(Inventory[] invs){
     	Shop tempShop = RealShopping.shopMap.get(store);
+        Map<Price, Integer> surplus = new HashMap<>();
         if(tempShop.hasPrices()){//If shop has prices
             Map<Price, Integer> newInv = invToPInv();
+            Map<Price, Integer> oldInv = RSUtils.joinMaps(bought, items);
 
             //Old inv = items
 
@@ -171,25 +186,22 @@ public class RSPlayerInventory {
                     newInv = RSUtils.joinMaps(newInv, tempInv);
                 }
             }
-
             for(Price key:newInv.keySet()){
-                if(tempShop.hasPrice(key)) {//Something in inventory has a price
+                if(tempShop.hasPrice(key)){
                     int amount = newInv.get(key);
-                    if(items.containsKey(key)) {
-                        int oldAm = items.get(key);
-                        if(oldAm > amount){//More items before than now
-                                amount = 0;
-                        } else {//More items now
-                                amount -= oldAm;
+                    if(oldInv.containsKey(key)) {//Something in inventory has a price
+                        int oldAm = oldInv.get(key);
+                        if(oldAm < amount){//More items than before
+                            amount -= oldAm;
                         }
                     }
-                    if(bought.containsKey(key)) bought.put(key, amount + bought.get(key));
-                    else bought.put(key, amount);
+                    if(surplus.containsKey(key)) surplus.put(key, amount + surplus.get(key));
+                    else surplus.put(key, amount);
                 }
             }
         }
 
-        return bought;
+        return surplus;
     }
 	
     public Map<Price, Integer> getStolen(){
@@ -237,7 +249,7 @@ public class RSPlayerInventory {
                             Price temp = new Price(iS);
                             int amount;
                             if(RealShopping.isTool(iS.getTypeId()))
-                                    amount = RealShopping.getMaxDur(iS.getTypeId()) - iS.getDurability();
+                                    amount = 1;
                             else 
                                     amount = iS.getAmount();
                             if(tempMap.containsKey(temp)) tempMap.put(temp, tempMap.get(temp) + amount);
@@ -250,13 +262,13 @@ public class RSPlayerInventory {
     private Map<Price, Integer> invToPInv(){
             //Guess it is safe to use getPlayerExact, because this will only be called with an online player.
             //Will throw NullPointer otherwise
-            Object[] obj = ArrayUtils.addAll(Bukkit.getPlayerExact(player).getInventory().getContents()
+            Object[] IS = ArrayUtils.addAll(Bukkit.getPlayerExact(player).getInventory().getContents()
                             , Bukkit.getPlayerExact(player).getInventory().getArmorContents());
-            ItemStack[] IS = new ItemStack[obj.length];
-
-            for(int i = 0;i < obj.length;i++)
-                    IS[i] = (ItemStack) obj[i];
-            return invToPInv(IS);
+//            ItemStack[] IS = new ItemStack[obj.length];
+//
+//            for(int i = 0;i < obj.length;i++)
+//                    IS[i] = (ItemStack) obj[i];
+            return invToPInv((ItemStack [])IS);
     }
 
     private Map<Price, Integer> invToPInv(Inventory inv){
@@ -314,19 +326,20 @@ public class RSPlayerInventory {
     }
 
     public int removeItem(Price pi, int amount){//Returns how many items couldn't be removed, or -1 if item didn't exist
-            if(items.containsKey(pi))
-                    if(items.get(pi) > amount){
-                            items.put(pi, items.get(pi) - amount);
-                            return 0;
-                    } else if(items.get(pi) == amount){
-                            items.remove(pi);
-                            return 0;
-                    } else {
-                            int diff = amount - items.get(pi);
-                            items.remove(pi);
-                            return diff;
-                    }
-            return -1;
+        Map<Price, Integer> items = RSUtils.joinMaps(bought, this.items);
+        if(items.containsKey(pi))
+            if(items.get(pi) > amount){
+                items.put(pi, items.get(pi) - amount);
+                return 0;
+            } else if(items.get(pi) == amount){
+                items.remove(pi);
+                return 0;
+            } else {
+                int diff = amount - items.get(pi);
+                items.remove(pi);
+                return diff;
+            }
+        return -1;
     }
 
     public boolean addItem(ItemStack iS, int amount){

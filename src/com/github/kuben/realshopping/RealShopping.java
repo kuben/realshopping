@@ -62,7 +62,7 @@ import com.github.kuben.realshopping.exceptions.RealShoppingException;
 import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.stengun.realshopping.PriceParser;
-import com.github.stengun.realshopping.ShippedSerialization;
+import com.github.stengun.realshopping.ClassSerialization;
 
 //TODO better storing of database files
 
@@ -1096,11 +1096,13 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
             float version = 0f;
             FileInputStream fstream = new FileInputStream(f);
             BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
+            YamlConfiguration conf = new YamlConfiguration();
             Shop tempShop;
-            while ((s = br.readLine()) != null){
+            boolean end = false;
+            while ((s = br.readLine()) != null && !end){
                     boolean notHeader = true;
 
-                    if(what != TempFiles.SHIPPEDPACKAGES && version == 0 && s.length() > header.length() && s.substring(0, header.length()).equals(header)){
+                    if(what != TempFiles.SHIPPEDPACKAGES && what != TempFiles.INVENTORIES && version == 0 && s.length() > header.length() && s.substring(0, header.length()).equals(header)){
                             notHeader = false;
                             String vStr = s.substring(header.length());
                             if(what == TempFiles.TPLOCS){
@@ -1114,7 +1116,15 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                     switch(what){
                         //TODO convert load with object stream
                         case INVENTORIES:
-                            PInvSet.add(new RSPlayerInventory(s));
+                            try {
+                                conf.load(f);
+                                for(String player:conf.getKeys(false)){
+                                    PInvSet.add(ClassSerialization.loadInventory(conf.getConfigurationSection(player)));
+                                }
+                                end = true;
+                            } catch (InvalidConfigurationException ex) {
+                                Logger.getLogger(RealShopping.class.getName()).log(Level.SEVERE, null, ex);
+                            }
                             break;
                         case JAILED:
                             jailedPlayers.put(s.split(";")[0], RSUtils.stringToLoc(s.split(";")[1], s.split(";")[2]));
@@ -1129,19 +1139,19 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                                                     ,Double.parseDouble(s.split(";")[1].split(",")[3])));
                             break;
                         case SHIPPEDPACKAGES:
-                            YamlConfiguration conf = new YamlConfiguration();
                             try {
                                 conf.load(f);
                                 for(String pl:conf.getKeys(false)){
                                     List<ShippedPackage> packs = new LinkedList<>();
                                     ConfigurationSection players = conf.getConfigurationSection(pl);
                                     for(String pkg:players.getKeys(false)){
-                                        packs.add(ShippedSerialization.loadShippedPackage(players.getConfigurationSection(pkg)));
+                                        packs.add(ClassSerialization.loadShippedPackage(players.getConfigurationSection(pkg)));
                                     }
                                     shippedToCollect.put(pl, packs);
                                 }
+                                end = true;
                             } catch (InvalidConfigurationException ex) {
-                                Logger.getLogger(RealShopping.class.getName()).log(Level.SEVERE, null, ex);
+                                RealShopping.log.log(Level.SEVERE, null, ex);
                             }
                             break;
                         case TOCLAIM:
@@ -1252,14 +1262,20 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     private void saveHelper(File f, String header, Object[] keys, TempFiles what) throws IOException{
         if(!f.exists()) f.createNewFile();
         PrintWriter pW;
+        FileConfiguration conf = new YamlConfiguration();
         pW = new PrintWriter(f);
         for(int i = 0;i < keys.length;i++){
-            if(what != TempFiles.SHIPPEDPACKAGES && i == 0) pW.println(header);
+            if(what != TempFiles.SHIPPEDPACKAGES && what != TempFiles.INVENTORIES && i == 0) pW.println(header);
             String line = "";
             switch(what){
                 //TODO convert saves with object stream.
                 case INVENTORIES:
-                    line = ((RSPlayerInventory)keys[i]).exportToString();
+                    for(Object k:keys){
+                        RSPlayerInventory pinv = (RSPlayerInventory) k;
+                        ConfigurationSection player = conf.createSection(pinv.getPlayer());
+                        ClassSerialization.saveInventory(pinv, player);
+                    }
+                    conf.save(f);
                     break;
                 case JAILED:
                     line = ((String)keys[i]) + ";" + jailedPlayers.get((String)keys[i]).getWorld().getName() + ";" + RSUtils.locAsString(jailedPlayers.get((String)keys[i]));
@@ -1272,12 +1288,11 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                     if(!protStr.equals("")) line = ((String) keys[i]) + ";" + protStr;
                     break;
                 case SHIPPEDPACKAGES:
-                    FileConfiguration conf = getConfig();
                     for(String s:shippedToCollect.keySet()){
                         ConfigurationSection player = conf.createSection(s);
                         for(ShippedPackage pkg:shippedToCollect.get(s)){
                             ConfigurationSection date = player.createSection(Long.toString(pkg.getDateSent()));
-                            ShippedSerialization.saveShippedPackage(pkg, date);
+                            ClassSerialization.saveShippedPackage(pkg, date);
                         }                        
                     }
                     conf.save(f);
