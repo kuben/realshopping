@@ -72,7 +72,7 @@ class RSSetPrices extends RSCommand {
     private boolean copy(){
         try {
             if((args.length == 3 && store.equals(args[1])) || (args.length == 2 && !store.equals(args[1]))){//If copy from store
-                if(RealShopping.shopMap.containsKey(args[args.length - 1])){
+                if(RealShopping.shopExists(args[args.length - 1])){
                     shop.clonePrices(args[args.length - 1]);
                     sender.sendMessage(ChatColor.GREEN + LangPack.OLDPRICESREPLACEDWITHPRICESFROM + args[args.length - 1]);
                     return true;
@@ -143,20 +143,20 @@ class RSSetPrices extends RSCommand {
         if(args.length > 0){
             boolean isPlayer = player != null && RealShopping.hasPInv(player);
             int startargs = 1;
-            //preliminar control of arguments. We must say if setprices contains the store argument.
+            //preliminary control of arguments. We must say if setprices contains the store argument.
             // and the command will be in the form STORE ARGS, where args can be colon separated or single words.
             // we need to know where to pick args if the store is specified.
             if(argsContainStore(args)){
                 store = args[1];
                 startargs = 2;
             }
-            else store = RealShopping.getPInv(player).getStore();
+            else store = RealShopping.getPInv(player).getShop().getName();
 
-            if(store.equals("") || !RealShopping.shopMap.containsKey(store) || !isPlayer){
+            if(store.equals("") || !RealShopping.shopExists(store) || !isPlayer){
                 sender.sendMessage(ChatColor.RED + (!isPlayer?LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE:store + LangPack.DOESNTEXIST));
                 return false;
             }
-            shop = RealShopping.shopMap.get(store);
+            shop = RealShopping.getShop(store);
             arg = args[startargs];
             //This trick will avoid the use of a second switch case
             if((!shop.getOwner().equals(player.getName()) || !player.hasPermission("realshopping.rsset"))){

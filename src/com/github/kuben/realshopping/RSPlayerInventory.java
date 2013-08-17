@@ -28,30 +28,43 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import com.github.kuben.realshopping.exceptions.RealShoppingException;
+
 public class RSPlayerInventory {
 
     private Map<Price, Integer> items,bought;
-    private String store;//TODO switch to Shop
+    private Shop shop;//Not string, because only existing stores 
     private String player;//String because should involve offline players too
-    public RSPlayerInventory(Player player, String store){//Use when player is entering store
-            this.store = store;
-            this.player = player.getName();
-            //Special Inv to PInv
-            Object[] obj = ArrayUtils.addAll(player.getInventory().getContents(), player.getInventory().getArmorContents());
-            ItemStack[] IS = new ItemStack[obj.length];
+    
+    public RSPlayerInventory(Player player, Shop shop){//Use when player is entering store
+        this.shop = shop;
+        this.player = player.getName();
+        //Special Inv to PInv
+        Object[] obj = ArrayUtils.addAll(player.getInventory().getContents(), player.getInventory().getArmorContents());
+        ItemStack[] IS = new ItemStack[obj.length];
 
-            for(int i = 0;i < obj.length;i++)
-                    IS[i] = (ItemStack) obj[i];
-            items = invToPInv(IS);//Item - amount/dur
-            bought = new HashMap<>();
+        for(int i = 0;i < obj.length;i++)
+            IS[i] = (ItemStack) obj[i];
+        items = invToPInv(IS);//Item - amount/dur
+        bought = new HashMap<>();
     }
 
-    public RSPlayerInventory(String importStr){//Use to recover a PlayerInventory from string
-            items = new HashMap<>();//Item - amount/dur
-            bought = new HashMap<>();
-            this.store = importStr.split(";")[0].split("-")[1];
-            this.player = importStr.split(";")[0].split("-")[0];
-            createInv(importStr.split(";")[1]);
+    /**
+     * Restores a RSPlayerInventory object from a string
+     * 
+     * IMPORTANT! Has to be used after all stores have been initialized.
+     * @param importStr The String with the saved information 
+     * @throws RealShoppingException type SHOP_DOESNT_EXIST if the shop which the player is supposed to be in doesn't exist.
+     */
+    public RSPlayerInventory(String importStr) throws RealShoppingException {
+        String store = importStr.split(";")[0].split("-")[1];
+        if(!RealShopping.shopExists(store)) throw new RealShoppingException(RealShoppingException.Type.SHOP_DOESNT_EXIST, store);
+
+        shop = RealShopping.getShop(store);
+        items = new HashMap<>();//Item - amount/dur
+        bought = new HashMap<>();
+        this.player = importStr.split(";")[0].split("-")[0];
+        createInv(importStr.split(";")[1]);
     }
 
     public boolean update(){
@@ -72,22 +85,20 @@ public class RSPlayerInventory {
 	}
 	
     public boolean hasPaid(){
-		Map<Price, Integer> newInv = invToPInv();
+        Map<Price, Integer> newInv = invToPInv();
 
-		//Old inv = items
-		Shop tempshop = RealShopping.shopMap.get(store);
-		Object[] keys = newInv.keySet().toArray();
-		boolean hasPaid = true;
-		if(tempshop.hasPrices())//If there are prices for store.
-			for(Object k:keys){
-                                Price key = (Price)k;
-				if(tempshop.hasPrice(key)) {//If item has price
-					hasPaid = items.containsKey(key);
-                                        if(hasPaid && newInv.get(key) > items.get(key))
-                                            hasPaid = false;
-                                }
-			}
-		return hasPaid;
+        Object[] keys = newInv.keySet().toArray();
+        boolean hasPaid = true;
+        if(shop.hasPrices())//If there are prices for store.
+            for(Object k:keys){
+                Price key = (Price)k;
+                if(shop.hasPrice(key)){//If item has price
+                    hasPaid = items.containsKey(key);
+                    if(hasPaid && newInv.get(key) > items.get(key))
+                        hasPaid = false;
+                }
+            }
+        return hasPaid;
     }
     
     public int toPay(){
@@ -95,46 +106,34 @@ public class RSPlayerInventory {
     }
     
     public int toPay(Inventory[] invs) {
-        return toPay(invs,store);
+        return toPay(invs, shop);
     }
     
-    public int toPay(Inventory[] invs, String store){
-    	int toPay = 0;
-    	Shop tempShop = RealShopping.shopMap.get(store);
-        if(tempShop.hasPrices()){//If shop has prices
+    public int toPay(Inventory[] invs, Shop shop){
+        int toPay = 0;
+        
+        if(shop.hasPrices()){//If shop has prices
             Map<Price, Integer> newInv = invToPInv();
-
-            //Old inv = items
-
-            if(invs != null){
+            if(invs != null)
                 for(int i = 0;i < invs.length;i++){
                     Map<Price, Integer> tempInv = invToPInv(invs[i]);
                     newInv = RSUtils.joinMaps(newInv, tempInv);
                 }
-            }
-
-            Object[] keys = newInv.keySet().toArray();
-
-            for(Object k:keys){
-                Price key = (Price)k;
-                if(tempShop.hasPrice(key)) {//Something in inventory has a price
-                    int amount = newInv.get(key);
-                    int cost = tempShop.getPrice(key);
-                    int pcnt = 100 - tempShop.getSale(key);
+            for(Price k:newInv.keySet().toArray(new Price[0]))
+                if(shop.hasPrice(k)) {//Something in inventory has a price
+                    int amount = newInv.get(k);
+                    int cost = shop.getPrice(k);
+                    int pcnt = 100 - shop.getSale(k);
                     cost *= pcnt/100f;
-                    if(items.containsKey(key)) {
-                        int oldAm = items.get(key);
-                        if(oldAm > amount){//More items before than now
-                                amount = 0;
-                        } else {//More items now
-                                amount -= oldAm;
-                        }
+                    if(items.containsKey(k)) {
+                        int oldAm = items.get(k);
+                        if(oldAm > amount) amount = 0;//More items before than now
+                        else amount -= oldAm;//More items now
                     }
-                    toPay += cost * (RealShopping.isTool(key.getType())?(double)amount / (double)RealShopping.getMaxDur(key.getType()):amount);//Convert items durability to item amount
+                    toPay += cost * (RealShopping.isTool(k.getType())?(double)amount / (double)RealShopping.getMaxDur(k.getType()):amount);//Convert items durability to item amount
                 }
-            }
         }
-
+        
         return toPay;
     }
     
@@ -145,6 +144,7 @@ public class RSPlayerInventory {
     public void delBought(Price p){
         bought.remove(p);
     }
+    
     /**
      * Gives Bought items since the player entered the shop.
      * @return A map with Item - Amount
@@ -159,63 +159,45 @@ public class RSPlayerInventory {
      * @return 
      */
     public Map<Price, Integer> getBoughtWait(Inventory[] invs){
-    	Shop tempShop = RealShopping.shopMap.get(store);
-        if(tempShop.hasPrices()){//If shop has prices
+        if(shop.hasPrices()){//If shop has prices
             Map<Price, Integer> newInv = invToPInv();
-
-            //Old inv = items
-
-            if(invs != null){
+            if(invs != null)
                 for(int i = 0;i < invs.length;i++){
                     Map<Price, Integer> tempInv = invToPInv(invs[i]);
                     newInv = RSUtils.joinMaps(newInv, tempInv);
                 }
-            }
-
-            for(Price key:newInv.keySet()){
-                if(tempShop.hasPrice(key)) {//Something in inventory has a price
+            for(Price key:newInv.keySet())
+                if(shop.hasPrice(key)) {//Something in inventory has a price
                     int amount = newInv.get(key);
                     if(items.containsKey(key)) {
                         int oldAm = items.get(key);
-                        if(oldAm > amount){//More items before than now
-                                amount = 0;
-                        } else {//More items now
-                                amount -= oldAm;
-                        }
+                        if(oldAm > amount) amount = 0;//More items before than now
+                        else amount -= oldAm;//More items now
                     }
                     if(bought.containsKey(key)) bought.put(key, amount + bought.get(key));
                     else bought.put(key, amount);
                 }
-            }
         }
 
         return bought;
     }
 	
     public Map<Price, Integer> getStolen(){
-        //Get stolen items
-        //Old inv = items
-
         Map<Price, Integer> newInv = invToPInv();
-
         Map<Price, Integer> stolen = new HashMap<>();
 
-        Price[] keys = (Price[])newInv.keySet().toArray();
-        for(Price key:keys){
-            if(RealShopping.shopMap.get(store).hasPrice(key)) {//Something in inventory has a price
+        Price[] keys = newInv.keySet().toArray(new Price[0]);
+        for(Price key:keys)
+            if(shop.hasPrice(key)) {//Something in inventory has a price
                 int amount = newInv.get(key);
                 if(hasItem(key)) {
                     int oldAm = getAmount(key);
-                    if(oldAm > amount){//More items before than now
-                        amount = 0;
-                    } else {//More items now
-                        amount -= oldAm;
-                    }
+                    if(oldAm > amount) amount = 0;//More items before than now
+                    else amount -= oldAm;//More items now
                 }
                 if(stolen.containsKey(key)) stolen.put(key, amount + stolen.get(key));
                 else stolen.put(key, amount);
             }
-        }
         return stolen;
     }
     
@@ -264,30 +246,17 @@ public class RSPlayerInventory {
     }
 
     public String exportToString(){
-            String s = "";
-            Object[] keys = items.keySet().toArray();
-            for(Object oob:keys){
-                    Price pi = (Price)oob;
-                    if(!s.equals("")) s += ",";
-                    s += pi.toString(items.get(pi).intValue());
-            }
-            return player + "-" + store + ";" + s;
+        String s = "";
+        for(Price p:items.keySet().toArray(new Price[0])){
+            if(!s.equals("")) s += ",";;
+            s += p.toString(items.get(p).intValue());
+        }
+        return player + "-" + shop.getName() + ";" + s;
     }
 
-    public String getStore(){
-            return store;
-    }
-
-    public Shop getShop(){
-            return RealShopping.shopMap.get(store);
-    }
+    public Shop getShop(){ return shop; }
 
     public String getPlayer(){ return player; }
-
-    public boolean setStore(String store){
-            this.store = store;
-            return true;
-    }
 
     public boolean hasItems(){
             return !items.isEmpty();
@@ -339,6 +308,6 @@ public class RSPlayerInventory {
     
     @Override
     public String toString(){
-            return "PInventory Store: " + store + " Items: " + items;
+            return "PInventory Store: " + shop + " Items: " + items;
     }
 }

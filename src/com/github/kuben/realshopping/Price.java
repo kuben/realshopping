@@ -21,7 +21,6 @@ package com.github.kuben.realshopping;
 
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.MaterialData;
 /**
  * This class represents a price for an item inside the store.

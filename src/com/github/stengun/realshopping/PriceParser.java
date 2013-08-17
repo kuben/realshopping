@@ -20,12 +20,17 @@
 package com.github.stengun.realshopping;
 
 import com.github.kuben.realshopping.Price;
+
 import static com.github.kuben.realshopping.RealShopping.MANDIR;
+
 import com.github.kuben.realshopping.Shop;
+
 import javax.xml.parsers.DocumentBuilder; 
 import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -33,6 +38,8 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -41,6 +48,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -57,12 +65,12 @@ public class PriceParser {
     //Static utils
     /**
      * Loads a saved shop/price map from a file.
-     * @param shopmap Map of all shops where to save prices.
+     * @param shopset Set of all shops where to save prices.
      * @throws ParserConfigurationException
      * @throws SAXException
      * @throws IOException 
      */
-    public static void loadPriceMap(Map<String,Shop> shopmap) throws ParserConfigurationException, SAXException, IOException{
+    public static void loadPriceMap(Set<Shop> shopset) throws ParserConfigurationException, SAXException, IOException{
         File f = new File(MANDIR+"prices.xml");
         if(!f.exists()){
             f.createNewFile();
@@ -79,18 +87,18 @@ public class PriceParser {
             if (shops.item(i).getNodeType() != Node.ELEMENT_NODE)
                 continue;
             
-            parseShop((Element)shops.item(i),shopmap);
+            parseShop((Element)shops.item(i),shopset);
         }
     }
     /**
      * Saves to file the entire shop/price map.
-     * @param shopmap Map where to take shops and prices.
+     * @param shopset Set where to take shops and prices.
      * @throws ParserConfigurationException
      * @throws FileNotFoundException
      * @throws TransformerConfigurationException
      * @throws TransformerException 
      */
-    public static void savePriceMap(Map<String, Shop> shopmap) throws ParserConfigurationException, FileNotFoundException, TransformerConfigurationException, TransformerException {
+    public static void savePriceMap(Set<Shop> shopset) throws ParserConfigurationException, FileNotFoundException, TransformerConfigurationException, TransformerException {
         File f = new File(MANDIR+"prices.xml");//Reset file
         //if(f.exists()) f.delete();
 
@@ -103,13 +111,12 @@ public class PriceParser {
         doc.appendChild(doc.createComment("If you want to manually edit this file, do it when your server is down. Your changes won't be saved otherwise!"));
 
         Map<Price, Integer[]> shopPrices;
-        Object[] keys = shopmap.keySet().toArray();
-        for(Object key:keys){	
+        for(Shop shopObj:shopset){	
             Element shop = doc.createElement("shop");
-            shop.setAttribute("name", shopmap.get((String)key).getName());
+            shop.setAttribute("name", shopObj.getName());
             root.appendChild(shop);
 
-            shopPrices = shopmap.get((String)key).getPricesMap();
+            shopPrices = shopObj.getPricesMap();
             Object[] ids = shopPrices.keySet().toArray();
             for(Object obj:ids){
                 Price obitm = (Price)obj;
@@ -150,15 +157,22 @@ public class PriceParser {
     }
     
     // Private membes
-    private static void parseShop(Element shop, Map<String,Shop> shopmap){
-        if(shopmap.get(shop.getAttribute("name")) == null) return;
+    private static void parseShop(Element shop, Set<Shop> shopset){
+        String store = shop.getAttribute("name");
+        Shop tempShop = null;
+        for(Shop tShop:shopset)
+            if(tShop.getName().equals(store)){
+                tempShop = tShop;
+                break;
+            }
+        if(tempShop == null) return;
         NodeList prices = shop.getElementsByTagName("item");
         if(!shop.hasChildNodes()) return;
         for(int i=0;i<prices.getLength();i++){
             if (prices.item(i).getNodeType() != Node.ELEMENT_NODE)
                 continue;
             Object[] pprice = parsePrices( (Element)prices.item(i));
-            shopmap.get(shop.getAttribute("name")).getPricesMap().put((Price)pprice[0], (Integer[])pprice[1]);
+            tempShop.getPricesMap().put((Price)pprice[0], (Integer[])pprice[1]);
         }
     }
     
