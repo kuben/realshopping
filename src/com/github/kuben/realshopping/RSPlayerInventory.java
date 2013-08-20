@@ -18,6 +18,7 @@
  */
 package com.github.kuben.realshopping;
 
+import com.github.kuben.realshopping.exceptions.RealShoppingException;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.lang.ArrayUtils;
@@ -25,8 +26,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-
-import com.github.kuben.realshopping.exceptions.RealShoppingException;
 
 public class RSPlayerInventory {
 
@@ -46,7 +45,13 @@ public class RSPlayerInventory {
         items = invToPInv(IS);//Item - amount/dur
         bought = new HashMap<>();
     }
-
+    
+    public RSPlayerInventory(String player, Shop shop, Map<Price, Integer> bought, Map<Price, Integer> items){
+        this.player = player;
+        this.shop = shop;
+        this.bought = bought;
+        this.items = items;
+    }
     /**
      * Restores a RSPlayerInventory object from a string
      * 
@@ -88,13 +93,12 @@ public class RSPlayerInventory {
 
         //Old inv = items + bought.
         Map<Price, Integer> contents = getItems();
-        Shop tempshop = RealShopping.shopMap.get(store);
-        if (!tempshop.hasPrices()) {
+        if (!shop.hasPrices()) {
             return true;
         }
 
         for (Price key : newInv.keySet()) {
-            if (tempshop.hasPrice(key)) {
+            if (shop.hasPrice(key)) {
                 if (contents.containsKey(key) && contents.get(key) >= newInv.get(key)) {
                     continue;
                 }
@@ -109,13 +113,12 @@ public class RSPlayerInventory {
     }
 
     public int toPay(Inventory[] invs) {
-        return toPay(invs, store);
+        return toPay(invs, shop);
     }
 
-    public int toPay(Inventory[] invs, String store) {
+    public int toPay(Inventory[] invs, Shop shop) {
         int toPay = 0;
-        Shop tempShop = RealShopping.shopMap.get(store);
-        if (tempShop.hasPrices()) {//If shop has prices
+        if (shop.hasPrices()) {//If shop has prices
             Map<Price, Integer> newInv = invToPInv();
 
             //Old inv = items
@@ -129,10 +132,10 @@ public class RSPlayerInventory {
             Map<Price, Integer> contents = getItems();
 
             for (Price key : newInv.keySet()) {
-                if (tempShop.hasPrice(key)) {//Something in inventory has a price
+                if (shop.hasPrice(key)) {//Something in inventory has a price
                     int amount = newInv.get(key);
-                    int cost = tempShop.getPrice(key);
-                    int pcnt = 100 - tempShop.getSale(key);
+                    int cost = shop.getPrice(key);
+                    int pcnt = 100 - shop.getSale(key);
                     cost *= pcnt / 100f;
                     if (contents.containsKey(key)) {
                         int oldAm = contents.get(key);
@@ -144,8 +147,8 @@ public class RSPlayerInventory {
                     }
                     toPay += cost * (RealShopping.isTool(key.getType()) ? (double) amount / (double) RealShopping.getMaxDur(key.getType()) : amount);//Convert items durability to item amount
                 }
+            }
         }
-        
         return toPay;
     }
 
@@ -164,7 +167,15 @@ public class RSPlayerInventory {
     public void delBought(Price p) {
         bought.remove(p);
     }
-
+    
+    public void delBought(Price p, Integer amount){
+        int iam = 0;
+        if (bought.containsKey(p)) {
+            iam = bought.get(p);
+        }
+        if(iam > amount) bought.put(p, iam - amount);
+        else if(iam <= amount) bought.remove(p);
+    }
     public void resetBought() {
         bought = new HashMap<>();
     }
@@ -185,9 +196,8 @@ public class RSPlayerInventory {
      * @return hashmap containing all items that waits to be bought.
      */
     public Map<Price, Integer> getBoughtWait(Inventory[] invs) {
-        Shop tempShop = RealShopping.shopMap.get(store);
         Map<Price, Integer> surplus = new HashMap<>();
-        if (tempShop.hasPrices()) {//If shop has prices
+        if (shop.hasPrices()) {//If shop has prices
             Map<Price, Integer> newInv = invToPInv();
             Map<Price, Integer> oldInv = RSUtils.joinMaps(bought, items);
 
@@ -200,7 +210,7 @@ public class RSPlayerInventory {
                 }
             }
             for (Price key : newInv.keySet()) {
-                if (tempShop.hasPrice(key)) {
+                if (shop.hasPrice(key)) {
                     int amount = newInv.get(key);
                     if (oldInv.containsKey(key)) {//Something in inventory has a price
                         int oldAm = oldInv.get(key);
@@ -214,6 +224,7 @@ public class RSPlayerInventory {
                         surplus.put(key, amount);
                     }
                 }
+            }
         }
 
         return surplus;
@@ -227,7 +238,7 @@ public class RSPlayerInventory {
         Map<Price, Integer> stolen = new HashMap<>();
 
         for (Price key : newInv.keySet()) {
-            if (RealShopping.shopMap.get(store).hasPrice(key)) {//Something in inventory has a price
+            if (shop.hasPrice(key)) {//Something in inventory has a price
                 int amount = newInv.get(key);
                 if (hasItem(key)) {
                     int oldAm = getAmount(key);
@@ -240,10 +251,11 @@ public class RSPlayerInventory {
                     stolen.put(key, amount);
                 }
             }
+        }
         return stolen;
     }
 
-    void createInv(String invStr) {
+    public void createInv(String invStr) {
         if (!invStr.equals("")) {
             for (String item : invStr.split(",")) {
                 Price temp = new Price(item.split(":")[0]);
@@ -325,6 +337,7 @@ public class RSPlayerInventory {
     }
 
     public int getAmount(Price pi) {
+        if(pi == null || !items.containsKey(pi)) return 0;
         return items.get(pi);
     }
 

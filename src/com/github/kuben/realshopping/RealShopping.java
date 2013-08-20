@@ -109,6 +109,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         statUpdater = null;
         notificatorThread = null;
         playerSettings = new HashSet<>();
+        eePairs = new HashMap<>();
         defPrices = new HashMap<>();
         PInvSet = new HashSet<>();
         maxDurMap = new HashMap<>();
@@ -265,6 +266,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                                 tempShop.addBanned(banned[i]);
                             }
                         }
+                        shopSet.add(tempShop);
                     }
                 }
                 fstream.close();
@@ -284,7 +286,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 
 
         try {
-            PriceParser.loadPriceMap(shopSet);
+            PriceParser.loadPriceMap();
         } catch (Exception e){
             e.printStackTrace();
             log.info("Failed while reading prices.xml");
@@ -1149,14 +1151,13 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                                 ,Double.parseDouble(s.split(";")[1].split(",")[3])));
                         break;
                     case SHIPPEDPACKAGES:
-                        YamlConfiguration conf = new YamlConfiguration();
                         try {
                             conf.load(f);
                             for(String pl:conf.getKeys(false)){
                                 List<ShippedPackage> packs = new LinkedList<>();
                                 ConfigurationSection players = conf.getConfigurationSection(pl);
                                 for(String pkg:players.getKeys(false)){
-                                    packs.add(ShippedSerialization.loadShippedPackage(players.getConfigurationSection(pkg)));
+                                    packs.add(ClassSerialization.loadShippedPackage(players.getConfigurationSection(pkg)));
                                 }
                                 shippedToCollect.put(pl, packs);
                             }
@@ -1626,331 +1627,6 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     }
 
     public void reload(){
-        smallReload = true;
-        onDisable();
-        onEnable();
-    }
-
-    public static RSPlayerInventory getPInv(Player player) {
-        for (RSPlayerInventory pInv : PInvSet) {
-            if (pInv.getPlayer().equals(player.getName())) {
-                return pInv;
-            }
-        }
-        return null;
-    }
-
-    public static boolean addPInv(RSPlayerInventory pInv) {
-        return PInvSet.add(pInv);
-    }
-
-    public static boolean hasPInv(Player player) {
-        for (RSPlayerInventory pInv : PInvSet) {
-            if (pInv.getPlayer().equals(player.getName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static boolean removePInv(Player player) {
-        for (RSPlayerInventory pInv : PInvSet) {
-            if (pInv.getPlayer().equals(player.getName())) {
-                PInvSet.remove(pInv);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static boolean removePInv(String player) {
-        for (RSPlayerInventory pInv : PInvSet) {
-            if (pInv.getPlayer().equals(player)) {
-                PInvSet.remove(pInv);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public Updater getUpdater() {
-        return updater;
-    }
-
-    public void setUpdater(Updater updater) {
-        this.updater = updater;
-    }
-
-    public static Set<String> getNotificatorKeys() {
-        return notificator.keySet();
-    }
-
-    public static List<String> getNotifications(String player) {
-        return notificator.get(player);
-    }
-
-    public static boolean isTool(int item) {
-        return maxDurMap.containsKey(item);
-    }
-
-    public static int getMaxDur(int item) {
-        return maxDurMap.get(item);
-    }
-
-    public static boolean isForbiddenInStore(int item) {
-        return forbiddenInStore.contains(item);
-    }
-
-    public static List<String> getSortedAliases() {
-        return sortedAliases;
-    }
-
-    public static Map<String, Integer[]> getAliasesMap() {
-        return aliasesMap;
-    }
-
-    protected static boolean addEntranceExit(EEPair eePair, Shop shop) {
-        if (eePairs.containsKey(eePair)) {
-            return false;
-        }
-        eePairs.put(eePair, shop);
-        return true;
-    }
-
-    protected static boolean removeEntranceExit(Shop shop, Location en, Location ex) {
-        for (EEPair ee : eePairs.keySet()) {
-            if (ee.hasEntrance(en) && ee.hasExit(ex) && eePairs.get(ee).equals(shop)) {
-                eePairs.remove(ee);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    protected static int clearEntrancesExits(Shop shop) {
-        Map<EEPair, Shop> tempPairs = new HashMap<EEPair, Shop>(eePairs);
-        int i = 0;
-        for (EEPair ee : tempPairs.keySet()) {
-            if (tempPairs.get(ee).equals(shop)) {
-                eePairs.remove(ee);
-                i++;
-            }
-        }
-        return i;
-    }
-
-    protected static boolean hasEntrance(Shop shop, Location en) {
-        for (EEPair ee : eePairs.keySet()) {
-            if (ee.hasEntrance(en) && eePairs.get(ee).equals(shop)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    protected static boolean hasExit(Shop shop, Location ex) {
-        for (EEPair ee : eePairs.keySet()) {
-            if (ee.hasExit(ex) && eePairs.get(ee).equals(shop)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    protected static Location getRandomEntrance(Shop shop) {
-        for (EEPair ee : eePairs.keySet()) {
-            if (eePairs.get(ee).equals(shop)) {
-                return ee.getEntrance();
-            }
-        }
-        return null;
-    }
-
-    protected static Location getEntrance(Shop shop, Location ex) {
-        for (EEPair ee : eePairs.keySet()) {
-            if (ee.hasExit(ex) && eePairs.get(ee).equals(shop)) {
-                return ee.getEntrance();
-            }
-        }
-        return null;
-    }
-
-    protected static Location getExit(Shop shop, Location en) {
-        for (EEPair ee : eePairs.keySet()) {
-            if (ee.hasEntrance(en) && eePairs.get(ee).equals(shop)) {
-                return ee.getExit();
-            }
-        }
-        return null;
-    }
-
-    protected static Shop isEntranceTo(Location loc) {
-        for (EEPair ee : eePairs.keySet()) {
-            if (ee.getEntrance().equals(loc)) {
-                return eePairs.get(ee);
-            }
-        }
-        return null;
-    }
-
-    public static boolean hasDefPrices() {
-        return !RealShopping.defPrices.isEmpty();
-    }
-
-    public static void clearDefPrices() {
-        defPrices.clear();
-    }
-
-    public static Integer getDefPricesSize() {
-        return defPrices.size();
-    }
-
-    public static Map<Price, Integer[]> getDefPrices() {
-        return defPrices;
-    }
-
-    public static void addDefPrice(Price p, Integer[] i) {
-        defPrices.put(p, i);
-    }
-
-    public static Location[] getTpLocsKeysArray() {
-        return forbiddenTpLocs.keySet().toArray(new Location[0]);
-    }
-
-    public static Integer getTpLoc(Location loc) {
-        return forbiddenTpLocs.get(loc);
-    }
-
-    public static boolean hasTpLoc(Location loc) {
-        return forbiddenTpLocs.containsKey(loc);
-    }
-
-    public static Integer addTpLoc(Location loc, Integer radius) {
-        return forbiddenTpLocs.put(loc, radius);
-    }
-
-    public static Integer removeTpLoc(Location loc) {
-        return forbiddenTpLocs.remove(loc);
-    }
-
-    public static boolean isTpLocBlacklist() {
-        return tpLocBlacklist;
-    }
-
-    public static void setTpLocBlacklist() {
-        tpLocBlacklist = true;
-    }
-
-    public static void setTpLocWhitelist() {
-        tpLocBlacklist = false;
-    }
-
-    public static Location getJailed(String player) {
-        return jailedPlayers.get(player);
-    }
-
-    public static boolean isJailed(String player) {
-        return jailedPlayers.containsKey(player);
-    }
-
-    public static Location removeJailed(String player) {
-        return jailedPlayers.remove(player);
-    }
-
-    public static boolean hasShippedToCollect(String player) {
-        return shippedToCollect.containsKey(player);
-    }
-
-    public static int getShippedToCollectAmount(String player) {
-        return shippedToCollect.get(player).size();
-    }
-
-    public static ShippedPackage getShippedToCollect(String player, int ID) {
-        return shippedToCollect.get(player).get(ID);
-    }
-
-    public static ShippedPackage removeShippedToCollect(String player, int ID) {
-        return shippedToCollect.get(player).remove(ID);
-    }
-
-    public static void addShippedToCollect(String player, ShippedPackage pack) {
-        if (!hasShippedToCollect(player)) {
-            shippedToCollect.put(player, new ArrayList<ShippedPackage>());
-        }
-        shippedToCollect.get(player).add(pack);
-    }
-
-    public static void setEntrance(Player player) {
-        entrance = player.getLocation().getBlock().getLocation();
-    }//TODO Rename?
-
-    public static void setExit(Player player) {
-        exit = player.getLocation().getBlock().getLocation();
-    }
-
-    public static boolean hasEntrance() {
-        return !entrance.equals("");
-    }
-
-    public static boolean hasExit() {
-        return !exit.equals("");
-    }
-
-    public static Location getEntrance() {
-        return entrance;
-    }
-
-    public static Location getExit() {
-        return exit;
-    }
-
-    public static Location addPlayerEntrance(Player player) {
-        return playerEntrances.put(player.getName(), player.getLocation().getBlock().getLocation());
-    }
-
-    public static Location addPlayerExit(Player player) {
-        return playerExits.put(player.getName(), player.getLocation().getBlock().getLocation());
-    }
-
-    public static boolean hasPlayerEntrance(String player) {
-        return playerEntrances.containsKey(player);
-    }
-
-    public static boolean hasPlayerExit(String player) {
-        return playerExits.containsKey(player);
-    }
-
-    public static Location getPlayerEntrance(String player) {
-        return playerEntrances.get(player);
-    }
-
-    public static Location getPlayerExit(String player) {
-        return playerExits.get(player);
-    }
-
-    public static void jailPlayer(Player player) {
-        jailedPlayers.put(player.getName(), shopMap.get(getPInv(player).getStore()).getFirstE());
-    }
-
-    /*
-     * 
-     * Misc
-     * 
-     */
-    public static void sendNotification(String who, String what) {
-        if (Config.getNotTimespan() >= 500) {
-            if (!notificator.containsKey(who)) {
-                notificator.put(who, new ArrayList<String>());
-            }
-            notificator.get(who).add(what);
-        }
-    }
-
-    public File getPFile() {
-        return this.getFile();
-    }
-
-    public void reload() {
         smallReload = true;
         onDisable();
         onEnable();

@@ -2,6 +2,7 @@ package com.github.stengun.realshopping;
 
 import com.github.kuben.realshopping.Price;
 import com.github.kuben.realshopping.RSPlayerInventory;
+import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.ShippedPackage;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -30,7 +31,7 @@ public class ClassSerialization {
     }
 
     public static void saveInventory(RSPlayerInventory inv, ConfigurationSection destination) {
-        destination.set("store", inv.getStore());
+        destination.set("store", inv.getShop().getName());
 
         ConfigurationSection bought = destination.createSection("bought");
         int i = 0;
@@ -55,7 +56,7 @@ public class ClassSerialization {
         ConfigurationSection itms = source.getConfigurationSection("contents");
         Map<Price, Integer> items = loadPriceMap(itms);
 
-        return new RSPlayerInventory(player, store, bought, items);
+        return new RSPlayerInventory(player, RealShopping.getShop(store), bought, items);
     }
 
     /**

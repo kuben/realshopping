@@ -299,12 +299,6 @@ public class Shop {//TODO add load/save interface
             if(!RealShopping.shopExists(store)) return false;
             prices = new HashMap<>(RealShopping.getShop(store).prices);
             return true;
-        }
-        if (!RealShopping.shopMap.containsKey(store)) {
-            return false;
-        }
-        prices = new HashMap<>(RealShopping.shopMap.get(store).prices);
-        return true;
     }
 
     public void setPrices(Map<Price, Integer[]> prices) {
@@ -563,14 +557,14 @@ public class Shop {//TODO add load/save interface
      * 
      */
     public static boolean sellToStore(Player p, ItemStack[] iS) {
-        Shop tempShop = RealShopping.shopMap.get(RealShopping.getPInv(p).getStore());
-        if (Config.isEnableSelling() && RealShopping.hasPInv(p) && tempShop.getBuyFor() > 0) {
+        Shop shop = RealShopping.getPInv(p).getShop();
+        if (Config.isEnableSelling() && RealShopping.hasPInv(p) && shop.getBuyFor() > 0) {
             int payment = 0;
             List<ItemStack> sold = new ArrayList<>();
             for (ItemStack ist : iS) {//Calculate cost and check if player owns items
                 if (ist != null) {
                     Price itm = new Price(ist);
-                    if (tempShop.hasPrice(itm)) {//Something in inventory has a price
+                    if (shop.hasPrice(itm)) {//Something in inventory has a price
                         int amount = ((RealShopping.isTool(ist.getTypeId())) ? RealShopping.getMaxDur(ist.getTypeId()) - ist.getDurability() : ist.getAmount());
 
                         int soldAm = amount;
@@ -582,16 +576,16 @@ public class Shop {//TODO add load/save interface
 
                         if (RealShopping.getPInv(p).getAmount(ist) >= soldAm) {
                             int cost = 0;
-                            if (tempShop.hasPrice(itm)) {
-                                cost = tempShop.getPrice(itm);
+                            if (shop.hasPrice(itm)) {
+                                cost = shop.getPrice(itm);
                             }
                             //There is a sale on that item.
                             int pcnt = 0;
-                            if (tempShop.hasSale(itm)) {
-                                pcnt = 100 - tempShop.getSale(itm);
+                            if (shop.hasSale(itm)) {
+                                pcnt = 100 - shop.getSale(itm);
                                 cost *= pcnt / 100f;
                             }
-                            cost *= tempShop.getBuyFor() / 100f;
+                            cost *= shop.getBuyFor() / 100f;
 
                             sold.add(ist);
                             payment += cost * (RealShopping.isTool(itm.getType()) ? (double) amount / (double) RealShopping.getMaxDur(itm.getType()) : amount);//Convert items durability to item amount
@@ -600,7 +594,7 @@ public class Shop {//TODO add load/save interface
                 }
             }
             boolean cont = false;
-            String own = tempShop.getOwner();
+            String own = shop.getOwner();
             if (!own.equals("@admin")) {
                 if (RSEconomy.getBalance(own) >= payment / 100f) {
                     RSEconomy.deposit(p.getName(), payment / 100f);
@@ -608,12 +602,13 @@ public class Shop {//TODO add load/save interface
                     if (!sold.isEmpty()) {
                         p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sold.size() + LangPack.ITEMSFOR + payment / 100f + LangPack.UNIT);
                     }
-                    if (tempShop.allowsNotifications() && !sold.isEmpty()) {
-                        RealShopping.sendNotification(own, LangPack.YOURSTORE + tempShop.getName() + LangPack.BOUGHTSTUFFFOR + payment / 100f + LangPack.UNIT + LangPack.FROM + p.getName());
-                    }
+                    RealShopping.sendNotification(own, LangPack.YOURSTORE + shop.getName() 
+                            + LangPack.BOUGHTSTUFFFOR 
+                            + payment / 100f + LangPack.UNIT 
+                            + LangPack.FROM + p.getName());
                     for (ItemStack key : sold) {
                         if (Config.isEnableAI()) {
-                            tempShop.addStat(new Statistic(new Price(key), key.getAmount(), false));
+                            shop.addStat(new Statistic(new Price(key), key.getAmount(), false));
                         }
                         RealShopping.getPInv(p).removeItem(key, key.getAmount());
                     }
@@ -632,7 +627,7 @@ public class Shop {//TODO add load/save interface
             if (cont) {
                 if (!own.equals("@admin")) {//Return items if player store.
                     for (int i = 0; i < sold.size(); i++) {
-                        tempShop.addStolenToClaim(sold.get(i));
+                        shop.addStolenToClaim(sold.get(i));
                     }
                 }
                 ItemStack[] newInv = p.getInventory().getContents();
@@ -714,32 +709,39 @@ public class Shop {//TODO add load/save interface
         return true;
     }
 
-    public static boolean pay(Player player, Inventory[] invs){
-        if(RealShopping.hasPInv(player)){
-            RSPlayerInventory PInv = RealShopping.getPInv(player);
-            Shop tempShop = PInv.getShop();
-            if(tempShop.hasPrices()) {
-                int toPay = PInv.toPay(invs);
-                if(toPay==0) return false;
-                if(RSEconomy.getBalance(player.getName()) < toPay/100f) {
-                    player.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOBUYTHINGSFOR + toPay/100f + LangPack.UNIT);
+    public static boolean pay(Player player, Inventory[] invs) {
+        if (RealShopping.hasPInv(player)) {
+            RSPlayerInventory pinv = RealShopping.getPInv(player);
+            Shop shop = pinv.getShop();
+            if (shop.hasPrices()) {
+                int toPay = pinv.toPay(invs);
+                if (toPay == 0) {
+                    return false;
+                }
+                if (RSEconomy.getBalance(player.getName()) < toPay / 100f) {
+                    player.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOBUYTHINGSFOR + toPay / 100f + LangPack.UNIT);
                     return true;
                 }
                 RSEconomy.withdraw(player.getName(), toPay/100f);
-                if(!tempShop.getOwner().equals("@admin")){
-                    RSEconomy.deposit(tempShop.getOwner(), toPay/100f);//If player owned store, pay player
-                    if(RealShopping.getPlayerSettings(player.getName()).getSoldNotifications(tempShop, toPay/100))//And send a notification perhaps
-                        RealShopping.sendNotification(tempShop.getOwner(), player.getName() + LangPack.BOUGHTSTUFFFOR + toPay/100f + LangPack.UNIT + LangPack.FROMYOURSTORE + tempShop.getName() + ".");
+                if(!shop.getOwner().equals("@admin")){
+                    RSEconomy.deposit(shop.getOwner(), toPay/100f);//If player owned store, pay player
+                    if(RealShopping.getPlayerSettings(player.getName()).getSoldNotifications(shop, toPay/100))//And send a notification perhaps
+                        RealShopping.sendNotification(shop.getOwner(), player.getName() + LangPack.BOUGHTSTUFFFOR + toPay/100f + LangPack.UNIT + LangPack.FROMYOURSTORE + shop.getName() + ".");
                 }
-                Map<Price, Integer> bought = PInv.getBoughtWait(invs);
+                Map<Price, Integer> bought = pinv.getBoughtWait(invs);
+                for (Price p : bought.keySet()) {
+                    pinv.addBought(p, bought.get(p));
+                }
 
-                if(Config.isEnableAI())
-                    for(Price key:bought.keySet().toArray(new Price[0]))
-                        tempShop.addStat(new Statistic(key, bought.get(key), true));
+                if (Config.isEnableAI()) {
+                    for (Price key : bought.keySet()) {
+                        shop.addStat(new Statistic(key, bought.get(key), true));
+                    }
+                }
 
-                if(invs != null) PInv.update(invs);
-                else PInv.update();
-                player.sendMessage(ChatColor.GREEN + LangPack.YOUBOUGHTSTUFFFOR + toPay/100f + LangPack.UNIT);
+//                if(invs != null) pinv.update(invs);
+//                else pinv.update();
+                player.sendMessage(ChatColor.GREEN + LangPack.YOUBOUGHTSTUFFFOR + toPay / 100f + LangPack.UNIT);
                 return true;
             } else {
                 player.sendMessage(ChatColor.RED + LangPack.THEREARENOPRICESSETFORTHISSTORE);
@@ -758,6 +760,7 @@ public class Shop {//TODO add load/save interface
                     if(tempShop.hasExit(l)){
                         l = tempShop.getCorrEntrance(l);
                         RealShopping.removePInv(player);
+                        removePager(player.getName());
                         player.teleport(l.add(0.5, 0, 0.5));
                         player.sendMessage(ChatColor.GREEN + LangPack.YOULEFT + ChatColor.DARK_GREEN + tempShop.getName());
                         return true;
@@ -781,6 +784,7 @@ public class Shop {//TODO add load/save interface
                     player.teleport(ex.add(0.5, 0, 0.5));
 
                     RealShopping.addPInv(new RSPlayerInventory(player, tempShop));
+                    
                     player.sendMessage(ChatColor.GREEN + LangPack.YOUENTERED + tempShop.getName());
 
                     //Refill chests
@@ -802,6 +806,7 @@ public class Shop {//TODO add load/save interface
                             chest.getBlockInventory().setContents(itemStack);
                         }
                     }
+                        addPager(player.getName());
                     return true;
                 } else player.sendMessage(ChatColor.RED + LangPack.YOUAREBANNEDFROM + tempShop.getName());
             } else if(cmd) player.sendMessage(ChatColor.RED + LangPack.YOURENOTATTHEENTRANCEOFASTORE);

@@ -19,9 +19,8 @@
 package com.github.stengun.realshopping;
 
 import com.github.kuben.realshopping.Price;
-
+import com.github.kuben.realshopping.RealShopping;
 import static com.github.kuben.realshopping.RealShopping.MANDIR;
-
 import com.github.kuben.realshopping.Shop;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -30,6 +29,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -61,12 +61,11 @@ public class PriceParser {
     /**
      * Loads a saved shop/price map from a file.
      *
-     * @param shopmap Map of all shops where to save prices.
      * @throws ParserConfigurationException
      * @throws SAXException
      * @throws IOException
      */
-    public static void loadPriceMap(Map<String, Shop> shopmap) throws ParserConfigurationException, SAXException, IOException {
+    public static void loadPriceMap() throws ParserConfigurationException, SAXException, IOException {
         File f = new File(MANDIR + "prices.xml");
         if (!f.exists()) {
             f.createNewFile();
@@ -84,20 +83,20 @@ public class PriceParser {
                 continue;
             }
 
-            parseShop((Element) shops.item(i), shopmap);
+            parseShop((Element) shops.item(i));
         }
     }
 
     /**
      * Saves to file the entire shop/price map.
      *
-     * @param shopmap Map where to take shops and prices.
+     * @param shopset Map where to take shops and prices.
      * @throws ParserConfigurationException
      * @throws FileNotFoundException
      * @throws TransformerConfigurationException
      * @throws TransformerException
      */
-    public static void savePriceMap(Map<String, Shop> shopmap) throws ParserConfigurationException, FileNotFoundException, TransformerConfigurationException, TransformerException {
+    public static void savePriceMap(Set<Shop> shopset) throws ParserConfigurationException, FileNotFoundException, TransformerConfigurationException, TransformerException {
         File f = new File(MANDIR + "prices.xml");//Reset file
         //if(f.exists()) f.delete();
 
@@ -110,13 +109,12 @@ public class PriceParser {
         doc.appendChild(doc.createComment("If you want to manually edit this file, do it when your server is down. Your changes won't be saved otherwise!"));
 
         Map<Price, Integer[]> shopPrices;
-        Object[] keys = shopmap.keySet().toArray();
-        for (Object key : keys) {
+        for (Shop s : shopset) {
             Element shop = doc.createElement("shop");
-            shop.setAttribute("name", shopmap.get((String) key).getName());
+            shop.setAttribute("name", s.getName());
             root.appendChild(shop);
 
-            shopPrices = shopmap.get((String) key).getPricesMap();
+            shopPrices = s.getPricesMap();
             Object[] ids = shopPrices.keySet().toArray();
             for (Object obj : ids) {
                 Price obitm = (Price) obj;
@@ -157,8 +155,8 @@ public class PriceParser {
     }
 
     // Private membes
-    private static void parseShop(Element shop, Map<String, Shop> shopmap) {
-        if (shopmap.get(shop.getAttribute("name")) == null) {
+    private static void parseShop(Element shop) {
+        if (!RealShopping.shopExists(shop.getAttribute("name"))) {
             return;
         }
         NodeList prices = shop.getElementsByTagName("item");
@@ -170,7 +168,7 @@ public class PriceParser {
                 continue;
             }
             Object[] pprice = parsePrices((Element) prices.item(i));
-            shopmap.get(shop.getAttribute("name")).getPricesMap().put((Price) pprice[0], (Integer[]) pprice[1]);
+            RealShopping.getShop(shop.getAttribute("name")).getPricesMap().put((Price) pprice[0], (Integer[]) pprice[1]);
         }
     }
 

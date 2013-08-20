@@ -7,7 +7,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -240,8 +239,7 @@ public class RSUtils {
     }
 
     public static boolean isChestProtected(Location l){
-            Shop[] keys = RealShopping.shopMap.values().toArray(new Shop[0]);
-            for(Shop temp:keys){
+            for(Shop temp:RealShopping.getShops()){
                     if(temp.isProtectedChest(l)) return true;
             }
             return false;
@@ -250,14 +248,14 @@ public class RSUtils {
     public static Location[] getNearestTpLocs(Location loc, int maxAmount){
             Location[] keys = RealShopping.getTpLocsKeysArray();
             Location[] nearest = null;
-            Map<Location, Double> locDist = new HashMap<Location, Double>();
+            Map<Location, Double> locDist = new HashMap<>();
             for(Location l:keys)
                     if(loc.getWorld().equals(l.getWorld()))
                             locDist.put(l, loc.distance(l));
 
             if(!locDist.isEmpty()){
                     ValueComparator bvc =  new ValueComparator(locDist);
-                    TreeMap<Location,Double> sorted_map = new TreeMap<Location,Double>(bvc);
+                    TreeMap<Location,Double> sorted_map = new TreeMap<>(bvc);
                     sorted_map.putAll(locDist);
 
 
@@ -279,15 +277,12 @@ public class RSUtils {
      * 
      */
 
-    public static String[] getOwnedStores(String player){
-            String sString = ",";
-            String[] keys = RealShopping.shopMap.keySet().toArray(new String[0]);
-            for(String store:keys){
-                    if(RealShopping.shopMap.get(store).getOwner().toLowerCase().equals(player.toLowerCase())) sString += store;
-            }
-            return sString.substring(1).split(",");
+    public static Shop[] getOwnedShops(String player){
+        List<Shop> shopList = new ArrayList<>();
+        for(Shop shop:RealShopping.getShops())
+            if(shop.getOwner().toLowerCase().equals(player.toLowerCase())) shopList.add(shop);
+        return shopList.toArray(new Shop[0]);
     }
-
     /**
      * We check for minecarts near the pay block.
      * @param l Location where to check for shopping carts.
@@ -344,17 +339,13 @@ public class RSUtils {
     }
 
     public static boolean shipCartContents(StorageMinecart sM, Player p) {
-            //Get bought items in cart
-
-            //Old inv = items
-
             List<ItemStack> cartInv = new LinkedList<>();
             for(ItemStack i:sM.getInventory().getContents()){
                 if(i!= null) cartInv.add(i);
             }
 
             RSPlayerInventory pinv = RealShopping.getPInv(p);
-            Shop tempshop = RealShopping.shopMap.get(pinv.getStore());
+            Shop tempshop = pinv.getShop();
             Map<Price, Integer> bought = pinv.getBought();
             //The shipment is invalid when cart is empty.
             if(cartInv.isEmpty() || bought.isEmpty()){
@@ -368,15 +359,18 @@ public class RSUtils {
                     if(i == null) continue;
                     Price x = new Price(i);
                     if(tempshop.hasPrice(x) && bought.containsKey(x)){ //Player owns this item (bought)
-                        int amount = bought.get(x) + (RealShopping.isTool(i.getTypeId())?1:i.getAmount());
-                        if(amount > pinv.getAmount(x))
-                            bought.put(x, pinv.getAmount(x));
-                        else
-                            bought.put(x, amount);
-                        rem.add(i);
+                        int amount = RealShopping.isTool(i.getTypeId())?1:i.getAmount();
+                        ItemStack r = i.clone();
+                        if(amount > bought.get(x)){
+                            r.setAmount(bought.get(x));
+                        } else {
+                            r.setAmount(amount);
+                        }
+                        rem.add(r);
+                        pinv.delBought(x,amount);
                     }
                 }
-                cartInv.removeAll(rem);
+                cartInv = updateCartInv(cartInv,rem);
 
                 sM.getInventory().setContents(cartInv.toArray(new ItemStack[0]));
 
@@ -384,9 +378,9 @@ public class RSUtils {
                 RealShopping.addShippedToCollect(p.getName(), new ShippedPackage(rem.toArray(new ItemStack[0]), 0, sM.getLocation()));
                 p.sendMessage(ChatColor.GREEN + LangPack.PACKAGEWAITINGTOBEDELIVERED);
 
-                //Update player inv
+                //Update bought inventory
                 for(Price is:bought.keySet()){
-                    pinv.removeItem(is, bought.get(is));
+                    pinv.delBought(is, bought.get(is));
                 }
 
             } else p.sendMessage(ChatColor.RED + LangPack.YOUHAVENTBOUGHTANYTHING);
@@ -394,9 +388,21 @@ public class RSUtils {
             return true;
     }
 
+    private static List<ItemStack> updateCartInv(List<ItemStack> cart,List<ItemStack> rem){
+        List<ItemStack> newInv = new LinkedList<>();
+        for(ItemStack i : cart){
+            for(ItemStack f : rem)
+                if(f.getType() == i.getType())
+                    if(f.getAmount() < i.getAmount()){
+                        i.setAmount(i.getAmount() - f.getAmount());
+                    } else continue;
+            newInv.add(i);
+        }
+        return newInv;
+    }
     public static boolean collectShipped(Location l, Player p, int id) {
         if(l.getBlock().getState() instanceof Chest){
-            if(!RealShopping.hasPInv(p) || RealShopping.shopMap.get(RealShopping.getPInv(p).getStore()).getOwner().equals(p.getName())){
+            if(!RealShopping.hasPInv(p) || RealShopping.getPInv(p).getShop().getOwner().equals(p.getName())){
                 if(RealShopping.hasShippedToCollect(p.getName())){
                     if(RealShopping.getShippedToCollectAmount(p.getName()) >= id){
                         boolean cont = false;
@@ -547,28 +553,28 @@ public class RSUtils {
         p.getInventory().setContents(newPlayerInv[0]);
         p.getInventory().setArmorContents(newPlayerInv[1]);
 
-        String own = RealShopping.shopMap.get(RealShopping.getPInv(p).getStore()).getOwner();
+        String own = RealShopping.getPInv(p).getShop().getOwner();
         if(!own.equals("@admin")){//Return items if player store.
             for(Price key:stolen2.keySet()){
                 ItemStack tempIS = key.toItemStack();
                 if(RealShopping.isTool(key.getType())){
                     if(stolen2.get(key) > RealShopping.getMaxDur(key.getType()))
                         while(RealShopping.getMaxDur(key.getType()) < stolen2.get(key)){//If more than one stack/full tool
-                            RealShopping.shopMap.get(RealShopping.getPInv(p).getStore()).addStolenToClaim(tempIS.clone());
+                            RealShopping.getPInv(p).getShop().addStolenToClaim(tempIS.clone());
                             stolen2.put(key, stolen2.get(key) - RealShopping.getMaxDur(key.getType()));
                         }
                     tempIS.setDurability((short) (RealShopping.getMaxDur(key.getType()) - stolen2.get(key)));
-                    RealShopping.shopMap.get(RealShopping.getPInv(p).getStore()).addStolenToClaim(tempIS);
+                    RealShopping.getPInv(p).getShop().addStolenToClaim(tempIS);
                 } else {
                     if(stolen2.get(key) > Material.getMaterial(key.getType()).getMaxStackSize())
                         while(Material.getMaterial(key.getType()).getMaxStackSize() < stolen2.get(key)){//If more than one stack/full tool
                             ItemStack tempIStemp = tempIS.clone();
                             tempIStemp.setAmount(Material.getMaterial(key.getType()).getMaxStackSize());
-                            RealShopping.shopMap.get(RealShopping.getPInv(p).getStore()).addStolenToClaim(tempIStemp);
+                            RealShopping.getPInv(p).getShop().addStolenToClaim(tempIStemp);
                             stolen2.put(key, stolen2.get(key) - Material.getMaterial(key.getType()).getMaxStackSize());
                         }
                     tempIS.setAmount(stolen2.get(key));
-                    RealShopping.shopMap.get(RealShopping.getPInv(p).getStore()).addStolenToClaim(tempIS);
+                    RealShopping.getPInv(p).getShop().addStolenToClaim(tempIS);
                 }
             }
         }

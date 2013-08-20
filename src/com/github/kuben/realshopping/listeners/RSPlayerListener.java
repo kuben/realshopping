@@ -85,7 +85,7 @@ public class RSPlayerListener implements Listener {
                 RSUtils.punish(player);
             } else {
                 if (RSUtils.allowTpOutOfStore(event.getTo())) {
-                    String shopName = RealShopping.getPInv(player).getStore();
+                    String shopName = RealShopping.getPInv(player).getShop().getName();
                     RealShopping.removePInv(player);
                     player.sendMessage(ChatColor.RED + LangPack.YOULEFT + shopName);
                 } else {
@@ -266,7 +266,7 @@ public class RSPlayerListener implements Listener {
                             } else if (player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.BROWN_MUSHROOM) {
                                 if (Config.isEnableSelling()) {
                                     if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-                                        if (RealShopping.shopMap.get(RealShopping.getPInv(player).getStore()).getBuyFor() > 0) {
+                                        if (RealShopping.getPInv(player).getShop().getBuyFor() > 0) {
                                             Inventory tempInv = Bukkit.createInventory(null, 36, LangPack.SELLTOSTORE);
                                             player.openInventory(tempInv);
                                         } else {
@@ -302,7 +302,7 @@ public class RSPlayerListener implements Listener {
                 event.setCancelled(true);
                 Pager pg = Shop.getPager(player.getName());
                 pg.push();
-                Shop.prices(player, pg.getPage(), RealShopping.getPInv(player).getStore());
+                Shop.prices(player, pg.getPage(), RealShopping.getPInv(player).getShop());
             }
 
         }
@@ -374,10 +374,8 @@ public class RSPlayerListener implements Listener {
     private boolean canOpenDoor(Location loc) {
         Location l = loc.getBlock().getLocation();
         Location l2 = loc.getBlock().getLocation().clone().subtract(0, 1, 0);
-        Object[] keys = RealShopping.shopMap.keySet().toArray();
-        for (int i = 0; i < keys.length; i++) {
-            if (RealShopping.shopMap.get(keys[i]).hasEntrance(l) || RealShopping.shopMap.get(keys[i]).hasExit(l)
-                    || RealShopping.shopMap.get(keys[i]).hasEntrance(l2) || RealShopping.shopMap.get(keys[i]).hasExit(l2)) {
+        for(Shop shop : RealShopping.getShops()) {
+            if(shop.hasEntrance(l) || shop.hasExit(l) || shop.hasEntrance(l2) || shop.hasExit(l2)){
                 return false;
             }
         }
