@@ -19,7 +19,9 @@
 package com.github.stengun.realshopping;
 
 import com.github.kuben.realshopping.Price;
+
 import static com.github.kuben.realshopping.RealShopping.MANDIR;
+
 import com.github.kuben.realshopping.Shop;
 import java.io.File;
 import java.io.FileNotFoundException;

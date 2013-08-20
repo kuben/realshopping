@@ -61,67 +61,19 @@ public class Shop {//TODO add load/save interface
      */
     private String name, world, owner;//Admin stores: owner = @admin
     private int buyFor = 0;
-    private byte notifyChanges = 0;
-    private int changeTreshold = 1;
-    private int changePercent = 5;
-    private boolean allowNotifications = true;
+
     /*
      * 
      * Getters and Setters
      * 
      */
 
-    public String getName() {
-        return name;
-    }
+    public String getName(){ return name; }
+    public String getWorld(){ return world; }
+    public String getOwner(){ return owner; }
 
-    public String getWorld() {
-        return world;
-    }
-
-    public String getOwner() {
-        return owner;
-    }
-
-    public int getBuyFor() {
-        return buyFor;
-    }
-
-    public void setBuyFor(int buyFor) {
-        this.buyFor = buyFor;
-    }
-
-    public byte getNotifyChanges() {
-        return notifyChanges;
-    }
-
-    public void setNotifyChanges(byte notifyChanges) {
-        this.notifyChanges = notifyChanges;
-    }
-
-    public int getChangeTreshold() {
-        return changeTreshold;
-    }
-
-    public void setChangeTreshold(int changeTreshold) {
-        this.changeTreshold = changeTreshold;
-    }
-
-    public int getChangePercent() {
-        return changePercent;
-    }
-
-    public void setChangePercent(int changePercent) {
-        this.changePercent = changePercent;
-    }
-
-    public boolean allowsNotifications() {
-        return allowNotifications;
-    }
-
-    public void setAllowNotifications(boolean allowNotifications) {
-        this.allowNotifications = allowNotifications;
-    }
+    public int getBuyFor(){ return buyFor; }
+    public void setBuyFor(int buyFor){ this.buyFor = buyFor; }
 
     /*
      * 
@@ -340,8 +292,12 @@ public class Shop {//TODO add load/save interface
     }
 
     public boolean clonePrices(String store) {
-        if (store == null) {
-            prices = getLowestPrices();
+            if(store == null){
+                    prices = getLowestPrices();
+                    return true;
+            }
+            if(!RealShopping.shopExists(store)) return false;
+            prices = new HashMap<>(RealShopping.getShop(store).prices);
             return true;
         }
         if (!RealShopping.shopMap.containsKey(store)) {
@@ -585,17 +541,15 @@ public class Shop {//TODO add load/save interface
 
     private Map<Price, Integer[]> getLowestPrices() {
         Map<Price, Integer[]> tempMap = new HashMap<>();
-        String[] keys = RealShopping.shopMap.keySet().toArray(new String[0]);
-        for (String s : keys) {
-            if (!s.equals(name)) {
-                Price[] keys2 = RealShopping.shopMap.get(s).getPrices().keySet().toArray(new Price[0]);
-                for (Price p : keys2) {
-                    if (tempMap.containsKey(p)) {
-                        if (tempMap.get(p)[0] > RealShopping.shopMap.get(s).getPrice(p)) {
-                            tempMap.put(p, new Integer[]{RealShopping.shopMap.get(s).getPrice(p)});
-                        }
-                    } else {
-                        tempMap.put(p, new Integer[]{RealShopping.shopMap.get(s).getPrice(p)});
+        for(Shop shop : RealShopping.getShops()) {
+            if(!shop.getName().equals(name)) {
+                Price[] keys2 = shop.getPrices().keySet().toArray(new Price[0]);
+                for(Price p : keys2) {
+                    if(tempMap.containsKey(p)){
+                        if(tempMap.get(p)[0] > shop.getPrice(p))
+                            tempMap.put(p, new Integer[] { shop.getPrice(p) });
+                        else
+                            tempMap.put(p, new Integer[] { shop.getPrice(p) });
                     }
                 }
             }
@@ -709,52 +663,41 @@ public class Shop {//TODO add load/save interface
         return false;
     }
 
-    public static boolean prices(CommandSender sender, int page, String store) {//In 0.50+ pages start from 1
-        Shop tempShop = RealShopping.shopMap.get(store);
-        if (tempShop.hasPrices()) {
-            Map<Price, Integer> tempMap = tempShop.getPrices();
-            if (!tempMap.isEmpty()) {
+    public static boolean prices(CommandSender sender, int page, Shop shop){//In 0.50+ pages start from 1
+        if(shop.hasPrices()){
+            Map<Price, Integer> tempMap = shop.getPrices();
+            if(!tempMap.isEmpty()){
                 Price[] keys = tempMap.keySet().toArray(new Price[0]);
-                if ((page - 1) * 9 < keys.length) {//If page exists
-                    // 					boolean SL = false;
-                    if (tempShop.hasSales()) {
-                        sender.sendMessage(ChatColor.GREEN + LangPack.THEREISA + tempShop.getFirstSale() + LangPack.PCNTOFFSALEAT + store);
-                        // 						SL = true;
+                if((page-1)*9 < keys.length){//If page exists
+                    if(shop.hasSales()){
+                        sender.sendMessage(ChatColor.GREEN + LangPack.THEREISA + shop.getFirstSale() + LangPack.PCNTOFFSALEAT + shop.getName());
                     }
-                    if (page * 9 < keys.length) {//Not last
-                        for (int i = 9 * (page - 1); i < 9 * page; i++) {
+                    if(page*9 < keys.length){//Not last
+                        for(int i = 9*(page-1);i < 9*page;i++){
                             int cost = tempMap.get(keys[i]);
                             String onSlStr = "";
-                            if (tempShop.hasSale(keys[i].stripOffData()) || tempShop.hasSale(keys[i])) {//There is a sale on that item.
+                            if(shop.hasSale(keys[i].stripOffData()) || shop.hasSale(keys[i])){//There is a sale on that item.
                                 int pcnt = -1;
-                                if (tempShop.hasSale(keys[i].stripOffData())) {
-                                    pcnt = 100 - tempShop.getSale(keys[i].stripOffData());
-                                }
-                                if (tempShop.hasSale(keys[i])) {
-                                    pcnt = 100 - tempShop.getSale(keys[i]);
-                                }
-                                cost *= pcnt / 100f;
+                                if(shop.hasSale(keys[i].stripOffData())) pcnt = 100 - shop.getSale(keys[i].stripOffData());
+                                if(shop.hasSale(keys[i]))  pcnt = 100 - shop.getSale(keys[i]);
+                                cost *= pcnt/100f;
                                 onSlStr = ChatColor.GREEN + LangPack.ONSALE;
                             }
-                            sender.sendMessage(ChatColor.BLUE + "" + keys[i].formattedString() + ChatColor.BLACK + " - " + ChatColor.RED + cost / 100f + LangPack.UNIT + onSlStr);
+                            sender.sendMessage(ChatColor.BLUE + "" + keys[i].formattedString() + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
                         }
                         sender.sendMessage(ChatColor.RED + LangPack.MOREITEMSONPAGE + (page + 1));
                     } else {//Last page
-                        for (int i = 9 * (page - 1); i < keys.length; i++) {
+                        for(int i = 9*(page-1);i < keys.length;i++){
                             int cost = tempMap.get(keys[i]);
                             String onSlStr = "";
-                            if (tempShop.hasSale(keys[i].stripOffData()) || tempShop.hasSale(keys[i])) {//There is a sale on that item.
+                            if(shop.hasSale(keys[i].stripOffData()) || shop.hasSale(keys[i])){//There is a sale on that item.
                                 int pcnt = -1;
-                                if (tempShop.hasSale(keys[i].stripOffData())) {
-                                    pcnt = 100 - tempShop.getSale(keys[i].stripOffData());
-                                }
-                                if (tempShop.hasSale(keys[i])) {
-                                    pcnt = 100 - tempShop.getSale(keys[i]);
-                                }
-                                cost *= pcnt / 100f;
+                                if(shop.hasSale(keys[i].stripOffData())) pcnt = 100 - shop.getSale(keys[i].stripOffData());
+                                if(shop.hasSale(keys[i]))  pcnt = 100 - shop.getSale(keys[i]);
+                                cost *= pcnt/100f;
                                 onSlStr = ChatColor.GREEN + LangPack.ONSALE;
                             }
-                            sender.sendMessage(ChatColor.BLUE + "" + keys[i].formattedString() + ChatColor.BLACK + " - " + ChatColor.RED + cost / 100f + LangPack.UNIT + onSlStr);
+                            sender.sendMessage(ChatColor.BLUE + "" + keys[i].formattedString() + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
                         }
                     }
                 } else {
@@ -771,154 +714,102 @@ public class Shop {//TODO add load/save interface
         return true;
     }
 
-    public static boolean pay(Player player, Inventory[] invs) {
-        if (RealShopping.hasPInv(player)) {
-            RSPlayerInventory pinv = RealShopping.getPInv(player);
-            Shop shop = pinv.getShop();
-            if (shop.hasPrices()) {
-                int toPay = pinv.toPay(invs);
-                if (toPay == 0) {
-                    return false;
-                }
-                if (RSEconomy.getBalance(player.getName()) < toPay / 100f) {
-                    player.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOBUYTHINGSFOR + toPay / 100f + LangPack.UNIT);
+    public static boolean pay(Player player, Inventory[] invs){
+        if(RealShopping.hasPInv(player)){
+            RSPlayerInventory PInv = RealShopping.getPInv(player);
+            Shop tempShop = PInv.getShop();
+            if(tempShop.hasPrices()) {
+                int toPay = PInv.toPay(invs);
+                if(toPay==0) return false;
+                if(RSEconomy.getBalance(player.getName()) < toPay/100f) {
+                    player.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOBUYTHINGSFOR + toPay/100f + LangPack.UNIT);
                     return true;
                 }
-                RSEconomy.withdraw(player.getName(), toPay / 100f);
-                if (!shop.getOwner().equals("@admin")) {
-                    RSEconomy.deposit(shop.getOwner(), toPay / 100f);//If player owned store, pay player
-                    if (shop.allowsNotifications()) {
-                        RealShopping.sendNotification(shop.getOwner(), player.getName()
-                                + LangPack.BOUGHTSTUFFFOR + toPay / 100f + LangPack.UNIT + LangPack.FROMYOURSTORE + shop.getName() + ".");
-                    }
+                RSEconomy.withdraw(player.getName(), toPay/100f);
+                if(!tempShop.getOwner().equals("@admin")){
+                    RSEconomy.deposit(tempShop.getOwner(), toPay/100f);//If player owned store, pay player
+                    if(RealShopping.getPlayerSettings(player.getName()).getSoldNotifications(tempShop, toPay/100))//And send a notification perhaps
+                        RealShopping.sendNotification(tempShop.getOwner(), player.getName() + LangPack.BOUGHTSTUFFFOR + toPay/100f + LangPack.UNIT + LangPack.FROMYOURSTORE + tempShop.getName() + ".");
                 }
-                Map<Price, Integer> bought = pinv.getBoughtWait(invs);
-                for (Price p : bought.keySet()) {
-                    pinv.addBought(p, bought.get(p));
-                }
+                Map<Price, Integer> bought = PInv.getBoughtWait(invs);
 
-                if (Config.isEnableAI()) {
-                    for (Price key : bought.keySet()) {
-                        shop.addStat(new Statistic(key, bought.get(key), true));
-                    }
-                }
+                if(Config.isEnableAI())
+                    for(Price key:bought.keySet().toArray(new Price[0]))
+                        tempShop.addStat(new Statistic(key, bought.get(key), true));
 
-//                if(invs != null) pinv.update(invs);
-//                else pinv.update();
-                player.sendMessage(ChatColor.GREEN + LangPack.YOUBOUGHTSTUFFFOR + toPay / 100f + LangPack.UNIT);
+                if(invs != null) PInv.update(invs);
+                else PInv.update();
+                player.sendMessage(ChatColor.GREEN + LangPack.YOUBOUGHTSTUFFFOR + toPay/100f + LangPack.UNIT);
                 return true;
             } else {
                 player.sendMessage(ChatColor.RED + LangPack.THEREARENOPRICESSETFORTHISSTORE);
                 return true;
             }
-        } else {
-            player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
-        }
+        } else player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
         return false;
     }
 
-    /**
-     * This method is called when a player exits from the store.
-     *
-     * @param player The player who's going to exit.
-     * @param cmd true if this method was called from <b>/rsexit</b> command.
-     * @return True if the player exited, false otherwise.
-     */
-    public static boolean exit(Player player, boolean cmd) {
-        if (RealShopping.hasPInv(player)) {
-            if (RealShopping.shopMap.size() > 0) {
-                if (!PromptMaster.isConversing(player) && !RSPlayerListener.hasConversationListener(player)) {
-                    if (RealShopping.getPInv(player).hasPaid() || player.getGameMode() == GameMode.CREATIVE) {
-                        Shop shop = RealShopping.getPInv(player).getShop();
-                        Location l = player.getLocation().getBlock().getLocation().clone();
-                        if (shop.hasExit(l)) {
-                            l = shop.getCorrEntrance(l);
-                            RealShopping.removePInv(player);
-                            removePager(player.getName());
-                            player.teleport(l.add(0.5, 0, 0.5));
-                            player.sendMessage(ChatColor.GREEN + LangPack.YOULEFT + shop.getName());
-                            return true;
-                        } else {
-                            if (cmd) {
-                                player.sendMessage(ChatColor.RED + LangPack.YOURENOTATTHEEXITOFASTORE);
-                            }
-                            return false;
-                        }
-                    } else {
-                        player.sendMessage(ChatColor.RED + LangPack.YOUHAVENTPAIDFORALLYOURARTICLES);
-                        return false;
-                    }
-                } else {
-                    player.sendRawMessage(ChatColor.RED + LangPack.YOU_CANT_DO_THIS_WHILE_IN_A_CONVERSATION);
-                    player.sendRawMessage(LangPack.ALL_CONVERSATIONS_CAN_BE_ABORTED_WITH_ + ChatColor.DARK_PURPLE + "quit");
-                    return false;
-                }
-            } else {
-                player.sendMessage(ChatColor.RED + LangPack.THEREARENOSTORESSET);
-                return false;
-            }
-        } else {
-            player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
-            return false;
-        }
-    }
-
-    public static boolean enter(Player player, boolean cmd) {
-        if (RealShopping.shopMap.size() > 0) {
-            Location l = player.getLocation().getBlock().getLocation().clone();
-            Shop tempShop = RealShopping.isEntranceTo(l);
-            if (!PromptMaster.isConversing(player) && !RSPlayerListener.hasConversationListener(player)) {
-                if (tempShop != null) {//Enter shop
-                    Location ex = tempShop.getCorrExit(l);
-                    if (!tempShop.isBanned(player.getName().toLowerCase())) {
-                        player.teleport(ex.add(0.5, 0, 0.5));
-
-                        RealShopping.addPInv(new RSPlayerInventory(player, tempShop.getName()));
-                        player.sendMessage(ChatColor.GREEN + LangPack.YOUENTERED + tempShop.getName());
-
-                        //Refill chests
-                        Location[] chestArr = tempShop.getChests().keySet().toArray(new Location[0]);
-                        for (int i = 0; i < chestArr.length; i++) {
-                            Block tempChest = player.getWorld().getBlockAt(chestArr[i]);
-                            if (tempChest.getType() != Material.CHEST) {
-                                tempChest.setType(Material.CHEST);
-                            }
-                            BlockState blockState = tempChest.getState();
-                            if (blockState instanceof Chest) {
-                                Chest chest = (Chest) blockState;
-                                chest.getBlockInventory().clear();
-                                ItemStack[] itemStack = new ItemStack[27];
-                                int k = 0;
-                                for (Integer[] j : tempShop.getChests().get(chestArr[i])) {
-                                    itemStack[k] = new MaterialData(j[0], j[1].byteValue()).toItemStack((j[2] == 0) ? Material.getMaterial(j[0]).getMaxStackSize() : j[2]);
-                                    k++;
-                                }
-                                chest.getBlockInventory().setContents(itemStack);
-                            }
-                        }
-                        addPager(player.getName());
+    public static boolean exit(Player player, boolean cmd){
+        if(RealShopping.hasPInv(player)){
+            if(!PromptMaster.isConversing(player) && !RSPlayerListener.hasConversationListener(player)){
+                if(RealShopping.getPInv(player).hasPaid() || player.getGameMode() == GameMode.CREATIVE){
+                    Shop tempShop = RealShopping.getPInv(player).getShop();
+                    Location l = player.getLocation().getBlock().getLocation().clone();
+                    if(tempShop.hasExit(l)){
+                        l = tempShop.getCorrEntrance(l);
+                        RealShopping.removePInv(player);
+                        player.teleport(l.add(0.5, 0, 0.5));
+                        player.sendMessage(ChatColor.GREEN + LangPack.YOULEFT + ChatColor.DARK_GREEN + tempShop.getName());
                         return true;
-                    } else {
-                        player.sendMessage(ChatColor.RED + LangPack.YOUAREBANNEDFROM + tempShop.getName());
-                        return false;
-                    }
-                } else {
-                    if (cmd) {
-                        player.sendMessage(ChatColor.RED + LangPack.YOURENOTATTHEENTRANCEOFASTORE);
-                    }
-                    return false;
-                }
+                    } else if(cmd)player.sendMessage(ChatColor.RED + LangPack.YOURENOTATTHEEXITOFASTORE);
+                } else player.sendMessage(ChatColor.RED + LangPack.YOUHAVENTPAIDFORALLYOURARTICLES);
             } else {
                 player.sendRawMessage(ChatColor.RED + LangPack.YOU_CANT_DO_THIS_WHILE_IN_A_CONVERSATION);
                 player.sendRawMessage(LangPack.ALL_CONVERSATIONS_CAN_BE_ABORTED_WITH_ + ChatColor.DARK_PURPLE + "quit");
-                return false;
             }
+        } else player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
+        return false;
+    }
+
+    public static boolean enter(Player player, boolean cmd){
+        if(!PromptMaster.isConversing(player) && !RSPlayerListener.hasConversationListener(player)){
+            Location l = player.getLocation().getBlock().getLocation().clone(); 
+            Shop tempShop = RealShopping.isEntranceTo(l);
+            if(tempShop != null){//Enter shop
+                Location ex = tempShop.getCorrExit(l);
+                if(!tempShop.isBanned(player.getName().toLowerCase())){
+                    player.teleport(ex.add(0.5, 0, 0.5));
+
+                    RealShopping.addPInv(new RSPlayerInventory(player, tempShop));
+                    player.sendMessage(ChatColor.GREEN + LangPack.YOUENTERED + tempShop.getName());
+
+                    //Refill chests
+                    Location[] chestArr = tempShop.getChests().keySet().toArray(new Location[0]);
+                    for(int i = 0;i < chestArr.length;i++){
+                        Block tempChest = player.getWorld().getBlockAt(chestArr[i]);
+                        if(tempChest.getType() != Material.CHEST) tempChest.setType(Material.CHEST);
+                        BlockState blockState = tempChest.getState();
+                        if(blockState instanceof Chest){
+                            Chest chest = (Chest)blockState;
+                            chest.getBlockInventory().clear();
+                            ItemStack[] itemStack = new ItemStack[27];
+                            int k = 0;
+                            for(Integer[] j:tempShop.getChests().get(chestArr[i])){
+                                itemStack[k] = new MaterialData(j[0],j[1].byteValue())
+                                .toItemStack((j[2]==0)?Material.getMaterial(j[0]).getMaxStackSize():j[2]);
+                                k++;
+                            }
+                            chest.getBlockInventory().setContents(itemStack);
+                        }
+                    }
+                    return true;
+                } else player.sendMessage(ChatColor.RED + LangPack.YOUAREBANNEDFROM + tempShop.getName());
+            } else if(cmd) player.sendMessage(ChatColor.RED + LangPack.YOURENOTATTHEENTRANCEOFASTORE);
         } else {
-            if (cmd) {
-                player.sendMessage(ChatColor.RED + LangPack.THEREARENOSTORESSET);
-            }
-            return false;
+            player.sendRawMessage(ChatColor.RED + LangPack.YOU_CANT_DO_THIS_WHILE_IN_A_CONVERSATION);
+            player.sendRawMessage(LangPack.ALL_CONVERSATIONS_CAN_BE_ABORTED_WITH_ + ChatColor.DARK_PURPLE + "quit");
         }
+        return false;
     }
 }
 

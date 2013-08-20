@@ -61,18 +61,20 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 //TODO better storing of database files
 public class RealShopping extends JavaPlugin {//TODO stores case sensitive, players case preserving
-
     private Updater updater;
     private StatUpdater statUpdater;
     private Notificator notificatorThread;
+
     //Constants
     public static final String MANDIR = "plugins/RealShopping/";
     public static final String VERSION = "v0.51";
     public static final float VERFLOAT = 0.51f;
+
     //Vars
     private static Set<RSPlayerInventory> PInvSet;//Changed to set
-    public static Map<String, Shop> shopMap;//TODO
-    public static Map<String, PSetting> playerSettings;
+    private static Set<Shop> shopSet;
+    private static Set<PSetting> playerSettings;
+
     private static Map<EEPair, Shop> eePairs;
     private static Map<Price, Integer[]> defPrices;
     private static Map<Integer, Integer> maxDurMap;
@@ -85,10 +87,13 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     private static Map<String, List<ShippedPackage>> shippedToCollect;
     private static Map<Location, Integer> forbiddenTpLocs;//TODO Maybe have a class for these, or enum
     private static Map<String, List<String>> notificator;
+
     private static boolean tpLocBlacklist;
     private static Location entrance;
     private static Location exit;
+
     private boolean smallReload = false;
+
     static Logger log;
     public static String working;
     public static String newUpdate;
@@ -98,19 +103,19 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
      * Enable/Disable functions
      * 
      */
-    public void onEnable() {
+
+    public void onEnable(){
         setUpdater(null);
         statUpdater = null;
         notificatorThread = null;
-        playerSettings = new HashMap<>();
-        eePairs = new HashMap<>();
+        playerSettings = new HashSet<>();
         defPrices = new HashMap<>();
         PInvSet = new HashSet<>();
         maxDurMap = new HashMap<>();
         sortedAliases = null;//Is initialized in initAliases
         aliasesMap = new HashMap<>(801);
         defPrices = new HashMap<>();
-        shopMap = new HashMap<>();
+        shopSet = new HashSet<>();
         playerEntrances = new HashMap<>();
         playerExits = new HashMap<>();
         jailedPlayers = new HashMap<>();
@@ -194,68 +199,70 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                 String header = "Shops database for RealShopping v";
                 Float version = 0f;
                 boolean notHeader = true;
-                while ((s = br.readLine()) != null) {// Read shops.db
+                while ((s = br.readLine()) != null){// Read shops.db
                     notHeader = true;
-                    if (version == 0 && s.length() > header.length() && s.substring(0, header.length()).equals(header)) {
+                    if(version == 0 && s.length() > header.length() && s.substring(0, header.length()).equals(header)){
                         version = Float.parseFloat(s.substring(header.length()));
                         notHeader = false;
                     }
-                    if (notHeader) {
+                    if(notHeader) {
                         String[] tS = s.split(";")[0].split(":");
-                        shopMap.put(tS[0], new Shop(tS[0], tS[1], (version >= 0.20) ? tS[2] : "@admin"));
-                        if (version >= 0.30) {
-                            shopMap.get(tS[0]).setBuyFor(Integer.parseInt(tS[3]));
-                        }
-                        if (version >= 0.40) {
-                            byte notifyByte = 0;
-                            if (tS[4].equals("notify")) {
-                                notifyByte = 1;
-                            } else if (tS[4].equals("change")) {
-                                notifyByte = 2;
-                            }
-                            shopMap.get(tS[0]).setNotifyChanges(notifyByte);
-                            shopMap.get(tS[0]).setChangeTreshold(Integer.parseInt(tS[5]));
-                            shopMap.get(tS[0]).setChangePercent(Integer.parseInt(tS[6]));
-                            shopMap.get(tS[0]).setAllowNotifications(Boolean.parseBoolean(tS[7]));
-                        }
-                        for (int i = (version >= 0.40) ? 8 : (version >= 0.30) ? 4 : (version >= 0.20) ? 3 : 2; i < tS.length; i++) {//The entrances + exits
+                        Shop tempShop = new Shop(tS[0], tS[1], (version >= 0.20)?tS[2]:"@admin");
+                        if(version >= 0.30) tempShop.setBuyFor(Integer.parseInt(tS[3]));
+                        /*
+                         * For versions 0.40 through 0.50 notifications and AI settings for stores are ignored.
+                         * The shop owner will just have to set them again, using /rsme.
+                         */
+                        for(int i = 
+                            (version >= 0.51)?4:
+                            (version >= 0.40)?8:
+                            (version >= 0.30)?4:
+                            (version >= 0.20)?3:2
+                            ;i < tS.length;i++){//The entrances + exits
+                            
                             String[] tSS = tS[i].split(",");
-                            Location en = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[0]), Integer.parseInt(tSS[1]), Integer.parseInt(tSS[2]));
-                            Location ex = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[3]), Integer.parseInt(tSS[4]), Integer.parseInt(tSS[5]));
+                            Location en = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[0]),Integer.parseInt(tSS[1]), Integer.parseInt(tSS[2]));
+                            Location ex = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[3]),Integer.parseInt(tSS[4]), Integer.parseInt(tSS[5]));
                             try {
-                                shopMap.get(tS[0]).addEntranceExit(en, ex);
+                                tempShop.addEntranceExit(en, ex);
                             } catch (RealShoppingException e) {
-                            }//Ignore
+                                if(e.getType() == RealShoppingException.Type.EEPAIR_ALREADY_EXISTS){
+                                    log.info("Duplicate entrance/exit pair, skipping (entrance: "
+                                            + RSUtils.locAsString(en) + ", exit: "
+                                            + RSUtils.locAsString(ex) + " in store " + tS[1] + ".");
+                                    if(Config.debug) e.printStackTrace();
+                                } else e.printStackTrace();
+                            }
                         }
-                        for (int i = 1; i < s.split(";").length; i++) {//There are chests
-                            Location l = new Location(getServer().getWorld(tS[1]), Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[0]), Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[1]), Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[2]));
-                            shopMap.get(tS[0]).addChest(l);
+                        for(int i = 1;i < s.split(";").length;i++){//There are chests
+                            Location l = new Location(getServer().getWorld(tS[1]), Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[0])
+                                    , Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[1])
+                                    , Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[2]));
+                            tempShop.addChest(l);
                             String idS = s.split(";")[i].split("\\[")[1].split("\\]")[0];
-                            if (!idS.split(",")[0].trim().equals("")) {
+                            if(!idS.split(",")[0].trim().equals("")){
                                 int[][] ids = new int[idS.split(",").length][3];
-                                for (int j = 0; j < ids.length; j++) {//The chests
-                                    if (idS.split(",")[j].contains(":")) {
+                                for(int j = 0;j < ids.length;j++){//The chests
+                                    if(idS.split(",")[j].contains(":")){
                                         ids[j][0] = Integer.parseInt(idS.split(",")[j].split(":")[0].trim());
                                         ids[j][1] = Integer.parseInt(idS.split(",")[j].split(":")[1].trim());
-                                        if (idS.split(",")[j].split(":").length > 2) {
+                                        if(idS.split(",")[j].split(":").length > 2)
                                             ids[j][2] = Integer.parseInt(idS.split(",")[j].split(":")[2].trim());
-                                        } else {
-                                            ids[j][2] = 0;
-                                        }
+                                        else ids[j][2] = 0;
                                     } else {
                                         ids[j][0] = Integer.parseInt(idS.split(",")[j].trim());
                                         ids[j][1] = 0;
                                         ids[j][2] = 0;
                                     }
                                 }
-                                shopMap.get(tS[0]).addChestItem(l, ids);
+                                tempShop.addChestItem(l, ids);
                             }
                         }
                         int bIdx = s.indexOf("BANNED_");
-                        if (bIdx > -1) {//There are banned players
+                        if(bIdx > -1){//There are banned players
                             String[] banned = s.substring(bIdx + 7).split(",");
-                            for (int i = 0; i < banned.length; i++) {
-                                shopMap.get(tS[0]).addBanned(banned[i]);
+                            for(int i = 0;i < banned.length;i++){
+                                tempShop.addBanned(banned[i]);
                             }
                         }
                     }
@@ -277,8 +284,8 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 
 
         try {
-            PriceParser.loadPriceMap(shopMap);
-        } catch (Exception e) {
+            PriceParser.loadPriceMap(shopSet);
+        } catch (Exception e){
             e.printStackTrace();
             log.info("Failed while reading prices.xml");
         }
@@ -328,13 +335,9 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
             saveTemporaryFile(TempFiles.NOTIFICATIONS);//Notifications
             RSEconomy.export();//This will only happen if econ is null
 
-            if (notificatorThread != null) {
-                notificatorThread.running = false;
-            }
-            if (statUpdater != null) {
-                statUpdater.running = false;
-            }
-            PriceParser.savePriceMap(shopMap);
+            if(notificatorThread != null) notificatorThread.running = false;
+            if(statUpdater != null) statUpdater.running = false;
+            PriceParser.savePriceMap(shopSet);
             //Write prices to xml
 
 
@@ -347,57 +350,44 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         } catch (TransformerException e) {
             e.printStackTrace();
         }
-        RealShopping.loginfo(LangPack.REALSHOPPINGDISABLED);
+        log.info(LangPack.REALSHOPPINGDISABLED);
     }
 
-    public static void updateEntrancesDb() {
+    public static void updateEntrancesDb(){
         //Update file
         long tstamp = System.nanoTime();
         try {
             File f = new File(MANDIR + "shops.db");
-            if (!f.exists()) {
-                f.createNewFile();
-            }
+            if(!f.exists()) f.createNewFile();
             PrintWriter pW = new PrintWriter(f);
-            Object[] keys = shopMap.keySet().toArray();
             pW.println("Shops database for RealShopping " + VERSION);
-            for (int i = 0; i < keys.length; i++) {
-                Shop tempShop = shopMap.get(keys[i]);
-                pW.print(keys[i] + ":" + tempShop.getWorld() + ":" + tempShop.getOwner() + ":" + tempShop.getBuyFor()
-                        + ":" + (tempShop.getNotifyChanges() == 2 ? "change" : (tempShop.getNotifyChanges() == 1 ? "notify" : "nothing"))
-                        + ":" + tempShop.getChangeTreshold() + ":" + tempShop.getChangePercent() + ":" + tempShop.allowsNotifications());
-                for (EEPair ee : eePairs.keySet()) {
-                    if (eePairs.get(ee).equals(tempShop)) {
+            for(Shop shop:shopSet){
+                pW.print(shop.getName() + ":" + shop.getWorld() + ":" + shop.getOwner() + ":" + shop.getBuyFor());
+                //If notifications and AI is enabled is not stored with the player settings
+                for(EEPair ee:eePairs.keySet()){
+                    if(eePairs.get(ee).equals(shop))
                         pW.print(":" + RSUtils.locAsString(ee.getEntrance()) + "," + RSUtils.locAsString(ee.getExit()));
-                    }
                 }
-                Map<Location, ArrayList<Integer[]>> tempChests = tempShop.getChests();
-                Object[] chestLocs = tempChests.keySet().toArray();
-                for (int j = 0; j < chestLocs.length; j++) {
+                Map<Location, ArrayList<Integer[]>> tempChests = shop.getChests();
+                Location[] chestLocs = tempChests.keySet().toArray(new Location[0]);
+                for(int j = 0;j < chestLocs.length;j++){
                     String items = "";
-                    for (Integer[] ii : tempChests.get(chestLocs[j])) {
-                        if (!items.equals("")) {
-                            items += ",";
-                        }
+                    for(Integer[] ii:tempChests.get(chestLocs[j])){
+                        if(!items.equals("")) items += ",";
                         items += ii[0];
-                        if (ii.length > 1 && ii[1] != 0) {
-                            items += ":" + ii[1];
-                        }
-                        if (ii.length > 2 && ii[2] != 0) {
-                            items += ":" + ii[2];
-                        }
+                        if(ii.length > 1 && ii[1] != 0) items += ":" + ii[1];
+                        if(ii.length > 2 && ii[2] != 0) items += ":" + ii[2];
                     }
-                    pW.print(";" + RSUtils.locAsString((Location) chestLocs[j]) + "[ " + items + "]");
+                    pW.print(";" + RSUtils.locAsString(chestLocs[j]) + "[ " + items + "]");
                 }
-                Object[] banned = tempShop.getBanned().toArray();
-                if (banned.length > 0) {
+                String[] banned = shop.getBanned().toArray(new String[0]);
+                if(banned.length > 0){
                     pW.print("BANNED_");
-                    for (int j = 0; j < banned.length; j++) {
-                        if (j > 0) {
-                            pW.print(",");
-                        }
+                    for(int j = 0;j < banned.length;j++){
+                        if(j > 0) pW.print(",");
                         pW.print(banned[j]);
                     }
+
                 }
                 pW.println();
             }
@@ -405,64 +395,62 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if (Config.debug) {
-            RealShopping.loginfo("Finished updating shops.db in " + (System.nanoTime() - tstamp) + "ns");
-        }
+        if(Config.debug) log.info("Finished updating shops.db in " + (System.nanoTime() - tstamp) + "ns");
     }
 
-    private void initMaxDur() {
-        maxDurMap.put(256, 251);//Iron tools
-        maxDurMap.put(257, 251);
-        maxDurMap.put(258, 251);
-        maxDurMap.put(267, 251);
-        maxDurMap.put(292, 251);
-        maxDurMap.put(268, 60);//Wooden tools
-        maxDurMap.put(269, 60);
-        maxDurMap.put(270, 60);
-        maxDurMap.put(271, 60);
-        maxDurMap.put(290, 60);
-        maxDurMap.put(272, 132);//Stone tools
-        maxDurMap.put(273, 132);
-        maxDurMap.put(274, 132);
-        maxDurMap.put(275, 132);
-        maxDurMap.put(291, 132);
-        maxDurMap.put(276, 1562);//Diamond tools
-        maxDurMap.put(277, 1562);
-        maxDurMap.put(278, 1562);
-        maxDurMap.put(279, 1562);
-        maxDurMap.put(293, 1562);
-        maxDurMap.put(283, 33);//Gold tools
-        maxDurMap.put(284, 33);
-        maxDurMap.put(285, 33);
-        maxDurMap.put(286, 33);
-        maxDurMap.put(294, 33);
-        maxDurMap.put(298, 56);//Leather
-        maxDurMap.put(299, 82);
-        maxDurMap.put(300, 76);
-        maxDurMap.put(301, 66);
-        maxDurMap.put(302, 78);//Chainmail
-        maxDurMap.put(303, 114);
-        maxDurMap.put(304, 106);
-        maxDurMap.put(305, 92);
-        maxDurMap.put(306, 166);//Iron
-        maxDurMap.put(307, 242);
-        maxDurMap.put(308, 226);
-        maxDurMap.put(309, 296);
-        maxDurMap.put(310, 364);//Diamond
-        maxDurMap.put(311, 529);
-        maxDurMap.put(312, 496);
-        maxDurMap.put(313, 430);
-        maxDurMap.put(314, 78);//Gold
-        maxDurMap.put(315, 114);
-        maxDurMap.put(316, 106);
-        maxDurMap.put(317, 92);
-        maxDurMap.put(346, 65);//Fishing rod
-        maxDurMap.put(359, 239);//Shears
-        maxDurMap.put(259, 65);//Flint and steel
-        maxDurMap.put(261, 385);//Bow
+    private void initMaxDur(){
+        maxDurMap.put(256,251);//Iron tools
+        maxDurMap.put(257,251);
+        maxDurMap.put(258,251);
+        maxDurMap.put(267,251);
+        maxDurMap.put(292,251);
+        maxDurMap.put(268,60);//Wooden tools
+        maxDurMap.put(269,60);
+        maxDurMap.put(270,60);
+        maxDurMap.put(271,60);
+        maxDurMap.put(290,60);
+        maxDurMap.put(272,132);//Stone tools
+        maxDurMap.put(273,132);
+        maxDurMap.put(274,132);
+        maxDurMap.put(275,132);
+        maxDurMap.put(291,132);
+        maxDurMap.put(276,1562);//Diamond tools
+        maxDurMap.put(277,1562);
+        maxDurMap.put(278,1562);
+        maxDurMap.put(279,1562);
+        maxDurMap.put(293,1562);
+        maxDurMap.put(283,33);//Gold tools
+        maxDurMap.put(284,33);
+        maxDurMap.put(285,33);
+        maxDurMap.put(286,33);
+        maxDurMap.put(294,33);
+        maxDurMap.put(298,56);//Leather
+        maxDurMap.put(299,82);
+        maxDurMap.put(300,76);
+        maxDurMap.put(301,66);
+        maxDurMap.put(302,78);//Chainmail
+        maxDurMap.put(303,114);
+        maxDurMap.put(304,106);
+        maxDurMap.put(305,92);
+        maxDurMap.put(306,166);//Iron
+        maxDurMap.put(307,242);
+        maxDurMap.put(308,226);
+        maxDurMap.put(309,296);
+        maxDurMap.put(310,364);//Diamond
+        maxDurMap.put(311,529);
+        maxDurMap.put(312,496);
+        maxDurMap.put(313,430);
+        maxDurMap.put(314,78);//Gold
+        maxDurMap.put(315,114);
+        maxDurMap.put(316,106);
+        maxDurMap.put(317,92);
+        maxDurMap.put(346,65);//Fishing rod
+        maxDurMap.put(359,239);//Shears
+        maxDurMap.put(259,65);//Flint and steel
+        maxDurMap.put(261,385);//Bow
     }
 
-    private void initForbiddenInStore() {
+    private void initForbiddenInStore(){
         forbiddenInStore.add(297);//Bread
         forbiddenInStore.add(354);//Cake
         forbiddenInStore.add(366);//Cooked Chicken
@@ -1155,54 +1143,44 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                         forbiddenTpLocs.put(RSUtils.stringToLoc(s.split(";")[0], s.split(";")[1]), Integer.parseInt(s.split(";")[2]));
                         break;
                     case PROTECTEDCHESTS:
-                        shopMap.get(s.split(";")[0]).addProtectedChest(new Location(getServer().getWorld(s.split(";")[1].split(",")[0]), Double.parseDouble(s.split(";")[1].split(",")[1]), Double.parseDouble(s.split(";")[1].split(",")[2]), Double.parseDouble(s.split(";")[1].split(",")[3])));
+                        getShop(s.split(";")[0]).addProtectedChest(new Location(getServer().getWorld(s.split(";")[1].split(",")[0])
+                                ,Double.parseDouble(s.split(";")[1].split(",")[1])
+                                ,Double.parseDouble(s.split(";")[1].split(",")[2])
+                                ,Double.parseDouble(s.split(";")[1].split(",")[3])));
                         break;
                     case SHIPPEDPACKAGES:
+                        YamlConfiguration conf = new YamlConfiguration();
                         try {
                             conf.load(f);
-                            for (String pl : conf.getKeys(false)) {
+                            for(String pl:conf.getKeys(false)){
                                 List<ShippedPackage> packs = new LinkedList<>();
                                 ConfigurationSection players = conf.getConfigurationSection(pl);
-                                for (String pkg : players.getKeys(false)) {
-                                    packs.add(ClassSerialization.loadShippedPackage(players.getConfigurationSection(pkg)));
+                                for(String pkg:players.getKeys(false)){
+                                    packs.add(ShippedSerialization.loadShippedPackage(players.getConfigurationSection(pkg)));
                                 }
                                 shippedToCollect.put(pl, packs);
                             }
-                            end = true;
                         } catch (InvalidConfigurationException ex) {
-                            RealShopping.log.log(Level.SEVERE, null, ex);
+                            Logger.getLogger(RealShopping.class.getName()).log(Level.SEVERE, null, ex);
                         }
                         break;
                     case TOCLAIM:
-                        if (version >= 0.32) {
-                            tempShop = shopMap.get(s.split(",")[0]);
-                            for (int i = 2; i < s.split(",").length; i++) {
+                        if(version >= 0.32){
+                            tempShop = getShop(s.split(",")[0]);
+                            for(int i = 2;i < s.split(",").length;i++){
                                 String s1[] = s.split(",")[2].split(":");
                                 ItemStack tempIS = new MaterialData(Integer.parseInt(s1[0]), Byte.parseByte(s1[3])).toItemStack(Integer.parseInt(s1[1]));
                                 tempIS.setDurability(Short.parseShort(s1[2]));
-                                for (int j = 4; j < s.split(",")[2].split(":").length; j++) {
+                                for(int j = 4;j < s.split(",")[2].split(":").length;j++){
                                     tempIS.addEnchantment(Enchantment.getById(Integer.parseInt(s.split(",")[2].split(":")[j].split(";")[0])), Integer.parseInt(s.split(",")[2].split(":")[j].split(";")[1]));
                                 }
                                 tempShop.addStolenToClaim(tempIS);
                             }
-                        } else {
-                            String[] stores = RSUtils.getOwnedStores(s.split(";")[0]);
-                            if (!stores[0].equals("")) {
-                                tempShop = shopMap.get(stores[0]);
-                                for (int i = 1; i < s.split(";").length; i++) {
-                                    String s1[] = s.split(";")[i].split(",");
-                                    ItemStack tempIS = new MaterialData(Integer.parseInt(s1[0]), Byte.parseByte(s1[3])).toItemStack(Integer.parseInt(s1[1]));
-                                    tempIS.setDurability(Short.parseShort(s1[2]));
-                                    tempShop.addStolenToClaim(tempIS);
-                                }
-                            } else {
-                                RealShopping.loginfo("Couldn't convert because player doesn't own any stores: " + s);
-                            }
-                        }
+                        } else RealShopping.loginfo("Couldn't convert stores from an old database file");//Removed converting from old version
                         break;
                     case STATS:
-                        tempShop = shopMap.get(s.split(";")[0]);
-                        for (int i = 1; i < s.split(";").length; i++) {
+                        tempShop = getShop(s.split(";")[0]);
+                        for(int i = 1;i < s.split(";").length;i++){
                             tempShop.addStat(new Statistic(s.split(";")[i]));
                         }
                         break;
@@ -1307,10 +1285,8 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                     line = ((Location) keys[i]).getWorld().getName() + ";" + RSUtils.locAsString((Location) keys[i]) + ";" + forbiddenTpLocs.get((Location) keys[i]);
                     break;
                 case PROTECTEDCHESTS:
-                    String protStr = shopMap.get((String) keys[i]).exportProtectedToString();
-                    if (!protStr.equals("")) {
-                        line = ((String) keys[i]) + ";" + protStr;
-                    }
+                    String protStr = ((Shop)keys[i]).exportProtectedToString();
+                    if(!protStr.equals("")) line = ((Shop) keys[i]).getName() + ";" + protStr;
                     break;
                 case SHIPPEDPACKAGES:
                     for (String s : shippedToCollect.keySet()) {
@@ -1323,24 +1299,17 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                     conf.save(f);
                     break;
                 case TOCLAIM:
-                    String exportedStr = shopMap.get((String) keys[i]).exportToClaim();
-                    if (!exportedStr.equals("")) {
-                        line = keys[i] + "," + exportedStr;
-                    }
+                    String exportedStr = ((Shop)keys[i]).exportToClaim();
+                    if(!exportedStr.equals(""))	line = ((Shop)keys[i]).getName() + "," + exportedStr;
                     break;
                 case STATS:
-                    String statStr = shopMap.get((String) keys[i]).exportStats();
-                    if (!statStr.equals("")) {
-                        line = keys[i] + statStr;
-                    }
+                    String statStr = ((Shop)keys[i]).exportStats();
+                    if(!statStr.equals(""))	line = ((Shop)keys[i]).getName() + statStr;
                     break;
                 case NOTIFICATIONS:
                     String s = "";
-                    for (String ss : notificator.get((String) keys[i])) {
-                        s += "\"" + ss;
-                    }
-                    if (!s.equals("")) {
-                        line = keys[i] + s;
+                    for(String ss:notificator.get((String)keys[i])){
+                        s += "\""+ss;
                     }
                     break;
                 default:
@@ -1377,7 +1346,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                 case PROTECTEDCHESTS:
                     f = new File(MANDIR + "protectedchests.db");
                     header = "Protected chests for RealShopping " + VERSION;
-                    saveHelper(f, header, shopMap.keySet().toArray(), what);
+                    saveHelper(f, header, shopSet.toArray(), what);
                     break;
                 case SHIPPEDPACKAGES:
                     f = new File(MANDIR + "shipped.db");
@@ -1387,12 +1356,12 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                 case TOCLAIM:
                     f = new File(MANDIR + "toclaim.db");
                     header = "Stolen items database for RealShopping " + VERSION;
-                    saveHelper(f, header, shopMap.keySet().toArray(), what);
+                    saveHelper(f, header, shopSet.toArray(), what);
                     break;
                 case STATS:
                     f = new File(MANDIR + "stats.db");
                     header = "Statistics database for RealShopping " + VERSION;
-                    saveHelper(f, header, shopMap.keySet().toArray(), what);
+                    saveHelper(f, header, shopSet.toArray(), what);
                     break;
                 case NOTIFICATIONS:
                     f = new File(MANDIR + "notifications.db");
@@ -1420,33 +1389,246 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
      * Getters and Setters
      * 
      */
-    public static String[] getPlayersInStore(String store) {
+
+
+    /**
+     * @param p An String with the name of the player.
+     * @return The object containing all settings of a player. If such an object doesn't exist, the method creates one and returns it.
+     */
+    public static PSetting getPlayerSettings(String p){
+        for(PSetting ps:playerSettings)
+            if(ps.getPlayer().equals(p)) return ps;
+        return new PSetting(p);
+    }
+
+    /**
+     * Checks whether or not a store exists.
+     * @param store A string with the name of the store you want to check for.
+     * @return true if the store exists, false otherwise.
+     */
+    public static boolean shopExists(String store){ return getShop(store)==null?false:true; }
+
+    /**
+     * Gets the named store
+     * @param store A string with the name of the store you want to get.
+     * @return The shop object of the store if such a store exists, null otherwise.
+     */
+    public static Shop getShop(String store){
+        for(Shop shop:shopSet)
+            if(shop.getName().equals(store)) return shop;
+        return null;
+    }
+
+    /**
+     * Adds the shop to the shopSet
+     * @param shop The [newly created] shop which should be added to the shopSet
+     */
+    public static void addShop(Shop shop){
+        shopSet.add(shop);
+    }
+    
+    /**
+     * Removes the named store from the shopSet
+     * @param store The name of the shop you want to remove.
+     * @return True if the shop was in the shopSet, false otherwise.
+     */
+    public static boolean removeShop(String store){
+        Shop shop = getShop(store);
+        if(shop == null) return false;
+        shopSet.remove(shop);
+        return true;
+    }
+    
+    public static Set<Shop> getShops(){ return shopSet; }
+
+    /**
+     * @param player An object representing the player.
+     * @return The object representing the inventory of the named player, or null if the player is not in a store.
+     */
+    public static RSPlayerInventory getPInv(Player player){
+        for(RSPlayerInventory pInv:PInvSet)
+            if(pInv.getPlayer().equals(player.getName())) return pInv;
+        return null;
+    }
+    public static boolean addPInv(RSPlayerInventory pInv){ return PInvSet.add(pInv); }
+
+    /**
+     * Checks whether or not a player has a stored inventory (and is in a store).
+     * @param player An object representing the player.
+     * @return true if they do, false if they don't.
+     */
+    public static boolean hasPInv(Player player){ return getPInv(player)==null?false:true; }
+    public static boolean removePInv(Player player){
+        for(RSPlayerInventory pInv:PInvSet)
+            if(pInv.getPlayer().equals(player.getName())){
+                PInvSet.remove(pInv);
+                return true;
+            }
+        return false;
+    }
+    public static boolean removePInv(String player){
+        for(RSPlayerInventory pInv:PInvSet)
+            if(pInv.getPlayer().equals(player)){
+                PInvSet.remove(pInv);
+                return true;
+            }
+        return false;
+    }
+
+
+    public static String[] getPlayersInStore(String store){
         String pString = "";
-        for (RSPlayerInventory pInv : PInvSet) {
-            if (pInv.getStore().equals(store)) {
-                if (!pString.equals("")) {
-                    pString += ",";
-                }
+        for(RSPlayerInventory pInv:PInvSet){
+            if(pInv.getShop().getName().equals(store)){
+                if(!pString.equals("")) pString += ",";
                 pString += pInv.getPlayer();
             }
         }
         return pString.split(",");
     }
 
-    public static PSetting getPlayerSettings(Player p) {
-        if (!playerSettings.containsKey(p.getName())) {
-            playerSettings.put(p.getName(), new PSetting());
-        }
-        return playerSettings.get(p.getName());
-    }
+    public Updater getUpdater() { return updater; }
+    public void setUpdater(Updater updater) { this.updater = updater; }
 
-    public static String getPSettingPlayer(PSetting ps) {
-        for (String p : playerSettings.keySet().toArray(new String[0])) {
-            if (playerSettings.get(p) == ps) {
-                return p;
+    public static Set<String> getNotificatorKeys(){ return notificator.keySet(); }
+    public static List<String> getNotifications(String player){ return notificator.get(player); }
+
+    public static boolean isTool(int item){ return maxDurMap.containsKey(item); }
+    public static int getMaxDur(int item){ return maxDurMap.get(item); }
+
+    public static boolean isForbiddenInStore(int item){ return forbiddenInStore.contains(item); }
+
+    public static List<String> getSortedAliases(){ return sortedAliases; }
+    public static Map<String, Integer[]> getAliasesMap(){ return aliasesMap; }
+
+    protected static boolean addEntranceExit(EEPair eePair, Shop shop){
+        if(eePairs.containsKey(eePair)) return false;
+        eePairs.put(eePair, shop);
+        return true;
+    }
+    protected static boolean removeEntranceExit(Shop shop, Location en, Location ex){
+        for(EEPair ee:eePairs.keySet()){
+            if(ee.hasEntrance(en) && ee.hasExit(ex) && eePairs.get(ee).equals(shop)){
+                eePairs.remove(ee);
+                return true; 
             }
         }
+        return false;
+    }
+    protected static int clearEntrancesExits(Shop shop){
+        Map<EEPair, Shop> tempPairs = new HashMap<EEPair, Shop>(eePairs);
+        int i = 0;
+        for(EEPair ee:tempPairs.keySet()){
+            if(tempPairs.get(ee).equals(shop)){
+                eePairs.remove(ee);
+                i++;
+            }
+        }
+        return i;
+    }
+    protected static boolean hasEntrance(Shop shop, Location en){
+        for(EEPair ee:eePairs.keySet()){
+            if(ee.hasEntrance(en) && eePairs.get(ee).equals(shop)) return true; 
+        }
+        return false;
+    }
+    protected static boolean hasExit(Shop shop, Location ex){
+        for(EEPair ee:eePairs.keySet()){
+            if(ee.hasExit(ex) && eePairs.get(ee).equals(shop)) return true; 
+        }
+        return false;
+    }
+    protected static Location getRandomEntrance(Shop shop){
+        for(EEPair ee:eePairs.keySet()){
+            if(eePairs.get(ee).equals(shop)) return ee.getEntrance();
+        }
         return null;
+    }
+    protected static Location getEntrance(Shop shop, Location ex){
+        for(EEPair ee:eePairs.keySet()){
+            if(ee.hasExit(ex) && eePairs.get(ee).equals(shop)) return ee.getEntrance(); 
+        }
+        return null;
+    }
+    protected static Location getExit(Shop shop, Location en){
+        for(EEPair ee:eePairs.keySet()){
+            if(ee.hasEntrance(en) && eePairs.get(ee).equals(shop)) return ee.getExit(); 
+        }
+        return null;
+    }
+    protected static Shop isEntranceTo(Location loc){
+        for(EEPair ee:eePairs.keySet()){
+            if(ee.getEntrance().equals(loc)) return eePairs.get(ee);
+        }
+        return null;
+    }
+
+    public static boolean hasDefPrices(){ return !RealShopping.defPrices.isEmpty(); }
+    public static void clearDefPrices(){ defPrices.clear(); }
+    public static Integer getDefPricesSize() { return defPrices.size(); }
+    public static Map<Price, Integer[]> getDefPrices() { return defPrices; }
+    public static void addDefPrice(Price p, Integer[] i) { defPrices.put(p, i); }
+
+    public static Location[] getTpLocsKeysArray(){ return forbiddenTpLocs.keySet().toArray(new Location[0]); }
+    public static Integer getTpLoc(Location loc){ return forbiddenTpLocs.get(loc); }
+    public static boolean hasTpLoc(Location loc){ return forbiddenTpLocs.containsKey(loc); }
+    public static Integer addTpLoc(Location loc, Integer radius){ return forbiddenTpLocs.put(loc, radius); }
+    public static Integer removeTpLoc(Location loc){ return forbiddenTpLocs.remove(loc); }
+    public static boolean isTpLocBlacklist() { return tpLocBlacklist; }
+    public static void setTpLocBlacklist() { tpLocBlacklist = true; }
+    public static void setTpLocWhitelist() { tpLocBlacklist = false; }
+
+    public static Location getJailed(String player){ return jailedPlayers.get(player); }
+    public static boolean isJailed(String player){ return jailedPlayers.containsKey(player); }
+    public static Location removeJailed(String player){ return jailedPlayers.remove(player); }
+
+    public static boolean hasShippedToCollect(String player){ return shippedToCollect.containsKey(player); }
+    public static int getShippedToCollectAmount(String player){ return shippedToCollect.get(player).size(); }
+    public static ShippedPackage getShippedToCollect(String player, int ID){ return shippedToCollect.get(player).get(ID); }
+    public static ShippedPackage removeShippedToCollect(String player, int ID){ return shippedToCollect.get(player).remove(ID); }
+    public static void addShippedToCollect(String player, ShippedPackage pack){
+        if(!hasShippedToCollect(player))
+            shippedToCollect.put(player, new ArrayList<ShippedPackage>());
+        shippedToCollect.get(player).add(pack);
+    }
+
+    public static void setEntrance(Player player) { entrance = player.getLocation().getBlock().getLocation(); }//TODO Rename?
+    public static void setExit(Player player) { exit = player.getLocation().getBlock().getLocation(); }
+    public static boolean hasEntrance(){ return !entrance.equals(""); }
+    public static boolean hasExit(){ return !exit.equals(""); }
+    public static Location getEntrance() { return entrance; }
+    public static Location getExit() { return exit; }
+
+    public static Location addPlayerEntrance(Player player){ return playerEntrances.put(player.getName(), player.getLocation().getBlock().getLocation()); }
+    public static Location addPlayerExit(Player player){ return playerExits.put(player.getName(), player.getLocation().getBlock().getLocation()); }
+    public static boolean hasPlayerEntrance(String player){ return playerEntrances.containsKey(player); }
+    public static boolean hasPlayerExit(String player){ return playerExits.containsKey(player); }
+    public static Location getPlayerEntrance(String player){ return playerEntrances.get(player); }
+    public static Location getPlayerExit(String player){ return playerExits.get(player); }
+
+    public static void jailPlayer(Player player){ jailedPlayers.put(player.getName(), getPInv(player).getShop().getFirstE()); }
+
+    /*
+     * 
+     * Misc
+     * 
+     */
+
+    public static void sendNotification(String who, String what){
+        if(Config.getNotTimespan() >= 500){
+            if(!notificator.containsKey(who)) notificator.put(who, new ArrayList<String>());
+            notificator.get(who).add(what);
+        }
+    }
+
+    public File getPFile(){
+        return this.getFile();
+    }
+
+    public void reload(){
+        smallReload = true;
+        onDisable();
+        onEnable();
     }
 
     public static RSPlayerInventory getPInv(Player player) {

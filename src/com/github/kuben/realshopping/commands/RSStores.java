@@ -18,7 +18,7 @@ import com.github.kuben.realshopping.prompts.PromptMaster;
 class RSStores extends RSCommand {
 
 	private boolean isOwner;
-	
+	//TODO color stuff
 	public RSStores(CommandSender sender, String[] args) {
 		super(sender, args);
 		isOwner = false;
@@ -29,11 +29,11 @@ class RSStores extends RSCommand {
 		//Check if help was asked for
 		if(args.length == 0 || args[0].equalsIgnoreCase("help")){
 			if(args.length == 0){
-				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rsstores store [buyfor ...|collect ...|ban ...|unban ...|kick ...|startsale ...|endsale|notifications ...|onchange ...");
+				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rsstores store [buyfor ...|collect ...|ban ...|unban ...|kick ...|startsale ...|endsale");
 				sender.sendMessage(LangPack.FOR_HELP_FOR_A_SPECIFIC_COMMAND_TYPE_ + ChatColor.LIGHT_PURPLE + "/rsstores help " + ChatColor.DARK_PURPLE + "COMMAND");
 			} else if(args.length == 1){
 				sender.sendMessage(ChatColor.GREEN + LangPack.RSSTORESHELP + LangPack.YOU_CAN_GET_MORE_HELP_ABOUT_
-						+ ChatColor.LIGHT_PURPLE + "buyfor, collect, ban, unban, kick, startsale, endsale, notifications, onchange");
+						+ ChatColor.LIGHT_PURPLE + "buyfor, collect, ban, unban, kick, startsale, endsale");
 			} else {
 				if(args[1].equals("buyfor")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "buyfor %_OF_SELL_PRICE" + ChatColor.RESET + LangPack.BUYFORHELP);
 				else if(args[1].equals("collect")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "collect [-c] [" + ChatColor.DARK_PURPLE + "AMOUNT" + ChatColor.LIGHT_PURPLE + "]" + ChatColor.RESET
@@ -50,20 +50,21 @@ class RSStores extends RSCommand {
 						+ ChatColor.RESET + LangPack.STARTSALEHELP2);
 				else if(args[1].equals("endsale")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "endsale" + ChatColor.RESET
 						+ LangPack.ENDSALEHELP);
-				else if(args[1].equals("notifications")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "notifications [on|off]" + ChatColor.RESET
-    					+ LangPack.NOTIFICATIONSHELP);
-				else if(args[1].equals("onchange")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "onchange [nothing|notify " + ChatColor.DARK_PURPLE + "TRESHOLD"
-    					+ ChatColor.LIGHT_PURPLE + "|changeprices " + ChatColor.DARK_PURPLE + "TRESHOLD PERCENT" + ChatColor.LIGHT_PURPLE + "]"
-    					+ ChatColor.RESET + LangPack.ONCHANGEHELP);
 			}
 			return true;
 		}
 		return null;
 	}
 	
+	/**
+	 * Checks if player is allowed to manage the store named in args[0] 
+	 * , that is (if player owned store) if they are the owner or 
+	 * (if admin store) if they have the rsset permission.
+	 * @return True if player is allowed to manage the store, false otherwise.
+	 */
 	private boolean determineIfOwner(){
-		if(RealShopping.shopMap.containsKey(args[0])){
-			if(RealShopping.shopMap.get(args[0]).getOwner().equalsIgnoreCase("@admin")){
+		if(RealShopping.shopExists(args[0])){
+			if(RealShopping.getShop(args[0]).getOwner().equalsIgnoreCase("@admin")){
 				if(player == null){
 					isOwner = true;
 				} else if(player.hasPermission("realshopping.rsset")){
@@ -71,7 +72,7 @@ class RSStores extends RSCommand {
 				}
 			} else {
 				if(player != null){
-					if(RealShopping.shopMap.get(args[0]).getOwner().equalsIgnoreCase(player.getName())){
+					if(RealShopping.getShop(args[0]).getOwner().equalsIgnoreCase(player.getName())){
 						isOwner = true;
 					}
 				}
@@ -107,7 +108,7 @@ class RSStores extends RSCommand {
 					sender.sendMessage(ChatColor.RED + args[3] + LangPack.ISNOTANINTEGER);
 				}
 		}
-		Shop tempShop = RealShopping.shopMap.get(args[0]);
+		Shop tempShop = RealShopping.getShop(args[0]);
 		if(player != null){
 			if(!tempShop.getOwner().equalsIgnoreCase("@admin")){
 				if(cFlag){
@@ -155,7 +156,7 @@ class RSStores extends RSCommand {
 				int pcnt = Integer.parseInt(args[2]);
 				if(pcnt <= 100){
 					if(pcnt >= 0){
-						RealShopping.shopMap.get(args[0]).setBuyFor(pcnt);
+						RealShopping.getShop(args[0]).setBuyFor(pcnt);
 						if(pcnt > 0) sender.sendMessage(ChatColor.GREEN + LangPack.BUYSFOR + pcnt + LangPack.PCNTOFORIGINAL);
 						else sender.sendMessage(ChatColor.RED + LangPack.NOTBUYINGFROMPLAYERS);
 						RealShopping.updateEntrancesDb();
@@ -171,9 +172,9 @@ class RSStores extends RSCommand {
 	
 	private boolean ban(){
 		if(args.length != 3) return false;
-		if(RealShopping.shopMap.get(args[0]).isBanned(args[2].toLowerCase())) sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISALREADYBANNEDFROMYOURSTORE);
+		if(RealShopping.getShop(args[0]).isBanned(args[2].toLowerCase())) sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISALREADYBANNEDFROMYOURSTORE);
 		else {
-			RealShopping.shopMap.get(args[0]).addBanned(args[2].toLowerCase());
+			RealShopping.getShop(args[0]).addBanned(args[2].toLowerCase());
 			sender.sendMessage(ChatColor.GREEN + LangPack.BANNED + args[2] + LangPack.FROMSTORE);
 		}
 		RealShopping.updateEntrancesDb();
@@ -182,8 +183,8 @@ class RSStores extends RSCommand {
 	
 	private boolean unban(){
 		if(args.length != 3) return false;
-			if(RealShopping.shopMap.get(args[0]).isBanned(args[2].toLowerCase())){
- 				RealShopping.shopMap.get(args[0]).removeBanned(args[2].toLowerCase());
+			if(RealShopping.getShop(args[0]).isBanned(args[2].toLowerCase())){
+ 				RealShopping.getShop(args[0]).removeBanned(args[2].toLowerCase());
  				sender.sendMessage(ChatColor.GREEN + args[2] + LangPack.ISNOLONGERBANNEDFROMYOURSTORE);
  			} else sender.sendMessage(ChatColor.RED + args[2] + LangPack.WASNTBANNEDFROMYOURSTORE);
  			RealShopping.updateEntrancesDb();
@@ -206,7 +207,7 @@ class RSStores extends RSCommand {
  						if(PromptMaster.isConversing(player)) PromptMaster.abandonConversation(player);
  						
  						RSUtils.returnStolen(sender.getServer().getPlayerExact(args[2]));
- 						Location l = RealShopping.shopMap.get(args[0]).getFirstE();
+ 						Location l = RealShopping.getShop(args[0]).getFirstE();
  						RealShopping.removePInv(sender.getServer().getPlayerExact(args[2]));
  						sender.getServer().getPlayerExact(args[2]).teleport(l.add(0.5, 0, 0.5));
  						sender.sendMessage(ChatColor.GREEN + args[2] + LangPack.WASKICKEDFROMYOURSTORE);
@@ -234,131 +235,53 @@ class RSStores extends RSCommand {
 	}
 	
 	private boolean startsale(){
-            try {
-                int pcnt = Integer.parseInt(args[2]);
-                if(pcnt < 100){
-                    if(pcnt > 0){
-                        Shop tempShop = RealShopping.shopMap.get(args[0]);
-                        if(tempShop != null){
-                            if(tempShop.hasPrices()){
-                                tempShop.clearSales();
-                                if(args.length == 3){
-                                    Price[] keys = tempShop.getPrices().keySet().toArray(new Price[0]);
-                                    int i = 0;
+        try {
+            int pcnt = Integer.parseInt(args[2]);
+            if(pcnt < 100){
+                if(pcnt > 0){
+                    Shop tempShop = RealShopping.getShop(args[0]);
+                    if(tempShop != null){
+                        if(tempShop.hasPrices()){
+                            tempShop.clearSales();
+                            if(args.length == 3){
+                                Price[] keys = tempShop.getPrices().keySet().toArray(new Price[0]);
+                                int i = 0;
+                                for(;i < keys.length;i++){
+                                    tempShop.addSale(keys[i], pcnt);
+                                }
+                                if(pcnt > 0) sender.sendMessage(ChatColor.GREEN + "" + pcnt + LangPack.PCNTOFF + i + LangPack.ITEMS);
+                                else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);
+                                return true;
+                            } else {//If args.length > 3
+                                String[] keys = args[3].split(",");
+                                if(keys.length > 0){
+                                    int i = 0, j = 0;
                                     for(;i < keys.length;i++){
-                                        tempShop.addSale(keys[i], pcnt);
+                                        Price tempP = RSUtils.pullPrice(keys[i],this.player);
+                                        if(tempShop.hasPrice(tempP) || tempShop.hasPrice(tempP.stripOffData())){
+                                            tempShop.addSale(tempP, pcnt);
+                                            j++;
+                                        }
                                     }
-                                    if(pcnt > 0) sender.sendMessage(ChatColor.GREEN + "" + pcnt + LangPack.PCNTOFF + i + LangPack.ITEMS);
+                                    if(pcnt > 0) sender.sendMessage(ChatColor.GREEN + "" + pcnt + LangPack.PCNTOFF + j + LangPack.ITEMS);
                                     else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);
                                     return true;
-                                } else {//If args.length > 3
-                                    String[] keys = args[3].split(",");
-                                    if(keys.length > 0){
-                                        int i = 0, j = 0;
-                                        for(;i < keys.length;i++){
-                                            Price tempP = RSUtils.pullPrice(keys[i],this.player);
-                                            if(tempShop.hasPrice(tempP) || tempShop.hasPrice(tempP.stripOffData())){
-                                                tempShop.addSale(tempP, pcnt);
-                                                j++;
-                                            }
-                                        }
-                                        if(pcnt > 0) sender.sendMessage(ChatColor.GREEN + "" + pcnt + LangPack.PCNTOFF + j + LangPack.ITEMS);
-                                        else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);
-                                        return true;
-                                    } else sender.sendMessage(ChatColor.RED + args[3] + LangPack.ISNOTAVALIDARGUMENT);
-                                }
-                            } else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);	
-                        } else sender.sendMessage(ChatColor.RED + LangPack.STORE + args[0] + LangPack.DOESNTEXIST);
-                    } else sender.sendMessage(ChatColor.RED + LangPack.YOUCANTUSEAVALUEOF0ORLESS);
-                } else  sender.sendMessage(ChatColor.RED + LangPack.YOUCANTUSEAVALUEOF100ORMORE);
-            } catch(NumberFormatException e){
-                sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTANINTEGER);
-            }
-            return false;
+                                } else sender.sendMessage(ChatColor.RED + args[3] + LangPack.ISNOTAVALIDARGUMENT);
+                            }
+                        } else sender.sendMessage(ChatColor.RED + LangPack.NOITEMSARESOLDINTHESTORE);	
+                    } else sender.sendMessage(ChatColor.RED + LangPack.STORE + args[0] + LangPack.DOESNTEXIST);
+                } else sender.sendMessage(ChatColor.RED + LangPack.YOUCANTUSEAVALUEOF0ORLESS);
+            } else  sender.sendMessage(ChatColor.RED + LangPack.YOUCANTUSEAVALUEOF100ORMORE);
+        } catch(NumberFormatException e){
+            sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTANINTEGER);
+        }
+        return false;
 	}
 	
 	private boolean endsale(){
-		RealShopping.shopMap.get(args[0]).clearSales();
+		RealShopping.getShop(args[0]).clearSales();
 		sender.sendMessage(ChatColor.GREEN + LangPack.SALEENDED);
 		return true;
-	}
-	
-	private boolean notifications(){
-		if(args.length > 2){
-			if(args[2].equals("on")){
-				RealShopping.shopMap.get(args[0]).setAllowNotifications(true);
-				sender.sendMessage(ChatColor.GREEN + LangPack.ENABLEDNOTIFICATIONSFOR + args[0]);
-			} else if(args[2].equals("off")){
-				RealShopping.shopMap.get(args[0]).setAllowNotifications(false);
-				sender.sendMessage(ChatColor.GREEN + LangPack.DISABLEDNOTIFICATIONSFOR + args[0]);
-			} else {
-				sender.sendMessage(ChatColor.RED + args[2] + LangPack.ISNOTAVALIDARGUMENT);
-				sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "[...] notifications [on|off]");
-			}
-			return true;
-		} else {
-			sender.sendMessage(ChatColor.GREEN + LangPack.NOTIFICATIONSARE + (RealShopping.shopMap.get(args[0]).allowsNotifications()?"on":"off") + ".");
-			return true;
-		}
-	}
-	
-	private boolean onchange(){
-		if(Config.isEnableAI()){
-			if(args.length == 2){
-				if(RealShopping.shopMap.get(args[0]).getNotifyChanges() == 1) sender.sendMessage(ChatColor.GREEN + LangPack.YOUWILLBENOTIFIEDIF + args[0] + LangPack.LOSESGAINS
-						+ RealShopping.shopMap.get(args[0]).getChangeTreshold() + LangPack.PLACES);
-				else if(RealShopping.shopMap.get(args[0]).getNotifyChanges() == 2) sender.sendMessage(ChatColor.GREEN + LangPack.THEPRICEWILLBELOWEREDINCREASED_ + RealShopping.shopMap.get(args[0]).getChangePercent()
-						+ LangPack.PCNTIF + args[0] + LangPack.LOSESGAINS + RealShopping.shopMap.get(args[0]).getChangeTreshold() + LangPack.PLACES);
-				else sender.sendMessage(ChatColor.GREEN + args[0] + LangPack.WONTNOTIFY_);
-				return true;
-			} else if(args.length > 2){
-				int tresh = -1;
-				int pcnt = -1;
-				if(args.length > 3) try {
-					tresh = Integer.parseInt(args[3]);
-				} catch(NumberFormatException e){
-				sender.sendMessage(ChatColor.RED + args[3] + LangPack.ISNOTANINTEGER);
-				} if(args.length > 4) try {
-					pcnt = Integer.parseInt(args[4]);
-				} catch(NumberFormatException e) {
-					sender.sendMessage(ChatColor.RED + args[4] + LangPack.ISNOTANINTEGER);
-					if(args[4].contains("%")) sender.sendMessage(LangPack.SKIPPSIGN);
-				}
-				if(args[2].equals("nothing")){
-					RealShopping.shopMap.get(args[0]).setNotifyChanges((byte)0);
-					sender.sendMessage(ChatColor.GREEN + LangPack.YOUWONTGETNOTIFIEDWHENYOURSTORE + args[0] + LangPack.BECOMESMOREORLESSPOPULAR);
-					RealShopping.updateEntrancesDb();
-					return true;
-				} else if(args[2].equals("notify")){
-					if(tresh > -1){
-						RealShopping.shopMap.get(args[0]).setNotifyChanges((byte)1);
-						RealShopping.shopMap.get(args[0]).setChangeTreshold(tresh);
-						sender.sendMessage(ChatColor.GREEN + LangPack.YOUWILLGETNOTIFIEDWHENYOURSTORE + args[0] + LangPack.BECOMESATLEAST + tresh + LangPack.PLACESMOREORLESSPOPULAR);
-						RealShopping.updateEntrancesDb();
-					} else
-						sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "[...] onchange notify TRESHOLD " + ChatColor.RESET
-								+ LangPack.WHERETRESHOLDIS_);
-					return true;
-				} else if(args[2].equals("changeprices")){
-					if(tresh > -1 && pcnt > -1){
-						RealShopping.shopMap.get(args[0]).setNotifyChanges((byte)2);
-						RealShopping.shopMap.get(args[0]).setChangeTreshold(tresh);
-						RealShopping.shopMap.get(args[0]).setChangePercent(pcnt);
-						sender.sendMessage(ChatColor.GREEN + LangPack.YOUWILLGETNOTIFIEDWHENYOURSTORE + args[0] + LangPack.BECOMESATLEAST + ChatColor.DARK_PURPLE + tresh
-								+ LangPack.PLACESMOREORLESSPOPULAR + LangPack.ANDTHEPRICESWILLBE_ + ChatColor.DARK_PURPLE + pcnt + "%.");
-						RealShopping.updateEntrancesDb();
-						return true;
-					} else
-						sender.sendMessage(LangPack.USAGE + ChatColor.DARK_PURPLE + "[...] onchange changepries TRESHOLD PERCENT" + ChatColor.RESET
-								+ LangPack.WHERETRESHOLDIS_CHANGES_
-								+ LangPack.ANDPERCENTIS_);
-					return true;
-				}
-			}
-		} else {
-			sender.sendMessage(ChatColor.RED + LangPack.AI_ISNOTENABLED_);
-		}
-		return false;
 	}
 	
 	@Override
@@ -366,9 +289,9 @@ class RSStores extends RSCommand {
 		if(!determineIfOwner()) return false;
 		
 		if(args.length == 1){//First argument MUST be store
-			sender.sendMessage(ChatColor.GREEN + LangPack.STORE + args[0] + ((RealShopping.shopMap.get(args[0]).getOwner().equalsIgnoreCase("@admin"))?"":LangPack.OWNEDBY + RealShopping.shopMap.get(args[0]).getOwner()));
-			if(RealShopping.shopMap.get(args[0]).getBuyFor() > 0) sender.sendMessage(ChatColor.GREEN + LangPack.BUYSFOR + RealShopping.shopMap.get(args[0]).getBuyFor() + LangPack.PCNTOFORIGINAL);
-			if(RealShopping.shopMap.get(args[0]).hasSales()) sender.sendMessage(ChatColor.GREEN + LangPack.HASA + RealShopping.shopMap.get(args[0]).getFirstSale() + LangPack.PCNTOFFSALERIGHTNOW);
+			sender.sendMessage(ChatColor.GREEN + LangPack.STORE + args[0] + ((RealShopping.getShop(args[0]).getOwner().equalsIgnoreCase("@admin"))?"":LangPack.OWNEDBY + RealShopping.getShop(args[0]).getOwner()));
+			if(RealShopping.getShop(args[0]).getBuyFor() > 0) sender.sendMessage(ChatColor.GREEN + LangPack.BUYSFOR + RealShopping.getShop(args[0]).getBuyFor() + LangPack.PCNTOFORIGINAL);
+			if(RealShopping.getShop(args[0]).hasSales()) sender.sendMessage(ChatColor.GREEN + LangPack.HASA + RealShopping.getShop(args[0]).getFirstSale() + LangPack.PCNTOFFSALERIGHTNOW);
 			if(!RealShopping.getPlayersInStore(args[0])[0].equals("")){
 				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.PLAYERSINSTORE + "\n" + ChatColor.RESET + RSUtils.formatPlayerListToMess(RealShopping.getPlayersInStore(args[0])));
 			}
@@ -389,10 +312,6 @@ class RSStores extends RSCommand {
     			return startsale();
     		} else if(args.length == 2 && args[1].equalsIgnoreCase("endsale")){
     			return endsale();
-    		} else if(args[1].equals("notifications")){
-    			return notifications();
-    		} else if(args[1].equals("onchange")){
-    			return onchange();
     		}
 		} else sender.sendMessage(ChatColor.RED + LangPack.YOUDONTHAVEPERMISSIONTOMANAGETHATSTORE);
 		return false;
