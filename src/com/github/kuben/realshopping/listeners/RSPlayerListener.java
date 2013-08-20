@@ -67,7 +67,6 @@ import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-@SuppressWarnings("deprecation")
 public class RSPlayerListener implements Listener {
 
     private static Set<GeneralListener> listenerSet = new HashSet<>();

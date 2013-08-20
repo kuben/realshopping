@@ -145,7 +145,7 @@ public class RSPlayerInventory {
                             amount -= oldAm;
                         }
                     }
-                    toPay += cost * (RealShopping.isTool(key.getType()) ? (double) amount / (double) RealShopping.getMaxDur(key.getType()) : amount);//Convert items durability to item amount
+                    toPay += cost * amount;//Convert items durability to item amount
                 }
             }
         }

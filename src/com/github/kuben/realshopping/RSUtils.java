@@ -390,12 +390,17 @@ public class RSUtils {
 
     private static List<ItemStack> updateCartInv(List<ItemStack> cart,List<ItemStack> rem){
         List<ItemStack> newInv = new LinkedList<>();
+ 
         for(ItemStack i : cart){
-            for(ItemStack f : rem)
-                if(f.getType() == i.getType())
-                    if(f.getAmount() < i.getAmount()){
+            for(ItemStack f : rem){
+                if(f.isSimilar(i))
+                    if(f.getAmount() <= i.getAmount()){
                         i.setAmount(i.getAmount() - f.getAmount());
-                    } else continue;
+                        if(i.getAmount() == 0)
+                            break;
+                    }
+            }
+            if(i.getAmount() == 0) continue;
             newInv.add(i);
         }
         return newInv;

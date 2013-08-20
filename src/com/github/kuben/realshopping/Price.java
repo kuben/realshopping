@@ -150,12 +150,13 @@ public final class Price {
 
     @Override
     public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + data;
-            result = prime * result + metahash;
-            result = prime * result + type;
-            return result;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + data;
+        result = prime * result + type;
+        result = prime * result + amount;
+        result = prime * result + metahash;
+        return result;
     }
 
     @Override
