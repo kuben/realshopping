@@ -94,7 +94,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 
     private boolean smallReload = false;
 
-    static Logger log;
+    private static Logger log;
     public static String working;
     public static String newUpdate;
 
@@ -228,7 +228,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                                 tempShop.addEntranceExit(en, ex);
                             } catch (RealShoppingException e) {
                                 if(e.getType() == RealShoppingException.Type.EEPAIR_ALREADY_EXISTS){
-                                    log.info("Duplicate entrance/exit pair, skipping (entrance: "
+                                    loginfo("Duplicate entrance/exit pair, skipping (entrance: "
                                             + RSUtils.locAsString(en) + ", exit: "
                                             + RSUtils.locAsString(ex) + " in store " + tS[1] + ".");
                                     if(Config.debug) e.printStackTrace();
@@ -278,10 +278,10 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            log.info("Failed while reading shops.db");
+            loginfo("Failed while reading shops.db");
         } catch (IOException e) {
             e.printStackTrace();
-            log.info("Failed while reading shops.db");
+            loginfo("Failed while reading shops.db");
         }
 
 
@@ -289,7 +289,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
             PriceParser.loadPriceMap();
         } catch (Exception e){
             e.printStackTrace();
-            log.info("Failed while reading prices.xml");
+            loginfo("Failed while reading prices.xml");
         }
 
         loadTemporaryFile(TempFiles.INVENTORIES);

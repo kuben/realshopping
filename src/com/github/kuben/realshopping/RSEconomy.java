@@ -29,9 +29,7 @@ import java.sql.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
-
 import net.milkbowl.vault.economy.Economy;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -91,7 +89,7 @@ public class RSEconomy {
     	}
     	
     	if(econ == null) {
-    		RealShopping.log.info("Vault/Economy plugin not found. Initializing internal economy.");
+    		RealShopping.loginfo("Vault/Economy plugin not found. Initializing internal economy.");
     		
     		File f;
     		FileInputStream fstream;
@@ -112,7 +110,7 @@ public class RSEconomy {
     			f.delete();
     		} catch (Exception e){
 				e.printStackTrace();
-    			RealShopping.log.info("Failed while reading econ.db");
+    			RealShopping.loginfo("Failed while reading econ.db");
     		}
     		return false;
     	} else return true;
@@ -253,7 +251,7 @@ class StatUpdater extends Thread {
             }
         }
 
-        if(Config.debug) RealShopping.log.info(System.nanoTime() - tStamp + "ns");
+        if(Config.debug) RealShopping.loginfo(System.nanoTime() - tStamp + "ns");
     }
 
 }
