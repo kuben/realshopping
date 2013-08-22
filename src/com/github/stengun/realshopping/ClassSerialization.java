@@ -4,6 +4,8 @@ import com.github.kuben.realshopping.Price;
 import com.github.kuben.realshopping.RSPlayerInventory;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.ShippedPackage;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,18 +13,48 @@ import java.util.Map;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 
 /**
- * This class helps with ShippedPackage serialization. All of this work is based
- * upon aadnk's work located at https://gist.github.com/aadnk/4593947
+ * This class helps with serialization of specific objects that cannot be saved because
+ * they don't implement Serialization interface. 
  *
  * @author stengun
  */
 public class ClassSerialization {
-
+    
+    /**
+     * Correctly saves a list of ItemStack objects into a ConfigurationSection.
+     * @param items list of items that needs to be saved.
+     * @param destination Section where to save items to.
+     */
+    public static void saveItemStackList(Collection<ItemStack> items, ConfigurationSection destination) {
+        int i = 0;
+        for(ItemStack it : items) {
+            if(it == null) continue;
+            destination.set(Integer.toString(i++), it);
+        }
+    }
+    
+    /**
+     * Loads a list of ItemStack objects from a ConfigurationSection.
+     * @param section Where to read the saved list.
+     * @return A correctly build List of Itemstack Objects.
+     */
+    public static List<ItemStack> loadItemStack(ConfigurationSection section) {
+        List<ItemStack> stacks = new LinkedList<>();
+        for (String key : section.getKeys(false)) {
+            stacks.add((ItemStack) section.get(key));
+        }
+        return stacks;
+    }
+    
+    /**
+     * Gives a YAML formatted string conversion ready to be saved into a file.
+     * @param inv Inventory object to convert.
+     * @return String YAML formatted of Inventory Object.
+     */
     public static String saveInventory(RSPlayerInventory inv) {
         YamlConfiguration config = new YamlConfiguration();
         // Save every element in the list
@@ -30,6 +62,11 @@ public class ClassSerialization {
         return config.saveToString();
     }
 
+    /**
+     * Saves a RSPlayerInventory to a configuration section for YAML parser.
+     * @param inv Inventory to save
+     * @param destination ConfigurationSection where to save inventory.
+     */
     public static void saveInventory(RSPlayerInventory inv, ConfigurationSection destination) {
         destination.set("store", inv.getShop().getName());
 
@@ -45,7 +82,12 @@ public class ClassSerialization {
             savePriceMap(p, contents.createSection(Integer.toString(i++)), inv.getItems().get(p));
         }
     }
-
+    
+    /**
+     * Loads a RSPlayerInventory from a loaded ConfigurationSection.
+     * @param source ConfigurationSection where to read.
+     * @return Correctly built RSPlayerInventory object.
+     */
     public static RSPlayerInventory loadInventory(ConfigurationSection source) {
         String player = source.getName();
         String store = source.getString("store");
@@ -73,7 +115,7 @@ public class ClassSerialization {
     }
 
     /**
-     * Saves a ShippedPackage to a configuration section of a YAML file.
+     * Saves a ShippedPackage to a configuration section for YAML parser.
      *
      * @param pack Shipped package to save
      * @param destination The configuration section of config file.
@@ -88,15 +130,8 @@ public class ClassSerialization {
         location.set("world", pack.getLocationSent().getWorld().getName());
 
         ConfigurationSection contents = destination.createSection("contents");
-        ItemStack[] inventory = pack.getContents();
         // Save every element in the list
-        for (int i = 0; i < inventory.length; i++) {
-            ItemStack item = inventory[i];
-            // Don't store NULL entries
-            if (item != null) {
-                contents.set(Integer.toString(i), item);
-            }
-        }
+        saveItemStackList(Arrays.asList(pack.getContents()), contents);
     }
 
     /**
@@ -113,14 +148,11 @@ public class ClassSerialization {
         Location loc = new Location(Bukkit.getWorld(location.getString("world")), location.getDouble("x"), location.getDouble("y"), location.getDouble("z"));
 
         ConfigurationSection contents = source.getConfigurationSection("contents");
-        List<ItemStack> stacks = new LinkedList<>();
-        for (String key : contents.getKeys(false)) {
-            stacks.add((ItemStack) contents.get(key));
-        }
-
-        return new ShippedPackage(stacks.toArray(new ItemStack[0]), cost, loc, date);
+        return new ShippedPackage(loadItemStack(contents).toArray(new ItemStack[0]), cost, loc, date);
     }
 
+    
+    // -----------------------  Private static methods.
     private static void savePriceMap(Price p, ConfigurationSection bought, Integer amount) {
         bought.set("type", p.getType());
         bought.set("data", p.getData());

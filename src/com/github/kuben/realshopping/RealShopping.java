@@ -53,10 +53,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.material.MaterialData;
 import org.bukkit.plugin.java.JavaPlugin;
 
 //TODO better storing of database files
@@ -103,7 +100,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
      * Enable/Disable functions
      * 
      */
-
+    @Override
     public void onEnable(){
         setUpdater(null);
         statUpdater = null;
@@ -215,10 +212,10 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                          * The shop owner will just have to set them again, using /rsme.
                          */
                         for(int i = 
-                            (version >= 0.51)?4:
-                            (version >= 0.40)?8:
-                            (version >= 0.30)?4:
-                            (version >= 0.20)?3:2
+                            (version >= 0.51f)?4:
+                            (version >= 0.40f)?8:
+                            (version >= 0.30f)?4:
+                            (version >= 0.20f)?3:2
                             ;i < tS.length;i++){//The entrances + exits
                             
                             String[] tSS = tS[i].split(",");
@@ -1110,7 +1107,11 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
             while ((s = br.readLine()) != null && !end) {
                 boolean notHeader = true;
 
-                if (what != TempFiles.SHIPPEDPACKAGES && what != TempFiles.INVENTORIES && version == 0 && s.length() > header.length() && s.substring(0, header.length()).equals(header)) {
+                if (what != TempFiles.SHIPPEDPACKAGES 
+                        && what != TempFiles.TOCLAIM
+                        && what != TempFiles.INVENTORIES 
+                        && version == 0 && s.length() > header.length() 
+                        && s.substring(0, header.length()).equals(header)) {
                     notHeader = false;
                     String vStr = s.substring(header.length());
                     if (what == TempFiles.TPLOCS) {
@@ -1134,9 +1135,10 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                                 PInvSet.add(ClassSerialization.loadInventory(conf.getConfigurationSection(player)));
                                 Shop.addPager(player);
                             }
-                            end = true;
                         } catch (InvalidConfigurationException ex) {
                             Logger.getLogger(RealShopping.class.getName()).log(Level.SEVERE, null, ex);
+                        } finally {
+                            end = true;
                         }
                         break;
                     case JAILED:
@@ -1163,22 +1165,23 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                                 shippedToCollect.put(pl, packs);
                             }
                         } catch (InvalidConfigurationException ex) {
-                            Logger.getLogger(RealShopping.class.getName()).log(Level.SEVERE, null, ex);
+                           logsevere(ex.getStackTrace().toString());
+                        } finally {
+                            end = true;
                         }
                         break;
                     case TOCLAIM:
-                        if(version >= 0.32){
-                            tempShop = getShop(s.split(",")[0]);
-                            for(int i = 2;i < s.split(",").length;i++){
-                                String s1[] = s.split(",")[2].split(":");
-                                ItemStack tempIS = new MaterialData(Integer.parseInt(s1[0]), Byte.parseByte(s1[3])).toItemStack(Integer.parseInt(s1[1]));
-                                tempIS.setDurability(Short.parseShort(s1[2]));
-                                for(int j = 4;j < s.split(",")[2].split(":").length;j++){
-                                    tempIS.addEnchantment(Enchantment.getById(Integer.parseInt(s.split(",")[2].split(":")[j].split(";")[0])), Integer.parseInt(s.split(",")[2].split(":")[j].split(";")[1]));
-                                }
-                                tempShop.addStolenToClaim(tempIS);
+                        try {
+                            conf.load(f);
+                            for(String shops:conf.getKeys(false)) {
+                                ConfigurationSection stolen = conf.getConfigurationSection(shops);
+                                getShop(shops).setStolenToClaim(ClassSerialization.loadItemStack(stolen));
                             }
-                        } else RealShopping.loginfo("Couldn't convert stores from an old database file");//Removed converting from old version
+                        } catch (InvalidConfigurationException ex) {
+                            logsevere(ex.getStackTrace().toString());
+                        } finally {
+                            end = true;
+                        }
                         break;
                     case STATS:
                         tempShop = getShop(s.split(";")[0]);
@@ -1266,7 +1269,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         FileConfiguration conf = new YamlConfiguration();
         pW = new PrintWriter(f);
         for (int i = 0; i < keys.length; i++) {
-            if (what != TempFiles.SHIPPEDPACKAGES && what != TempFiles.INVENTORIES && i == 0) {
+            if (what != TempFiles.SHIPPEDPACKAGES && what != TempFiles.INVENTORIES && what != TempFiles.TOCLAIM && i == 0) {
                 pW.println(header);
             }
             String line = "";
@@ -1301,15 +1304,19 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                     conf.save(f);
                     break;
                 case TOCLAIM:
-                    String exportedStr = ((Shop)keys[i]).exportToClaim();
-                    if(!exportedStr.equals(""))	line = ((Shop)keys[i]).getName() + "," + exportedStr;
+                    for(Object k : keys) {
+                        Shop shop = (Shop)k;
+                        ConfigurationSection shopsec = conf.createSection(shop.getName());
+                        ClassSerialization.saveItemStackList(shop.getStolenToClaim(), shopsec);
+                    }
+                    conf.save(f);
                     break;
                 case STATS:
                     String statStr = ((Shop)keys[i]).exportStats();
                     if(!statStr.equals(""))	line = ((Shop)keys[i]).getName() + statStr;
                     break;
                 case NOTIFICATIONS:
-                    String s = "";
+                    String s = ""; // what?
                     for(String ss:notificator.get((String)keys[i])){
                         s += "\""+ss;
                     }

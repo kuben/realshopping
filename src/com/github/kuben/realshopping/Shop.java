@@ -384,7 +384,11 @@ public class Shop {//TODO add load/save interface
     public void clearStolenToClaim() {
         stolenToClaim.clear();
     }
-
+    
+    public void setStolenToClaim(List<ItemStack> stolen) {
+        this.stolenToClaim = stolen;
+    }
+    
     public void addStolenToClaim(ItemStack stolenItem) {
         stolenToClaim.add(stolenItem);
     }
@@ -504,6 +508,7 @@ public class Shop {//TODO add load/save interface
      * @return
      * @Deprecated
      */
+    @Deprecated
     public String exportToClaim() {
         String s = "";
         for (ItemStack tempIS : stolenToClaim) {
