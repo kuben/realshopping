@@ -37,12 +37,13 @@ class RSMe extends RSPlayerCommand {
 		super(sender, args);
 	}
 
-	//TODO have an notifications limit
 	//TODO add settings to rsstores (X:timely spending limit for buying)
 	//TODO idea: notify about store favorited
 	//TODO add clear and list
 	//TODO check AI with config
 	//TODO add allow reports to config
+	//TODO add reading notifications command
+	//TODO view favorites
 	
 	@Override
 	protected boolean execute() {

@@ -119,7 +119,7 @@ public class RSPlayerInventory {
                     Map<Price, Integer> tempInv = invToPInv(invs[i]);
                     newInv = RSUtils.joinMaps(newInv, tempInv);
                 }
-            for(Price k:newInv.keySet().toArray(new Price[0]))
+            for(Price k:newInv.keySet())
                 if(shop.hasPrice(k)) {//Something in inventory has a price
                     int amount = newInv.get(k);
                     int cost = shop.getPrice(k);

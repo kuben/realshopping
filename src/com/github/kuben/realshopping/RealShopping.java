@@ -66,8 +66,6 @@ import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.stengun.realshopping.PriceParser;
 import com.github.stengun.realshopping.ShippedSerialization;
 
-//TODO better storing of database files
-
 public class RealShopping extends JavaPlugin {//TODO stores case sensitive, players case preserving
     private Updater updater;
     private StatUpdater statUpdater;
@@ -117,6 +115,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         statUpdater = null;
         notificatorThread = null;
         playerSettings = new HashSet<>();
+        eePairs = new HashMap<>();
         defPrices = new HashMap<>();
         PInvSet = new HashSet<>();
         maxDurMap = new HashMap<>();
@@ -221,12 +220,11 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                          * The shop owner will just have to set them again, using /rsme.
                          */
                         for(int i = 
-                            (version >= 0.51)?4:
-                            (version >= 0.40)?8:
-                            (version >= 0.30)?4:
-                            (version >= 0.20)?3:2
+                            (version >= 0.51f)?4:
+                            (version >= 0.40f)?8:
+                            (version >= 0.30f)?4:
+                            (version >= 0.20f)?3:2
                             ;i < tS.length;i++){//The entrances + exits
-                            
                             String[] tSS = tS[i].split(",");
                             Location en = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[0]),Integer.parseInt(tSS[1]), Integer.parseInt(tSS[2]));
                             Location ex = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[3]),Integer.parseInt(tSS[4]), Integer.parseInt(tSS[5]));
@@ -272,6 +270,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                                 tempShop.addBanned(banned[i]);
                             }
                         }
+                        shopSet.add(tempShop);
                     }
                 }
                 fstream.close();
@@ -365,10 +364,12 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
             pW.println("Shops database for RealShopping " + VERSION);
             for(Shop shop:shopSet){
                 pW.print(shop.getName() + ":" + shop.getWorld() + ":" + shop.getOwner() + ":" + shop.getBuyFor());
-                //If notifications and AI is enabled is not stored with the player settings
+                //If notifications and AI is enabled is now stored with the player settings
                 for(EEPair ee:eePairs.keySet()){
-                    if(eePairs.get(ee).equals(shop))
+                    if(eePairs.get(ee).equals(shop)){
+                        System.out.println(":" + RSUtils.locAsString(ee.getEntrance()) + "," + RSUtils.locAsString(ee.getExit()));
                         pW.print(":" + RSUtils.locAsString(ee.getEntrance()) + "," + RSUtils.locAsString(ee.getExit()));
+                    }
                 }
                 Map<Location, ArrayList<Integer[]>> tempChests = shop.getChests();
                 Location[] chestLocs = tempChests.keySet().toArray(new Location[0]);
@@ -397,7 +398,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if(Config.debug) log.info("Finished updating shops.db in " + (System.nanoTime() - tstamp) + "ns");
+        if(Config.debug) loginfo("Finished updating shops.db in " + (System.nanoTime() - tstamp) + "ns");
     }
 
     private void initMaxDur(){
@@ -1378,13 +1379,20 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 
     /**
      * @param p An String with the name of the player.
-     * @return The object containing all settings of a player. If such an object doesn't exist, the method creates one and returns it.
+     * @return The object containing all settings of a player. If such an object doesn't exist, the method creates one, puts it in the playerSettings set and returns it.
      */
     public static PSetting getPlayerSettings(String p){
         for(PSetting ps:playerSettings)
             if(ps.getPlayer().equals(p)) return ps;
-        return new PSetting(p);
+        PSetting ps = new PSetting(p);
+        playerSettings.add(ps);
+        return ps;
     }
+    
+    /**
+     * @return A clone of the entire playerSettings set.
+     */
+    public static Set<PSetting> getPlayerSettings(){ return new HashSet<>(playerSettings); }
 
     /**
      * Checks whether or not a store exists.
@@ -1424,17 +1432,21 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         return true;
     }
     
-    public static Set<Shop> getShops(){ return shopSet; }
+    /**
+     * @return A clone of the entire shop set.
+     */
+    public static Set<Shop> getShops(){ return new HashSet<>(shopSet); }
 
     /**
      * @param player An object representing the player.
      * @return The object representing the inventory of the named player, or null if the player is not in a store.
      */
-    public static RSPlayerInventory getPInv(Player player){
+    public static RSPlayerInventory getPInv(String player){
         for(RSPlayerInventory pInv:PInvSet)
-            if(pInv.getPlayer().equals(player.getName())) return pInv;
+            if(pInv.getPlayer().equals(player)) return pInv;
         return null;
     }
+    public static RSPlayerInventory getPInv(Player player){ return getPInv(player.getName()); }
     public static boolean addPInv(RSPlayerInventory pInv){ return PInvSet.add(pInv); }
 
     /**
@@ -1442,7 +1454,8 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
      * @param player An object representing the player.
      * @return true if they do, false if they don't.
      */
-    public static boolean hasPInv(Player player){ return getPInv(player)==null?false:true; }
+    public static boolean hasPInv(String player){ return getPInv(player)==null?false:true; }
+    public static boolean hasPInv(Player player){ return hasPInv(player.getName()); }
     public static boolean removePInv(Player player){
         for(RSPlayerInventory pInv:PInvSet)
             if(pInv.getPlayer().equals(player.getName())){
