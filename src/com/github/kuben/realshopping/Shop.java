@@ -19,7 +19,6 @@
 package com.github.kuben.realshopping;
 
 import com.github.kuben.realshopping.exceptions.RealShoppingException;
-import com.github.kuben.realshopping.exceptions.RealShoppingException.Type;
 import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.stengun.realshopping.Pager;
@@ -81,7 +80,9 @@ public class Shop {//TODO add load/save interface
      * 
      */
     public void addEntranceExit(Location en, Location ex) throws RealShoppingException {
-        new EEPair(en, ex, this);
+        if (!RealShopping.addEntranceExit(new EEPair(en, ex), this)) {
+            throw new RealShoppingException(RealShoppingException.Type.EEPAIR_ALREADY_EXISTS);
+        }
     }
 
     public boolean removeEntranceExit(Location en, Location ex) {
@@ -826,81 +827,5 @@ public class Shop {//TODO add load/save interface
             player.sendRawMessage(LangPack.ALL_CONVERSATIONS_CAN_BE_ABORTED_WITH_ + ChatColor.DARK_PURPLE + "quit");
         }
         return false;
-    }
-}
-
-final class EEPair {//An entrance and exit
-
-    final private Location entrance, exit;
-
-    public EEPair(Location entrance, Location exit, Shop shop) throws RealShoppingException {
-        if (entrance == null || exit == null || shop == null) {
-            throw new NullPointerException();
-        }
-        this.entrance = entrance;
-        this.exit = exit;
-        if (!RealShopping.addEntranceExit(this, shop)) {
-            throw new RealShoppingException(Type.EEPAIR_ALREADY_EXISTS);
-        }
-    }
-
-    public boolean hasEntrance(Location en) {
-        return entrance.equals(en);
-    }
-
-    public boolean hasExit(Location ex) {
-        return exit.equals(ex);
-    }
-    //Clone because 0.5 will be added
-
-    public Location getEntrance() {
-        return entrance.clone();
-    }
-
-    public Location getExit() {
-        return exit.clone();
-    }
-
-    @Override
-    public String toString() {
-        return "Entrance: " + entrance + ", exit: " + exit;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((entrance == null) ? 0 : entrance.hashCode());
-        result = prime * result + ((exit == null) ? 0 : exit.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        EEPair other = (EEPair) obj;
-        if (entrance == null) {
-            if (other.entrance != null) {
-                return false;
-            }
-        } else if (!entrance.equals(other.entrance)) {
-            return false;
-        }
-        if (exit == null) {
-            if (other.exit != null) {
-                return false;
-            }
-        } else if (!exit.equals(other.exit)) {
-            return false;
-        }
-        return true;
     }
 }
