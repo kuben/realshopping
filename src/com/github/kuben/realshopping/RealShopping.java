@@ -336,7 +336,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
             saveTemporaryFile(TempFiles.STATS);//Stats
             saveTemporaryFile(TempFiles.NOTIFICATIONS);//Notifications
             RSEconomy.export();//This will only happen if econ is null
-
+            Shop.resetPagers();
             if(notificatorThread != null) notificatorThread.running = false;
             if(statUpdater != null) statUpdater.running = false;
             PriceParser.savePriceMap(shopSet);
@@ -1132,6 +1132,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                             conf.load(f);
                             for (String player : conf.getKeys(false)) {
                                 PInvSet.add(ClassSerialization.loadInventory(conf.getConfigurationSection(player)));
+                                Shop.addPager(player);
                             }
                             end = true;
                         } catch (InvalidConfigurationException ex) {
@@ -1381,6 +1382,10 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         return false;
     }
 
+    public static void logsevere (String msg) {
+        log.log(Level.SEVERE, msg);
+    }
+    
     public static void loginfo(String msg) {
         log.log(Level.INFO, msg);
     }//TODO start using this?

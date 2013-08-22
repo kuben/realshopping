@@ -435,8 +435,14 @@ public class Shop {//TODO add load/save interface
     public static Pager getPager(String player) {
         return timers.get(player);
     }
-
-    private static void removePager(String player) {
+    
+    public static void resetPagers(){
+        for(String pl:timers.keySet()){
+            removePager(pl);
+        }
+    }
+    
+    public static void removePager(String player) {
         Pager pg = timers.get(player);
         if (pg == null) {
             return;
@@ -445,7 +451,7 @@ public class Shop {//TODO add load/save interface
         try {
             pg.join(5000);
         } catch (InterruptedException ex) {
-            Logger.getLogger(Shop.class.getName()).log(Level.SEVERE, null, ex);
+            RealShopping.logsevere(ex.getStackTrace().toString());
         }
         timers.remove(player);
     }
@@ -457,7 +463,7 @@ public class Shop {//TODO add load/save interface
      * @param player
      * @param pager
      */
-    private static void addPager(String player) {
+    public static void addPager(String player) {
         if (timers.containsKey(player)) {
             Pager pg = timers.get(player);
             pg.setStop(true);
