@@ -21,6 +21,7 @@ package com.github.kuben.realshopping;
 
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.material.MaterialData;
 /**
  * This class represents a price for an item inside the store.
@@ -55,16 +56,24 @@ public final class Price {
     public Price(ItemStack itm) {
         this(itm.getTypeId(),itm.getData().getData(),0);
         //this.amount = itm.getAmount();
-        if(itm.hasItemMeta()) this.metahash = itm.getItemMeta().hashCode();
+        final int prime = 31;
+        if(itm.hasItemMeta()) {
+            if(this.type == 387) { // prototype for books. I hash only 1 page to avoid overflow.
+                BookMeta bm = (BookMeta) itm.getItemMeta();
+                this.metahash = bm.getPage(1).hashCode() * prime;
+                this.metahash = metahash + (bm.getAuthor().hashCode()*prime);
+                this.metahash = metahash + (bm.getTitle().hashCode()*prime);
+            }
+            else this.metahash = itm.getItemMeta().hashCode();
+        }
         if(RealShopping.isTool(itm.getTypeId())){ // Prototype for different Durability on items.
-            final int prime = 31;
             this.metahash = (this.metahash + (itm.getDurability() * prime))*prime;
         }
     }
     /**
      * Constructs a price object from a string.
      * The string must be formatted as follows:
-     * ID:data:metahash[:description]
+     * ID:data:amount:metahash[:description]
      * @param s A string representing a price object.
      */
     public Price(String s){
