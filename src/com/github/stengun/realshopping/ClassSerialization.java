@@ -156,7 +156,7 @@ public class ClassSerialization {
     private static void savePriceMap(Price p, ConfigurationSection bought, Integer amount) {
         bought.set("type", p.getType());
         bought.set("data", p.getData());
-//        bought.set("iamount", p.getAmount());
+        bought.set("iamount", p.getAmount());
         bought.set("amount", amount);
         bought.set("metahash", p.getMetaHash());
         if (p.hasDescription()) {
@@ -170,13 +170,13 @@ public class ClassSerialization {
         for (String s : itms.getKeys(false)) {
             int type = itms.getConfigurationSection(s).getInt("type");
             byte data = (byte) itms.getConfigurationSection(s).getInt("data");
-//            int iamount = itms.getConfigurationSection(s).getInt("iamount");
+            int iamount = itms.getConfigurationSection(s).getInt("iamount");
             int amount = itms.getConfigurationSection(s).getInt("amount");
             int metahash = itms.getConfigurationSection(s).getInt("metahash");
             String description = itms.getConfigurationSection(s).getString("description");
             Price p = new Price(type, data, metahash);
             p.setDescription(description);
-//            p.setAmount(iamount);
+            p.setAmount(iamount);
             retval.put(p, amount);
         }
 

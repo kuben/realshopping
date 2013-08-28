@@ -1,15 +1,14 @@
 package com.github.kuben.realshopping.commands;
 
-import java.util.Map;
-
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.command.CommandSender;
 import com.github.kuben.realshopping.LangPack;
 import com.github.kuben.realshopping.Price;
 import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
+import java.util.Map;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.command.CommandSender;
 
 class RSPrices extends RSCommand {
 	
@@ -95,7 +94,7 @@ class RSPrices extends RSCommand {
 	private boolean searchItem(Shop shop, Price price){
 		boolean noMatches = true;
 		if(price.getData() != -1){//Item with specific data value requested
-			int cost = shop.getPrice(price);
+			double cost = shop.getPrice(price);
 			String onSlStr = "";
 			if(shop.hasSale(price)){//There is a sale on that item.
 				int pcnt = 100 - shop.getSale(price);

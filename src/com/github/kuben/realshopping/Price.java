@@ -60,7 +60,7 @@ public final class Price {
         if(itm.hasItemMeta()) {
             if(this.type == 387) { // prototype for books. I hash only 1 page to avoid overflow.
                 BookMeta bm = (BookMeta) itm.getItemMeta();
-                this.metahash = bm.getPage(1).hashCode() * prime;
+                this.metahash = metahash + (bm.getPage(1).hashCode() * prime);
                 this.metahash = metahash + (bm.getAuthor().hashCode()*prime);
                 this.metahash = metahash + (bm.getTitle().hashCode()*prime);
             }
@@ -93,6 +93,7 @@ public final class Price {
      */
     public ItemStack toItemStack(){
             ItemStack tempIS = new MaterialData(type, data).toItemStack();
+            //tempIS.setAmount(amount);
             return tempIS;
     }
 
@@ -135,7 +136,7 @@ public final class Price {
      * @return Display formatted string for this object.
      */
     public String formattedString(){
-        return type+(data > 0?":"+data:"")+" "+Material.getMaterial(type).toString() +"X"+ amount + (hasDescription() ? " - "+description:"");
+        return type+(data > 0?":"+data:"")+" "+Material.getMaterial(type).toString() +" * "+ amount + (hasDescription() ? " - "+description:"");
     }
     /**
      * Formats this object with a stat formatted string with amount.
@@ -167,15 +168,29 @@ public final class Price {
         result = prime * result + metahash;
         return result;
     }
-
+    
+    public boolean similar(Object obj) {
+        if (obj == null || getClass() != obj.getClass()) return false;
+        if (this == obj) return true;
+        Price other = (Price) obj;
+        if (data != other.data || type != other.type) return false;
+        if(metahash != other.metahash) return false;
+        return true;
+    }
+    
+    public boolean compatible(Object obj) {
+        if(similar(obj)) {
+            return ((Price)obj).amount <= this.amount;
+        }
+        return false;
+    }
+    
     @Override
     public boolean equals(Object obj) {
-            if (obj == null || getClass() != obj.getClass()) return false;
-            if (this == obj) return true;
-            Price other = (Price) obj;
-            if (data != other.data || type != other.type || amount != other.amount) return false;
-            if(metahash != other.metahash) return false;
-            return true;
+        if(similar(obj)) {
+            return amount == ((Price)obj).amount;
+        }
+        return false;
     }
 
     public int getMetaHash() {

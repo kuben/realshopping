@@ -1,21 +1,21 @@
 package com.github.kuben.realshopping.commands;
 
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.command.CommandSender;
-
 import com.github.kuben.realshopping.Config;
 import com.github.kuben.realshopping.LangPack;
 import com.github.kuben.realshopping.Price;
 import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.command.CommandSender;
 
 
 class RSSetPrices extends RSCommand {
 
     private String arg = "";
     private String description = "";
+    private int amount = 1;
     private String store = "";
     private Shop shop = null;
 
@@ -29,9 +29,10 @@ class RSSetPrices extends RSCommand {
             if(o == null || o.length < 2) return false;
             Price p = (Price)o[0];
             Integer[] i = (Integer[])o[1];
-            String name = p.formattedString();
             if(i[0] < 0 ) return false;
             p.setDescription(this.description);
+            p.setAmount(amount);
+            String name = p.formattedString();
             shop.setPrice(p, i[0]);
             sender.sendMessage(ChatColor.GREEN + LangPack.PRICEFOR + name + LangPack.SETTO + i[0]/100f + LangPack.UNIT);
             if(i.length > 1){//Also set min max
@@ -168,6 +169,18 @@ class RSSetPrices extends RSCommand {
             switch(args[0].toLowerCase()){
                 case "add":
                     if(startargs < args.length-1){
+                        if(args[startargs+1].equals("bulk")) {
+                            startargs +=1;
+                            amount = player.getItemInHand().getAmount();
+                            if(startargs+1 <= args.length-1) {
+                                startargs +=1;
+                                try {
+                                    amount = Integer.parseInt(args[startargs]);
+                                } catch ( NumberFormatException ex) {
+                                    amount = player.getItemInHand().getAmount();
+                                }
+                            } 
+                        }
                         for(int i = startargs+1;i<args.length;i++){
                             if(i != 0) this.description += " ";
                             this.description += args[i];

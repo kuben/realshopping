@@ -229,12 +229,29 @@ public class Shop {//TODO add load/save interface
     }
 
     public boolean hasPrice(Price p) {
-        return prices.containsKey(p);
+        if(prices.containsKey(p)) {
+            return true;
+        }
+        for(Price pr:prices.keySet()) {
+            if(pr.similar(p)) return true;
+        }
+        return false;
+//        return prices.containsKey(p); // Is good only for exact prices.
     }
 
-    public Integer getPrice(Price p) {
-        Integer[] r = prices.get(p);
-        return (r == null ? 0 : r[0]);
+    public double getPrice(Price p) {
+        Price found = new Price(p.getType());
+        for(Price pr:prices.keySet()) {
+            if(p.compatible(pr)) {
+                if(found.getAmount() < pr.getAmount()) {
+                    found = pr;
+                }
+            }
+        }
+        Integer[] r = prices.get(found);
+        if(r == null) return 0.0;
+        double retval = ((double)r[0])/found.getAmount();
+        return retval;
     }
 
     public Map<Price, Integer> getPrices() {
@@ -248,10 +265,21 @@ public class Shop {//TODO add load/save interface
     public Map<Price, Integer[]> getPricesMap() {
         return prices;
     }
-
+    
+/**
+ * Sets a price for an item.
+ * @param p Price to set.
+ * @param i Integer object with new price.
+ * @return null if the item was not present, otherwise will set the price and return the old one.
+ */
     public Integer setPrice(Price p, Integer i) {
-        Integer[] r = prices.put(p, new Integer[]{i});
-        return (r == null ? null : r[0]);
+        Integer retval = null;
+        if(prices.containsKey(p)) {
+            retval = prices.get(p)[0];
+            prices.remove(p);
+        }
+        prices.put(p, new Integer[]{i});
+        return retval;
     }
 
     public boolean removePrice(Price p) {
@@ -278,14 +306,14 @@ public class Shop {//TODO add load/save interface
 
     public boolean setMinMax(Price p, Integer min, Integer max) {
         if (prices.containsKey(p)) {
-            prices.put(p, new Integer[]{getPrice(p), min, max});
+            prices.put(p, new Integer[]{(int)getPrice(p), min, max});
             return true;
         }
         return false;
     }
 
     public void clearMinMax(Price p) {
-        setPrice(p, getPrice(p));
+        setPrice(p, (int)getPrice(p));
     }
 
     public void clearPrices() {
@@ -553,9 +581,9 @@ public class Shop {//TODO add load/save interface
                 for(Price p : keys2) {
                     if(tempMap.containsKey(p)){
                         if(tempMap.get(p)[0] > shop.getPrice(p))
-                            tempMap.put(p, new Integer[] { shop.getPrice(p) });
+                            tempMap.put(p, new Integer[] { (int)shop.getPrice(p) });
                         else
-                            tempMap.put(p, new Integer[] { shop.getPrice(p) });
+                            tempMap.put(p, new Integer[] { (int)shop.getPrice(p) });
                     }
                 }
             }
@@ -587,7 +615,7 @@ public class Shop {//TODO add load/save interface
                         }
 
                         if (RealShopping.getPInv(p).getAmount(ist) >= soldAm) {
-                            int cost = 0;
+                            double cost = 0;
                             if (shop.hasPrice(itm)) {
                                 cost = shop.getPrice(itm);
                             }
@@ -751,8 +779,6 @@ public class Shop {//TODO add load/save interface
                     }
                 }
 
-//                if(invs != null) pinv.update(invs);
-//                else pinv.update();
                 player.sendMessage(ChatColor.GREEN + LangPack.YOUBOUGHTSTUFFFOR + toPay / 100f + LangPack.UNIT);
                 return true;
             } else {

@@ -132,11 +132,11 @@ public class RSPlayerInventory {
             Map<Price, Integer> contents = getItems();
 
             for (Price key : newInv.keySet()) {
+                key.setAmount(newInv.get(key));
                 if (shop.hasPrice(key)) {//Something in inventory has a price
-                    int amount = newInv.get(key);
-                    int cost = shop.getPrice(key);
+                    int amount = key.getAmount();
+                    double cost = shop.getPrice(key);
                     int pcnt = 100 - shop.getSale(key);
-                    cost *= pcnt / 100f;
                     if (contents.containsKey(key)) {
                         int oldAm = contents.get(key);
                         if (oldAm > amount) {//More items before than now
@@ -145,7 +145,8 @@ public class RSPlayerInventory {
                             amount -= oldAm;
                         }
                     }
-                    toPay += cost * amount;//Convert items durability to item amount
+                    cost *= amount;
+                    toPay = (int) (cost * pcnt / 100f);
                 }
             }
         }
