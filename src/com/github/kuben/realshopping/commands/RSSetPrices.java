@@ -12,7 +12,6 @@ import org.bukkit.command.CommandSender;
 
 
 class RSSetPrices extends RSCommand {
-
     private String arg = "";
     private String description = "";
     private int amount = 1;
@@ -149,58 +148,63 @@ class RSSetPrices extends RSCommand {
             // and the command will be in the form STORE ARGS, where args can be colon separated or single words.
             // we need to know where to pick args if the store is specified.
             if(argsContainStore(args)){
-                store = args[1];
+                store = args[0];
                 startargs = 2;
             }
-            else store = RealShopping.getPInv(player).getShop().getName();
+            else if(isPlayer) {
+                store = RealShopping.getPInv(player).getShop().getName();
+            } else {
+                store = "";
+            }
 
-            if(store.equals("") || !RealShopping.shopExists(store) || !isPlayer){
+            if(!store.equals("") && RealShopping.shopExists(store)){
+                shop = RealShopping.getShop(store);
+                arg = args[startargs];
+                //This trick will avoid the use of a second switch case
+                if(shop.getOwner().equals("@admin") && (!isPlayer || player.hasPermission("realshopping.rsset")) || shop.getOwner().equals(player.getName())){
+                    switch(args[startargs-1].toLowerCase()){
+                        case "add":
+                            if(startargs < args.length-1){
+                                if(args[startargs+1].equals("bulk")) {
+                                    startargs +=1;
+                                    amount = player.getItemInHand().getAmount();
+                                    if(startargs+1 <= args.length-1) {
+                                        startargs +=1;
+                                        try {
+                                            amount = Integer.parseInt(args[startargs]);
+                                        } catch ( NumberFormatException ex) {
+                                            amount = player.getItemInHand().getAmount();
+                                        }
+                                    } 
+                                }
+                                for(int i = startargs+1;i<args.length;i++){
+                                    if(i != 0) this.description += " ";
+                                    this.description += args[i];
+                                }
+                            }
+                            return add();
+                        case "del":
+                            return del();
+                        case "showminmax":
+                            return showMinMax();
+                        case "setminmax":
+                            return setMinMax();
+                        case "clearminmax":
+                            return clearMinMax();
+                        case "copy":
+                            if(args.length > 2) return copy();
+                            break;
+                        case "clear":
+                            return clear();
+                        case "defaults":
+                            return defaults();
+                        default:
+                            break;
+                    }
+                }
+            } else {
                 sender.sendMessage(ChatColor.RED + (!isPlayer?LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE:store + LangPack.DOESNTEXIST));
                 return false;
-            }
-            shop = RealShopping.getShop(store);
-            arg = args[startargs];
-            //This trick will avoid the use of a second switch case
-            if(shop.getOwner().equals("@admin") && player.hasPermission("realshopping.rsset") || shop.getOwner().equals(player.getName())){
-                switch(args[0].toLowerCase()){
-                    case "add":
-                        if(startargs < args.length-1){
-                            if(args[startargs+1].equals("bulk")) {
-                                startargs +=1;
-                                amount = player.getItemInHand().getAmount();
-                                if(startargs+1 <= args.length-1) {
-                                    startargs +=1;
-                                    try {
-                                        amount = Integer.parseInt(args[startargs]);
-                                    } catch ( NumberFormatException ex) {
-                                        amount = player.getItemInHand().getAmount();
-                                    }
-                                } 
-                            }
-                            for(int i = startargs+1;i<args.length;i++){
-                                if(i != 0) this.description += " ";
-                                this.description += args[i];
-                            }
-                        }
-                        return add();
-                    case "del":
-                        return del();
-                    case "showminmax":
-                        return showMinMax();
-                    case "setminmax":
-                        return setMinMax();
-                    case "clearminmax":
-                        return clearMinMax();
-                    case "copy":
-                        if(args.length > 2) return copy();
-                        break;
-                    case "clear":
-                        return clear();
-                    case "defaults":
-                        return defaults();
-                    default:
-                        break;
-                }
             }
         }
         sender.sendMessage(ChatColor.RED + LangPack.YOUARENTPERMITTEDTOEMANAGETHISSTORE);
@@ -261,10 +265,17 @@ class RSSetPrices extends RSCommand {
         return null;
     }
 
-    //this method can be expanded to a more comprehensive syntax check.
     private boolean argsContainStore(String[] args) {
+        //simply, if there are more than 2 args and the first is not a command, then I think is a store.
         if(args.length > 2){ // Maybe
-            return !(args[1].contains(":") || args[1].contains(",") || args[1].contains(".") || args[1].contains(";") || args[1].contains(" "));
+            return !(args[0].equals("add") 
+                    || args[0].equals("del") 
+                    || args[0].contains("setminmax") 
+                    || args[0].contains("showminmax") 
+                    || args[0].contains("clearminmax")
+                    || args[0].contains("copy")
+                    || args[0].contains("clear")
+                    || args[0].contains("defaults"));
         }
         return false;
     }

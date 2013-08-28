@@ -241,6 +241,7 @@ public class Shop {//TODO add load/save interface
 
     public double getPrice(Price p) {
         Price found = new Price(p.getType());
+        found.setAmount(0);
         for(Price pr:prices.keySet()) {
             if(p.compatible(pr)) {
                 if(found.getAmount() < pr.getAmount()) {
