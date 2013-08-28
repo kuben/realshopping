@@ -132,11 +132,10 @@ public class RSPlayerInventory {
             Map<Price, Integer> contents = getItems();
 
             for (Price key : newInv.keySet()) {
-                key.setAmount(newInv.get(key));
+                //key.setAmount(newInv.get(key));
                 if (shop.hasPrice(key)) {//Something in inventory has a price
-                    int amount = key.getAmount();
-                    double cost = shop.getPrice(key);
-                    int pcnt = 100 - shop.getSale(key);
+                    int amount = newInv.get(key);
+
                     if (contents.containsKey(key)) {
                         int oldAm = contents.get(key);
                         if (oldAm > amount) {//More items before than now
@@ -145,7 +144,10 @@ public class RSPlayerInventory {
                             amount -= oldAm;
                         }
                     }
-                    cost *= amount;
+                    key.setAmount(amount);
+                    double cost = shop.getPrice(key) * amount;
+                    int pcnt = 100 - shop.getSale(key);
+                    
                     toPay = (int) (cost * pcnt / 100f);
                 }
             }
@@ -334,12 +336,17 @@ public class RSPlayerInventory {
     }
 
     public int getAmount(ItemStack iS) {
-        return items.get(new Price(iS));
+        if(iS == null) return 0;
+        Price pi = new Price(iS);
+        if(!this.getItems().containsKey(pi)) return 0;
+        return this.getItems().get(pi);
+//        return items.get(new Price(iS));
     }
 
     public int getAmount(Price pi) {
-        if(pi == null || !items.containsKey(pi)) return 0;
-        return items.get(pi);
+        if(pi == null || !this.getItems().containsKey(pi)) return 0;
+        return this.getItems().get(pi);
+//        return items.get(pi);
     }
 
     public int removeItem(ItemStack iS, int amount) {
