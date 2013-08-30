@@ -10,19 +10,35 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 
-
 class RSSetPrices extends RSCommand {
-    private String arg = "";
-    private String description = "";
-    private int amount = 1;
-    private String store = "";
-    private Shop shop = null;
 
+    private final ChatColor LP = ChatColor.LIGHT_PURPLE;
+    private final ChatColor DP = ChatColor.DARK_PURPLE;
+    private final ChatColor GR = ChatColor.GREEN;
+    private final ChatColor DG = ChatColor.DARK_GREEN;
+    private final ChatColor RD = ChatColor.RED;
+    private final ChatColor DR = ChatColor.DARK_RED;
+    private final ChatColor RESET = ChatColor.RESET;
+    
+    private final String MORE_HELP = LP + "add"
+            + RESET + ", " + LP + "del"
+            + RESET + ", " + LP + "defaults"
+            + RESET + ", " + LP + "copy"
+            + RESET + ", " + LP + "clear"
+            + RESET + ", " + LP + "showminmax"
+            + RESET + ", " + LP + "clearminmax"
+            + RESET + ", " + LP + "setminmax";
+    
+    private String[] comArgs;//An array with all the arguments to the command, that is without the keyword and the store. 
+    private Shop shop = null;
+    
     public RSSetPrices(CommandSender sender, String[] args) {
         super(sender, args);
     }
 
     private boolean add(){
+        /*
+         * We'll fix this when merging
         try {
             Object[] o = RSUtils.pullPriceCostMinMax(arg,this.player);
             if(o == null || o.length < 2) return false;
@@ -33,178 +49,182 @@ class RSSetPrices extends RSCommand {
             p.setAmount(amount);
             String name = p.formattedString();
             shop.setPrice(p, i[0]);
-            sender.sendMessage(ChatColor.GREEN + LangPack.PRICEFOR + name + LangPack.SETTO + i[0]/100f + LangPack.UNIT);
+            sender.sendMessage(GR + LangPack.PRICEFOR + name + LangPack.SETTO + i[0]/100f + LangPack.UNIT);
             if(i.length > 1){//Also set min max
                 shop.setMinMax(p, i[1], i[2]);
-                sender.sendMessage(ChatColor.GREEN + LangPack.SETMINIMALANDMAXIMALPRICESFOR + name);
+                sender.sendMessage(GR + LangPack.SETMINIMALANDMAXIMALPRICESFOR + name);
             }
             return true;
         } catch (NumberFormatException e) {
-            sender.sendMessage(ChatColor.RED + arg + LangPack.ISNOTAPROPER_FOLLOWEDBYTHEPRICE_ + LangPack.UNIT);
+            sender.sendMessage(RD + arg + LangPack.ISNOTAPROPER_FOLLOWEDBYTHEPRICE_ + LangPack.UNIT);
             if(Config.debug) e.printStackTrace();
         } catch (ArrayIndexOutOfBoundsException e){
-            sender.sendMessage(ChatColor.RED + arg + LangPack.ISNOTAPROPER_FOLLOWEDBYTHEPRICE_ + LangPack.UNIT);
+            sender.sendMessage(RD + arg + LangPack.ISNOTAPROPER_FOLLOWEDBYTHEPRICE_ + LangPack.UNIT);
             if(Config.debug) e.printStackTrace();
         } catch (ClassCastException e){
-            sender.sendMessage(ChatColor.RED + arg + LangPack.ISNOTAPROPER_FOLLOWEDBYTHEPRICE_ + LangPack.UNIT);
+            sender.sendMessage(RD + arg + LangPack.ISNOTAPROPER_FOLLOWEDBYTHEPRICE_ + LangPack.UNIT);
             if(Config.debug) e.printStackTrace();
-        }
+        }*/
         return false;
     }
 
     private boolean del(){
         
         try {
-            Price p = RSUtils.pullPrice(arg,this.player);
+            Price p = RSUtils.pullPrice(comArgs[0],this.player);
             String dString = p.getData()>-1?"("+p.getData()+")":"";
             if(shop.hasPrice(p)){
                 shop.removePrice(p);
-                sender.sendMessage(ChatColor.RED + LangPack.REMOVEDPRICEFOR + p.formattedString() + dString);
+                sender.sendMessage(RD + LangPack.REMOVEDPRICEFOR + DR + p.formattedString() + dString);
                     return true;
             } else {
-                sender.sendMessage(ChatColor.RED + LangPack.COULDNTFINDPRICEFOR + Material.getMaterial(p.getType()) + dString);
+                sender.sendMessage(RD + LangPack.COULDNTFINDPRICEFOR + DR + Material.getMaterial(p.getType()) + dString);
             }
         } catch (NumberFormatException e) {
-            sender.sendMessage(ChatColor.RED + arg + LangPack.ISNOTAPROPER_);
+            sender.sendMessage(DR + comArgs[0] + RD + LangPack.ISNOTAPROPER_);
         }
         return false;
     }
 
     private boolean copy(){
-        try {
-            if((args.length == 3 && store.equals(args[1])) || (args.length == 2 && !store.equals(args[1]))){//If copy from store
-                if(RealShopping.shopExists(args[args.length - 1])){
-                    shop.clonePrices(args[args.length - 1]);
-                    sender.sendMessage(ChatColor.GREEN + LangPack.OLDPRICESREPLACEDWITHPRICESFROM + args[args.length - 1]);
-                    return true;
-                }
-            } else {
-                shop.clonePrices(null);
-                sender.sendMessage(ChatColor.GREEN + LangPack.OLDPRICESREPLACEDWITHTHELOWEST_);
+        if(comArgs.length > 0){//If copy from store
+            if(RealShopping.shopExists(comArgs[0])){
+                shop.clonePrices(comArgs[0]);
+                sender.sendMessage(GR + LangPack.OLDPRICESREPLACEDWITHPRICESFROM + DG + comArgs[0]);
                 return true;
             }
-        } catch (NumberFormatException e) {
-            sender.sendMessage(ChatColor.RED + arg + LangPack.ISNOTAPROPER_);
+        } else {
+            shop.clonePrices(null);
+            sender.sendMessage(GR + LangPack.OLDPRICESREPLACEDWITHTHELOWEST_);
+            return true;
         }
         return false;
     }
 
     private boolean clear(){
         shop.clearPrices();
-        sender.sendMessage(ChatColor.GREEN + LangPack.CLEAREDALLPRICESFOR + store);
+        sender.sendMessage(GR + LangPack.CLEAREDALLPRICESFOR + DG + shop.getName() + GR + ".");
         return true;
     }
 
     private boolean defaults(){
         if(RealShopping.hasDefPrices()){
             shop.setPrices(RealShopping.getDefPrices());
-            sender.sendMessage(ChatColor.GREEN + LangPack.SETDEFAULTPRICESFOR + store);
+            sender.sendMessage(GR + LangPack.SETDEFAULTPRICESFOR + DG + shop.getName() + GR + ".");
             return true;
-        } else sender.sendMessage(ChatColor.RED + LangPack.THEREARENODEFAULTPRICES);
+        } else sender.sendMessage(RD + LangPack.THEREARENODEFAULTPRICES);
         return false;
     }
 
     private boolean showMinMax(){
-        Price p = RSUtils.pullPrice(arg,this.player);
+        Price p = RSUtils.pullPrice(comArgs[0],this.player);
         String name = p.formattedString();
         if(shop.hasMinMax(p)){
-            sender.sendMessage(ChatColor.GREEN + LangPack.STORE + store + LangPack.HASAMINIMALPRICEOF + shop.getMin(p)/100f + LangPack.UNIT
-                    + LangPack.ANDAMAXIMALPRICEOF + shop.getMax(p)/100f + LangPack.UNIT + LangPack.FOR + name);
-        } else sender.sendMessage(ChatColor.GREEN + LangPack.STORE + store + LangPack.DOESNTHAVEAMINIMALANDMAXIMALPRICEFOR + name);
+            sender.sendMessage(GR + LangPack.STORE + DG + shop.getName() + GR + LangPack.HASAMINIMALPRICEOF + DG + shop.getMin(p)/100f + GR + LangPack.UNIT
+                    + LangPack.ANDAMAXIMALPRICEOF + DG + shop.getMax(p)/100f + GR + LangPack.UNIT+ LangPack.FOR + ChatColor.BLUE + name);
+        } else sender.sendMessage(GR + LangPack.STORE + DG + shop.getName() + GR + LangPack.DOESNTHAVEAMINIMALANDMAXIMALPRICEFOR + ChatColor.BLUE + name);
         return true;
     }
 
     private boolean clearMinMax(){
-        Price p = RSUtils.pullPrice(arg,this.player);
+        Price p = RSUtils.pullPrice(comArgs[0],this.player);
         String name = p.formattedString();
         if(shop.hasMinMax(p)){
             shop.clearMinMax(p);
-            sender.sendMessage(ChatColor.GREEN + LangPack.CLEAREDMINIMALANDMAXIMALPRICESFOR + name);
-        } else sender.sendMessage(ChatColor.GREEN + LangPack.STORE + store + LangPack.DIDNTHAVEAMINIMALANDMAXIMALPRICEFOR + name);
+            sender.sendMessage(GR + LangPack.CLEAREDMINIMALANDMAXIMALPRICESFOR + ChatColor.BLUE + name);
+        } else sender.sendMessage(GR + LangPack.STORE + DG + shop.getName() + GR + LangPack.DIDNTHAVEAMINIMALANDMAXIMALPRICEFOR + ChatColor.BLUE + name);
         return true;
     }
 
     private boolean setMinMax(){
         try {
-            Object[] o = RSUtils.pullPriceMinMax(arg,this.player);
+            Object[] o = RSUtils.pullPriceMinMax(comArgs[0],this.player);
             Price p = (Price)o[0];
             Integer[] i = (Integer[])o[1];
             shop.setMinMax(p, i[0], i[1]);
             String name = p.formattedString();
-            sender.sendMessage(ChatColor.GREEN + LangPack.SETMINIMALANDMAXIMALPRICESFOR + name);
+            sender.sendMessage(GR + LangPack.SETMINIMALANDMAXIMALPRICESFOR + ChatColor.BLUE + name);
             return true;
         } catch (NumberFormatException e) {
-            sender.sendMessage(ChatColor.RED + arg + LangPack.ISNOTAPROPERARGUMENT);
+            sender.sendMessage(DR + comArgs[0] + RD + LangPack.ISNOTAPROPERARGUMENT);
         }
         return false;
     }
 
     @Override
     protected boolean execute() {
-        if(args.length > 0){
-            boolean isPlayer = player != null && RealShopping.hasPInv(player);
-            int startargs = 1;
-            //preliminary control of arguments. We must say if setprices contains the store argument.
-            // and the command will be in the form STORE ARGS, where args can be colon separated or single words.
-            // we need to know where to pick args if the store is specified.
-            if(argsContainStore(args)){
-                store = args[0];
-                startargs = 2;
+        if(args.length >= 2){
+            //Check for permission. This also means that players with rsset permission can manage ANY store
+            if((!shop.getOwner().equals(player.getName()) && !player.hasPermission("realshopping.rsset"))){
+                sender.sendMessage(RD + LangPack.YOUARENTPERMITTEDTOEMANAGETHISSTORE);
+                return false;
             }
-            else if(isPlayer) {
-                store = RealShopping.getPInv(player).getShop().getName();
-            } else {
-                store = "";
+            
+            String com;
+            String store = null;
+
+            //Syntax check
+            switch(args[0].toLowerCase()){
+                case "add": case "del": case "copy": case "clear": case "defaults": case "showminmax": case "clearminmax": case "setminmax":
+                    //If the first argument is the command
+                    com = args[0];
+                    comArgs = cutBeginning(args, 1);//The first argument to the command is args[1]
+                    break;
+                default:
+                    switch(args[1].toLowerCase()){
+                        case "add": case "del": case "copy": case "clear": case "defaults": case "showminmax": case "clearminmax": case "setminmax":
+                            //If the second argument is the command
+                            store = args[0];//The first argument has to be the store                            
+                            com = args[1];
+                            comArgs = cutBeginning(args, 2);//The first argument to the command is args[2]
+                            break;
+                        default:
+                            //Wrong syntax
+                            return false;
+                    }
             }
 
-            if(!store.equals("") && RealShopping.shopExists(store)){
-                shop = RealShopping.getShop(store);
-                arg = args[startargs];
-                //This trick will avoid the use of a second switch case
-                if(shop.getOwner().equals("@admin") && (!isPlayer || player.hasPermission("realshopping.rsset")) || shop.getOwner().equals(player.getName())){
-                    switch(args[startargs-1].toLowerCase()){
-                        case "add":
-                            if(startargs < args.length-1){
-                                if(args[startargs+1].equals("bulk")) {
-                                    startargs +=1;
-                                    amount = player.getItemInHand().getAmount();
-                                    if(startargs+1 <= args.length-1) {
-                                        startargs +=1;
-                                        try {
-                                            amount = Integer.parseInt(args[startargs]);
-                                        } catch ( NumberFormatException ex) {
-                                            amount = player.getItemInHand().getAmount();
-                                        }
-                                    } 
-                                }
-                                for(int i = startargs+1;i<args.length;i++){
-                                    if(i != 0) this.description += " ";
-                                    this.description += args[i];
-                                }
-                            }
-                            return add();
-                        case "del":
-                            return del();
-                        case "showminmax":
-                            return showMinMax();
-                        case "setminmax":
-                            return setMinMax();
-                        case "clearminmax":
-                            return clearMinMax();
-                        case "copy":
-                            if(args.length > 2) return copy();
-                            break;
-                        case "clear":
-                            return clear();
-                        case "defaults":
-                            return defaults();
-                        default:
-                            break;
-                    }
+            //Now set the shop variable
+            if(store != null){//Store was specified
+                if(RealShopping.shopExists(store))//All clear
+                    shop = RealShopping.getShop(store);
+                else {
+                    sender.sendMessage(RD + LangPack.STORE + DR + store + RD + LangPack.DOESNTEXIST);
+                    return true;
                 }
-            } else {
-                sender.sendMessage(ChatColor.RED + (!isPlayer?LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE:store + LangPack.DOESNTEXIST));
-                return false;
+            } else {//Use the store which the player is in
+                if(player == null){
+                    sender.sendMessage(RD + LangPack.YOUHAVETOUSETHESTOREARGUMENTWHENEXECUTINGTHISCOMMANDFROMCONSOLE);
+                    return false;
+                }
+                if(!RealShopping.hasPInv(player)){
+                    sender.sendMessage(RD + LangPack.YOUHAVETOBEINASTOREIFNOTUSINGTHESTOREARGUMENT);
+                    return false;
+                }
+                shop = RealShopping.getPInv(player).getShop();
+            }
+
+            //Call the right method. The methods will have to parse the arguments correctly.
+            //Since the shop is already set, the methods should use comArgs[] instead of args[].
+            switch(com.toLowerCase()){
+                case "add":
+                    return add();
+                case "del":
+                    return del();
+                case "showminmax":
+                    return showMinMax();
+                case "setminmax":
+                    return setMinMax();
+                case "clearminmax":
+                    return clearMinMax();
+                case "copy":
+                    return copy();
+                case "clear":
+                    return clear();
+                case "defaults":
+                    return defaults();
+                default:
+                    break;
             }
         }
         sender.sendMessage(ChatColor.RED + LangPack.YOUARENTPERMITTEDTOEMANAGETHISSTORE);
@@ -215,47 +235,42 @@ class RSSetPrices extends RSCommand {
         //Check if help was asked for
         if(args.length == 0 || args[0].equalsIgnoreCase("help")){
             if(args.length == 0){
-                sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rssetprices add|del|defaults|copy|clear [STORE] (ITEM_ID[:DATA][:COST][:MIN:MAX])|[COPY_FROM]");
-                sender.sendMessage(" OR /rssetprices showminmax|clearminmax|setminmax [STORE] [ITEM_ID[:DATA]:MIN:MAX]]");
-                sender.sendMessage(LangPack.FOR_HELP_FOR_A_SPECIFIC_COMMAND_TYPE_ + ChatColor.LIGHT_PURPLE + "/rssetprices help " + ChatColor.DARK_PURPLE + "COMMAND");
+                sender.sendMessage(DG + LangPack.USAGE + RESET + "/rssetprices [STORE] COMMAND [ARGS..]");
+                sender.sendMessage("Avaiable commands are: " + MORE_HELP);//LANG
+                sender.sendMessage(LangPack.FOR_HELP_FOR_A_SPECIFIC_COMMAND_TYPE_ + LP + "/rssetprices help " + DP + "COMMAND");
             } else if(args.length == 1){
-                sender.sendMessage(LangPack.RSSETHELP + ChatColor.DARK_PURPLE + "STORE" + ChatColor.RESET + LangPack.RSSETPRICESHELP2
-                                    + LangPack.YOU_CAN_GET_MORE_HELP_ABOUT_ + ChatColor.LIGHT_PURPLE + "add, del, defaults, copy, clear, showminmax, clearminmax, setminmax");
+                sender.sendMessage(LangPack.RSSETPRICESHELP + DP + "STORE" + RESET + LangPack.RSSETPRICESHELP2
+                                    + LangPack.YOU_CAN_GET_MORE_HELP_ABOUT_ + LP + MORE_HELP);
             } else {
                 switch(args[1].toLowerCase()){
                     case "add":
-                        sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "add [STORE] ITEM_ID[:DATA]:COST[:MIN:MAX]"
-                                    + ChatColor.RESET + LangPack.RSSETPRICESADDHELP + ChatColor.DARK_PURPLE + "COST" + ChatColor.RESET + LangPack.RSSETPRICESADDHELP2
-                                    + ChatColor.DARK_PURPLE + "MAX" + ChatColor.RESET + LangPack.AND_ + ChatColor.DARK_PURPLE + LangPack.ARGUMENTS);
+                        sender.sendMessage(LangPack.USAGE + LP + "add " + DP + "ITEM_ID" + LP + "[:" + DP + "DATA" + LP + "]:" + DP + "COST"
+                                    + LP + "[:" + DP + "MIN" + LP + ":" + DP + "MAX" + LP +"]"
+                                    + RESET + LangPack.RSSETPRICESADDHELP + DP + "COST" + RESET + LangPack.RSSETPRICESADDHELP2
+                                    + DP + "MAX" + RESET + LangPack.AND_ + DP + LangPack.ARGUMENTS);
                         break;
                     case "del":
-                        sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "del [STORE] ITEM_ID[:DATA]"
-                                    + ChatColor.RESET + LangPack.RSSETPRICESDELHELP);
+                        sender.sendMessage(LangPack.USAGE + LP + "del " + DP + "ITEM_ID" + LP + "[:" + DP + "DATA" + LP + "]" + RESET + LangPack.RSSETPRICESDELHELP);
                         break;
                     case "defaults":
-                        sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "defaults [STORE]"
-                                    + ChatColor.RESET + LangPack.RSSETPRICESDEFAUTLSHELP + ChatColor.LIGHT_PURPLE + "/rsimport");
+                        sender.sendMessage(LangPack.USAGE + LP + "defaults" + RESET + LangPack.RSSETPRICESDEFAUTLSHELP + LP + "/rsimport");
                         break;
                     case "copy":
-                        sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "copy [STORE] [COPY_FROM]"
-                                    + ChatColor.RESET + LangPack.RSSETPRICESCOPYHELP + ChatColor.DARK_PURPLE + "COPY_FROM" + ChatColor.RESET + LangPack.RSSETPRICESCOPYHELP2
-                                    + ChatColor.DARK_PURPLE + "COPY_FROM" + ChatColor.RESET + LangPack.RSSETPRICESCOPYHELP3);
+                        sender.sendMessage(LangPack.USAGE + LP + "copy [" + DP + "COPY_FROM" + LP + "]"
+                                    + RESET + LangPack.RSSETPRICESCOPYHELP + DP + "COPY_FROM" + RESET + LangPack.RSSETPRICESCOPYHELP2
+                                    + DP + "COPY_FROM" + RESET + LangPack.RSSETPRICESCOPYHELP3);
                         break;
                     case "clear":
-                        sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "clear [STORE]"
-                                    + ChatColor.RESET + LangPack.RSSETPRICESCLEARHELP);
+                        sender.sendMessage(LangPack.USAGE + LP + "clear" + RESET + LangPack.RSSETPRICESCLEARHELP);
                         break;
                     case "showminmax":
-                        sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "showminmax [STORE] ITEM_ID"
-                                    + ChatColor.RESET + LangPack.RSSETPRICESSHOWMMHELP);
+                        sender.sendMessage(LangPack.USAGE + LP + "showminmax " + DP + "ITEM_ID" + RESET + LangPack.RSSETPRICESSHOWMMHELP);
                         break;
                     case "clearminmax":
-                        sender.sendMessage(LangPack.USAGE +ChatColor.LIGHT_PURPLE + "clearminmax [STORE] ITEM_ID"
-                                    + ChatColor.RESET + LangPack.RSSETPRICESCLEARMMHELP);
+                        sender.sendMessage(LangPack.USAGE +LP + "clearminmax " + DP + "ITEM_ID" + RESET + LangPack.RSSETPRICESCLEARMMHELP);
                         break;
                     case "setminmax":
-                        sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "setminmax [STORE] ITEM_ID:MIN:MAX"
-                                    + ChatColor.RESET + LangPack.RSSETPRICESSETMMHELP);
+                        sender.sendMessage(LangPack.USAGE + LP + "setminmax " + DP + "ITEM_ID" + LP + ":" + DP + "MIN" + LP + ":" + DP + "MAX" + RESET + LangPack.RSSETPRICESSETMMHELP);
                     default:
                         break;
                 }
@@ -265,19 +280,16 @@ class RSSetPrices extends RSCommand {
         return null;
     }
 
-    private boolean argsContainStore(String[] args) {
-        //simply, if there are more than 2 args and the first is not a command, then I think is a store.
-        if(args.length > 2){ // Maybe
-            return !(args[0].equals("add") 
-                    || args[0].equals("del") 
-                    || args[0].contains("setminmax") 
-                    || args[0].contains("showminmax") 
-                    || args[0].contains("clearminmax")
-                    || args[0].contains("copy")
-                    || args[0].contains("clear")
-                    || args[0].contains("defaults"));
-        }
-        return false;
+    /**
+     * Used to isolate the latter part of a array. More specifically the arguments array.
+     * @param orig The original array
+     * @param shift How many places the values should be shifted forwards.
+     * @return A new, cut array.
+     */
+    private String[] cutBeginning(String[] orig, int shift){
+        String[] res = new String[orig.length - shift];
+        for(int i = 0;i < orig.length - shift;i++)
+            res[i] = orig[i + shift];
+        return res;
     }
-	
 }
