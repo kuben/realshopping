@@ -79,17 +79,11 @@ public class Shop {//TODO add load/save interface
      * Entrance/Exit
      * 
      */
-    public void addEntranceExit(Location en, Location ex) throws RealShoppingException {
-        if (!RealShopping.addEntranceExit(new EEPair(en, ex), this)) {
-            throw new RealShoppingException(RealShoppingException.Type.EEPAIR_ALREADY_EXISTS);
-        }
+    //TODO add to rsset and rssetstores
+    public void addEntranceExit(Location en, Location ex) throws RealShoppingException{ 
+        EEPair ep = new EEPair(en, ex);
+        RealShopping.addEntranceExit(ep, this);
     }
-
-    public boolean removeEntranceExit(Location en, Location ex) {
-        return RealShopping.removeEntranceExit(this, en, ex);
-    }//TODO add to rsset and rssetstores
-
-    public void addEntranceExit(Location en, Location ex) throws RealShoppingException{ new EEPair(en, ex, this);}
     public boolean removeEntranceExit(Location en, Location ex){ return RealShopping.removeEntranceExit(this, en, ex); }//TODO add to rsset and rssetstores
     public int clearEntrancesExits(){ return RealShopping.clearEntrancesExits(this); }
     public boolean hasEntrance(Location en){ return RealShopping.hasEntrance(this, en); }
@@ -648,9 +642,9 @@ public class Shop {//TODO add load/save interface
                     if (!sold.isEmpty())
                         p.sendMessage(ChatColor.GREEN + LangPack.SOLD + ChatColor.DARK_GREEN + sold.size() + ChatColor.GREEN + LangPack.ITEMSFOR
                                 + ChatColor.DARK_GREEN + payment/100f + ChatColor.GREEN + LangPack.UNIT);
-                    if (RealShopping.getPlayerSettings(own).getBoughtNotifications(tempShop, payment/100) && !sold.isEmpty())
+                    if (RealShopping.getPlayerSettings(own).getBoughtNotifications(shop, payment/100) && !sold.isEmpty())
                         RealShopping.sendNotification(own, LangPack.YOURSTORE
-                                + tempShop.getName() + LangPack.BOUGHTSTUFFFOR
+                                + shop.getName() + LangPack.BOUGHTSTUFFFOR
                                 + payment / 100f + LangPack.UNIT
                                 + LangPack.FROM + p.getName());//TODO not sure about notification colors
                     for (ItemStack key : sold) {
