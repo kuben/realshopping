@@ -24,7 +24,7 @@ public class ChestPrompt implements Prompt {
     	String ID = (String) context.getSessionData("ID");
 		Player player = (Player) context.getForWhom();
     	if(ID.equals("first")){
-        	Shop tempShop = RealShopping.shopMap.get(RealShopping.getPInv(player).getStore());
+        	Shop tempShop = RealShopping.getPInv(player).getShop();
         	context.setSessionData("shop",tempShop);
         	String out = "";
     		if(tempShop.getOwner().equals("@admin")){

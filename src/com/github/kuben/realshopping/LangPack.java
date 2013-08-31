@@ -21,11 +21,9 @@ package com.github.kuben.realshopping;
 
 import java.io.File;
 import java.io.IOException;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -1209,21 +1207,21 @@ public class LangPack {
 					else if(name.equals("DO_YOU_REALLY_WANT_TO_DELETE_")) DO_YOU_REALLY_WANT_TO_DELETE_ = el.getAttribute("value");
 					else if(name.equals("AND_ALL_ITS_")) AND_ALL_ITS_ = el.getAttribute("value");
 				}
-				RealShopping.log.info("Loaded " + lang + " language pack.");
+				RealShopping.loginfo("Loaded " + lang + " language pack.");
 			}
 		} catch (SAXException e) {
 			e.printStackTrace();
-			RealShopping.log.info("Failed while loading " + lang + " language pack.");
+			RealShopping.loginfo("Failed while loading " + lang + " language pack.");
 		} catch (IOException e) {
 			e.printStackTrace();
-			RealShopping.log.info("Failed while loading " + lang + " language pack.");
+			RealShopping.loginfo("Failed while loading " + lang + " language pack.");
 		} catch (ParserConfigurationException e) {
 			e.printStackTrace();
-			RealShopping.log.info("Failed while loading " + lang + " language pack.");
+			RealShopping.loginfo("Failed while loading " + lang + " language pack.");
 		} catch (Exception e) {
 			e.printStackTrace();
-			RealShopping.log.info("Failed while loading " + lang + " language pack.");
+			RealShopping.loginfo("Failed while loading " + lang + " language pack.");
 		}
-		else RealShopping.log.info("Loaded default language pack.");
+		else RealShopping.loginfo("Loaded default language pack.");
 	}
 }

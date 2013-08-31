@@ -19,18 +19,10 @@
 
 package com.github.kuben.realshopping;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import org.bukkit.Bukkit;
 
 import org.bukkit.Location;
-import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.inventory.ItemStack;
 
 public class ShippedPackage implements Serializable{

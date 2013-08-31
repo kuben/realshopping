@@ -18,41 +18,41 @@ class RSProtect extends RSPlayerCommand {
 
 	@Override
 	protected boolean execute() {
-		if(RealShopping.hasPInv(player)){
-			if(args.length == 1 & args[0].equalsIgnoreCase("add")){				
-					Shop tempShop = RealShopping.shopMap.get(RealShopping.getPInv(player).getStore());
-					BlockState bs = player.getLocation().getBlock().getState();
-					if(bs instanceof Chest | bs instanceof DoubleChest){
-						if(tempShop.isProtectedChest(bs.getLocation())){
-							player.sendMessage(ChatColor.GREEN + LangPack.THISCHESTISALREADYPROTECTED);
-							return true;
-						} else {
-							tempShop.addProtectedChest(bs.getLocation());
-							player.sendMessage(ChatColor.GREEN + LangPack.MADECHESTPROTECTED);
-							return true;
-					}
-				} else {
-					player.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUSELECTEDISNTACHEST);
-				}
-			} else if(args.length == 1 & args[0].equalsIgnoreCase("remove")){
-					Shop tempShop = RealShopping.shopMap.get(RealShopping.getPInv(player).getStore());
-					BlockState bs = player.getLocation().getBlock().getState();
-					if(tempShop.isProtectedChest(bs.getLocation())){
-						tempShop.removeProtectedChest(bs.getLocation());
-						player.sendMessage(ChatColor.GREEN + LangPack.UNPROTECTEDCHEST);
-						return true;
-				} else {
-						player.sendMessage(ChatColor.RED + LangPack.THISCHESTISNTPROTECTED);
-						return true;
-				}
-			}
-		} else player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
-		return false;
+	    if(RealShopping.hasPInv(player)){
+	        if(args.length == 1 & args[0].equalsIgnoreCase("add")){
+	            Shop tempShop = RealShopping.getPInv(player).getShop();
+	            BlockState bs = player.getLocation().getBlock().getState();
+	            if(bs instanceof Chest | bs instanceof DoubleChest){
+	                if(tempShop.isProtectedChest(bs.getLocation())){
+	                    player.sendMessage(ChatColor.GREEN + LangPack.THISCHESTISALREADYPROTECTED);
+	                    return true;
+	                } else {
+	                    tempShop.addProtectedChest(bs.getLocation());
+	                    player.sendMessage(ChatColor.GREEN + LangPack.MADECHESTPROTECTED);
+	                    return true;
+	                }
+	            } else {
+	                player.sendMessage(ChatColor.RED + LangPack.THEBLOCKYOUSELECTEDISNTACHEST);
+	            }
+	        } else if(args.length == 1 & args[0].equalsIgnoreCase("remove")){
+	            Shop tempShop = RealShopping.getPInv(player).getShop();
+	            BlockState bs = player.getLocation().getBlock().getState();
+	            if(tempShop.isProtectedChest(bs.getLocation())){
+	                tempShop.removeProtectedChest(bs.getLocation());
+	                player.sendMessage(ChatColor.GREEN + LangPack.UNPROTECTEDCHEST);
+	                return true;
+	            } else {
+	                player.sendMessage(ChatColor.RED + LangPack.THISCHESTISNTPROTECTED);
+	                return true;
+	            }
+	        }
+	    } else player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
+	    return false;
 	}
 
 	@Override
 	protected Boolean help(){
-		//Check if help was asked for
+	    //Check if help was asked for
 		if(args.length == 0 || args[0].equalsIgnoreCase("help")){
 			sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rsprotect add|remove");
 			sender.sendMessage(LangPack.RSPROTECTHELP + ChatColor.LIGHT_PURPLE + "add"
