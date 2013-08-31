@@ -22,7 +22,7 @@ class RSSetChests extends RSPlayerCommand {
 	@Override
 	protected boolean execute() {
 		if(RealShopping.hasPInv(player)){
-			tempShop = RealShopping.shopMap.get(RealShopping.getPInv(player).getStore());
+			tempShop = RealShopping.getPInv(player).getShop();
 			if(tempShop.getOwner().equals("@admin")){
 				if (args.length == 1 && args[0].equalsIgnoreCase("prompt")){
 					return PromptMaster.createConversation(PromptType.CHOOSE_CHESTS, player);

@@ -62,7 +62,7 @@ public class SetupStorePrompt implements Prompt {
         				context.setSessionData("ID", "second");
         				return ChatColor.RED + LangPack.YOUCANTNAMEASTORETHAT;
         			}
-            		if(!RealShopping.shopMap.containsKey(in)){
+            		if(!RealShopping.shopExists(in)){
             			context.setSessionData("shop", in);
             			context.setSessionData("ID", "create_second");
             			new SetupStoreListener(player, Type.APPEND, in, true);
@@ -106,8 +106,8 @@ public class SetupStorePrompt implements Prompt {
         	else if(ID.equals("append_name")){
         		try {
             		String rtrn;
-            		if(RealShopping.shopMap.containsKey(in)){
-            			if(RealShopping.shopMap.get(in).getOwner().equals(player.getName())){
+            		if(RealShopping.shopExists(in)){
+            			if(RealShopping.getShop(in).getOwner().equals(player.getName())){
                 			context.setSessionData("shop", in);
                 			context.setSessionData("ID", "append_second");
                 			new SetupStoreListener(player, Type.APPEND, in, true);
@@ -150,8 +150,8 @@ public class SetupStorePrompt implements Prompt {
         	else if(ID.equals("delete_name")){
         		try {
             		String rtrn;
-            		if(RealShopping.shopMap.containsKey(in)){
-            			if(RealShopping.shopMap.get(in).getOwner().equals(player.getName())){
+            		if(RealShopping.shopExists(in)){
+            			if(RealShopping.getShop(in).getOwner().equals(player.getName())){
                 			context.setSessionData("shop", in);
                 			context.setSessionData("ID", "delete_second");
                 			new SetupStoreListener(player, Type.DELETE, in, true);
@@ -193,8 +193,8 @@ public class SetupStorePrompt implements Prompt {
         	
         	else if(ID.equals("wipeout_name")){
         		String rtrn;
-        		if(RealShopping.shopMap.containsKey(in)){
-        			if(RealShopping.shopMap.get(in).getOwner().equals("@admin")){
+        		if(RealShopping.shopExists(in)){
+        			if(RealShopping.getShop(in).getOwner().equals("@admin")){
             			context.setSessionData("shop", in);
             			context.setSessionData("ID", "wipeout_second");
             			return LangPack.DO_YOU_REALLY_WANT_TO_DELETE_ + ChatColor.DARK_AQUA + in + ChatColor.RESET
@@ -209,11 +209,11 @@ public class SetupStorePrompt implements Prompt {
         	} else if(ID.equals("wipeout_confirm") && context.getSessionData("shop") != null){
         		if(in.equalsIgnoreCase("yes")){
         			String rtrn = "";
-        			Shop tempShop = RealShopping.shopMap.get(context.getSessionData("shop"));
+        			Shop tempShop = RealShopping.getShop((String) context.getSessionData("shop"));
         			if(tempShop != null){
         				if(RealShopping.getPlayersInStore(tempShop.getName())[0].equals("")){
         					tempShop.clearEntrancesExits();
-        					RealShopping.shopMap.remove(tempShop.getName());
+        					RealShopping.removeShop(tempShop.getName());
         					rtrn = ChatColor.GREEN + LangPack.DELETED_ + ChatColor.DARK_AQUA + context.getSessionData("shop") + ChatColor.GREEN + " .";
         					RealShopping.updateEntrancesDb();
         				} else rtrn = ChatColor.RED + LangPack.STORENOTEMPTY;
