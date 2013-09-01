@@ -37,12 +37,13 @@ class RSMe extends RSPlayerCommand {
 		super(sender, args);
 	}
 
-	//TODO have an notifications limit
 	//TODO add settings to rsstores (X:timely spending limit for buying)
 	//TODO idea: notify about store favorited
 	//TODO add clear and list
 	//TODO check AI with config
 	//TODO add allow reports to config
+	//TODO add reading notifications command
+	//TODO view favorites
 	
 	@Override
 	protected boolean execute() {
@@ -73,11 +74,11 @@ class RSMe extends RSPlayerCommand {
 
 					sett = args[2].toLowerCase(Locale.ENGLISH);
 					if(args.length > 3) val = args[3];
-					shop = RealShopping.shopMap.get(args[1]);
+					shop = RealShopping.getShop(args[1]);
 					if(shop == null) throw new RealShoppingException(RealShoppingException.Type.SHOP_DOESNT_EXIST, args[1]);
 				} else return false;
 				
-				settings = RealShopping.getPlayerSettings(player);
+				settings = RealShopping.getPlayerSettings(player.getName());
 				
 				switch(sett){//TODO reports
 					case "favnots":
@@ -140,9 +141,9 @@ class RSMe extends RSPlayerCommand {
 	 * @throws RealShoppingException type CANNOT_FAVORITE_OWN_SHOP if the player tries to favorite their own store.
 	 */
 	private boolean addFav() throws RealShoppingException {
-		Shop shop = RealShopping.shopMap.get(args[1]);
+		Shop shop = RealShopping.getShop(args[1]);
 		if(shop == null) throw new RealShoppingException(RealShoppingException.Type.SHOP_DOESNT_EXIST, args[1]);
-		return RealShopping.getPlayerSettings(player).addFavoriteStore(shop);
+		return RealShopping.getPlayerSettings(player.getName()).addFavoriteStore(shop);
 	}
 	
 	/**
@@ -152,9 +153,9 @@ class RSMe extends RSPlayerCommand {
 	 * @throws RealShoppingException type SHOP_DOESNT_EXIST if the shop doesn't exist in RealShopping.shopMap.
 	 */
 	private boolean delFav() throws RealShoppingException {
-		Shop shop = RealShopping.shopMap.get(args[1]);
+		Shop shop = RealShopping.getShop(args[1]);
 		if(shop == null) throw new RealShoppingException(RealShoppingException.Type.SHOP_DOESNT_EXIST, args[1]);
-		return RealShopping.getPlayerSettings(player).delFavoriteStore(shop);
+		return RealShopping.getPlayerSettings(player.getName()).delFavoriteStore(shop);
 	}
 	
 	/**

@@ -37,11 +37,11 @@ class RSSet extends RSPlayerCommand {
 							sender.sendMessage(ChatColor.RED + LangPack.YOUCANTNAMEASTORETHAT);
 							return true;
 						}
-				    	if(!RealShopping.shopMap.containsKey(args[1])){//Create
-				    		RealShopping.shopMap.put(args[1], new Shop(args[1], player.getWorld().getName(), "@admin"));
+				    	if(!RealShopping.shopExists(args[1])){//Create
+				    		RealShopping.addShop(new Shop(args[1], player.getWorld().getName(), "@admin"));
 				    	}
 				    	try {
-					    	RealShopping.shopMap.get(args[1]).addEntranceExit(RealShopping.getEntrance(), RealShopping.getExit());
+					    	RealShopping.getShop(args[1]).addEntranceExit(RealShopping.getEntrance(), RealShopping.getExit());
 					    	RealShopping.updateEntrancesDb();
 							player.sendMessage(ChatColor.RED + args[1] + LangPack.WASCREATED);
 				    	} catch(RealShoppingException e){
@@ -51,10 +51,10 @@ class RSSet extends RSPlayerCommand {
 					} else player.sendMessage(ChatColor.RED + LangPack.THERSNOEXITSET);
 				} else player.sendMessage(ChatColor.RED + LangPack.THERESNOENTRANCESET);
 			} else if (args.length == 2 && args[0].equalsIgnoreCase("delstore")){
-				if(RealShopping.shopMap.containsKey(args[1])){
+				if(RealShopping.shopExists(args[1])){
 					if(RealShopping.getPlayersInStore(args[1])[0].equals("")){
-						RealShopping.shopMap.get(args[1]).clearEntrancesExits();
-						RealShopping.shopMap.remove(args[1]);
+						RealShopping.getShop(args[1]).clearEntrancesExits();
+						RealShopping.removeShop(args[1]);
 						player.sendMessage(ChatColor.RED + args[1] + LangPack.WASREMOVED);
 						RealShopping.updateEntrancesDb();
 					} else player.sendMessage(ChatColor.RED + LangPack.STORENOTEMPTY);

@@ -27,6 +27,7 @@ public class PSetting {
 		}
 	}
 
+	private String player;
 	private Set<Shop> favShops;
 	
 	//Global
@@ -45,8 +46,10 @@ public class PSetting {
 	private Map<Shop, Integer> getAINotsMap;
 	private Map<Shop, Integer> changeOnAIMap;
 	
-	public PSetting(){
-		System.out.println("Creating new PSetting");
+	public PSetting(String player){
+		System.out.println("Creating new PSetting for player " + player);
+		
+		this.player = player;
 		favShops = new HashSet<Shop>();
 		
 		favNots = FavNots.BOTH;
@@ -64,13 +67,7 @@ public class PSetting {
 		changeOnAIMap = new HashMap<Shop, Integer>();
 	}
 	
-	public PSetting(String importStr){
-		/*
-		 * AAA=sal bro both
-		 * ;player-fav1,fav2:AAA:BBB:
-		 * 
-		 */
-	}
+//	public PSetting(String importStr){ }
 
 	/*
 	 * 
@@ -101,6 +98,8 @@ public class PSetting {
 	 * 
 	 */
 	
+	public String getPlayer(){ return player; }
+	
 	public boolean getSalesNotifications(Shop shop) {
 		FavNots o;
 		if(favNotsMap.containsKey(shop)) o = favNotsMap.get(shop);
@@ -115,24 +114,14 @@ public class PSetting {
 		return o == FavNots.SALES || o == FavNots.BOTH;
 	}
 	
-	public boolean getSoldNotifications(Shop shop) {
-		if(getSoldNotsMap.containsKey(shop)) return getSoldNotsMap.get(shop) >= 0;
-		return getSoldNots >= 0;
+	public boolean getSoldNotifications(Shop shop, int isover) {
+		if(getSoldNotsMap.containsKey(shop)) return getSoldNotsMap.get(shop) >= 0 && getSoldNotsMap.get(shop) <= isover;
+		return getSoldNots >= 0 && getSoldNots <= isover;
 	}
 
-	public boolean getBoughtNotifications(Shop shop) {
-		if(getBoughtNotsMap.containsKey(shop)) return getBoughtNotsMap.get(shop) >= 0;
-		return getBoughtNots >= 0;
-	}
-
-	public int soldNotificationsOver(Shop shop) {
-		if(getSoldNotsMap.containsKey(shop)) return getSoldNotsMap.get(shop);
-		return getSoldNots;
-	}
-
-	public int boughtNotificationsOver(Shop shop) {
-		if(getBoughtNotsMap.containsKey(shop)) return getBoughtNotsMap.get(shop);
-		return getBoughtNots;
+	public boolean getBoughtNotifications(Shop shop, int isover) {
+		if(getBoughtNotsMap.containsKey(shop)) return getBoughtNotsMap.get(shop) >= 0 && getBoughtNotsMap.get(shop) <= isover;
+		return getBoughtNots >= 0 && getBoughtNots <= isover;
 	}
 
 	public boolean getAINotifications(Shop shop) {
@@ -145,7 +134,7 @@ public class PSetting {
 		return getAINots;
 	}
 
-	public boolean getChangeAIPriceChange(Shop shop) {
+	public boolean getChangePricesOnAI(Shop shop) {
 		if(changeOnAIMap.containsKey(shop)) return changeOnAIMap.get(shop) > 0;
 		return changeOnAI > 0;
 	}
@@ -213,7 +202,5 @@ public class PSetting {
 	public void setChangeOnAI(int changeOnAI) { this.changeOnAI = changeOnAI; }
 	public void setChangeOnAI(int changeOnAI, Shop shop) { changeOnAIMap.put(shop, changeOnAI); }
 	public void defaultChangeOnAI(Shop shop){ changeOnAIMap.remove(shop); }
-	
-	private String getPlayer(){ return RealShopping.getPSettingPlayer(this); }
 	
 }

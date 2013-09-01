@@ -85,8 +85,7 @@ public class SetupStoreListener extends GeneralListener implements Appliable {
 			if(type == Type.APPEND){
 				Shop tempShop = getShop();
 				if(tempShop == null){//Time to create a store
-					tempShop = new Shop(store, getPlayer().getWorld().getName(), admin?"@admin":getPlayer().getName());
-					RealShopping.shopMap.put(store, tempShop);
+					RealShopping.addShop(new Shop(store, getPlayer().getWorld().getName(), admin?"@admin":getPlayer().getName()));
 				}
 				for(int i = 0;i < exits.size();i++){
 					try {

@@ -27,7 +27,7 @@ abstract class GeneralListener{
 	
 	public GeneralListener(Player player, String store) throws RSListenerException{//Isn't and shouldn't be in store
 		if(!RealShopping.hasPInv(player)){
-			shop = RealShopping.shopMap.get(store);//Can be null at this point
+			shop = RealShopping.getShop(store);//Can be null at this point
 			//Doesn't check for permissions
 			this.player = player;
 			//Now adds itself to set, or throws exception if failing
