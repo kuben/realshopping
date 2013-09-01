@@ -28,7 +28,6 @@ import com.github.kuben.realshopping.Shop;
 import com.github.kuben.realshopping.exceptions.RSListenerException;
 import com.github.kuben.realshopping.exceptions.RSListenerException.Type;
 import com.github.kuben.realshopping.prompts.PromptMaster;
-import com.github.stengun.realshopping.Pager;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -299,9 +298,7 @@ public class RSPlayerListener implements Listener {
         if (event.getRightClicked() instanceof ItemFrame) {
             if (RealShopping.hasPInv(player) && player.hasPermission("realshopping.rsprices") && ((ItemFrame) event.getRightClicked()).getItem().getType() == Material.PAPER) {
                 event.setCancelled(true);
-                Pager pg = Shop.getPager(player.getName());
-                pg.push();
-                Shop.prices(player, pg.getPage(), RealShopping.getPInv(player).getShop());
+                Shop.getPager(player.getName()).push();
             }
 
         }

@@ -1,7 +1,8 @@
 package com.github.stengun.realshopping;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import com.github.kuben.realshopping.RealShopping;
+import com.github.kuben.realshopping.Shop;
+import org.bukkit.Bukkit;
 
 /**
  * Pager class that stores the page a player is reading from an ItemFrame with
@@ -17,12 +18,14 @@ public class Pager extends Thread {
     private int page;
     private boolean stop;
     private long time, stamp;
+    private String player;
 
-    public Pager() {
+    public Pager(String player) {
         super();
         page = 1;
         stop = false;
         time = 3000;
+        this.player = player;
     }
 
     @Override
@@ -31,14 +34,20 @@ public class Pager extends Thread {
             try {
                 stamp = System.currentTimeMillis();
                 waitcheck();
+                Shop shop = RealShopping.getPInv(player).getShop();
                 long total = System.currentTimeMillis() - stamp;
                 if (total > time) {
                     page = 1;
                 } else {
-                    page += 1;
+                    if(page*9 < shop.getPrices().size()) {
+                        page += 1;
+                    } else {
+                        page = 1;
+                    }
                 }
+                Shop.prices(Bukkit.getPlayer(player), page, shop);
             } catch (InterruptedException ex) {
-                Logger.getLogger(Pager.class.getName()).log(Level.SEVERE, null, ex);
+                RealShopping.logsevere(ex.getStackTrace().toString());
             }
         }
     }

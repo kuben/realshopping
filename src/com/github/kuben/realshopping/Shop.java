@@ -507,7 +507,7 @@ public class Shop {//TODO add load/save interface
                 Logger.getLogger(Shop.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        Pager pager = new Pager();
+        Pager pager = new Pager(player);
         pager.start();
         timers.put(player, pager);
     }
@@ -722,9 +722,9 @@ public class Shop {//TODO add load/save interface
                         for(int i = 9*(page-1);i < 9*page;i++){
                             int cost = tempMap.get(keys[i]);
                             String onSlStr = "";
-                            if(shop.hasSale(keys[i].stripOffData()) || shop.hasSale(keys[i])){//There is a sale on that item.
+                            if(shop.hasSale(keys[i])){//There is a sale on that item.
                                 int pcnt = -1;
-                                if(shop.hasSale(keys[i].stripOffData())) pcnt = 100 - shop.getSale(keys[i].stripOffData());
+                                //if(shop.hasSale(keys[i].stripOffData())) pcnt = 100 - shop.getSale(keys[i].stripOffData());
                                 if(shop.hasSale(keys[i]))  pcnt = 100 - shop.getSale(keys[i]);
                                 cost *= pcnt/100f;
                                 onSlStr = ChatColor.GREEN + LangPack.ONSALE;
@@ -736,9 +736,9 @@ public class Shop {//TODO add load/save interface
                         for(int i = 9*(page-1);i < keys.length;i++){
                             int cost = tempMap.get(keys[i]);
                             String onSlStr = "";
-                            if(shop.hasSale(keys[i].stripOffData()) || shop.hasSale(keys[i])){//There is a sale on that item.
+                            if(shop.hasSale(keys[i])){//There is a sale on that item.
                                 int pcnt = -1;
-                                if(shop.hasSale(keys[i].stripOffData())) pcnt = 100 - shop.getSale(keys[i].stripOffData());
+                                //if(shop.hasSale(keys[i].stripOffData())) pcnt = 100 - shop.getSale(keys[i].stripOffData());
                                 if(shop.hasSale(keys[i]))  pcnt = 100 - shop.getSale(keys[i]);
                                 cost *= pcnt/100f;
                                 onSlStr = ChatColor.GREEN + LangPack.ONSALE;

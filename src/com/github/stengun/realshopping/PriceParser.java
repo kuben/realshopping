@@ -198,7 +198,11 @@ public class PriceParser {
         //id setting
         if (price.getAttribute("id") != null) {
             itemid = Integer.parseInt(price.getAttribute("id").split(":")[0]);
-            itemdata = Byte.parseByte(price.getAttribute("id").split(":")[1]);
+            if(price.getAttribute("id").split(":").length > 1) {
+                itemdata = Byte.parseByte(price.getAttribute("id").split(":")[1]);
+            } else {
+                itemdata = 0;
+            }
         }
         metahash = Integer.parseInt(price.getElementsByTagName("meta").item(0).getTextContent());
         amount = Integer.parseInt(price.getElementsByTagName("amount").item(0).getTextContent());
