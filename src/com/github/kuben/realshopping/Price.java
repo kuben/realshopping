@@ -169,25 +169,48 @@ public final class Price {
         return result;
     }
     
+    /**
+     * Checks if these two objects are similar (if are of the same type but data,amount and meta).
+     * @param obj
+     * @return true if similar.
+     */
     public boolean similar(Object obj) {
         if (obj == null || getClass() != obj.getClass()) return false;
         if (this == obj) return true;
         Price other = (Price) obj;
-        if (data != other.data || type != other.type) return false;
+        if (type != other.type) return false;
         if(metahash != other.metahash) return false;
         return true;
     }
     
-    public boolean compatible(Object obj) {
+    /**
+     * Like similar(), with the addition of data in equality checks.
+     * @param obj
+     * @return true if similar.
+     */
+    public boolean similarData(Object obj) {
         if(similar(obj)) {
-            return ((Price)obj).amount <= this.amount;
+            return ((Price)obj).data == this.data;
         }
         return false;
     }
     
+    /**
+     * Like SimilarData, but this one checks if the other object's amount is less or equal than this one.
+     * @param obj
+     * @return true if compatible.
+     */
+    public boolean compatible(Object obj) {
+        if(similarData(obj)) {
+            
+            return ((Price)obj).amount <= this.amount;
+        }
+        return false;
+    }
+
     @Override
     public boolean equals(Object obj) {
-        if(similar(obj)) {
+        if(similarData(obj)) {
             return amount == ((Price)obj).amount;
         }
         return false;

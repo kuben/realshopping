@@ -75,9 +75,11 @@ public class RSPlayerInventory {
         items = invToPInv();
         return true;
     }
-
+    
+    @Deprecated
     public boolean update(Inventory[] invs) {
         items.clear();
+        bought.clear();
         items = invToPInv();
 
         if (invs != null) {
@@ -148,7 +150,7 @@ public class RSPlayerInventory {
                     double cost = shop.getPrice(key) * amount;
                     int pcnt = 100 - shop.getSale(key);
                     
-                    toPay = (int) (cost * pcnt / 100f);
+                    toPay += (int) (cost * pcnt / 100f);
                 }
             }
         }

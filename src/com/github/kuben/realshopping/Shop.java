@@ -206,18 +206,39 @@ public class Shop {//TODO add load/save interface
     public boolean hasPrices() {
         return !prices.isEmpty();
     }
-
-    public boolean hasPrice(Price p) {
+    
+    public boolean hasSimilarPrice(Price p) {
         if(prices.containsKey(p)) {
             return true;
         }
         for(Price pr:prices.keySet()) {
             if(pr.similar(p)) return true;
         }
+        return false;        
+    }
+    
+    /**
+     * Tells me if this store have a price for an item (not considering its amount).
+     * @param p Price object to check.
+     * @return true if the price is present, false otherwise.
+     */
+    public boolean hasPrice(Price p) {
+        if(prices.containsKey(p)) {
+            return true;
+        }
+        for(Price pr:prices.keySet()) {
+            if(pr.similarData(p)) return true;
+        }
         return false;
-//        return prices.containsKey(p); // Is good only for exact prices.
     }
 
+    /**
+     * Gets, if present, a compatible price for given item.
+     * The returned price amount will be less or equal than given one, and if not present
+     * this method will return 0.
+     * @param p Price to check.
+     * @return The correct price for the item, 0.0 if not present.
+     */
     public double getPrice(Price p) {
         Price found = new Price(p.getType());
         found.setAmount(0);
