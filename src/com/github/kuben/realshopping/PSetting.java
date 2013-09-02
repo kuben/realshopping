@@ -47,7 +47,7 @@ public class PSetting {
 	private Map<Shop, Integer> changeOnAIMap;
 	
 	public PSetting(String player){
-		System.out.println("Creating new PSetting for player " + player);
+		if(Config.debug) RealShopping.loginfo("Creating new PSetting for player " + player);
 		
 		this.player = player;
 		favShops = new HashSet<Shop>();

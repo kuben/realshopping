@@ -152,79 +152,77 @@ class RSSetPrices extends RSCommand {
 
     @Override
     protected boolean execute() {
-        if(args.length >= 2){
-            //Check for permission. This also means that players with rsset permission can manage ANY store
-            if((!shop.getOwner().equals(player.getName()) && !player.hasPermission("realshopping.rsset"))){
-                sender.sendMessage(RD + LangPack.YOUARENTPERMITTEDTOEMANAGETHISSTORE);
+        String com;
+        String store = null;
+
+        //Syntax check
+        switch(args[0].toLowerCase()){
+            case "add": case "del": case "copy": case "clear": case "defaults": case "showminmax": case "clearminmax": case "setminmax":
+                //If the first argument is the command
+                com = args[0];
+                comArgs = cutBeginning(args, 1);//The first argument to the command is args[1]
+                break;
+            default:
+                switch(args[1].toLowerCase()){
+                    case "add": case "del": case "copy": case "clear": case "defaults": case "showminmax": case "clearminmax": case "setminmax":
+                        //If the second argument is the command
+                        store = args[0];//The first argument has to be the store                            
+                        com = args[1];
+                        comArgs = cutBeginning(args, 2);//The first argument to the command is args[2]
+                        break;
+                    default:
+                        //Wrong syntax
+                        return false;
+                }
+        }
+
+        //Now set the shop variable
+        if(store != null){//Store was specified
+            if(RealShopping.shopExists(store))//All clear
+                shop = RealShopping.getShop(store);
+            else {
+                sender.sendMessage(RD + LangPack.STORE + DR + store + RD + LangPack.DOESNTEXIST);
+                return true;
+            }
+        } else {//Use the store which the player is in
+            if(player == null){
+                sender.sendMessage(RD + LangPack.YOUHAVETOUSETHESTOREARGUMENTWHENEXECUTINGTHISCOMMANDFROMCONSOLE);
                 return false;
             }
-            
-            String com;
-            String store = null;
-
-            //Syntax check
-            switch(args[0].toLowerCase()){
-                case "add": case "del": case "copy": case "clear": case "defaults": case "showminmax": case "clearminmax": case "setminmax":
-                    //If the first argument is the command
-                    com = args[0];
-                    comArgs = cutBeginning(args, 1);//The first argument to the command is args[1]
-                    break;
-                default:
-                    switch(args[1].toLowerCase()){
-                        case "add": case "del": case "copy": case "clear": case "defaults": case "showminmax": case "clearminmax": case "setminmax":
-                            //If the second argument is the command
-                            store = args[0];//The first argument has to be the store                            
-                            com = args[1];
-                            comArgs = cutBeginning(args, 2);//The first argument to the command is args[2]
-                            break;
-                        default:
-                            //Wrong syntax
-                            return false;
-                    }
+            if(!RealShopping.hasPInv(player)){
+                sender.sendMessage(RD + LangPack.YOUHAVETOBEINASTOREIFNOTUSINGTHESTOREARGUMENT);
+                return false;
             }
+            shop = RealShopping.getPInv(player).getShop();
+        }
 
-            //Now set the shop variable
-            if(store != null){//Store was specified
-                if(RealShopping.shopExists(store))//All clear
-                    shop = RealShopping.getShop(store);
-                else {
-                    sender.sendMessage(RD + LangPack.STORE + DR + store + RD + LangPack.DOESNTEXIST);
-                    return true;
-                }
-            } else {//Use the store which the player is in
-                if(player == null){
-                    sender.sendMessage(RD + LangPack.YOUHAVETOUSETHESTOREARGUMENTWHENEXECUTINGTHISCOMMANDFROMCONSOLE);
-                    return false;
-                }
-                if(!RealShopping.hasPInv(player)){
-                    sender.sendMessage(RD + LangPack.YOUHAVETOBEINASTOREIFNOTUSINGTHESTOREARGUMENT);
-                    return false;
-                }
-                shop = RealShopping.getPInv(player).getShop();
-            }
-
-            //Call the right method. The methods will have to parse the arguments correctly.
-            //Since the shop is already set, the methods should use comArgs[] instead of args[].
-            switch(com.toLowerCase()){
-                case "add":
-                    return add();
-                case "del":
-                    return del();
-                case "showminmax":
-                    return showMinMax();
-                case "setminmax":
-                    return setMinMax();
-                case "clearminmax":
-                    return clearMinMax();
-                case "copy":
-                    return copy();
-                case "clear":
-                    return clear();
-                case "defaults":
-                    return defaults();
-                default:
-                    break;
-            }
+        //Check for permission. This also means that players with rsset permission can manage ANY store
+        if((!shop.getOwner().equals(player.getName()) && !player.hasPermission("realshopping.rsset"))){
+            sender.sendMessage(RD + LangPack.YOUARENTPERMITTEDTOEMANAGETHISSTORE);
+            return false;
+        }
+        
+        //Call the right method. The methods will have to parse the arguments correctly.
+        //Since the shop is already set, the methods should use comArgs[] instead of args[].
+        switch(com.toLowerCase()){
+            case "add":
+                return add();
+            case "del":
+                return del();
+            case "showminmax":
+                return showMinMax();
+            case "setminmax":
+                return setMinMax();
+            case "clearminmax":
+                return clearMinMax();
+            case "copy":
+                return copy();
+            case "clear":
+                return clear();
+            case "defaults":
+                return defaults();
+            default:
+                break;
         }
         return false;
     }
@@ -245,7 +243,7 @@ class RSSetPrices extends RSCommand {
                         sender.sendMessage(LangPack.USAGE + LP + "add " + DP + "ITEM_ID" + LP + "[:" + DP + "DATA" + LP + "]:" + DP + "COST"
                                     + LP + "[:" + DP + "MIN" + LP + ":" + DP + "MAX" + LP +"]"
                                     + RESET + LangPack.RSSETPRICESADDHELP + DP + "COST" + RESET + LangPack.RSSETPRICESADDHELP2
-                                    + DP + "MAX" + RESET + LangPack.AND_ + DP + LangPack.ARGUMENTS);
+                                    + DP + "MAX" + RESET + LangPack.AND_ + DP + "MIN" + RESET + LangPack.ARGUMENTS);
                         break;
                     case "del":
                         sender.sendMessage(LangPack.USAGE + LP + "del " + DP + "ITEM_ID" + LP + "[:" + DP + "DATA" + LP + "]" + RESET + LangPack.RSSETPRICESDELHELP);

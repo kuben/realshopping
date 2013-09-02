@@ -1376,7 +1376,6 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
      * 
      */
 
-
     /**
      * @param p An String with the name of the player.
      * @return The object containing all settings of a player. If such an object doesn't exist, the method creates one, puts it in the playerSettings set and returns it.
@@ -1489,7 +1488,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     public void setUpdater(Updater updater) { this.updater = updater; }
 
     public static Set<String> getNotificatorKeys(){ return notificator.keySet(); }
-    public static List<String> getNotifications(String player){ return notificator.get(player); }
+    public static List<String> getNotifications(String player){ return new ArrayList<>(notificator.get(player)); }
 
     public static boolean isTool(int item){ return maxDurMap.containsKey(item); }
     public static int getMaxDur(int item){ return maxDurMap.get(item); }
@@ -1608,10 +1607,16 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 
     /*
      * 
-     * Misc
+     * Notifications methods
      * 
      */
 
+    /**
+     * Adds a message to the list of pending notifications.
+     * The message will be delivered next time the Notificator thread is running and the player is online. 
+     * @param who The name of the player which the message should be sent to.
+     * @param what The message
+     */
     public static void sendNotification(String who, String what){
         if(Config.getNotTimespan() >= 500){
             if(!notificator.containsKey(who)) notificator.put(who, new ArrayList<String>());
@@ -1619,6 +1624,69 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         }
     }
 
+    /**
+     * Cancels all notifications about sales from a certain store if they haven't been delivered yet.
+     * @param store The store which the notifications concern.
+     */
+    public static void cancelSaleNotification(String store){
+        String beginning = ChatColor.GREEN + LangPack.STORE + ChatColor.DARK_GREEN + store + ChatColor.GREEN + " now has a ";
+        
+        for(String p:notificator.keySet())
+            for(String not:new ArrayList<>(notificator.get(p)))
+                if(not.length() > beginning.length() && not.substring(0, beginning.length()).equals(beginning))
+                    notificator.get(p).remove(not);
+    }
+    
+    /**
+     * Cancels all broadcasts from a certain store if they haven't been delivered yet.
+     * @param store The store which the broadcasts concern.
+     */
+    public static void cancelBroadcasts(String store){
+        String beginning = ChatColor.LIGHT_PURPLE + "[" + ChatColor.DARK_PURPLE + store + ChatColor.LIGHT_PURPLE + "] " + ChatColor.RESET;
+        
+        for(String p:notificator.keySet())
+            for(String not:new ArrayList<>(notificator.get(p)))
+                if(not.length() > beginning.length() && not.substring(0, beginning.length()).equals(beginning))
+                    notificator.get(p).remove(not);
+    }
+    
+    /**
+     * Cancels any number of broadcasts (beginning with the most recent) from a certain store if they haven't been delivered yet.
+     * @param store The store which the notifications concern.
+     * @param amount The number of broadcasts to cancel.
+     */
+    public static void cancelBroadcasts(String store, int amount){
+        String beginning = ChatColor.LIGHT_PURPLE + "[" + ChatColor.DARK_PURPLE + store + ChatColor.LIGHT_PURPLE + "] " + ChatColor.RESET;
+        
+        for(String p:notificator.keySet()){
+            List<String> nots = new ArrayList<>(notificator.get(p));
+            for(int i = nots.size() - 1,j = amount;i >= 0 && j > 0;i--){//Continue as long as there are notifications left AND amount has not been exceeded
+                String not = nots.get(i);
+                if(not.length() > beginning.length() && not.substring(0, beginning.length()).equals(beginning)){
+                    notificator.get(p).remove(not);
+                    j--;//One less broadcast to cancel
+                }
+            }
+        }
+    }
+    
+    /**
+     * Removed a notification from the pending notifications list. You need to have an exact copy of the String object to do this.
+     * 
+     * This is meant to be used by the Notificator class after a message has been delivered.
+     * @param player The player to whom the notification was meant to be sent.
+     * @param not The notification.
+     */
+    protected static void removeNotification(String player, String not){
+        if(notificator.containsKey(player)) notificator.get(player).remove(not);
+    }
+    
+    /*
+     * 
+     * Misc.
+     * 
+     */
+    
     public File getPFile(){
         return this.getFile();
     }
@@ -1643,12 +1711,12 @@ class Notificator extends Thread {
     public void run(){
         try {
             while(running){
-                for(String s:RealShopping.getNotificatorKeys()){
-                    if(Bukkit.getPlayerExact(s) != null){
-                        List<String> nots = RealShopping.getNotifications(s);
-                        for(int i = 0;i < 10 && 0 < nots.size();i ++){
-                            Bukkit.getPlayerExact(s).sendMessage(ChatColor.LIGHT_PURPLE + "[RealShopping] " + ChatColor.RESET + nots.get(0));
-                            nots.remove(0);
+                for(String p:RealShopping.getNotificatorKeys()){
+                    Player player = Bukkit.getPlayerExact(p);
+                    if(player != null){
+                        for(String not:RealShopping.getNotifications(p)){
+                            player.sendMessage(ChatColor.LIGHT_PURPLE + "[RealShopping] " + ChatColor.RESET + not);
+                            RealShopping.removeNotification(p, not);
                         }
                     }
                 }

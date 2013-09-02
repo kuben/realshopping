@@ -208,13 +208,13 @@ public class Shop {//TODO add load/save interface
     public void clearMinMax(Price p) { setPrice(p, getPrice(p)); }
     public void clearPrices() { prices.clear(); }
     public boolean clonePrices(String store) {
-            if(store == null){
-                    prices = getLowestPrices();
-                    return true;
-            }
-            if(!RealShopping.shopExists(store)) return false;
-            prices = new HashMap<>(RealShopping.getShop(store).prices);
+        if(store == null){
+            prices = getLowestPrices();
             return true;
+        }
+        if(!RealShopping.shopExists(store)) return false;
+        prices = new HashMap<>(RealShopping.getShop(store).prices);
+        return true;
     }
     public void setPrices(Map<Price, Integer[]> prices) { this.prices = prices; }
 
