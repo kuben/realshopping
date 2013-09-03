@@ -803,8 +803,8 @@ public class Shop {//TODO add load/save interface
     public static boolean exit(Player player, boolean cmd){
         if(RealShopping.hasPInv(player)){
             if(!PromptMaster.isConversing(player) && !RSPlayerListener.hasConversationListener(player)){
-                if(RealShopping.getPInv(player).hasPaid() || player.getGameMode() == GameMode.CREATIVE){
-                    Shop tempShop = RealShopping.getPInv(player).getShop();
+                Shop tempShop = RealShopping.getPInv(player).getShop();
+                if(RealShopping.getPInv(player).hasPaid() || player.getGameMode() == GameMode.CREATIVE || player.getName().equals(tempShop.getOwner())){
                     Location l = player.getLocation().getBlock().getLocation().clone();
                     if(tempShop.hasExit(l)){
                         l = tempShop.getCorrEntrance(l);

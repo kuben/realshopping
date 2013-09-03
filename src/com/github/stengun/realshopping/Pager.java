@@ -1,5 +1,6 @@
 package com.github.stengun.realshopping;
 
+import com.github.kuben.realshopping.RSPlayerInventory;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
 import org.bukkit.Bukkit;
@@ -34,18 +35,21 @@ public class Pager extends Thread {
             try {
                 stamp = System.currentTimeMillis();
                 waitcheck();
-                Shop shop = RealShopping.getPInv(player).getShop();
-                long total = System.currentTimeMillis() - stamp;
-                if (total > time) {
-                    page = 1;
-                } else {
-                    if(page*9 < shop.getPrices().size()) {
-                        page += 1;
-                    } else {
+                RSPlayerInventory pinv = RealShopping.getPInv(player);
+                if(pinv != null){
+                    Shop shop = pinv.getShop();
+                    long total = System.currentTimeMillis() - stamp;
+                    if (total > time) {
                         page = 1;
+                    } else {
+                        if(page*9 < shop.getPrices().size()) {
+                            page += 1;
+                        } else {
+                            page = 1;
+                        }
                     }
-                }
-                Shop.prices(Bukkit.getPlayer(player), page, shop);
+                    Shop.prices(Bukkit.getPlayer(player), page, shop);
+                } else stop = true;
             } catch (InterruptedException ex) {
                 RealShopping.logsevere(ex.getStackTrace().toString());
             }
