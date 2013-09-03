@@ -30,7 +30,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.HashSet;
 import java.util.Set;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Server;
@@ -273,18 +272,18 @@ public class Config {
 						if(tempF.renameTo(f))
 							notInConfig -= 1;
 						else
-							RealShopping.log.info("Couldn't save tempproperties as realshopping.properties (Error #202)");
+							RealShopping.loginfo("Couldn't save tempproperties as realshopping.properties (Error #202)");
 					} else {
-						RealShopping.log.info("Couldn't save tempproperties as realshopping.properties (Error #201)");
+						RealShopping.loginfo("Couldn't save tempproperties as realshopping.properties (Error #201)");
 					}
 				}
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
-			RealShopping.log.info("Failed while reading realshopping.properties. Default properties loaded.");
+			RealShopping.loginfo("Failed while reading realshopping.properties. Default properties loaded.");
 		} catch(IOException e) {
 			e.printStackTrace();
-			RealShopping.log.info("Failed while reading realshopping.properties. Default properties loaded.");
+			RealShopping.loginfo("Failed while reading realshopping.properties. Default properties loaded.");
 		}
 	}
 	
@@ -549,23 +548,23 @@ class Zone {
 	private int percent = -1; //Ignore cost if percent != -1
 	
 	public Zone(int bounds, double cost){
-		if(!setBounds(bounds)) RealShopping.log.info("Could not create delivery zone. Wrong bounds value: " + bounds);
-		if(!setCost(cost)) RealShopping.log.info("Could not create delivery zone. Wrong cost value: " + cost);
+		if(!setBounds(bounds)) RealShopping.loginfo("Could not create delivery zone. Wrong bounds value: " + bounds);
+		if(!setCost(cost)) RealShopping.loginfo("Could not create delivery zone. Wrong cost value: " + cost);
 	}
 	
 	public Zone(int bounds, int percent){
-		if(!setBounds(bounds)) RealShopping.log.info("Could not create delivery zone. Wrong bounds value: " + bounds);
-		if(!setPercent(percent)) RealShopping.log.info("Could not create delivery zone. Wrong percent value: " + percent);
+		if(!setBounds(bounds)) RealShopping.loginfo("Could not create delivery zone. Wrong bounds value: " + bounds);
+		if(!setPercent(percent)) RealShopping.loginfo("Could not create delivery zone. Wrong percent value: " + percent);
 	}
 	
 	public Zone(boolean multiworld, double cost){
 		setMultiworld();
-		if(!setCost(cost)) RealShopping.log.info("Could not create delivery zone. Wrong cost value: " + cost);
+		if(!setCost(cost)) RealShopping.loginfo("Could not create delivery zone. Wrong cost value: " + cost);
 	}
 	
 	public Zone(boolean multiworld, int percent){
 		setMultiworld();
-		if(!setPercent(percent)) RealShopping.log.info("Could not create delivery zone. Wrong percent value: " + percent);
+		if(!setPercent(percent)) RealShopping.loginfo("Could not create delivery zone. Wrong percent value: " + percent);
 	}
 
 	public int getBounds() {

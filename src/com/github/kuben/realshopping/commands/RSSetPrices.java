@@ -38,37 +38,58 @@ class RSSetPrices extends RSCommand {
     }
 
     private boolean add(){
-        /*
-         * We'll fix this when merging
-        try {
-            Object[] o = RSUtils.pullPriceCostMinMax(arg,this.player);
-            if(o == null || o.length < 2) return false;
-            Price p = (Price)o[0];
-            Integer[] i = (Integer[])o[1];
-            String name = p.formattedString();
-            if(i[0] < 0 ) return false;
-            p.setDescription(this.description);
-            shop.setPrice(p, i[0]);
-            sender.sendMessage(GR + LangPack.PRICEFOR + name + LangPack.SETTO + i[0]/100f + LangPack.UNIT);
-            if(i.length > 1){//Also set min max
-                shop.setMinMax(p, i[1], i[2]);
-                sender.sendMessage(GR + LangPack.SETMINIMALANDMAXIMALPRICESFOR + name);
-            }
-            return true;
-        } catch (NumberFormatException e) {
-            sender.sendMessage(RD + arg + LangPack.ISNOTAPROPER_FOLLOWEDBYTHEPRICE_ + LangPack.UNIT);
-            if(Config.debug) e.printStackTrace();
-        } catch (ArrayIndexOutOfBoundsException e){
-            sender.sendMessage(RD + arg + LangPack.ISNOTAPROPER_FOLLOWEDBYTHEPRICE_ + LangPack.UNIT);
-            if(Config.debug) e.printStackTrace();
-        } catch (ClassCastException e){
-            sender.sendMessage(RD + arg + LangPack.ISNOTAPROPER_FOLLOWEDBYTHEPRICE_ + LangPack.UNIT);
-            if(Config.debug) e.printStackTrace();
-        }*/
-        return false;
+        Price itmprice = null;
+        Integer[] priminmax = null;
+        int amount = 1;
+        boolean handheld = comArgs[0].split(":")[0].equals("hand"); //This is horrible, sorry.
+        String description = "";
+        
+        switch(comArgs.length) {
+            default: // More than 1 argument: can be -b, description.
+                if(comArgs.length > 1) {
+                    int strt = 1;
+                    if(comArgs[1].equals("-b")) {
+                        try {
+                            amount = Integer.parseInt(comArgs[2]);
+                            strt = 3;
+                        } catch(Exception ex) {
+                            if(handheld) {
+                                amount = player.getItemInHand().getAmount();
+                                strt = 2;
+                            }
+                            else {
+                                sender.sendMessage(RD + "You must provide a stack number if the item is not handheld.");
+                                return false;
+                            }
+                        }
+                    }
+                    for(int j = strt;j<comArgs.length;j++) {
+                        description += comArgs[j] + (comArgs.length - j == 1?"":" ");
+                    }
+                }
+            case 1:
+                Object[] o = RSUtils.pullPriceCostMinMax(comArgs[0],this.player);
+                if(o == null || o.length < 2) return false;
+                itmprice = (Price)o[0];
+                priminmax = (Integer[])o[1];
+                if(priminmax[0] < 0) return false;
+            case 0:
+                break;
+        }
+        if(itmprice == null || priminmax == null) return false;
+        itmprice.setDescription(description);
+        itmprice.setAmount(amount);
+        shop.setPrice(itmprice, priminmax[0]);
+        sender.sendMessage(GR + LangPack.PRICEFOR + itmprice.formattedString() + LangPack.SETTO + priminmax[0]/100f + LangPack.UNIT);
+        if(priminmax.length > 1) {
+            shop.setMinMax(itmprice, priminmax[1], priminmax[2]);
+            sender.sendMessage(GR + LangPack.SETMINIMALANDMAXIMALPRICESFOR + itmprice.formattedString());
+        }
+        return true;
     }
 
     private boolean del(){
+        
         try {
             Price p = RSUtils.pullPrice(comArgs[0],this.player);
             String dString = p.getData()>-1?"("+p.getData()+")":"";
@@ -195,7 +216,7 @@ class RSSetPrices extends RSCommand {
             }
             shop = RealShopping.getPInv(player).getShop();
         }
-
+            
         //Check for permission. This also means that players with rsset permission can manage ANY store
         if((!shop.getOwner().equals(player.getName()) && !player.hasPermission("realshopping.rsset"))){
             sender.sendMessage(RD + LangPack.YOUARENTPERMITTEDTOEMANAGETHISSTORE);
@@ -226,7 +247,7 @@ class RSSetPrices extends RSCommand {
         }
         return false;
     }
-
+@Override
     protected Boolean help(){
         //Check if help was asked for
         if(args.length == 0 || args[0].equalsIgnoreCase("help")){

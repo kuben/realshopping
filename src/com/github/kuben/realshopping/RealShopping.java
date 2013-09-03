@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *     
  */
-
 package com.github.kuben.realshopping;
 
 import java.io.BufferedReader;
@@ -37,13 +36,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
-
 import net.h31ix.updater.Updater;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -51,10 +47,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.material.MaterialData;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.github.kuben.realshopping.RSEconomy;
@@ -100,7 +93,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 
     private boolean smallReload = false;
 
-    static Logger log;
+    private static Logger log;
     public static String working;
     public static String newUpdate;
 
@@ -109,7 +102,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
      * Enable/Disable functions
      * 
      */
-
+    @Override
     public void onEnable(){
         setUpdater(null);
         statUpdater = null;
@@ -141,7 +134,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 
         newUpdate = "";
 
-        if(!smallReload){
+        if (!smallReload) {
             getServer().getPluginManager().registerEvents(new RSPlayerListener(), this);
             RSCommandExecutor cmdExe = new RSCommandExecutor(this);
             getCommand("rsenter").setExecutor(cmdExe);
@@ -172,21 +165,22 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         PromptMaster.initialize(this);
         RSEconomy.setupEconomy();
         Config.initialize();
-        if(Config.getAutoUpdate() > 0){
-            if(Config.getAutoUpdate() == 5){
+        if (Config.getAutoUpdate() > 0) {
+            if (Config.getAutoUpdate() == 5) {
                 setUpdater(new Updater(this, "realshopping", this.getFile(), Updater.UpdateType.DEFAULT, true));
-                if(getUpdater().getResult() == Updater.UpdateResult.SUCCESS){
-                    log.info(LangPack.REALSHOPPINGUPDATEDTO + getUpdater().getLatestVersionString() + LangPack.RESTARTTHESERVER_VERSION);
+                if (getUpdater().getResult() == Updater.UpdateResult.SUCCESS) {
+                    RealShopping.loginfo(LangPack.REALSHOPPINGUPDATEDTO + getUpdater().getLatestVersionString() + LangPack.RESTARTTHESERVER_VERSION);
                 }
             } else {
                 setUpdater(new Updater(this, "realshopping", this.getFile(), Updater.UpdateType.NO_DOWNLOAD, true));
-                if(getUpdater().getResult() == Updater.UpdateResult.UPDATE_AVAILABLE){
-                    if(Config.getAutoUpdate() > 2)
+                if (getUpdater().getResult() == Updater.UpdateResult.UPDATE_AVAILABLE) {
+                    if (Config.getAutoUpdate() > 2) {
                         newUpdate = getUpdater().getLatestVersionString() + LangPack.OFRE_UPDATECOMMAND;
-                    else
+                    } else {
                         newUpdate = getUpdater().getLatestVersionString()
-                        + LangPack.OFRE_UPDATEINFO + ChatColor.LIGHT_PURPLE + "/rsupdate info";
-                    log.info(newUpdate);
+                                + LangPack.OFRE_UPDATEINFO + ChatColor.LIGHT_PURPLE + "/rsupdate info";
+                    }
+                    RealShopping.loginfo(newUpdate);
                 }
             }
         }
@@ -196,7 +190,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         BufferedReader br;
         try {
             f = new File(MANDIR + "shops.db");
-            if(!f.exists()){
+            if (!f.exists()) {
                 f.createNewFile();
             } else {
                 fstream = new FileInputStream(f);
@@ -232,7 +226,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                                 tempShop.addEntranceExit(en, ex);
                             } catch (RealShoppingException e) {
                                 if(e.getType() == RealShoppingException.Type.EEPAIR_ALREADY_EXISTS){
-                                    log.info("Duplicate entrance/exit pair, skipping (entrance: "
+                                    loginfo("Duplicate entrance/exit pair, skipping (entrance: "
                                             + RSUtils.locAsString(en) + ", exit: "
                                             + RSUtils.locAsString(ex) + " in store " + tS[1] + ".");
                                     if(Config.debug) e.printStackTrace();
@@ -275,23 +269,25 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                 }
                 fstream.close();
                 br.close();
-                if(version < VERFLOAT)//Needs updating
+                if (version < VERFLOAT)//Needs updating
+                {
                     updateEntrancesDb();
+                }
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            log.info("Failed while reading shops.db");
-        } catch(IOException e) {
+            loginfo("Failed while reading shops.db");
+        } catch (IOException e) {
             e.printStackTrace();
-            log.info("Failed while reading shops.db");
+            loginfo("Failed while reading shops.db");
         }
 
 
         try {
-            PriceParser.loadPriceMap(shopSet);
+            PriceParser.loadPriceMap();
         } catch (Exception e){
             e.printStackTrace();
-            log.info("Failed while reading prices.xml");
+            loginfo("Failed while reading prices.xml");
         }
 
         loadTemporaryFile(TempFiles.INVENTORIES);
@@ -306,23 +302,26 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         //TODO modify default prices
 
         f = new File(MANDIR + "langpacks/");
-        if(!f.exists()) f.mkdir();
+        if (!f.exists()) {
+            f.mkdir();
+        }
         LangPack.initialize(Config.getLangpack());
         initForbiddenInStore();
         initMaxDur();
         initAliases();
-        if(Config.getNotTimespan() >= 500){
+        if (Config.getNotTimespan() >= 500) {
             notificatorThread = new Notificator();
             notificatorThread.start();
         }
-        if(Config.isEnableAI()){
+        if (Config.isEnableAI()) {
             statUpdater = new StatUpdater();
             statUpdater.start();
         }
-        log.info(LangPack.REALSHOPPINGINITIALIZED);
+        RealShopping.loginfo(LangPack.REALSHOPPINGINITIALIZED);
     }
+
     @Override
-    public void onDisable(){
+    public void onDisable() {
         try {
             PromptMaster.abandonAllConversations();
             //TODO disable executor
@@ -335,7 +334,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
             saveTemporaryFile(TempFiles.STATS);//Stats
             saveTemporaryFile(TempFiles.NOTIFICATIONS);//Notifications
             RSEconomy.export();//This will only happen if econ is null
-
+            Shop.resetPagers();
             if(notificatorThread != null) notificatorThread.running = false;
             if(statUpdater != null) statUpdater.running = false;
             PriceParser.savePriceMap(shopSet);
@@ -491,7 +490,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         forbiddenInStore.add(383);//Spawning egg
     }
 
-    private void initAliases(){
+    private void initAliases() {
         aliasesMap.put("hand", new Integer[]{-1});
         aliasesMap.put("stone", new Integer[]{1});
         aliasesMap.put("grass", new Integer[]{2});
@@ -499,20 +498,20 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         aliasesMap.put("cobble", new Integer[]{4});
         aliasesMap.put("cobblestone", new Integer[]{4});
         aliasesMap.put("plank", new Integer[]{5});
-        aliasesMap.put("oakplank", new Integer[]{5,0});
-        aliasesMap.put("spruceplank", new Integer[]{5,1});
-        aliasesMap.put("brichplank", new Integer[]{5,2});
-        aliasesMap.put("jungleplank", new Integer[]{5,3});
+        aliasesMap.put("oakplank", new Integer[]{5, 0});
+        aliasesMap.put("spruceplank", new Integer[]{5, 1});
+        aliasesMap.put("brichplank", new Integer[]{5, 2});
+        aliasesMap.put("jungleplank", new Integer[]{5, 3});
         aliasesMap.put("planks", new Integer[]{5});
-        aliasesMap.put("oakplanks", new Integer[]{5,0});
-        aliasesMap.put("spruceplanks", new Integer[]{5,1});
-        aliasesMap.put("brichplanks", new Integer[]{5,2});
-        aliasesMap.put("jungleplanks", new Integer[]{5,3});
+        aliasesMap.put("oakplanks", new Integer[]{5, 0});
+        aliasesMap.put("spruceplanks", new Integer[]{5, 1});
+        aliasesMap.put("brichplanks", new Integer[]{5, 2});
+        aliasesMap.put("jungleplanks", new Integer[]{5, 3});
         aliasesMap.put("sapling", new Integer[]{6});
-        aliasesMap.put("oaksapling", new Integer[]{6,0});
-        aliasesMap.put("sprucesapling", new Integer[]{6,1});
-        aliasesMap.put("birchsapling", new Integer[]{6,2});
-        aliasesMap.put("junglesapling", new Integer[]{6,3});
+        aliasesMap.put("oaksapling", new Integer[]{6, 0});
+        aliasesMap.put("sprucesapling", new Integer[]{6, 1});
+        aliasesMap.put("birchsapling", new Integer[]{6, 2});
+        aliasesMap.put("junglesapling", new Integer[]{6, 3});
         aliasesMap.put("bedrock", new Integer[]{7});
         aliasesMap.put("water", new Integer[]{8});
         aliasesMap.put("stationarywater", new Integer[]{9});
@@ -524,15 +523,15 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         aliasesMap.put("ironore", new Integer[]{15});
         aliasesMap.put("coalore", new Integer[]{16});
         aliasesMap.put("wood", new Integer[]{17});
-        aliasesMap.put("oakwood", new Integer[]{17,0});
-        aliasesMap.put("sprucewood", new Integer[]{17,1});
-        aliasesMap.put("birchwood", new Integer[]{17,2});
-        aliasesMap.put("junglewood", new Integer[]{17,3});
+        aliasesMap.put("oakwood", new Integer[]{17, 0});
+        aliasesMap.put("sprucewood", new Integer[]{17, 1});
+        aliasesMap.put("birchwood", new Integer[]{17, 2});
+        aliasesMap.put("junglewood", new Integer[]{17, 3});
         aliasesMap.put("leaves", new Integer[]{18});
-        aliasesMap.put("oakleaves", new Integer[]{18,0});
-        aliasesMap.put("spruceleaves", new Integer[]{18,1});
-        aliasesMap.put("birchleaves", new Integer[]{18,2});
-        aliasesMap.put("jungleleaves", new Integer[]{18,3});
+        aliasesMap.put("oakleaves", new Integer[]{18, 0});
+        aliasesMap.put("spruceleaves", new Integer[]{18, 1});
+        aliasesMap.put("birchleaves", new Integer[]{18, 2});
+        aliasesMap.put("jungleleaves", new Integer[]{18, 3});
         aliasesMap.put("sponge", new Integer[]{19});
         aliasesMap.put("glass", new Integer[]{20});
         aliasesMap.put("lapisore", new Integer[]{21});
@@ -541,8 +540,8 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         aliasesMap.put("lapislazuliblock", new Integer[]{22});
         aliasesMap.put("dispenser", new Integer[]{23});
         aliasesMap.put("sandstone", new Integer[]{24});
-        aliasesMap.put("chiseledsandstone", new Integer[]{24,1});
-        aliasesMap.put("smoothsandstone", new Integer[]{24,2});
+        aliasesMap.put("chiseledsandstone", new Integer[]{24, 1});
+        aliasesMap.put("smoothsandstone", new Integer[]{24, 2});
         aliasesMap.put("noteblock", new Integer[]{25});
         aliasesMap.put("bedblock", new Integer[]{26});
         aliasesMap.put("poweredrail", new Integer[]{27});
@@ -550,28 +549,28 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         aliasesMap.put("stickypiston", new Integer[]{29});
         aliasesMap.put("web", new Integer[]{30});
         aliasesMap.put("deadshrub", new Integer[]{31});
-        aliasesMap.put("grass", new Integer[]{31,1});
-        aliasesMap.put("fern", new Integer[]{31,2});
+        aliasesMap.put("grass", new Integer[]{31, 1});
+        aliasesMap.put("fern", new Integer[]{31, 2});
         aliasesMap.put("deadshrub", new Integer[]{32});
         aliasesMap.put("piston", new Integer[]{33});
         aliasesMap.put("pistonhead", new Integer[]{34});
         aliasesMap.put("wool", new Integer[]{35});
-        aliasesMap.put("whitewool", new Integer[]{35,0});
-        aliasesMap.put("orangewool", new Integer[]{35,1});
-        aliasesMap.put("magentawool", new Integer[]{35,2});
-        aliasesMap.put("lightbluewool", new Integer[]{35,3});
-        aliasesMap.put("yellowwool", new Integer[]{35,4});
-        aliasesMap.put("lightgreenwool", new Integer[]{35,5});
-        aliasesMap.put("pinkwool", new Integer[]{35,6});
-        aliasesMap.put("graywool", new Integer[]{35,7});
-        aliasesMap.put("lightgraywool", new Integer[]{35,8});
-        aliasesMap.put("cyanwool", new Integer[]{35,9});
-        aliasesMap.put("purplewool", new Integer[]{35,10});
-        aliasesMap.put("bluewool", new Integer[]{35,11});
-        aliasesMap.put("brownwool", new Integer[]{35,12});
-        aliasesMap.put("darkgreenwool", new Integer[]{35,13});
-        aliasesMap.put("redwool", new Integer[]{35,14});
-        aliasesMap.put("blackwool", new Integer[]{35,15});
+        aliasesMap.put("whitewool", new Integer[]{35, 0});
+        aliasesMap.put("orangewool", new Integer[]{35, 1});
+        aliasesMap.put("magentawool", new Integer[]{35, 2});
+        aliasesMap.put("lightbluewool", new Integer[]{35, 3});
+        aliasesMap.put("yellowwool", new Integer[]{35, 4});
+        aliasesMap.put("lightgreenwool", new Integer[]{35, 5});
+        aliasesMap.put("pinkwool", new Integer[]{35, 6});
+        aliasesMap.put("graywool", new Integer[]{35, 7});
+        aliasesMap.put("lightgraywool", new Integer[]{35, 8});
+        aliasesMap.put("cyanwool", new Integer[]{35, 9});
+        aliasesMap.put("purplewool", new Integer[]{35, 10});
+        aliasesMap.put("bluewool", new Integer[]{35, 11});
+        aliasesMap.put("brownwool", new Integer[]{35, 12});
+        aliasesMap.put("darkgreenwool", new Integer[]{35, 13});
+        aliasesMap.put("redwool", new Integer[]{35, 14});
+        aliasesMap.put("blackwool", new Integer[]{35, 15});
         aliasesMap.put("dandelion", new Integer[]{37});
         aliasesMap.put("rose", new Integer[]{38});
         aliasesMap.put("brownmushroom", new Integer[]{39});
@@ -579,23 +578,23 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         aliasesMap.put("goldblock", new Integer[]{41});
         aliasesMap.put("ironblock", new Integer[]{42});
         aliasesMap.put("doubleslab", new Integer[]{43});
-        aliasesMap.put("doublestoneslab", new Integer[]{43,0});
-        aliasesMap.put("doublesandstoneslab", new Integer[]{43,1});
-        aliasesMap.put("doublewoodenslab", new Integer[]{43,2});
-        aliasesMap.put("doublecobblestoneslab", new Integer[]{43,3});
-        aliasesMap.put("doublebrickslab", new Integer[]{43,4});
-        aliasesMap.put("doublestonebrickslab", new Integer[]{43,5});
-        aliasesMap.put("doublenetherbrickslab", new Integer[]{43,6});
-        aliasesMap.put("doublequartzslab", new Integer[]{43,7});
+        aliasesMap.put("doublestoneslab", new Integer[]{43, 0});
+        aliasesMap.put("doublesandstoneslab", new Integer[]{43, 1});
+        aliasesMap.put("doublewoodenslab", new Integer[]{43, 2});
+        aliasesMap.put("doublecobblestoneslab", new Integer[]{43, 3});
+        aliasesMap.put("doublebrickslab", new Integer[]{43, 4});
+        aliasesMap.put("doublestonebrickslab", new Integer[]{43, 5});
+        aliasesMap.put("doublenetherbrickslab", new Integer[]{43, 6});
+        aliasesMap.put("doublequartzslab", new Integer[]{43, 7});
         aliasesMap.put("slab", new Integer[]{44});
-        aliasesMap.put("stoneslab", new Integer[]{44,0});
-        aliasesMap.put("sandstoneslab", new Integer[]{44,1});
-        aliasesMap.put("woodenslab", new Integer[]{44,2});
-        aliasesMap.put("cobblestoneslab", new Integer[]{44,3});
-        aliasesMap.put("brickslab", new Integer[]{44,4});
-        aliasesMap.put("stonebrickslab", new Integer[]{44,5});
-        aliasesMap.put("netherbrickslab", new Integer[]{44,6});
-        aliasesMap.put("quartzslab", new Integer[]{44,7});
+        aliasesMap.put("stoneslab", new Integer[]{44, 0});
+        aliasesMap.put("sandstoneslab", new Integer[]{44, 1});
+        aliasesMap.put("woodenslab", new Integer[]{44, 2});
+        aliasesMap.put("cobblestoneslab", new Integer[]{44, 3});
+        aliasesMap.put("brickslab", new Integer[]{44, 4});
+        aliasesMap.put("stonebrickslab", new Integer[]{44, 5});
+        aliasesMap.put("netherbrickslab", new Integer[]{44, 6});
+        aliasesMap.put("quartzslab", new Integer[]{44, 7});
         aliasesMap.put("brickblock", new Integer[]{45});
         aliasesMap.put("tnt", new Integer[]{46});
         aliasesMap.put("bookshelf", new Integer[]{47});
@@ -660,19 +659,19 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         aliasesMap.put("trapdoor", new Integer[]{96});
         aliasesMap.put("monsteregg", new Integer[]{97});
         aliasesMap.put("silverfishblock", new Integer[]{97});
-        aliasesMap.put("silverfishstone", new Integer[]{97,0});
-        aliasesMap.put("silverfishcobble", new Integer[]{97,1});
-        aliasesMap.put("silverfishcobblestone", new Integer[]{97,1});
-        aliasesMap.put("silverfishstonebricks", new Integer[]{97,2});
-        aliasesMap.put("silverfishstonebrick", new Integer[]{97,2});
+        aliasesMap.put("silverfishstone", new Integer[]{97, 0});
+        aliasesMap.put("silverfishcobble", new Integer[]{97, 1});
+        aliasesMap.put("silverfishcobblestone", new Integer[]{97, 1});
+        aliasesMap.put("silverfishstonebricks", new Integer[]{97, 2});
+        aliasesMap.put("silverfishstonebrick", new Integer[]{97, 2});
         aliasesMap.put("stonebricks", new Integer[]{98});
-        aliasesMap.put("mossystonebricks", new Integer[]{98,1});
-        aliasesMap.put("crackedstonebricks", new Integer[]{98,2});
-        aliasesMap.put("chiseledstonebricks", new Integer[]{98,3});
+        aliasesMap.put("mossystonebricks", new Integer[]{98, 1});
+        aliasesMap.put("crackedstonebricks", new Integer[]{98, 2});
+        aliasesMap.put("chiseledstonebricks", new Integer[]{98, 3});
         aliasesMap.put("stonebrick", new Integer[]{98});
-        aliasesMap.put("mossystonebrick", new Integer[]{98,1});
-        aliasesMap.put("crackedstonebrick", new Integer[]{98,2});
-        aliasesMap.put("chiseledstonebrick", new Integer[]{98,3});
+        aliasesMap.put("mossystonebrick", new Integer[]{98, 1});
+        aliasesMap.put("crackedstonebrick", new Integer[]{98, 2});
+        aliasesMap.put("chiseledstonebrick", new Integer[]{98, 3});
         aliasesMap.put("redhugemushroom", new Integer[]{99});
         aliasesMap.put("brownhugemushroom", new Integer[]{100});
         aliasesMap.put("ironbars", new Integer[]{101});
@@ -704,16 +703,16 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         aliasesMap.put("redstonelampon", new Integer[]{124});
         aliasesMap.put("doublewoodenslab", new Integer[]{125});
         aliasesMap.put("doublewoodslab", new Integer[]{125});
-        aliasesMap.put("doubleoakwoodslab", new Integer[]{125,0});
-        aliasesMap.put("doublesprucewoodslab", new Integer[]{125,1});
-        aliasesMap.put("doublebirchwoodslab", new Integer[]{125,2});
-        aliasesMap.put("doublejunglewoodslab", new Integer[]{125,3});
+        aliasesMap.put("doubleoakwoodslab", new Integer[]{125, 0});
+        aliasesMap.put("doublesprucewoodslab", new Integer[]{125, 1});
+        aliasesMap.put("doublebirchwoodslab", new Integer[]{125, 2});
+        aliasesMap.put("doublejunglewoodslab", new Integer[]{125, 3});
         aliasesMap.put("woodslab", new Integer[]{126});
         aliasesMap.put("woodenslab", new Integer[]{126});
-        aliasesMap.put("oakwoodslab", new Integer[]{126,0});
-        aliasesMap.put("sprucewoodslab", new Integer[]{126,1});
-        aliasesMap.put("birchwoodslab", new Integer[]{126,2});
-        aliasesMap.put("junglewoodslab", new Integer[]{126,3});
+        aliasesMap.put("oakwoodslab", new Integer[]{126, 0});
+        aliasesMap.put("sprucewoodslab", new Integer[]{126, 1});
+        aliasesMap.put("birchwoodslab", new Integer[]{126, 2});
+        aliasesMap.put("junglewoodslab", new Integer[]{126, 3});
         aliasesMap.put("cocoaplant", new Integer[]{127});
         aliasesMap.put("sandstonestairs", new Integer[]{128});
         aliasesMap.put("emeraldore", new Integer[]{129});
@@ -731,9 +730,9 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         aliasesMap.put("beacon", new Integer[]{138});
         aliasesMap.put("beaconblock", new Integer[]{138});
         aliasesMap.put("cobblewall", new Integer[]{139});
-        aliasesMap.put("mossycobblewall", new Integer[]{139,1});
+        aliasesMap.put("mossycobblewall", new Integer[]{139, 1});
         aliasesMap.put("cobblestonewall", new Integer[]{139});
-        aliasesMap.put("mossycobblestonewall", new Integer[]{139,1});
+        aliasesMap.put("mossycobblestonewall", new Integer[]{139, 1});
         aliasesMap.put("flowerpot", new Integer[]{140});
         aliasesMap.put("carrotcrops", new Integer[]{141});
         aliasesMap.put("potatocrops", new Integer[]{142});
@@ -754,8 +753,8 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         aliasesMap.put("netherquartzore", new Integer[]{153});
         aliasesMap.put("hopper", new Integer[]{154});
         aliasesMap.put("quartzblock", new Integer[]{155});
-        aliasesMap.put("chiseledquartzblock", new Integer[]{155,1});
-        aliasesMap.put("pillarquartzblock", new Integer[]{155,2});
+        aliasesMap.put("chiseledquartzblock", new Integer[]{155, 1});
+        aliasesMap.put("pillarquartzblock", new Integer[]{155, 2});
         aliasesMap.put("quartzstair", new Integer[]{156});
         aliasesMap.put("quartzstairs", new Integer[]{156});
         aliasesMap.put("activatorrail", new Integer[]{157});
@@ -768,7 +767,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         aliasesMap.put("bow", new Integer[]{261});
         aliasesMap.put("arrow", new Integer[]{262});
         aliasesMap.put("coal", new Integer[]{263});
-        aliasesMap.put("charcoal", new Integer[]{263,1});
+        aliasesMap.put("charcoal", new Integer[]{263, 1});
         aliasesMap.put("diamond", new Integer[]{264});
         aliasesMap.put("ironingot", new Integer[]{265});
         aliasesMap.put("goldingot", new Integer[]{266});
@@ -839,7 +838,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         aliasesMap.put("cookedporkchop", new Integer[]{320});
         aliasesMap.put("painting", new Integer[]{321});
         aliasesMap.put("goldenapple", new Integer[]{322});
-        aliasesMap.put("enchantedgoldenapple", new Integer[]{322,1});
+        aliasesMap.put("enchantedgoldenapple", new Integer[]{322, 1});
         aliasesMap.put("sign", new Integer[]{323});
         aliasesMap.put("wooddoor", new Integer[]{324});
         aliasesMap.put("woodendoor", new Integer[]{324});
@@ -879,22 +878,22 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         aliasesMap.put("fish", new Integer[]{350});
         aliasesMap.put("cookedfish", new Integer[]{350});
         aliasesMap.put("dye", new Integer[]{351});
-        aliasesMap.put("inksack", new Integer[]{351,0});
-        aliasesMap.put("rosered", new Integer[]{351,1});
-        aliasesMap.put("cactusgreen", new Integer[]{351,2});
-        aliasesMap.put("cocobeans", new Integer[]{351,3});
-        aliasesMap.put("lapislazuli", new Integer[]{351,4});
-        aliasesMap.put("purpledye", new Integer[]{351,5});
-        aliasesMap.put("cyandye", new Integer[]{351,6});
-        aliasesMap.put("lightgraydye", new Integer[]{351,7});
-        aliasesMap.put("graydye", new Integer[]{351,8});
-        aliasesMap.put("pinkdye", new Integer[]{351,9});
-        aliasesMap.put("limedye", new Integer[]{351,10});
-        aliasesMap.put("dandelionyellow", new Integer[]{351,11});
-        aliasesMap.put("lightbluedye", new Integer[]{351,12});
-        aliasesMap.put("magentadye", new Integer[]{351,13});
-        aliasesMap.put("orangedye", new Integer[]{351,14});
-        aliasesMap.put("bonemeal", new Integer[]{351,15});
+        aliasesMap.put("inksack", new Integer[]{351, 0});
+        aliasesMap.put("rosered", new Integer[]{351, 1});
+        aliasesMap.put("cactusgreen", new Integer[]{351, 2});
+        aliasesMap.put("cocobeans", new Integer[]{351, 3});
+        aliasesMap.put("lapislazuli", new Integer[]{351, 4});
+        aliasesMap.put("purpledye", new Integer[]{351, 5});
+        aliasesMap.put("cyandye", new Integer[]{351, 6});
+        aliasesMap.put("lightgraydye", new Integer[]{351, 7});
+        aliasesMap.put("graydye", new Integer[]{351, 8});
+        aliasesMap.put("pinkdye", new Integer[]{351, 9});
+        aliasesMap.put("limedye", new Integer[]{351, 10});
+        aliasesMap.put("dandelionyellow", new Integer[]{351, 11});
+        aliasesMap.put("lightbluedye", new Integer[]{351, 12});
+        aliasesMap.put("magentadye", new Integer[]{351, 13});
+        aliasesMap.put("orangedye", new Integer[]{351, 14});
+        aliasesMap.put("bonemeal", new Integer[]{351, 15});
         aliasesMap.put("bone", new Integer[]{352});
         aliasesMap.put("sugar", new Integer[]{353});
         aliasesMap.put("cake", new Integer[]{354});
@@ -920,70 +919,70 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         aliasesMap.put("goldnugget", new Integer[]{371});
         aliasesMap.put("netherwart", new Integer[]{372});
         aliasesMap.put("potion", new Integer[]{373});
-        aliasesMap.put("waterbottle", new Integer[]{373,0});
-        aliasesMap.put("awkwardpotion", new Integer[]{373,16});
-        aliasesMap.put("thickpotion", new Integer[]{373,32});
-        aliasesMap.put("mundanepotion", new Integer[]{373,64});
-        aliasesMap.put("regenerationpotion", new Integer[]{373,8193});
-        aliasesMap.put("regenerationpotionlong", new Integer[]{373,8257});
-        aliasesMap.put("regenerationpotion2", new Integer[]{373,8225});
-        aliasesMap.put("regenerationpotion2long", new Integer[]{373,8289});
-        aliasesMap.put("swiftnesspotion", new Integer[]{373,8194});
-        aliasesMap.put("swiftnesspotionlong", new Integer[]{373,8258});
-        aliasesMap.put("swiftnesspotion2", new Integer[]{373,8226});
-        aliasesMap.put("swiftnesspotion2long", new Integer[]{373,8290});
-        aliasesMap.put("fireresistancepotion", new Integer[]{373,8195});
-        aliasesMap.put("fireresistancepotionlong", new Integer[]{373,8259});
-        aliasesMap.put("poisonpotion", new Integer[]{373,8196});
-        aliasesMap.put("poisonpotionlong", new Integer[]{373,8260});
-        aliasesMap.put("poisonpotion2", new Integer[]{373,8228});
-        aliasesMap.put("poisonpotion2long", new Integer[]{373,8292});
-        aliasesMap.put("healingpotion", new Integer[]{373,8197});
-        aliasesMap.put("healingpotion2", new Integer[]{373,8229});
-        aliasesMap.put("nightvisionpotion", new Integer[]{373,8198});
-        aliasesMap.put("nightvisionpotionlong", new Integer[]{373,8262});
-        aliasesMap.put("weaknesspotion", new Integer[]{373,8200});
-        aliasesMap.put("weaknesspotionlong", new Integer[]{373,8264});
-        aliasesMap.put("strengthpotion", new Integer[]{373,8201});
-        aliasesMap.put("strengthpotionlong", new Integer[]{373,8265});
-        aliasesMap.put("strengthpotion2", new Integer[]{373,8233});
-        aliasesMap.put("strengthpotion2long", new Integer[]{373,8297});
-        aliasesMap.put("slownesspotion", new Integer[]{373,8202});
-        aliasesMap.put("slownesspotionlong", new Integer[]{373,8266});
-        aliasesMap.put("harmingpotion", new Integer[]{373,8204});
-        aliasesMap.put("harmingpotion2", new Integer[]{373,8236});
-        aliasesMap.put("invisibilitypotion", new Integer[]{373,8206});
-        aliasesMap.put("invisibilitypotionlong", new Integer[]{373,8270});
-        aliasesMap.put("regenerationsplash", new Integer[]{373,16385});
-        aliasesMap.put("regenerationsplashlong", new Integer[]{373,16449});
-        aliasesMap.put("regenerationsplash2", new Integer[]{373,16417});
-        aliasesMap.put("regenerationsplash2long", new Integer[]{373,16481});
-        aliasesMap.put("swiftnesssplash", new Integer[]{373,16386});
-        aliasesMap.put("swiftnesssplashlong", new Integer[]{373,16450});
-        aliasesMap.put("swiftnesssplash2", new Integer[]{373,16418});
-        aliasesMap.put("swiftnesssplash2long", new Integer[]{373,16482});
-        aliasesMap.put("fireresistancesplash", new Integer[]{373,16387});
-        aliasesMap.put("fireresistancesplashlong", new Integer[]{373,16451});
-        aliasesMap.put("poisonsplash", new Integer[]{373,16388});
-        aliasesMap.put("poisonsplashlong", new Integer[]{373,16452});
-        aliasesMap.put("poisonsplash2", new Integer[]{373,16420});
-        aliasesMap.put("poisonsplash2long", new Integer[]{373,16484});
-        aliasesMap.put("healingsplash", new Integer[]{373,16389});
-        aliasesMap.put("healingsplash2", new Integer[]{373,16421});
-        aliasesMap.put("nightvisionsplash", new Integer[]{373,16390});
-        aliasesMap.put("nightvisionsplashlong", new Integer[]{373,16454});
-        aliasesMap.put("weaknesssplash", new Integer[]{373,16392});
-        aliasesMap.put("weaknesssplashlong", new Integer[]{373,16456});
-        aliasesMap.put("strengthsplash", new Integer[]{373,16393});
-        aliasesMap.put("strengthsplashlong", new Integer[]{373,16457});
-        aliasesMap.put("strengthsplash2", new Integer[]{373,16425});
-        aliasesMap.put("strengthsplash2long", new Integer[]{373,16489});
-        aliasesMap.put("slownesssplash", new Integer[]{373,16394});
-        aliasesMap.put("slownesssplashlong", new Integer[]{373,16458});
-        aliasesMap.put("harmingsplash", new Integer[]{373,16396});
-        aliasesMap.put("harmingsplash2", new Integer[]{373,16428});
-        aliasesMap.put("invisibilitysplash", new Integer[]{373,16398});
-        aliasesMap.put("invisibilitysplashlong", new Integer[]{373,16462});
+        aliasesMap.put("waterbottle", new Integer[]{373, 0});
+        aliasesMap.put("awkwardpotion", new Integer[]{373, 16});
+        aliasesMap.put("thickpotion", new Integer[]{373, 32});
+        aliasesMap.put("mundanepotion", new Integer[]{373, 64});
+        aliasesMap.put("regenerationpotion", new Integer[]{373, 8193});
+        aliasesMap.put("regenerationpotionlong", new Integer[]{373, 8257});
+        aliasesMap.put("regenerationpotion2", new Integer[]{373, 8225});
+        aliasesMap.put("regenerationpotion2long", new Integer[]{373, 8289});
+        aliasesMap.put("swiftnesspotion", new Integer[]{373, 8194});
+        aliasesMap.put("swiftnesspotionlong", new Integer[]{373, 8258});
+        aliasesMap.put("swiftnesspotion2", new Integer[]{373, 8226});
+        aliasesMap.put("swiftnesspotion2long", new Integer[]{373, 8290});
+        aliasesMap.put("fireresistancepotion", new Integer[]{373, 8195});
+        aliasesMap.put("fireresistancepotionlong", new Integer[]{373, 8259});
+        aliasesMap.put("poisonpotion", new Integer[]{373, 8196});
+        aliasesMap.put("poisonpotionlong", new Integer[]{373, 8260});
+        aliasesMap.put("poisonpotion2", new Integer[]{373, 8228});
+        aliasesMap.put("poisonpotion2long", new Integer[]{373, 8292});
+        aliasesMap.put("healingpotion", new Integer[]{373, 8197});
+        aliasesMap.put("healingpotion2", new Integer[]{373, 8229});
+        aliasesMap.put("nightvisionpotion", new Integer[]{373, 8198});
+        aliasesMap.put("nightvisionpotionlong", new Integer[]{373, 8262});
+        aliasesMap.put("weaknesspotion", new Integer[]{373, 8200});
+        aliasesMap.put("weaknesspotionlong", new Integer[]{373, 8264});
+        aliasesMap.put("strengthpotion", new Integer[]{373, 8201});
+        aliasesMap.put("strengthpotionlong", new Integer[]{373, 8265});
+        aliasesMap.put("strengthpotion2", new Integer[]{373, 8233});
+        aliasesMap.put("strengthpotion2long", new Integer[]{373, 8297});
+        aliasesMap.put("slownesspotion", new Integer[]{373, 8202});
+        aliasesMap.put("slownesspotionlong", new Integer[]{373, 8266});
+        aliasesMap.put("harmingpotion", new Integer[]{373, 8204});
+        aliasesMap.put("harmingpotion2", new Integer[]{373, 8236});
+        aliasesMap.put("invisibilitypotion", new Integer[]{373, 8206});
+        aliasesMap.put("invisibilitypotionlong", new Integer[]{373, 8270});
+        aliasesMap.put("regenerationsplash", new Integer[]{373, 16385});
+        aliasesMap.put("regenerationsplashlong", new Integer[]{373, 16449});
+        aliasesMap.put("regenerationsplash2", new Integer[]{373, 16417});
+        aliasesMap.put("regenerationsplash2long", new Integer[]{373, 16481});
+        aliasesMap.put("swiftnesssplash", new Integer[]{373, 16386});
+        aliasesMap.put("swiftnesssplashlong", new Integer[]{373, 16450});
+        aliasesMap.put("swiftnesssplash2", new Integer[]{373, 16418});
+        aliasesMap.put("swiftnesssplash2long", new Integer[]{373, 16482});
+        aliasesMap.put("fireresistancesplash", new Integer[]{373, 16387});
+        aliasesMap.put("fireresistancesplashlong", new Integer[]{373, 16451});
+        aliasesMap.put("poisonsplash", new Integer[]{373, 16388});
+        aliasesMap.put("poisonsplashlong", new Integer[]{373, 16452});
+        aliasesMap.put("poisonsplash2", new Integer[]{373, 16420});
+        aliasesMap.put("poisonsplash2long", new Integer[]{373, 16484});
+        aliasesMap.put("healingsplash", new Integer[]{373, 16389});
+        aliasesMap.put("healingsplash2", new Integer[]{373, 16421});
+        aliasesMap.put("nightvisionsplash", new Integer[]{373, 16390});
+        aliasesMap.put("nightvisionsplashlong", new Integer[]{373, 16454});
+        aliasesMap.put("weaknesssplash", new Integer[]{373, 16392});
+        aliasesMap.put("weaknesssplashlong", new Integer[]{373, 16456});
+        aliasesMap.put("strengthsplash", new Integer[]{373, 16393});
+        aliasesMap.put("strengthsplashlong", new Integer[]{373, 16457});
+        aliasesMap.put("strengthsplash2", new Integer[]{373, 16425});
+        aliasesMap.put("strengthsplash2long", new Integer[]{373, 16489});
+        aliasesMap.put("slownesssplash", new Integer[]{373, 16394});
+        aliasesMap.put("slownesssplashlong", new Integer[]{373, 16458});
+        aliasesMap.put("harmingsplash", new Integer[]{373, 16396});
+        aliasesMap.put("harmingsplash2", new Integer[]{373, 16428});
+        aliasesMap.put("invisibilitysplash", new Integer[]{373, 16398});
+        aliasesMap.put("invisibilitysplashlong", new Integer[]{373, 16462});
         aliasesMap.put("emptybottle", new Integer[]{374});
         aliasesMap.put("glassbottle", new Integer[]{374});
         aliasesMap.put("spidereye", new Integer[]{375});
@@ -997,52 +996,52 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         aliasesMap.put("spawnegg", new Integer[]{383});
         aliasesMap.put("spawnmob", new Integer[]{383});
         aliasesMap.put("mobegg", new Integer[]{383});
-        aliasesMap.put("creeperegg", new Integer[]{383,50});
-        aliasesMap.put("skeletonegg", new Integer[]{383,51});
-        aliasesMap.put("spideregg", new Integer[]{383,52});
-        aliasesMap.put("zombieegg", new Integer[]{383,54});
-        aliasesMap.put("slimeegg", new Integer[]{383,55});
-        aliasesMap.put("ghastegg", new Integer[]{383,56});
-        aliasesMap.put("pigmanegg", new Integer[]{383,57});
-        aliasesMap.put("endermaneggegg", new Integer[]{383,58});
-        aliasesMap.put("cavespideregg", new Integer[]{383,59});
-        aliasesMap.put("silverfishegg", new Integer[]{383,60});
-        aliasesMap.put("blazeegg", new Integer[]{383,61});
-        aliasesMap.put("magmacubeegg", new Integer[]{383,62});
-        aliasesMap.put("bategg", new Integer[]{383,65});
-        aliasesMap.put("witchegg", new Integer[]{383,66});
-        aliasesMap.put("pigegg", new Integer[]{383,90});
-        aliasesMap.put("sheepegg", new Integer[]{383,91});
-        aliasesMap.put("cowegg", new Integer[]{383,92});
-        aliasesMap.put("chickenegg", new Integer[]{383,93});
-        aliasesMap.put("squidegg", new Integer[]{383,94});
-        aliasesMap.put("wolfegg", new Integer[]{383,95});
-        aliasesMap.put("mooshroomegg", new Integer[]{383,96});
-        aliasesMap.put("ocelotegg", new Integer[]{383,98});
-        aliasesMap.put("villageregg", new Integer[]{383,120});
-        aliasesMap.put("spawncreeper", new Integer[]{383,50});
-        aliasesMap.put("spawnskeleton", new Integer[]{383,51});
-        aliasesMap.put("spawnspider", new Integer[]{383,52});
-        aliasesMap.put("spawnzombie", new Integer[]{383,54});
-        aliasesMap.put("spawnslime", new Integer[]{383,55});
-        aliasesMap.put("spawnghast", new Integer[]{383,56});
-        aliasesMap.put("spawnpigman", new Integer[]{383,57});
-        aliasesMap.put("spawnenderman", new Integer[]{383,58});
-        aliasesMap.put("spawncavespider", new Integer[]{383,59});
-        aliasesMap.put("spawnsilverfish", new Integer[]{383,60});
-        aliasesMap.put("spawnblaze", new Integer[]{383,61});
-        aliasesMap.put("spawnmagmacube", new Integer[]{383,62});
-        aliasesMap.put("spawnbat", new Integer[]{383,65});
-        aliasesMap.put("spawnwitch", new Integer[]{383,66});
-        aliasesMap.put("spawnpig", new Integer[]{383,90});
-        aliasesMap.put("spawnsheep", new Integer[]{383,91});
-        aliasesMap.put("spawncow", new Integer[]{383,92});
-        aliasesMap.put("spawnchicken", new Integer[]{383,93});
-        aliasesMap.put("spawnsquid", new Integer[]{383,94});
-        aliasesMap.put("spawnwolf", new Integer[]{383,95});
-        aliasesMap.put("spawnmooshroom", new Integer[]{383,96});
-        aliasesMap.put("spawnocelot", new Integer[]{383,98});
-        aliasesMap.put("spawnvillager", new Integer[]{383,120});
+        aliasesMap.put("creeperegg", new Integer[]{383, 50});
+        aliasesMap.put("skeletonegg", new Integer[]{383, 51});
+        aliasesMap.put("spideregg", new Integer[]{383, 52});
+        aliasesMap.put("zombieegg", new Integer[]{383, 54});
+        aliasesMap.put("slimeegg", new Integer[]{383, 55});
+        aliasesMap.put("ghastegg", new Integer[]{383, 56});
+        aliasesMap.put("pigmanegg", new Integer[]{383, 57});
+        aliasesMap.put("endermaneggegg", new Integer[]{383, 58});
+        aliasesMap.put("cavespideregg", new Integer[]{383, 59});
+        aliasesMap.put("silverfishegg", new Integer[]{383, 60});
+        aliasesMap.put("blazeegg", new Integer[]{383, 61});
+        aliasesMap.put("magmacubeegg", new Integer[]{383, 62});
+        aliasesMap.put("bategg", new Integer[]{383, 65});
+        aliasesMap.put("witchegg", new Integer[]{383, 66});
+        aliasesMap.put("pigegg", new Integer[]{383, 90});
+        aliasesMap.put("sheepegg", new Integer[]{383, 91});
+        aliasesMap.put("cowegg", new Integer[]{383, 92});
+        aliasesMap.put("chickenegg", new Integer[]{383, 93});
+        aliasesMap.put("squidegg", new Integer[]{383, 94});
+        aliasesMap.put("wolfegg", new Integer[]{383, 95});
+        aliasesMap.put("mooshroomegg", new Integer[]{383, 96});
+        aliasesMap.put("ocelotegg", new Integer[]{383, 98});
+        aliasesMap.put("villageregg", new Integer[]{383, 120});
+        aliasesMap.put("spawncreeper", new Integer[]{383, 50});
+        aliasesMap.put("spawnskeleton", new Integer[]{383, 51});
+        aliasesMap.put("spawnspider", new Integer[]{383, 52});
+        aliasesMap.put("spawnzombie", new Integer[]{383, 54});
+        aliasesMap.put("spawnslime", new Integer[]{383, 55});
+        aliasesMap.put("spawnghast", new Integer[]{383, 56});
+        aliasesMap.put("spawnpigman", new Integer[]{383, 57});
+        aliasesMap.put("spawnenderman", new Integer[]{383, 58});
+        aliasesMap.put("spawncavespider", new Integer[]{383, 59});
+        aliasesMap.put("spawnsilverfish", new Integer[]{383, 60});
+        aliasesMap.put("spawnblaze", new Integer[]{383, 61});
+        aliasesMap.put("spawnmagmacube", new Integer[]{383, 62});
+        aliasesMap.put("spawnbat", new Integer[]{383, 65});
+        aliasesMap.put("spawnwitch", new Integer[]{383, 66});
+        aliasesMap.put("spawnpig", new Integer[]{383, 90});
+        aliasesMap.put("spawnsheep", new Integer[]{383, 91});
+        aliasesMap.put("spawncow", new Integer[]{383, 92});
+        aliasesMap.put("spawnchicken", new Integer[]{383, 93});
+        aliasesMap.put("spawnsquid", new Integer[]{383, 94});
+        aliasesMap.put("spawnwolf", new Integer[]{383, 95});
+        aliasesMap.put("spawnmooshroom", new Integer[]{383, 96});
+        aliasesMap.put("spawnocelot", new Integer[]{383, 98});
+        aliasesMap.put("spawnvillager", new Integer[]{383, 120});
         aliasesMap.put("expflask", new Integer[]{384});
         aliasesMap.put("experiencepotion", new Integer[]{384});
         aliasesMap.put("enchantingbottle", new Integer[]{384});
@@ -1061,12 +1060,12 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         aliasesMap.put("map", new Integer[]{395});
         aliasesMap.put("goldencarrot", new Integer[]{396});
         aliasesMap.put("mobhead", new Integer[]{397});
-        aliasesMap.put("skeletonhead", new Integer[]{397,0});
-        aliasesMap.put("witherhead", new Integer[]{397,1});
-        aliasesMap.put("zombiehead", new Integer[]{397,2});
-        aliasesMap.put("stevehead", new Integer[]{397,3});
-        aliasesMap.put("humanhead", new Integer[]{397,3});
-        aliasesMap.put("creeperhead", new Integer[]{397,4});
+        aliasesMap.put("skeletonhead", new Integer[]{397, 0});
+        aliasesMap.put("witherhead", new Integer[]{397, 1});
+        aliasesMap.put("zombiehead", new Integer[]{397, 2});
+        aliasesMap.put("stevehead", new Integer[]{397, 3});
+        aliasesMap.put("humanhead", new Integer[]{397, 3});
+        aliasesMap.put("creeperhead", new Integer[]{397, 4});
         aliasesMap.put("carrotonastick", new Integer[]{398});
         aliasesMap.put("netherstar", new Integer[]{399});
         aliasesMap.put("pumpkinpie", new Integer[]{400});
@@ -1099,39 +1098,50 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         Collections.sort(sortedAliases, new StringLengthComparator());//Actually sort the keys
     }
 
-    private void loadHelper(File f, String header, TempFiles what) throws FileNotFoundException, IOException{
-        if(f.exists()){
+    private void loadHelper(File f, String header, TempFiles what) throws FileNotFoundException, IOException {
+        if (f.exists()) {
             String s;
             float version = 0f;
             FileInputStream fstream = new FileInputStream(f);
             BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
+            YamlConfiguration conf = new YamlConfiguration();
             Shop tempShop;
-            while ((s = br.readLine()) != null){
+            boolean end = false;
+            while ((s = br.readLine()) != null && !end) {
                 boolean notHeader = true;
 
-                if(what != TempFiles.SHIPPEDPACKAGES && version == 0 && s.length() > header.length() && s.substring(0, header.length()).equals(header)){
+                if (what != TempFiles.SHIPPEDPACKAGES 
+                        && what != TempFiles.TOCLAIM
+                        && what != TempFiles.INVENTORIES 
+                        && version == 0 && s.length() > header.length() 
+                        && s.substring(0, header.length()).equals(header)) {
                     notHeader = false;
                     String vStr = s.substring(header.length());
-                    if(what == TempFiles.TPLOCS){
-                        if(vStr.substring(5).equals("Blacklist")) tpLocBlacklist = true;
-                        vStr = vStr.substring(0,4);
+                    if (what == TempFiles.TPLOCS) {
+                        if (vStr.substring(5).equals("Blacklist")) {
+                            tpLocBlacklist = true;
+                        }
+                        vStr = vStr.substring(0, 4);
                     }
                     version = Float.parseFloat(vStr);
                 }
 
-                if(!notHeader) break;
-                switch(what){
+                if (!notHeader) {
+                    break;
+                }
+                switch (what) {
                     //TODO convert load with object stream
                     case INVENTORIES:
                         try {
-                            PInvSet.add(new RSPlayerInventory(s));
-                        } catch (RealShoppingException e) {
-                            if(e.getType() == RealShoppingException.Type.SHOP_DOESNT_EXIST){
-                                log.info("Couldn't restore the RSPlayerInventory object of player "
-                                        + s.split(";")[0].split("-")[0] + " because store "
-                                        + s.split(";")[0].split("-")[1] + " doesn't exist.");
-                                if(Config.debug) e.printStackTrace();
-                            } else e.printStackTrace();
+                            conf.load(f);
+                            for (String player : conf.getKeys(false)) {
+                                PInvSet.add(ClassSerialization.loadInventory(conf.getConfigurationSection(player)));
+                                Shop.addPager(player);
+                            }
+                        } catch (InvalidConfigurationException ex) {
+                            Logger.getLogger(RealShopping.class.getName()).log(Level.SEVERE, null, ex);
+                        } finally {
+                            end = true;
                         }
                         break;
                     case JAILED:
@@ -1147,34 +1157,34 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                                 ,Double.parseDouble(s.split(";")[1].split(",")[3])));
                         break;
                     case SHIPPEDPACKAGES:
-                        YamlConfiguration conf = new YamlConfiguration();
                         try {
                             conf.load(f);
                             for(String pl:conf.getKeys(false)){
                                 List<ShippedPackage> packs = new LinkedList<>();
                                 ConfigurationSection players = conf.getConfigurationSection(pl);
                                 for(String pkg:players.getKeys(false)){
-                                    packs.add(ShippedSerialization.loadShippedPackage(players.getConfigurationSection(pkg)));
+                                    packs.add(ClassSerialization.loadShippedPackage(players.getConfigurationSection(pkg)));
                                 }
                                 shippedToCollect.put(pl, packs);
                             }
                         } catch (InvalidConfigurationException ex) {
-                            Logger.getLogger(RealShopping.class.getName()).log(Level.SEVERE, null, ex);
+                           logsevere(ex.getStackTrace().toString());
+                        } finally {
+                            end = true;
                         }
                         break;
                     case TOCLAIM:
-                        if(version >= 0.32){
-                            tempShop = getShop(s.split(",")[0]);
-                            for(int i = 2;i < s.split(",").length;i++){
-                                String s1[] = s.split(",")[2].split(":");
-                                ItemStack tempIS = new MaterialData(Integer.parseInt(s1[0]), Byte.parseByte(s1[3])).toItemStack(Integer.parseInt(s1[1]));
-                                tempIS.setDurability(Short.parseShort(s1[2]));
-                                for(int j = 4;j < s.split(",")[2].split(":").length;j++){
-                                    tempIS.addEnchantment(Enchantment.getById(Integer.parseInt(s.split(",")[2].split(":")[j].split(";")[0])), Integer.parseInt(s.split(",")[2].split(":")[j].split(";")[1]));
-                                }
-                                tempShop.addStolenToClaim(tempIS);
+                        try {
+                            conf.load(f);
+                            for(String shops:conf.getKeys(false)) {
+                                ConfigurationSection stolen = conf.getConfigurationSection(shops);
+                                getShop(shops).setStolenToClaim(ClassSerialization.loadItemStack(stolen));
                             }
-                        } else RealShopping.loginfo("Couldn't convert stores from an old database file");//Removed converting from old version
+                        } catch (InvalidConfigurationException ex) {
+                            logsevere(ex.getStackTrace().toString());
+                        } finally {
+                            end = true;
+                        }
                         break;
                     case STATS:
                         tempShop = getShop(s.split(";")[0]);
@@ -1184,10 +1194,10 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                         break;
                     case NOTIFICATIONS:
                         List<String> l = new ArrayList<>();
-                        for(int i = 1;i < s.split("\"").length;i++){
+                        for (int i = 1; i < s.split("\"").length; i++) {
                             l.add(s.split("\"")[i]);
                         }
-                        if(!l.isEmpty()){
+                        if (!l.isEmpty()) {
                             notificator.put(s.split("\"")[0], l);
                         }
                     default:
@@ -1201,11 +1211,11 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         f.delete();
     }
 
-    private void loadTemporaryFile(TempFiles what){
+    private void loadTemporaryFile(TempFiles what) {
         File f = null;
         String header = null;
         try {
-            switch(what){
+            switch (what) {
                 case INVENTORIES:
                     f = new File(MANDIR + "inventories.db");
                     header = "Inventories database for RealShopping v";
@@ -1248,74 +1258,88 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                 default:
                     break;
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             RealShopping.loginfo("Failed while reading " + f.getName());
         }
     }
 
-    private void saveHelper(File f, String header, Object[] keys, TempFiles what) throws IOException{
-        if(!f.exists()) f.createNewFile();
+    private void saveHelper(File f, String header, Object[] keys, TempFiles what) throws IOException {
+        if (!f.exists()) {
+            f.createNewFile();
+        }
         PrintWriter pW;
+        FileConfiguration conf = new YamlConfiguration();
         pW = new PrintWriter(f);
-        for(int i = 0;i < keys.length;i++){
-            if(what != TempFiles.SHIPPEDPACKAGES && i == 0) pW.println(header);
+        for (int i = 0; i < keys.length; i++) {
+            if (what != TempFiles.SHIPPEDPACKAGES && what != TempFiles.INVENTORIES && what != TempFiles.TOCLAIM && i == 0) {
+                pW.println(header);
+            }
             String line = "";
-            switch(what){
+            switch (what) {
                 //TODO convert saves with object stream.
                 case INVENTORIES:
-                    line = ((RSPlayerInventory)keys[i]).exportToString();
+                    for (Object k : keys) {
+                        RSPlayerInventory pinv = (RSPlayerInventory) k;
+                        ConfigurationSection player = conf.createSection(pinv.getPlayer());
+                        ClassSerialization.saveInventory(pinv, player);
+                    }
+                    conf.save(f);
                     break;
                 case JAILED:
-                    line = ((String)keys[i]) + ";" + jailedPlayers.get((String)keys[i]).getWorld().getName() + ";" + RSUtils.locAsString(jailedPlayers.get((String)keys[i]));
+                    line = ((String) keys[i]) + ";" + jailedPlayers.get((String) keys[i]).getWorld().getName() + ";" + RSUtils.locAsString(jailedPlayers.get((String) keys[i]));
                     break;
                 case TPLOCS:
-                    line = ((Location)keys[i]).getWorld().getName() + ";" + RSUtils.locAsString((Location)keys[i]) + ";" + forbiddenTpLocs.get((Location)keys[i]);
+                    line = ((Location) keys[i]).getWorld().getName() + ";" + RSUtils.locAsString((Location) keys[i]) + ";" + forbiddenTpLocs.get((Location) keys[i]);
                     break;
                 case PROTECTEDCHESTS:
                     String protStr = ((Shop)keys[i]).exportProtectedToString();
                     if(!protStr.equals("")) line = ((Shop) keys[i]).getName() + ";" + protStr;
                     break;
                 case SHIPPEDPACKAGES:
-                    FileConfiguration conf = getConfig();
-                    for(String s:shippedToCollect.keySet()){
+                    for (String s : shippedToCollect.keySet()) {
                         ConfigurationSection player = conf.createSection(s);
-                        for(ShippedPackage pkg:shippedToCollect.get(s)){
+                        for (ShippedPackage pkg : shippedToCollect.get(s)) {
                             ConfigurationSection date = player.createSection(Long.toString(pkg.getDateSent()));
-                            ShippedSerialization.saveShippedPackage(pkg, date);
-                        }                        
+                            ClassSerialization.saveShippedPackage(pkg, date);
+                        }
                     }
                     conf.save(f);
                     break;
                 case TOCLAIM:
-                    String exportedStr = ((Shop)keys[i]).exportToClaim();
-                    if(!exportedStr.equals(""))	line = ((Shop)keys[i]).getName() + "," + exportedStr;
+                    for(Object k : keys) {
+                        Shop shop = (Shop)k;
+                        ConfigurationSection shopsec = conf.createSection(shop.getName());
+                        ClassSerialization.saveItemStackList(shop.getStolenToClaim(), shopsec);
+                    }
+                    conf.save(f);
                     break;
                 case STATS:
                     String statStr = ((Shop)keys[i]).exportStats();
                     if(!statStr.equals(""))	line = ((Shop)keys[i]).getName() + statStr;
                     break;
                 case NOTIFICATIONS:
-                    String s = "";
+                    String s = ""; // what?
                     for(String ss:notificator.get((String)keys[i])){
                         s += "\""+ss;
                     }
-                    if(!s.equals("")) line = keys[i]+s;
                     break;
                 default:
                     return;
             }
-            if(!line.equals("")) pW.println(line);
+            if (!line.equals("")) {
+                pW.println(line);
+            }
         }
         pW.close();
     }
 
-    private boolean saveTemporaryFile(TempFiles what){
+    private boolean saveTemporaryFile(TempFiles what) {
         File f = null;
         String header;
 
         try {
-            switch(what){
+            switch (what) {
                 case INVENTORIES:
                     f = new File(MANDIR + "inventories.db");
                     header = "Inventories database for RealShopping " + VERSION;
@@ -1328,7 +1352,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                     break;
                 case TPLOCS:
                     f = new File(MANDIR + "allowedtplocs.db");
-                    header = "Allowed teleport locations for RealShopping " + VERSION + " " + (tpLocBlacklist?"Blacklist":"Whitelist");
+                    header = "Allowed teleport locations for RealShopping " + VERSION + " " + (tpLocBlacklist ? "Blacklist" : "Whitelist");
                     saveHelper(f, header, forbiddenTpLocs.keySet().toArray(), what);
                     break;
                 case PROTECTEDCHESTS:
@@ -1361,14 +1385,20 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
             }
 
 
-        } catch(Exception e){
+        } catch (Exception e) {
             RealShopping.loginfo("Failed while saving " + f.getName());
             e.printStackTrace();
         }
         return false;
     }
 
-    public static void loginfo(String msg){ log.log(Level.INFO,msg); }//TODO start using this?
+    public static void logsevere (String msg) {
+        log.log(Level.SEVERE, msg);
+    }
+    
+    public static void loginfo(String msg) {
+        log.log(Level.INFO, msg);
+    }//TODO start using this?
 
     /*
      * 
@@ -1696,21 +1726,19 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         onDisable();
         onEnable();
     }
-
-
 }
 
 class Notificator extends Thread {
 
     public boolean running;
 
-    public Notificator(){
+    public Notificator() {
         running = true;
     }
 
-    public void run(){
+    public void run() {
         try {
-            while(running){
+            while (running) {
                 for(String p:RealShopping.getNotificatorKeys()){
                     Player player = Bukkit.getPlayerExact(p);
                     if(player != null){
@@ -1732,6 +1760,7 @@ class Notificator extends Thread {
 class ValueComparator implements Comparator<Location> {
 
     Map<Location, Double> base;
+
     public ValueComparator(Map<Location, Double> base) {
         this.base = base;
     }
@@ -1749,6 +1778,7 @@ class ValueComparator implements Comparator<Location> {
 class StatComparator implements Comparator<String> {
 
     Map<String, Integer> base;
+
     public StatComparator(Map<String, Integer> base) {
         this.base = base;
     }
@@ -1763,7 +1793,13 @@ class StatComparator implements Comparator<String> {
     }
 }
 
+/**
+ * Enum for temporary files.
+ *
+ * @author stengun
+ */
 enum TempFiles {
+
     INVENTORIES(0),
     JAILED(1),
     TPLOCS(2),
@@ -1772,13 +1808,13 @@ enum TempFiles {
     TOCLAIM(5),
     STATS(6),
     NOTIFICATIONS(7);
-
     private int what;
-    private TempFiles(int what){
+
+    private TempFiles(int what) {
         this.what = what;
     }
 
-    public int getValue(){
+    public int getValue() {
         return what;
     }
 }

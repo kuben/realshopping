@@ -1,22 +1,20 @@
 package com.github.kuben.realshopping.commands;
 
-import java.util.Locale;
-
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.block.Chest;
-import org.bukkit.command.CommandSender;
-import org.bukkit.inventory.ItemStack;
-
 import com.github.kuben.realshopping.Config;
 import com.github.kuben.realshopping.LangPack;
-import com.github.kuben.realshopping.Price;
 import com.github.kuben.realshopping.PSetting;
+import com.github.kuben.realshopping.Price;
 import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
 import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
+import java.util.Locale;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.block.Chest;
+import org.bukkit.command.CommandSender;
+import org.bukkit.inventory.ItemStack;
 
 class RSStores extends RSCommand {
 
@@ -284,7 +282,7 @@ class RSStores extends RSCommand {
                                     int i = 0, j = 0;
                                     for(;i < keys.length;i++){
                                         Price tempP = RSUtils.pullPrice(keys[i],this.player);
-                                        if(shop.hasPrice(tempP) || shop.hasPrice(tempP.stripOffData())){
+                                        if(shop.hasPrice(tempP)){
                                             shop.addSale(tempP, pcnt);
                                             j++;
                                         }
