@@ -23,7 +23,7 @@ public class Pager extends Thread {
 
     public Pager(String player) {
         super();
-        page = 1;
+        page = 0;
         stop = false;
         time = 3000;
         this.player = player;
