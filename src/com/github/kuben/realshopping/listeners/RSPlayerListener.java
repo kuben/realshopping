@@ -263,13 +263,16 @@ public class RSPlayerListener implements Listener {
                                 }
                             } else if (player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.BROWN_MUSHROOM) {
                                 if (Config.isEnableSelling()) {
-                                    if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-                                        if (RealShopping.getPInv(player).getShop().getBuyFor() > 0) {
+                                    if (RealShopping.getPInv(player).getShop().getBuyFor() > 0) {
+                                        if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
+                                            player.sendMessage("I will pay " + Shop.sellPrice(RealShopping.getPInv(player), player.getItemInHand()) + "for that item.");
+                                        }else
+                                            if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
                                             Inventory tempInv = Bukkit.createInventory(null, 36, LangPack.SELLTOSTORE);
                                             player.openInventory(tempInv);
-                                        } else {
-                                            player.sendMessage(ChatColor.RED + LangPack.NOTBUYINGFROMPLAYERS);
                                         }
+                                    } else {
+                                        player.sendMessage(ChatColor.RED + LangPack.NOTBUYINGFROMPLAYERS);
                                     }
                                 } else {
                                     player.sendMessage(ChatColor.RED + LangPack.SELLINGTOSTORESISNOTENABLEDONTHISSERVER);

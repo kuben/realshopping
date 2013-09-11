@@ -1,12 +1,11 @@
 package com.github.kuben.realshopping;
 
+import com.github.kuben.realshopping.exceptions.RealShoppingException;
+import com.github.kuben.realshopping.exceptions.RealShoppingException.Type;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import com.github.kuben.realshopping.exceptions.RealShoppingException;
-import com.github.kuben.realshopping.exceptions.RealShoppingException.Type;
 
 public class PSetting {
 

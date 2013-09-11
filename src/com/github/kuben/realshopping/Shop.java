@@ -597,6 +597,29 @@ public class Shop {//TODO add load/save interface
      * Static Methods
      * 
      */
+    public static float sellPrice(RSPlayerInventory pinv, ItemStack ist) {
+        int payment = 0;
+        Shop shop = pinv.getShop();
+        if (ist != null) {
+            Price itm = new Price(ist);
+            if (shop.hasPrice(itm)) {
+                int amount = ((RealShopping.isTool(ist.getTypeId())) ? 1 : ist.getAmount());
+                itm.setAmount(amount);
+                double cost = shop.getPrice(itm);
+                if (cost > 0.0) {
+                    int pcnt = 0;
+                    if (shop.hasSale(itm)) {
+                        pcnt = 100 - shop.getSale(itm);
+                        cost *= pcnt / 100f;
+                    }
+                    cost *= shop.getBuyFor() / 100f;
+                    payment += cost * (RealShopping.isTool(itm.getType()) ? (double) amount / (double) RealShopping.getMaxDur(itm.getType()) : amount);//Convert items durability to item amount
+                }
+            }
+        }
+        return payment/100f;
+    }
+    
     public static boolean sellToStore(Player p, ItemStack[] iS) {
         if(Config.isEnableSelling() && RealShopping.hasPInv(p)) {
             RSPlayerInventory pinv = RealShopping.getPInv(p);
@@ -617,7 +640,7 @@ public class Shop {//TODO add load/save interface
                                 }
                             }
                             double cost = shop.getPrice(itm);
-                            if (RealShopping.getPInv(p).getAmount(ist) >= soldAm && cost > 0.0) {
+                            if (pinv.getAmount(ist) >= soldAm && cost > 0.0) {
                                 //There is a sale on that item.
                                 int pcnt = 0;
                                 if (shop.hasSale(itm)) {
@@ -632,7 +655,7 @@ public class Shop {//TODO add load/save interface
                         }
                     }
                 }
-                boolean cont = false;
+//                boolean cont = true;
                 String own = shop.getOwner();
                 if (!own.equals("@admin")) {
                     if (RSEconomy.getBalance(own) >= payment / 100f) {
@@ -651,7 +674,6 @@ public class Shop {//TODO add load/save interface
                                 RealShopping.getPInv(p).removeItem(key, key.getAmount());
                             }
                         }
-                        cont = true;
                     } else {
                         if(!sold.isEmpty()) p.sendMessage(ChatColor.RED + LangPack.OWNER + own + LangPack.CANTAFFORDTOBUYITEMSFROMYOUFOR + payment / 100f + LangPack.UNIT);
                     }
@@ -671,38 +693,35 @@ public class Shop {//TODO add load/save interface
                     for (ItemStack key : sold) {
                         RealShopping.getPInv(p).removeItem(key, key.getAmount());
                     }
-                    cont = true;
                 }
-                if (cont) {
-                    if (!own.equals("@admin")) {//Return items if player store.
-                        for (int i = 0; i < sold.size(); i++) {
-                            shop.addStolenToClaim(sold.get(i));
-                        }
+                if (!own.equals("@admin")) {//Return items if player store.
+                    for (int i = 0; i < sold.size(); i++) {
+                        shop.addStolenToClaim(sold.get(i));
                     }
-                    ItemStack[] newInv = p.getInventory().getContents();
-                    boolean skip = false;//To save CPU
-                    for (int i = 0; i < iS.length; i++) {
-                        if (sold.contains(iS[i])) {//Item is sold, do not return to player
-                            sold.remove(iS[i]);
-                        } else {
-                            if (!skip) {
-                                for (int j = 0; j < newInv.length; j++) {
-                                    if (newInv[j] == null) {
-                                        newInv[j] = iS[i];
-                                        iS[i] = null;
-                                        break;
-                                    }
+                }
+                ItemStack[] newInv = p.getInventory().getContents();
+                boolean skip = false;//To save CPU
+                for (int i = 0; i < iS.length; i++) {
+                    if (sold.contains(iS[i])) {//Item is sold, do not return to player
+                        sold.remove(iS[i]);
+                    } else {
+                        if (!skip) {
+                            for (int j = 0; j < newInv.length; j++) {
+                                if (newInv[j] == null) {
+                                    newInv[j] = iS[i];
+                                    iS[i] = null;
+                                    break;
                                 }
                             }
-                            if (iS[i] != null) {//Item hasn't been returned
-                                skip = true;
-                                p.getWorld().dropItem(p.getLocation(), iS[i]);
-                            }
+                        }
+                        if (iS[i] != null) {//Item hasn't been returned
+                            skip = true;
+                            p.getWorld().dropItem(p.getLocation(), iS[i]);
                         }
                     }
-                    p.getInventory().setContents(newInv);
-                    return true;
                 }
+                p.getInventory().setContents(newInv);
+                return true;
             }
         }
         return false;
