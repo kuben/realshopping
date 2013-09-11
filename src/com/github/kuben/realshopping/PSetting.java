@@ -32,7 +32,8 @@ public class PSetting {
 	
 	//Global
 	private FavNots favNots;
-//	private int getReports;//0 means off, X means X hours interval?
+	private int getReports;//0 means off, X means X periods interval?
+	private int reportPeriodsLeft;//To be decreased by the Reporter class. When zero, the report is sent, and the variable reset to the value of getReports
 	private int getSoldNots;  //-1 means no, 0 for all items
 	private int getBoughtNots;//X means for items over X cost
 	private int getAINots;//0 is no, X is TRESHOLD
@@ -40,7 +41,8 @@ public class PSetting {
 	
 	//Store specific
 	private Map<Shop, FavNots> favNotsMap;
-//	private Map<Shop, Integer> getReportsMap;
+	private Map<Shop, Integer> getReportsMap;
+	private Map<Shop, Integer> reportPeriodsLeftMap;
 	private Map<Shop, Integer> getSoldNotsMap;
 	private Map<Shop, Integer> getBoughtNotsMap;
 	private Map<Shop, Integer> getAINotsMap;
@@ -53,18 +55,20 @@ public class PSetting {
 		favShops = new HashSet<Shop>();
 		
 		favNots = FavNots.BOTH;
-//		getReports = 0;
+		getReports = 0;
+		reportPeriodsLeft = getReports;
 		getSoldNots = -1;
 		getBoughtNots = 0;
 		getAINots = 0;
 		changeOnAI = 0;
 		
-		favNotsMap = new HashMap<Shop, FavNots>();
-//		getReportsMap = new HashMap<Shop, Integer>();
-		getSoldNotsMap = new HashMap<Shop, Integer>();
-		getBoughtNotsMap = new HashMap<Shop, Integer>();
-		getAINotsMap = new HashMap<Shop, Integer>();
-		changeOnAIMap = new HashMap<Shop, Integer>();
+		favNotsMap = new HashMap<>();
+		getReportsMap = new HashMap<>();
+		reportPeriodsLeftMap = new HashMap<>();
+		getSoldNotsMap = new HashMap<>();
+		getBoughtNotsMap = new HashMap<>();
+		getAINotsMap = new HashMap<>();
+		changeOnAIMap = new HashMap<>();
 	}
 	
 //	public PSetting(String importStr){ }
@@ -99,6 +103,34 @@ public class PSetting {
 	 */
 	
 	public String getPlayer(){ return player; }
+	
+	public boolean getReports(Shop shop){
+	    if(getReportsMap.containsKey(shop)) return getReportsMap.get(shop) > 0;
+	    return getReports > 0;
+	}
+
+	public boolean updatePeriodAndCheckIfTimeToSendReport(Shop shop){//This assumes getReports() returns true
+	    if(getReportsMap.containsKey(shop)){
+	        if(!reportPeriodsLeftMap.containsKey(shop)) reportPeriodsLeftMap.put(shop, getReportsMap.get(shop));//Init, if not initialized
+	        
+	        int newval = reportPeriodsLeftMap.get(shop) - 1;
+	        reportPeriodsLeftMap.put(shop, newval);//Decrease
+	        
+	        if(newval == 0){//Time to send a report!
+	            reportPeriodsLeftMap.put(shop, getReportsMap.get(shop));//Reset
+	            return true;
+	        }
+	        return false;
+	    }
+	    
+        reportPeriodsLeft -= 1;//Decrease
+        
+        if(reportPeriodsLeft == 0){//Send a report!
+            reportPeriodsLeft = getReports;//Reset
+            return true;
+        }
+        return false;
+	}
 	
 	public boolean getSalesNotifications(Shop shop) {
 		FavNots o;

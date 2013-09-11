@@ -57,7 +57,7 @@ import com.github.kuben.realshopping.exceptions.RealShoppingException;
 import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.stengun.realshopping.PriceParser;
-import com.github.stengun.realshopping.ShippedSerialization;
+import com.github.stengun.realshopping.ClassSerialization;
 
 public class RealShopping extends JavaPlugin {//TODO stores case sensitive, players case preserving
     private Updater updater;
@@ -1749,6 +1749,43 @@ class Notificator extends Thread {
                     }
                 }
                 Thread.sleep(Math.max(Config.getNotTimespan(), 500));
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+    }
+}
+
+class Reporter extends Thread {
+
+    public boolean running;
+    /**
+     * In minutes, for how long the thread should sleep between runs. Has to be at least 10
+     */
+    public final int PERIOD;
+
+    public Reporter() {
+        running = true;
+        //Check if PERIOD >= 10
+        PERIOD = 10;
+    }
+
+    public void run() {
+        try {
+            while (running) {
+                for(PSetting ps:RealShopping.getPlayerSettings()){//Get all player settings
+                    Player player = Bukkit.getPlayerExact(ps.getPlayer());
+                    if(player == null) continue;//Player is not online, don't bother TODO send report as notification in this case
+                    for(Shop shop:RSUtils.getOwnedShops(player.getName()))//Get all shops of player
+                        if(ps.getReports(shop))
+                            if(ps.updatePeriodAndCheckIfTimeToSendReport(shop)){//Check if it is time to send a report
+                                //Send!
+                                player.sendMessage(ChatColor.BLUE + "Report for store " + ChatColor.DARK_BLUE + shop.getName() + ChatColor.BLUE + ".");
+                            }
+                }
+                
+                Thread.sleep(PERIOD);
             }
         } catch (InterruptedException e) {
             e.printStackTrace();

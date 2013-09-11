@@ -37,6 +37,11 @@ class RSMe extends RSPlayerCommand {
 		super(sender, args);
 	}
 
+	/*
+	 * Config:
+	 * Allow reports ()
+	 * 
+	 */
 	//TODO add settings to rsstores (X:timely spending limit for buying)
 	//TODO idea: notify about store favorited (implement this into reports)
 	//TODO add clear and list
