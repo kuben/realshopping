@@ -30,6 +30,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.apache.commons.lang.ArrayUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Server;
@@ -66,32 +68,10 @@ public class Config {
 	
 	private static Set<String> cartEnabledW;
 	
-	private static int KEEPSTOLEN;
-	private static int ENABLESELLING;
-	private static int AUTOPROTECT;
-	private static int ALLOWFILLCHESTS;
-	private static int ENABLEAI;
-	private static int PUNISHMENT;
-	private static int LANGPACK;
-	private static int PSTORECREATE;
-	private static int HELLLOC;
-	private static int JAILLOC;
-	private static int DROPLOC;
-	private static int DELIVERYZONES;
-	private static int AUTOUPDATE;
-	private static int NOTTIMESPAN;
-	private static int STATTIMESPAN;
-	private static int CLEANSTATSOLD;
-	private static int UPDATEFREQ;
-	private static int CARTENABLEDW;
-	private static int DISABLEDROP;
-	private static int DISABLECRAFTING;
-	private static int DISABLEBUCKETS;
-	private static int DISABLEENDERCHESTS;
-	private static int ENABLEDOORS;
-	
-	private static int MAX;
 	private static final String HEADER = "Properties file for RealShopping v";
+	
+	//Used to initialize Settings order values
+	private static int curVal = 2;
 	
 	static Server server;
 	private static float version = 0f;
@@ -104,7 +84,6 @@ public class Config {
 	 */
 	
 	public static void initialize(){
-		initVals();
 		server = Bukkit.getServer();
 		if(server.getWorld("world") != null){
 			hellLoc = new Location(server.getWorld("world"),0,0,0);
@@ -117,33 +96,40 @@ public class Config {
 		}
 
 		debug = false;
-        keepstolen = false;
-        langpack = "default";
-        punishment = "none";
-        pstorecreate = 0.0;
-        enableSelling = true;
-        enableDoors = false;
-        disableDrop = true;
-        disableCrafting = true;
-        disableBuckets = true;
-        disableEnderchests = true;
-        autoprotect = true;
-    	allowFillChests = true;
-    	enableAI = false;
-        deliveryZones = 0;
-        autoUpdate = 0;
-        zoneArray = new Zone[0];
-        notTimespan = 10000;
-        statTimespan = 604800;
-        cleanStatsOld = 2592000;
-        updateFreq = 3600;
-    	File f = new File(RealShopping.MANDIR);
+		cartEnabledW = new HashSet<String>();
+		debug = false;
+		keepstolen = false;
+		langpack = "default";
+		punishment = "none";
+		pstorecreate = 0.0;
+		enableSelling = true;
+		enableDoors = false;
+		disableDrop = true;
+		disableCrafting = true;
+		disableBuckets = true;
+		disableEnderchests = true;
+		autoprotect = true;
+		allowFillChests = true;
+		enableAI = false;
+		deliveryZones = 0;
+		autoUpdate = 0;
+		zoneArray = new Zone[0];
+		notTimespan = 10000;
+		statTimespan = 604800;
+		cleanStatsOld = 2592000;
+		updateFreq = 3600;
+		File f = new File(RealShopping.MANDIR);
     	if(!f.exists()) f.mkdir();
 		FileInputStream fstream;
 		BufferedReader br;
+		
+		if(curVal == 2){//Initialize Setting values from here. If curVal is something other than 2, they have already been initailized.
+		    Setting.values();//This is the first time Setting is called, hence all the settings are initialized and they render the correct orderValues.
+		}
+		int notInConfig = curVal - 1;
+
 		try {
 			f = new File(RealShopping.MANDIR + "realshopping.properties");
-			int notInConfig = MAX;
 			if(f.exists()) {
 				fstream = new FileInputStream(f);
 				br = new BufferedReader(new InputStreamReader(fstream));
@@ -159,88 +145,20 @@ public class Config {
 				if(!f.exists()) f.createNewFile();
 				PrintWriter pW = new PrintWriter(new BufferedWriter(new FileWriter(RealShopping.MANDIR + "realshopping.properties", true)));
 				
-				if(notInConfig >= AUTOUPDATE){
-						pW.println("enable-automatic-updates:"+getAutoUpdateStr(autoUpdate)+"  #Can be false, check-console, check, ask-console, ask, or true");
-						notInConfig -= AUTOUPDATE;
-				} if(notInConfig >= LANGPACK){
-					pW.println("language-pack:"+langpack+"  #located in langpacks/ , without the .xml ending");
-					notInConfig -= LANGPACK;
-				} if(notInConfig >= PUNISHMENT){
-					pW.println("punishment:"+punishment);
-					notInConfig -= PUNISHMENT;
-				} if(notInConfig >= KEEPSTOLEN){
-					pW.println("keep-stolen-items-after-punish:"+keepstolen);
-					notInConfig -= KEEPSTOLEN;
-				} if(notInConfig >= JAILLOC){
-					pW.println("jail-location:"+jailLoc.getWorld().getName()+";"+jailLoc.getBlockX()+","+jailLoc.getBlockY()+","+jailLoc.getBlockZ());
-					notInConfig -= JAILLOC;
-				} if(notInConfig >= HELLLOC){
-					pW.println("hell-location:"+hellLoc.getWorld().getName()+";"+hellLoc.getBlockX()+","+hellLoc.getBlockY()+","+hellLoc.getBlockZ());
-					notInConfig -= HELLLOC;
-				} if(notInConfig >= DROPLOC){
-					pW.println("drop-items-at:"+dropLoc.getWorld().getName()+";"+dropLoc.getBlockX()+","+dropLoc.getBlockY()+","+dropLoc.getBlockZ());
-					notInConfig -= DROPLOC;
-				} if(notInConfig >= PSTORECREATE){
-					pW.println("player-stores-create-cost:"+pstorecreate);
-					notInConfig -= PSTORECREATE;
-				} if(notInConfig >= ENABLESELLING){
-					pW.println("enable-selling-to-stores:"+enableSelling);
-					notInConfig -= ENABLESELLING;
-				} if(notInConfig >= ENABLEDOORS){
-					pW.println("enable-doors-as-entrances:"+enableDoors);
-					notInConfig -= ENABLEDOORS;
-				} if(notInConfig >= DISABLEDROP){
-					pW.println("disable-item-drop:"+disableDrop+"  #Disable dropping items in stores.");
-					notInConfig -= DISABLEDROP;
-				} if(notInConfig >= DISABLECRAFTING){
-					pW.println("disable-crafting:"+disableCrafting+"  #Disable crafting in stores.");
-					notInConfig -= DISABLECRAFTING;
-				} if(notInConfig >= DISABLEBUCKETS){
-					pW.println("disable-buckets:"+disableBuckets+"  #Disable using buckets in stores.");
-					notInConfig -= DISABLEBUCKETS;
-				} if(notInConfig >= DISABLEENDERCHESTS){
-					pW.println("disable-ender-chests:"+disableEnderchests+"  #Disable using Ender Chests in stores.");
-					notInConfig -= DISABLEENDERCHESTS;
-				} if(notInConfig >= CARTENABLEDW){
-	    			pW.print("enable-shopping-carts-in-worlds:");
-	    			boolean i = true;
-	    			for(String str:cartEnabledW){
-	    				if(i){
-	   						pW.print(str);
-	   						i = false;
-	   					}
-	    				else pW.print("," + str);
-	    			}
-	   				pW.println("  #Separate worlds by commas, or @all for all");
-					notInConfig -= CARTENABLEDW;
-				} if(notInConfig >= DELIVERYZONES){
-					pW.println("delivery-cost-zones:"+deliveryZones+"  #More about this on the plugin page.");
-					notInConfig -= DELIVERYZONES;
-				} if(notInConfig >= ALLOWFILLCHESTS){
-					pW.println("allow-filling-chests:"+allowFillChests);
-					notInConfig -= ALLOWFILLCHESTS;
-				} if(notInConfig >= AUTOPROTECT){
-					pW.println("auto-protect-chests:"+autoprotect+"  #Protect auto-refilling chests automaticly from being opened outside a store. Just a little security feature.");
-					notInConfig -= AUTOPROTECT;
-				} if(notInConfig >= NOTTIMESPAN){
-					pW.println("notificatior-update-frequency:"+notTimespan);
-					notInConfig -= NOTTIMESPAN;
-				} if(notInConfig >= ENABLEAI){
-					pW.println("enable-automatic-store-management:"+enableAI);
-					notInConfig -= ENABLEAI;
-				} if(notInConfig >= UPDATEFREQ){
-					pW.println("stat-updater-frequency:"+RSUtils.getTimeString(updateFreq));
-					notInConfig -= UPDATEFREQ;
-				} if(notInConfig >= STATTIMESPAN){
-					pW.println("statistics-timespan:"+RSUtils.getTimeString(statTimespan));
-					notInConfig -= STATTIMESPAN;
-				} if(notInConfig >= CLEANSTATSOLD){
-					pW.println("clean-stats-older-than:"+RSUtils.getTimeString(cleanStatsOld));
-					notInConfig -= CLEANSTATSOLD;
+				//Look for missing lines and append them to the file
+				Setting[] vals = Setting.values();
+				ArrayUtils.reverse(vals);//Check for highest values first
+				for(Setting s:vals){
+				    if(s.orderValue > notInConfig) continue;//Continue if line is in config
+				    
+				    pW.println(s.configString + ":" + s.returnVar());
+				    notInConfig -= s.orderValue;
 				}
+				
 				pW.close();
 				
-				if(notInConfig >= 1){//Read the file all over again, and save every line as reading
+				//Read the file all over again, and save every line as reading
+				if(notInConfig >= 1){
 					fstream = new FileInputStream(f);
 					br = new BufferedReader(new InputStreamReader(fstream));
 					File tempF = new File(RealShopping.MANDIR + "tempproperties");
@@ -250,31 +168,29 @@ public class Config {
 					
 					int i = 0;
 					while ((s = br.readLine()) != null){
-						if(i==0){
-							pW.println("Properties file for RealShopping " + RealShopping.VERSION);
-							pW.println("## Do not edit above line!");
-							pW.println("## The rest of a line after a hashtag is a comment and will be ignored.");
-							pW.println("#");
-						}
-						if(s.length() >= 33 && s.substring(0,33).equals("Properties file for RealShopping ")){}
-						else if(s.length() >= 26 && s.substring(0,26).trim().equals("## Do not edit above line!")){}
-						else if(s.length() >= 71 && s.substring(0,71).trim().equals("## The rest of a line after a hashtag is a comment and will be ignored.")){}
-						else if(s.length() >= 1 && s.substring(0,1).trim().equals("#")){}
-						else
-							pW.println(s);
-						i++;
+					    if(i==0){
+					        pW.println("Properties file for RealShopping " + RealShopping.VERSION);
+					        pW.println("## Do not edit above line!");
+					        pW.println("## The rest of a line after a hashtag is a comment and will be ignored.");
+					        pW.println("#");
+					    }
+					    if(s.length() >= 33 && s.substring(0,33).equals("Properties file for RealShopping ")){}
+					    else if(s.length() >= 26 && s.substring(0,26).trim().equals("## Do not edit above line!")){}
+					    else if(s.length() >= 71 && s.substring(0,71).trim().equals("## The rest of a line after a hashtag is a comment and will be ignored.")){}
+					    else if(s.length() >= 1 && s.substring(0,1).trim().equals("#")){}
+					    else
+					        pW.println(s);
+					    i++;
 					}
-					
+
 					pW.close();
 					fstream.close();
 					br.close();
 					if(f.delete()){
-						if(tempF.renameTo(f))
-							notInConfig -= 1;
-						else
-							RealShopping.loginfo("Couldn't save tempproperties as realshopping.properties (Error #202)");
+					    if(tempF.renameTo(f)) notInConfig -= 1;
+					    else RealShopping.loginfo("Couldn't save tempproperties as realshopping.properties (Error #202)");
 					} else {
-						RealShopping.loginfo("Couldn't save tempproperties as realshopping.properties (Error #201)");
+					    RealShopping.loginfo("Couldn't save tempproperties as realshopping.properties (Error #201)");
 					}
 				}
 			}
@@ -286,219 +202,36 @@ public class Config {
 			RealShopping.loginfo("Failed while reading realshopping.properties. Default properties loaded.");
 		}
 	}
-	
-	static void resetVars(){
-    	cartEnabledW = new HashSet<String>();
-    	debug = false;
-        keepstolen = false;
-        enableSelling = false;
-        autoprotect = false;
-        deliveryZones = -1;
-        autoUpdate = 0;
-        punishment = null;
-        langpack = null;
-        hellLoc = null;
-        jailLoc = null;
-        dropLoc = null;
-        pstorecreate = 0.0;
-        notTimespan = 0;
-        statTimespan = 0;
-        cleanStatsOld = 0;
-        updateFreq = 0;
-        allowFillChests = false;
-        enableAI = false;
-        disableDrop = false;
-        disableCrafting = false;
-        disableBuckets = false;
-        disableEnderchests = false;
-        enableDoors = false;
-	}
-	
-	private static void initVals(){
-		int curVal = 2;
-		for(int i = 0;i < 23;i++){
-			if(i == 0) CLEANSTATSOLD = curVal;
-			else if(i == 1) STATTIMESPAN = curVal;
-			else if(i == 2) UPDATEFREQ = curVal;
-			else if(i == 3) ENABLEAI = curVal;
-			else if(i == 4) NOTTIMESPAN = curVal;
-			else if(i == 5) AUTOPROTECT = curVal;
-			else if(i == 6) ALLOWFILLCHESTS = curVal;
-			else if(i == 7) DELIVERYZONES = curVal;
-			else if(i == 8) CARTENABLEDW = curVal;
-			else if(i == 9) DISABLEENDERCHESTS = curVal;
-			else if(i == 10) DISABLEBUCKETS = curVal;
-			else if(i == 11) DISABLECRAFTING = curVal;
-			else if(i == 12) DISABLEDROP = curVal;
-			else if(i == 13) ENABLEDOORS = curVal;
-			else if(i == 14) ENABLESELLING = curVal;
-			else if(i == 15) PSTORECREATE = curVal;
-			else if(i == 16) DROPLOC = curVal;
-			else if(i == 17) HELLLOC = curVal;
-			else if(i == 18) JAILLOC = curVal;
-			else if(i == 19) KEEPSTOLEN = curVal;
-			else if(i == 20) PUNISHMENT = curVal;
-			else if(i == 21) LANGPACK = curVal;
-			else if(i == 22) AUTOUPDATE = curVal;
-			curVal *= 2;
-		}
-		MAX = curVal - 1;
-	}
-	
+		
 	static int readConfigLine(String line){
-		int foo = 0;
-		boolean comment = false;
-		while(true){
-			if(line.length() > foo){
-				if(line.charAt(foo) != ' ' && line.charAt(foo) != '\t'){//Continue searching if space or tab
-					if(line.charAt(foo) == '#') comment = true;
-					break;
-				}
-			}
-			foo++;
+	    int beginning = 0;
+	    boolean comment = false;
+	    while(true){
+	        if(line.length() <= beginning){
+	            comment = true;//Empty line, break.
+	            break;
+	        }
+	        if(line.charAt(beginning) != ' ' && line.charAt(beginning) != '\t'){//Continue searching if space or tab
+	            if(line.charAt(beginning) == '#') comment = true;
+	            break;
+	        }
+	        beginning++;
 		}
 		if(!comment){
-			String s = line.substring(foo, line.length()).split("#")[0].trim();
+			String s = line.substring(beginning, line.length()).split("#")[0].trim();
 			if(s.length() > HEADER.length() && s.substring(0, HEADER.length()).equals(HEADER)){//If header
 				version = Float.parseFloat(s.substring(HEADER.length()));
 				if(version == RealShopping.VERFLOAT) return 1;
 			} else {
 				if(s.equals("debug")){
 					debug = true;
-				} else if(s.split(":")[0].equals("punishment")){
-					punishment = s.split(":")[1];
-					return PUNISHMENT;
-				} else if(s.split(":")[0].equals("keep-stolen-items-after-punish")){
-					keepstolen = Boolean.parseBoolean(s.split(":")[1]);
-					return KEEPSTOLEN;
-				} else if(s.split(":")[0].equals("jail-location")){
-					if(version >= 0.31){
-						if(server.getWorld(s.split(":")[1].split(";")[0]) != null){
-							jailLoc.setWorld(server.getWorld(s.split(":")[1].split(";")[0]));
-							jailLoc.setX(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[0]));
-							jailLoc.setY(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[1]));
-							jailLoc.setZ(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[2]));
-							return JAILLOC;
-						}
-					} else {
-						jailLoc.setWorld(server.getWorld("world"));
-						jailLoc.setX(Integer.parseInt(s.split(":")[1].split(",")[0]));
-						jailLoc.setY(Integer.parseInt(s.split(":")[1].split(",")[1]));
-						jailLoc.setZ(Integer.parseInt(s.split(":")[1].split(",")[2]));
-						return JAILLOC;
-					}
-				} else if(s.split(":")[0].equals("hell-location")){
-					if(version >= 0.31){
-						if(server.getWorld(s.split(":")[1].split(";")[0]) != null){
-							hellLoc.setWorld(server.getWorld(s.split(":")[1].split(";")[0]));
-							hellLoc.setX(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[0]));
-							hellLoc.setY(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[1]));
-							hellLoc.setZ(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[2]));
-							return HELLLOC;
-						}
-					} else {
-						hellLoc.setWorld(server.getWorld("world"));
-						hellLoc.setX(Integer.parseInt(s.split(":")[1].split(",")[0]));
-						hellLoc.setY(Integer.parseInt(s.split(":")[1].split(",")[1]));
-						hellLoc.setZ(Integer.parseInt(s.split(":")[1].split(",")[2]));
-						return HELLLOC;
-					}
-				} else if(s.split(":")[0].equals("drop-items-at")){
-					if(version >= 0.31){
-						if(server.getWorld(s.split(":")[1].split(";")[0]) != null){
-							dropLoc.setWorld(server.getWorld(s.split(":")[1].split(";")[0]));
-							dropLoc.setX(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[0]));
-							dropLoc.setY(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[1]));
-							dropLoc.setZ(Integer.parseInt(s.split(":")[1].split(";")[1].split(",")[2]));
-							return DROPLOC;
-						}
-					} else {
-						dropLoc.setWorld(server.getWorld("world"));
-						dropLoc.setX(Integer.parseInt(s.split(":")[1].split(",")[0]));
-						dropLoc.setY(Integer.parseInt(s.split(":")[1].split(",")[1]));
-						dropLoc.setZ(Integer.parseInt(s.split(":")[1].split(",")[2]));
-						return DROPLOC;
-					}
-				} else if(s.split(":")[0].equals("player-stores-create-cost")){
-					pstorecreate = Double.parseDouble(s.split(":")[1]);
-					return PSTORECREATE;
-				} else if(s.split(":")[0].equals("enable-shopping-carts-in-worlds")){
-					if(s.split(":").length > 1){
-						for(String str:s.split(":")[1].split(",")){
-							if(str.equals("@all")){
-								cartEnabledW.clear();
-								cartEnabledW.add("@all");
-								break;
-							} else if(server.getWorld(str) != null) cartEnabledW.add(str);
-						}
-					}
-					return CARTENABLEDW;
-				} else if(s.split(":")[0].equals("enable-selling-to-stores")){
-					enableSelling = Boolean.parseBoolean(s.split(":")[1]);
-					return ENABLESELLING;
-				} else if(s.split(":")[0].equals("enable-doors-as-entrances")){
-					enableDoors = Boolean.parseBoolean(s.split(":")[1]);
-					return ENABLEDOORS;
-				} else if(s.split(":")[0].equals("disable-item-drop")){
-					disableDrop = Boolean.parseBoolean(s.split(":")[1]);
-					return DISABLEDROP;
-				} else if(s.split(":")[0].equals("disable-crafting")){
-					disableCrafting = Boolean.parseBoolean(s.split(":")[1]);
-					return DISABLECRAFTING;
-				} else if(s.split(":")[0].equals("disable-buckets")){
-					disableBuckets = Boolean.parseBoolean(s.split(":")[1]);
-					return DISABLEBUCKETS;
-				} else if(s.split(":")[0].equals("disable-ender-chests")){
-					disableEnderchests = Boolean.parseBoolean(s.split(":")[1]);
-					return DISABLEENDERCHESTS;
-				} else if(s.split(":")[0].equals("language-pack")){
-					langpack = s.split(":")[1];
-					return LANGPACK;
-				} else if(s.split(":")[0].equals("delivery-cost-zones")){
-					deliveryZones = Integer.parseInt(s.split(":")[1]);
-					zoneArray = new Zone[deliveryZones];
-					return DELIVERYZONES;
-				} else if(s.split(":")[0].equals("auto-protect-chests")){
-					autoprotect = Boolean.parseBoolean(s.split(":")[1]);
-					return AUTOPROTECT;
-				} else if(s.split(":")[0].equals("enable-automatic-updates")){
-					String tempS = s.split(":")[1];
-					if(tempS.equals("true")) autoUpdate = 5;
-					else if(tempS.equals("ask")) autoUpdate = 4;
-					else if(tempS.equals("ask-console")) autoUpdate = 3;
-					else if(tempS.equals("check")) autoUpdate = 2;
-					else if(tempS.equals("check-console")) autoUpdate = 1;
-					else autoUpdate = 0;
-					return AUTOUPDATE;
-				} else if(s.length() > 8 && s.substring(0, 5).equals("zone ")){
-					String tempS = s.substring(5);
-					int nr = Integer.parseInt(tempS.split(":")[0]);
-					if(zoneArray.length >= nr)
-						if(tempS.split(":")[1].equalsIgnoreCase("world")){
-							if(tempS.endsWith("%")) zoneArray[nr - 1] = new Zone(true, Integer.parseInt(tempS.split(":")[2].split("%")[0]));
-							else zoneArray[nr - 1] = new Zone(true, Double.parseDouble(tempS.split(":")[2]));
-						} else {
-							if(tempS.endsWith("%")) zoneArray[nr - 1] = new Zone(Integer.parseInt(tempS.split(":")[1]), Integer.parseInt(tempS.split(":")[2].split("%")[0]));
-							else zoneArray[nr - 1] = new Zone(Integer.parseInt(tempS.split(":")[1]), Double.parseDouble(tempS.split(":")[2]));
-						}
-				} else if(s.split(":")[0].equals("allow-filling-chests")){
-					allowFillChests = Boolean.parseBoolean(s.split(":")[1]);
-					return ALLOWFILLCHESTS;
-				} else if(s.split(":")[0].equals("enable-automatic-store-management")){
-					enableAI = Boolean.parseBoolean(s.split(":")[1]);
-					return ENABLEAI;
-				} else if(s.split(":")[0].equals("stat-updater-frequency")){
-					updateFreq = RSUtils.getTimeInt(s.split(":")[1]);
-					return UPDATEFREQ;
-				} else if(s.split(":")[0].equals("statistics-timespan")){
-					statTimespan = RSUtils.getTimeInt(s.split(":")[1]);
-					return STATTIMESPAN;
-				} else if(s.split(":")[0].equals("clean-stats-older-than")){
-					cleanStatsOld = RSUtils.getTimeInt(s.split(":")[1]);
-					return CLEANSTATSOLD;
-				} else if(s.split(":")[0].equals("notificatior-update-frequency")){
-					notTimespan = Integer.parseInt(s.split(":")[1]);
-					return NOTTIMESPAN;
+				} else {
+				    for(Setting sett:Setting.values()){
+				        if(sett.configString.equals(s.split(":")[0])){
+				            if(s.indexOf(":") + 1 > s.length()) sett.setVar(s.substring(s.indexOf(":") + 1));
+				            return sett.orderValue;
+				        }
+				    }
 				}
 			}
 		}
@@ -540,6 +273,234 @@ public class Config {
 	public static Set<String> getCartEnabledW() { return cartEnabledW; }
 	public static boolean isCartEnabledW(String s) { if(cartEnabledW.contains("@all") || cartEnabledW.contains(s)) return true; return false; }
 
+	
+	private enum Setting {
+	    //Lines are displayed in config in reverse order
+	    //The further down a line is, the higher its order value, and the sooner is it checked for.
+	    CLEANSTATSOLD("clean-stats-older-than"),
+	    STATTIMESPAN("statistics-timespan"),
+	    UPDATEFREQ("stat-updater-frequency"),
+	    ENABLEAI("enable-automatic-store-management"),
+	    NOTTIMESPAN("notificatior-update-frequency"),
+	    AUTOPROTECT("auto-protect-chests"),
+	    ALLOWFILLCHESTS("allow-filling-chests"),
+	    DELIVERYZONES("delivery-cost-zones"),
+	    CARTENABLEDW("enable-shopping-carts-in-worlds"),
+	    DISABLEENDERCHESTS("disable-ender-chests"),
+	    DISABLEBUCKETS("disable-buckets"),
+	    DISABLECRAFTING("disable-crafting"),
+	    DISABLEDROP("disable-item-drop"),
+	    ENABLEDOORS("enable-doors-as-entrances"),
+	    ENABLESELLING("enable-selling-to-stores"),
+	    PSTORECREATE("player-stores-create-cost"),
+	    DROPLOC("drop-items-at"),
+	    HELLLOC("hell-location"),
+	    JAILLOC("jail-location"),
+	    KEEPSTOLEN("keep-stolen-items-after-punish"),
+	    PUNISHMENT("punishment"),
+	    LANGPACK("language-pack"),
+	    AUTOUPDATE("enable-automatic-updates");
+
+	    private final String configString;
+	    private final int orderValue;
+	    
+	    Setting(String configString){
+	        this.configString = configString;
+	        this.orderValue = curVal;
+	        curVal *= 2;
+	    }
+	    void setVar(String setting){
+	        switch(this){
+	            case PUNISHMENT:
+	                punishment = setting;
+	                break;
+	            case KEEPSTOLEN:
+	                keepstolen = Boolean.parseBoolean(setting);
+	                break;
+	            case JAILLOC:
+	                if(version >= 0.31){
+	                    if(server.getWorld(setting.split(";")[0]) != null){
+	                        jailLoc.setWorld(server.getWorld(setting.split(";")[0]));
+	                        jailLoc.setX(Integer.parseInt(setting.split(";")[1].split(",")[0]));
+	                        jailLoc.setY(Integer.parseInt(setting.split(";")[1].split(",")[1]));
+	                        jailLoc.setZ(Integer.parseInt(setting.split(";")[1].split(",")[2]));
+	                    }
+	                } else {
+	                    jailLoc.setWorld(server.getWorld("world"));
+	                    jailLoc.setX(Integer.parseInt(setting.split(",")[0]));
+	                    jailLoc.setY(Integer.parseInt(setting.split(",")[1]));
+	                    jailLoc.setZ(Integer.parseInt(setting.split(",")[2]));
+	                }
+	                break;
+	            case HELLLOC:
+	                if(version >= 0.31){
+	                    if(server.getWorld(setting.split(";")[0]) != null){
+	                        hellLoc.setWorld(server.getWorld(setting.split(";")[0]));
+	                        hellLoc.setX(Integer.parseInt(setting.split(";")[1].split(",")[0]));
+	                        hellLoc.setY(Integer.parseInt(setting.split(";")[1].split(",")[1]));
+	                        hellLoc.setZ(Integer.parseInt(setting.split(";")[1].split(",")[2]));
+	                    }
+	                } else {
+	                    hellLoc.setWorld(server.getWorld("world"));
+	                    hellLoc.setX(Integer.parseInt(setting.split(",")[0]));
+	                    hellLoc.setY(Integer.parseInt(setting.split(",")[1]));
+	                    hellLoc.setZ(Integer.parseInt(setting.split(",")[2]));
+	                }
+	                break;
+	            case DROPLOC:
+	                if(version >= 0.31){
+	                    if(server.getWorld(setting.split(";")[0]) != null){
+	                        dropLoc.setWorld(server.getWorld(setting.split(";")[0]));
+	                        dropLoc.setX(Integer.parseInt(setting.split(";")[1].split(",")[0]));
+	                        dropLoc.setY(Integer.parseInt(setting.split(";")[1].split(",")[1]));
+	                        dropLoc.setZ(Integer.parseInt(setting.split(";")[1].split(",")[2]));
+	                    }
+	                } else {
+	                    dropLoc.setWorld(server.getWorld("world"));
+	                    dropLoc.setX(Integer.parseInt(setting.split(",")[0]));
+	                    dropLoc.setY(Integer.parseInt(setting.split(",")[1]));
+	                    dropLoc.setZ(Integer.parseInt(setting.split(",")[2]));
+	                }
+	                break;
+	            case PSTORECREATE:
+	                pstorecreate = Double.parseDouble(setting);
+	                break;
+	            case CARTENABLEDW:
+	                for(String str:setting.split(",")){
+	                    if(str.equals("@all")){
+	                        cartEnabledW.clear();
+	                        cartEnabledW.add("@all");
+	                        break;
+	                    } else if(server.getWorld(str) != null) cartEnabledW.add(str);
+	                }
+	                break;
+	            case ENABLESELLING:
+	                enableSelling = Boolean.parseBoolean(setting);
+	                break;
+	            case ENABLEDOORS:
+	                enableDoors = Boolean.parseBoolean(setting);
+	                break;
+	            case DISABLEDROP:
+	                disableDrop = Boolean.parseBoolean(setting);
+	                break;
+	            case DISABLECRAFTING:
+	                disableCrafting = Boolean.parseBoolean(setting);
+	                break;
+	            case DISABLEBUCKETS:
+	                disableBuckets = Boolean.parseBoolean(setting);
+	                break;
+	            case DISABLEENDERCHESTS:
+	                disableEnderchests = Boolean.parseBoolean(setting);
+	                break;
+	            case LANGPACK:
+	                langpack = setting;
+	                break;
+	            case DELIVERYZONES:
+	                deliveryZones = Integer.parseInt(setting);
+	                zoneArray = new Zone[deliveryZones];
+	                break;
+	            case AUTOPROTECT:
+	                autoprotect = Boolean.parseBoolean(setting);
+	                break;
+	            case AUTOUPDATE:
+	                String tempS = setting;
+	                if(tempS.equals("true")) autoUpdate = 5;
+	                else if(tempS.equals("ask")) autoUpdate = 4;
+	                else if(tempS.equals("ask-console")) autoUpdate = 3;
+	                else if(tempS.equals("check")) autoUpdate = 2;
+	                else if(tempS.equals("check-console")) autoUpdate = 1;
+	                else autoUpdate = 0;
+/*	        } else if(s.length() > 8 && s.substring(0, 5).equals("zone ")){
+	            String tempS = s.substring(5);
+	            int nr = Integer.parseInt(tempS.split(":")[0]);
+	            if(zoneArray.length >= nr)
+	                if(tempS.split(":")[1].equalsIgnoreCase("world")){
+	                    if(tempS.endsWith("%")) zoneArray[nr - 1] = new Zone(true, Integer.parseInt(tempS.split(":")[2].split("%")[0]));
+	                    else zoneArray[nr - 1] = new Zone(true, Double.parseDouble(tempS.split(":")[2]));
+	                } else {
+	                    if(tempS.endsWith("%")) zoneArray[nr - 1] = new Zone(Integer.parseInt(tempS.split(":")[1]), Integer.parseInt(tempS.split(":")[2].split("%")[0]));
+	                    else zoneArray[nr - 1] = new Zone(Integer.parseInt(tempS.split(":")[1]), Double.parseDouble(tempS.split(":")[2]));
+	                }
+	            break;*/
+	            case ALLOWFILLCHESTS:
+	                allowFillChests = Boolean.parseBoolean(setting);
+	                break;
+	            case ENABLEAI:
+	                enableAI = Boolean.parseBoolean(setting);
+	                break;
+	            case UPDATEFREQ:
+	                updateFreq = RSUtils.getTimeInt(setting);
+	                break;
+	            case STATTIMESPAN:
+	                statTimespan = RSUtils.getTimeInt(setting);
+	                break;
+	            case CLEANSTATSOLD:
+	                cleanStatsOld = RSUtils.getTimeInt(setting);
+	                break;
+	            case NOTTIMESPAN:
+	                notTimespan = Integer.parseInt(setting);
+	        }
+	    }
+	        
+	    String returnVar(){
+	        switch(this){
+	            case AUTOUPDATE:
+	                return getAutoUpdateStr(autoUpdate)+"  #Can be false, check-console, check, ask-console, ask, or true";
+	            case LANGPACK:
+	                return langpack+"  #located in langpacks/ , without the .xml ending";
+	            case PUNISHMENT:
+	                return punishment;
+	            case KEEPSTOLEN:
+	                return keepstolen + "";
+	            case JAILLOC:
+	                return jailLoc.getWorld().getName()+";"+jailLoc.getBlockX()+","+jailLoc.getBlockY()+","+jailLoc.getBlockZ();
+	            case HELLLOC:
+	                return hellLoc.getWorld().getName()+";"+hellLoc.getBlockX()+","+hellLoc.getBlockY()+","+hellLoc.getBlockZ();
+	            case DROPLOC:
+	                return dropLoc.getWorld().getName()+";"+dropLoc.getBlockX()+","+dropLoc.getBlockY()+","+dropLoc.getBlockZ();
+	            case PSTORECREATE:
+	                return pstorecreate + "";
+	            case ENABLESELLING:
+	                return enableSelling + "";
+	            case ENABLEDOORS:
+	                return enableDoors + "";
+	            case DISABLEDROP:
+	                return disableDrop+"  #Disable dropping items in stores.";
+	            case DISABLECRAFTING:
+	                return disableCrafting+"  #Disable crafting in stores.";
+	            case DISABLEBUCKETS:
+	                return disableBuckets+"  #Disable using buckets in stores.";
+	            case DISABLEENDERCHESTS:
+	                return disableEnderchests+"  #Disable using Ender Chests in stores.";
+	            case CARTENABLEDW:
+	                String s = "";
+	                for(String str:cartEnabledW){
+	                    if(!s.equals("")) s += ",";
+	                    s += str;
+	                }
+	                return s + "  #Separate worlds by commas, or @all for all";
+	            case DELIVERYZONES:
+	                return deliveryZones+"  #More about this on the plugin page.";
+	            case ALLOWFILLCHESTS:
+	                return allowFillChests + "";
+	            case AUTOPROTECT:
+	                return autoprotect+"  #Protect auto-refilling chests automaticly from being opened outside a store. Just a little security feature.";
+	            case NOTTIMESPAN:
+	                return notTimespan + "";
+	            case ENABLEAI:
+	                return enableAI + "";
+	            case UPDATEFREQ:
+	                return RSUtils.getTimeString(updateFreq);
+	            case STATTIMESPAN:
+	                return RSUtils.getTimeString(statTimespan);
+	            case CLEANSTATSOLD:
+	                return RSUtils.getTimeString(cleanStatsOld);
+	            default :
+	                return "";
+	        }
+	    }
+
+	}
 }
 
 class Zone {

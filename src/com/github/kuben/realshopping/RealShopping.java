@@ -125,7 +125,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         forbiddenInStore = new HashSet<>();
         tpLocBlacklist = false;
 
-        Config.resetVars();
+        //Config.resetVars(); Don't know why I had this, the vars are set in the beginning of Config.initialize() anyways
 
         entrance = null;
         exit = null;
