@@ -651,19 +651,21 @@ public class Shop {//TODO add load/save interface
         List<ItemStack> returned = new ArrayList<>();
         for (int i=0;i<iS.length;i++) {
             ItemStack replacement = null;
-            if(iS[i] != null && iS[i].getAmount() > pinv.getAmount(iS[i])) {
+            if(iS[i] != null && iS[i].getAmount() >= pinv.getAmount(iS[i])) {
                 int exceed = iS[i].getAmount() - pinv.getAmount(iS[i]);
+                replacement = new ItemStack(iS[i]);
                 if(exceed > 0){
-                    replacement = new ItemStack(iS[i]);
                     replacement.setAmount(exceed);
                 }
                 iS[i].setAmount(pinv.getAmount(iS[i]));
             }
-            if(replacement != null) returned.add(replacement);
+            
             float sellp = sellPrice(shop, iS[i]);
-            if(sellp <= 0.0f) continue;
-            payment += sellp;
-            sold.add(iS[i]);
+            if(sellp > 0.0f) {
+                payment += sellp;
+                sold.add(iS[i]);
+            } else replacement = iS[i];
+            if(replacement != null) returned.add(replacement);
         }
         if(!sold.isEmpty()) {
             String own = shop.getOwner();
