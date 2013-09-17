@@ -53,7 +53,6 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
@@ -265,12 +264,12 @@ public class RSPlayerListener implements Listener {
                                 if (Config.isEnableSelling()) {
                                     if (RealShopping.getPInv(player).getShop().getBuyFor() > 0) {
                                         if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
-                                            player.sendMessage("I will pay " + Shop.sellPrice(RealShopping.getPInv(player), player.getItemInHand()) + "for that item.");
+                                            player.sendMessage("I will pay " + Shop.sellPrice(RealShopping.getPInv(player).getShop(), player.getItemInHand()) + "for that item.");
                                         }else
                                             if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-                                            Inventory tempInv = Bukkit.createInventory(null, 36, LangPack.SELLTOSTORE);
-                                            player.openInventory(tempInv);
-                                        }
+                                                Inventory tempInv = Bukkit.createInventory(null, 36, LangPack.SELLTOSTORE);
+                                                player.openInventory(tempInv);
+                                            }
                                     } else {
                                         player.sendMessage(ChatColor.RED + LangPack.NOTBUYINGFROMPLAYERS);
                                     }
@@ -331,18 +330,6 @@ public class RSPlayerListener implements Listener {
                     event.setCancelled(true);
                     ((DoubleChest) event.getInventory().getHolder()).getInventory().getViewers().remove(event.getPlayer());
                     ((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + "[RealShopping] " + LangPack.THISCHESTISPROTECTED);
-                }
-            }
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGH)
-    public void onInventoryCloseEvent(InventoryCloseEvent event) {
-        Player player = (Player) event.getPlayer();
-        if (!launchConversationListener(player, event)) {//Redirects event if player is in conversation, otherwise as usual
-            if (event.getInventory().getTitle().equals(LangPack.SELLTOSTORE)) {//TODO consider if this is a good idea, Probably isn't. Create own class extending inventory???
-                if (RealShopping.hasPInv(player)) {//If player is in store
-                    Shop.sellToStore(player, event.getInventory().getContents());
                 }
             }
         }

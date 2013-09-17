@@ -24,6 +24,7 @@ import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.stengun.realshopping.ClassSerialization;
 import com.github.stengun.realshopping.PriceParser;
+import com.github.stengun.realshopping.SellInventoryListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -134,6 +135,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 
         if (!smallReload) {
             getServer().getPluginManager().registerEvents(new RSPlayerListener(), this);
+            getServer().getPluginManager().registerEvents(new SellInventoryListener(), this);
             RSCommandExecutor cmdExe = new RSCommandExecutor(this);
             getCommand("rsenter").setExecutor(cmdExe);
             getCommand("rsexit").setExecutor(cmdExe);

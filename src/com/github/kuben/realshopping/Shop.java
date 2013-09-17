@@ -597,9 +597,15 @@ public class Shop {//TODO add load/save interface
      * Static Methods
      * 
      */
-    public static float sellPrice(RSPlayerInventory pinv, ItemStack ist) {
+    
+   /**
+    * Gets the price for that single item and relative quantity.
+    * @param shop Shop where to bring the price.
+    * @param ist Item we want to check price to.
+    * @return The price for that item. If not present, the price will be 0.0
+    */
+    public static float sellPrice(Shop shop, ItemStack ist) {
         int payment = 0;
-        Shop shop = pinv.getShop();
         if (ist != null) {
             Price itm = new Price(ist);
             if (shop.hasPrice(itm)) {
@@ -607,7 +613,7 @@ public class Shop {//TODO add load/save interface
                 itm.setAmount(amount);
                 double cost = shop.getPrice(itm);
                 if (cost > 0.0) {
-                    int pcnt = 0;
+                    int pcnt;
                     if (shop.hasSale(itm)) {
                         pcnt = 100 - shop.getSale(itm);
                         cost *= pcnt / 100f;
@@ -620,113 +626,98 @@ public class Shop {//TODO add load/save interface
         return payment/100f;
     }
     
+    
+    /**
+     * Sells an item to the store.
+     * In order to work, this method must be called from a player that actually <i>is</i>
+     * in a store.
+     * @param p Player that is going to sell an item.
+     * @param iS Item that's going to be sold.
+     * @return true if the item is sold, false if not or if the player is not in a store.
+     */
     public static boolean sellToStore(Player p, ItemStack[] iS) {
-        if(Config.isEnableSelling() && RealShopping.hasPInv(p)) {
-            RSPlayerInventory pinv = RealShopping.getPInv(p);
-            Shop shop = pinv.getShop();
-            if (shop.getBuyFor() > 0) {
-                int payment = 0;
-                List<ItemStack> sold = new ArrayList<>();
-                for (ItemStack ist : iS) {//Calculate cost and check if player owns items
-                    if (ist != null) {
-                        Price itm = new Price(ist);
-                        if (shop.hasPrice(itm)) {//Something in inventory has a price
-                            int amount = ((RealShopping.isTool(ist.getTypeId())) ? 1 : ist.getAmount());
-                            itm.setAmount(amount);
-                            int soldAm = amount;
-                            for (ItemStack tempSld : sold) {
-                                if (tempSld.getTypeId() == itm.getType()) {
-                                    soldAm += ((RealShopping.isTool(itm.getType())) ? 1 : ist.getAmount());
-                                }
-                            }
-                            double cost = shop.getPrice(itm);
-                            if (pinv.getAmount(ist) >= soldAm && cost > 0.0) {
-                                //There is a sale on that item.
-                                int pcnt = 0;
-                                if (shop.hasSale(itm)) {
-                                    pcnt = 100 - shop.getSale(itm);
-                                    cost *= pcnt / 100f;
-                                }
-                                cost *= shop.getBuyFor() / 100f;
-
-                                sold.add(ist);
-                                payment += cost * (RealShopping.isTool(itm.getType()) ? (double) amount / (double) RealShopping.getMaxDur(itm.getType()) : amount);//Convert items durability to item amount
-                            }
-                        }
-                    }
+        if ( !Config.isEnableSelling() 
+                || !RealShopping.hasPInv(p) 
+                || !RealShopping.getPInv(p).getShop().hasPrices() 
+                || RealShopping.getPInv(p).getShop().getBuyFor() < 1) 
+        {
+            return false;
+        }
+        boolean retval = false;
+        RSPlayerInventory pinv = RealShopping.getPInv(p);
+        Shop shop = pinv.getShop();
+        float payment = 0.0f;
+        List<ItemStack> sold = new ArrayList<>();
+        List<ItemStack> returned = new ArrayList<>();
+        for (int i=0;i<iS.length;i++) {
+            ItemStack replacement = null;
+            if(iS[i] != null && iS[i].getAmount() > pinv.getAmount(iS[i])) {
+                int exceed = iS[i].getAmount() - pinv.getAmount(iS[i]);
+                if(exceed > 0){
+                    replacement = new ItemStack(iS[i]);
+                    replacement.setAmount(exceed);
                 }
-//                boolean cont = true;
-                String own = shop.getOwner();
-                if (!own.equals("@admin")) {
-                    if (RSEconomy.getBalance(own) >= payment / 100f) {
-                        RSEconomy.deposit(p.getName(), payment / 100f);
-                        RSEconomy.withdraw(own, payment / 100f);//If player owned store, withdraw from owner
-                        if(!sold.isEmpty()) {
-                            p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sold.size() + LangPack.ITEMSFOR + payment / 100f + LangPack.UNIT);
-                            RealShopping.sendNotification(own, LangPack.YOURSTORE + shop.getName() 
-                                    + LangPack.BOUGHTSTUFFFOR 
-                                    + payment / 100f + LangPack.UNIT 
-                                    + LangPack.FROM + p.getName());
-                            for (ItemStack key : sold) {
-                                if (Config.isEnableAI()) {
-                                    shop.addStat(new Statistic(new Price(key), key.getAmount(), false));
-                                }
-                                RealShopping.getPInv(p).removeItem(key, key.getAmount());
-                            }
+                iS[i].setAmount(pinv.getAmount(iS[i]));
+            }
+            if(replacement != null) returned.add(replacement);
+            float sellp = sellPrice(shop, iS[i]);
+            if(sellp <= 0.0f) continue;
+            payment += sellp;
+            sold.add(iS[i]);
+        }
+        if(!sold.isEmpty()) {
+            String own = shop.getOwner();
+            if (!own.equals("@admin")) {
+                if (RSEconomy.getBalance(own) >= payment) {
+                    RSEconomy.deposit(p.getName(), payment);
+                    RSEconomy.withdraw(own, payment);//If player owned store, withdraw from owner
+                    p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sold.size() + LangPack.ITEMSFOR + payment + LangPack.UNIT);
+                    RealShopping.sendNotification(own, LangPack.YOURSTORE + shop.getName() 
+                            + LangPack.BOUGHTSTUFFFOR 
+                            + payment + LangPack.UNIT 
+                            + LangPack.FROM + p.getName());
+                    //Adding stats and claim items for owner
+                    for (ItemStack key : sold) {
+                        if (Config.isEnableAI()) {
+                            shop.addStat(new Statistic(new Price(key), key.getAmount(), false));
                         }
-                    } else {
-                        if(!sold.isEmpty()) p.sendMessage(ChatColor.RED + LangPack.OWNER + own + LangPack.CANTAFFORDTOBUYITEMSFROMYOUFOR + payment / 100f + LangPack.UNIT);
+                        shop.addStolenToClaim(key);
                     }
                 } else {
-                    RSEconomy.deposit(p.getName(), payment / 100f);
-                    RSEconomy.withdraw(own, payment / 100f);// If player owned
-                                                            // store, withdraw
-                                                            // from owner
-                    if (!sold.isEmpty())
-                        p.sendMessage(ChatColor.GREEN + LangPack.SOLD + ChatColor.DARK_GREEN + sold.size() + ChatColor.GREEN + LangPack.ITEMSFOR
-                                + ChatColor.DARK_GREEN + payment/100f + ChatColor.GREEN + LangPack.UNIT);
-                    if (RealShopping.getPlayerSettings(own).getBoughtNotifications(shop, payment/100) && !sold.isEmpty())
-                        RealShopping.sendNotification(own, LangPack.YOURSTORE
-                                + shop.getName() + LangPack.BOUGHTSTUFFFOR
-                                + payment / 100f + LangPack.UNIT
-                                + LangPack.FROM + p.getName());//TODO not sure about notification colors
-                    for (ItemStack key : sold) {
-                        RealShopping.getPInv(p).removeItem(key, key.getAmount());
-                    }
+                    p.sendMessage(ChatColor.RED + LangPack.OWNER + own + LangPack.CANTAFFORDTOBUYITEMSFROMYOUFOR + payment + LangPack.UNIT);
+                    p.getInventory().addItem(sold.toArray(new ItemStack[0]));
+                    sold.clear();
                 }
-                if (!own.equals("@admin")) {//Return items if player store.
-                    for (int i = 0; i < sold.size(); i++) {
-                        shop.addStolenToClaim(sold.get(i));
-                    }
-                }
-                ItemStack[] newInv = p.getInventory().getContents();
-                boolean skip = false;//To save CPU
-                for (int i = 0; i < iS.length; i++) {
-                    if (sold.contains(iS[i])) {//Item is sold, do not return to player
-                        sold.remove(iS[i]);
-                    } else {
-                        if (!skip) {
-                            for (int j = 0; j < newInv.length; j++) {
-                                if (newInv[j] == null) {
-                                    newInv[j] = iS[i];
-                                    iS[i] = null;
-                                    break;
-                                }
-                            }
-                        }
-                        if (iS[i] != null) {//Item hasn't been returned
-                            skip = true;
-                            p.getWorld().dropItem(p.getLocation(), iS[i]);
-                        }
-                    }
-                }
-                p.getInventory().setContents(newInv);
-                return true;
+            } else {
+                RSEconomy.deposit(p.getName(), payment);
+                RSEconomy.withdraw(own, payment);
+                p.sendMessage(ChatColor.GREEN + LangPack.SOLD + ChatColor.DARK_GREEN + sold.size() + ChatColor.GREEN + LangPack.ITEMSFOR
+                        + ChatColor.DARK_GREEN + payment + ChatColor.GREEN + LangPack.UNIT);
+                if (RealShopping.getPlayerSettings(own).getBoughtNotifications(shop, (int) (payment)))
+                    RealShopping.sendNotification(own, LangPack.YOURSTORE
+                            + shop.getName() + LangPack.BOUGHTSTUFFFOR
+                            + payment + LangPack.UNIT
+                            + LangPack.FROM + p.getName());
+            }
+            for(ItemStack sold_item:sold) {
+                pinv.removeItem(sold_item, sold_item.getAmount());
+                retval = true;
             }
         }
-        return false;
+        // Return unsold items to the player and remove sold ones from pinv.
+        p.getInventory().addItem(returned.toArray(new ItemStack[0]));
+        return retval;
     }
 
+    /**
+     * Prints on screen the shop's prices.
+     * Prices are divided by pages, every page is composed of 9 lines. With this
+     * method you must choose the page you want to see.
+     * @param sender Player who wrote the command.
+     * @param page Requested page.
+     * @param shop Shop where to bring the price list.
+     * @return true if the command was executed without problems. False if the store has no prices.
+     */
     public static boolean prices(CommandSender sender, int page, Shop shop){//In 0.50+ pages start from 1
         if(shop.hasPrices()){
             Map<Price, Integer> tempMap = shop.getPrices();
@@ -770,15 +761,21 @@ public class Shop {//TODO add load/save interface
                 }
             } else {
                 sender.sendMessage(ChatColor.RED + LangPack.THEREARENOPRICESSETFORTHISSTORE);
-                return true;
+                return false;
             }
         } else {
             sender.sendMessage(ChatColor.RED + LangPack.THEREARENOPRICESSETFORTHISSTORE);
-            return true;
+            return false;
         }
         return true;
     }
 
+    /**
+     * Performs cart checkout and payment for purchased items.
+     * @param player The player that is going to pay for purchased items.
+     * @param invs All inventories a player have.
+     * @return true if this command was executed correctly.
+     */
     public static boolean pay(Player player, Inventory[] invs) {
         if (RealShopping.hasPInv(player)) {
             RSPlayerInventory pinv = RealShopping.getPInv(player);
@@ -819,6 +816,14 @@ public class Shop {//TODO add load/save interface
         return false;
     }
 
+    /**
+     * Correctly exits a player from a store.
+     * This command can be executed only if the player is on a tile marked for "store exit",
+     * otherwise it will return false.
+     * @param player Player that executed this command.
+     * @param cmd True if this command was called from the command line and not from a Listener.
+     * @return true when exit is correctly performed, false if a player can't exit.
+     */
     public static boolean exit(Player player, boolean cmd){
         if(RealShopping.hasPInv(player)){
             if(!PromptMaster.isConversing(player) && !RSPlayerListener.hasConversationListener(player)){
@@ -842,6 +847,14 @@ public class Shop {//TODO add load/save interface
         return false;
     }
 
+    /**
+     * Brings the player into the store correctly.
+     * This command succedes only when the player is ina tile marked as "store entrance", 
+     * otherwise it will return false.
+     * @param player Player that executed this command.
+     * @param cmd True if this command was called from the command line, false if not.
+     * @return True when this command executed correctly, false if a player can't perform this action.
+     */
     public static boolean enter(Player player, boolean cmd){
         if(!PromptMaster.isConversing(player) && !RSPlayerListener.hasConversationListener(player)){
             Location l = player.getLocation().getBlock().getLocation().clone(); 
