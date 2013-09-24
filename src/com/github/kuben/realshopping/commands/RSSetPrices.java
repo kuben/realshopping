@@ -39,7 +39,7 @@ class RSSetPrices extends RSCommand {
         Price itmprice = null;
         Integer[] priminmax = null;
         int amount = 1;
-        boolean handheld = comArgs[0].split(":")[0].equals("hand"); //This is horrible, sorry.
+        boolean handheld = comArgs[0].split(":")[0].equals("hand") || Integer.parseInt(comArgs[0].split(":")[0]) < 0; //This is horrible, sorry.
         String description = "";
         
         switch(comArgs.length) {
@@ -69,6 +69,10 @@ class RSSetPrices extends RSCommand {
                 Object[] o = RSUtils.pullPriceCostMinMax(comArgs[0],this.player);
                 if(o == null || o.length < 2) return false;
                 itmprice = (Price)o[0];
+                if(itmprice.getType() == 0) {
+                    sender.sendMessage(RD + "You aren't holding anything.");
+                    return false;
+                }
                 priminmax = (Integer[])o[1];
                 if(priminmax[0] < 0) return false;
             case 0:
@@ -80,8 +84,10 @@ class RSSetPrices extends RSCommand {
         shop.setPrice(itmprice, priminmax[0]);
         sender.sendMessage(GR + LangPack.PRICEFOR + itmprice.formattedString() + LangPack.SETTO + priminmax[0]/100f + LangPack.UNIT);
         if(priminmax.length > 1) {
-            shop.setMinMax(itmprice, priminmax[1], priminmax[2]);
-            sender.sendMessage(GR + LangPack.SETMINIMALANDMAXIMALPRICESFOR + itmprice.formattedString());
+            if(priminmax[1] > 0 && priminmax[2] > 0) {
+                shop.setMinMax(itmprice, priminmax[1], priminmax[2]);
+                sender.sendMessage(GR + LangPack.SETMINIMALANDMAXIMALPRICESFOR + itmprice.formattedString());
+            } else sender.sendMessage(RD + "A negative number " + LangPack.ISNOTAPROPERARGUMENT +", Skipped min and max prices.");
         }
         return true;
     }

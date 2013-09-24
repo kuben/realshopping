@@ -60,6 +60,7 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.Inventory;
@@ -68,7 +69,23 @@ import org.bukkit.inventory.ItemStack;
 public class RSPlayerListener implements Listener {
 
     private static Set<GeneralListener> listenerSet = new HashSet<>();
-
+    
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onConnect(PlayerJoinEvent event) {
+        String player = event.getPlayer().getName();
+        if(RealShopping.hasPInv(player)) {
+            Shop.addPager(player);
+        }
+    }
+    
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onDisconnect(PlayerQuitEvent event) {
+        String player = event.getPlayer().getName();
+        if(RealShopping.hasPInv(player)) {
+            Shop.removePager(player);
+        }
+    }
+    
     @EventHandler(priority = EventPriority.HIGH)
     public void onTeleport(PlayerTeleportEvent event) {
         Player player = event.getPlayer();
@@ -129,9 +146,8 @@ public class RSPlayerListener implements Listener {
         if (RealShopping.hasPInv(player)) {
             RSPlayerInventory pinv = RealShopping.getPInv(player);
             Shop shop = pinv.getShop();
-            if (!RealShopping.getPInv(player).hasPaid()) {
+            if (!pinv.hasPaid()) {
                 List<ItemStack> newdrops = new LinkedList<>();
-
                 for (ItemStack itm : event.getDrops()) {
                     if (itm == null) {
                         continue;
@@ -148,13 +164,11 @@ public class RSPlayerListener implements Listener {
                                 newdrops.add(itm);
                                 ItemStack stole = new ItemStack(itm);
                                 stole.setAmount(amount - haveamount);
-
-                                shop.addStolenToClaim(stole);
+                                shop.addToClaim(stole);
                                 player.getInventory().remove(stole);
-
                             }
                         } else {
-                            shop.addStolenToClaim(itm);
+                            shop.addToClaim(itm);
                             pinv.removeItem(itm, itm.getAmount());
                             player.getInventory().remove(itm);
                         }
@@ -281,7 +295,7 @@ public class RSPlayerListener implements Listener {
                     }
                 }
             }
-            if (RealShopping.hasPInv(player) && event.getItem() != null && RealShopping.isForbiddenInStore(event.getItem().getTypeId())) {
+            if (RealShopping.hasPInv(player) && event.getItem() != null && RealShopping.isForbiddenInStore(event.getItem().getType())) {
                 if (event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR) {
                     player.sendMessage(ChatColor.RED + LangPack.YOUCANTUSETHATITEMINSTORE);
                     event.setUseItemInHand(Result.DENY);

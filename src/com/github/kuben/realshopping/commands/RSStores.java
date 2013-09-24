@@ -147,12 +147,12 @@ class RSStores extends RSCommand {
 					if(Config.isAllowFillChests()){
 						if(!RealShopping.hasPInv(player) || shop.getOwner().equals(player.getName())){
 							if(player.getLocation().getBlock().getState() instanceof Chest){
-								if(shop.hasStolenToClaim()){
+								if(shop.hasToClaim()){
 									if(amount == 0 || amount > 27) amount = 27;
 									ItemStack[] tempIs = new ItemStack[27];
 									int i = 0;
 									for(;i < amount;i++){
-										tempIs[i] = shop.claimStolenToClaim();
+										tempIs[i] = shop.pullFirstToClaim();
 										if(tempIs[i] == null) break;
 									}
 									ItemStack[] oldCont = ((Chest)player.getLocation().getBlock().getState()).getBlockInventory().getContents();
@@ -170,7 +170,7 @@ class RSStores extends RSCommand {
 				} else {
 					int i = 0;
 					for(;amount == 0 || i < amount;i++){
-						ItemStack tempIs = shop.claimStolenToClaim();
+						ItemStack tempIs = shop.pullFirstToClaim();
 						if(tempIs != null) player.getWorld().dropItem(player.getLocation(), tempIs);
 						else break;
 					}

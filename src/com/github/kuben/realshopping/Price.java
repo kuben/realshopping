@@ -66,7 +66,7 @@ public final class Price {
             }
             else this.metahash = itm.getItemMeta().hashCode();
         }
-        if(RealShopping.isTool(itm.getTypeId())){ // Prototype for different Durability on items.
+        if(RealShopping.isTool(itm.getType())){ // Prototype for different Durability on items.
             this.metahash = (this.metahash + (itm.getDurability() * prime))*prime;
         }
     }
@@ -136,7 +136,7 @@ public final class Price {
      * @return Display formatted string for this object.
      */
     public String formattedString(){
-        return type+(data > 0?":"+data:"")+" "+Material.getMaterial(type).toString() +" * "+ amount + (hasDescription() ? " - "+description:"");
+        return type + (data > 0?":"+data:"") + " " + Material.getMaterial(type).toString() +" * "+ amount + (hasDescription() ? " - "+description:"");
     }
     /**
      * Formats this object with a stat formatted string with amount.

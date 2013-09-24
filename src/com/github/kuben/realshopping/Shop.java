@@ -23,6 +23,7 @@ import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.stengun.realshopping.Pager;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -396,37 +397,62 @@ public class Shop {//TODO add load/save interface
 
     /*
      * 
-     * Stolen, banned, and protected
+     * Stolen (to claim), banned, and protected
      * 
      */
-    private List<ItemStack> stolenToClaim = new ArrayList<>();
+    private List<ItemStack> toClaim = new ArrayList<>();
     private Set<String> banned = new HashSet<>();
     private Set<Location> protectedChests = new HashSet<>();
 
-    public List<ItemStack> getStolenToClaim() {
-        return stolenToClaim;
+    /**
+     * Gets the list of items that wait to be claimed.
+     * @return List of ItemStack ready to be used.
+     */
+    public List<ItemStack> getToClaim() {
+        return toClaim;
     }
 
-    public boolean hasStolenToClaim() {
-        return !stolenToClaim.isEmpty();
+    /**
+     * Checks if a shop has items to claim.
+     * @return true if there are some, false otherwise.
+     */
+    public boolean hasToClaim() {
+        return !toClaim.isEmpty();
     }
 
-    public void clearStolenToClaim() {
-        stolenToClaim.clear();
+    /**
+     * Removes all items that waits to be claimed.
+     */
+    public void clearToClaim() {
+        toClaim.clear();
     }
     
-    public void setStolenToClaim(List<ItemStack> stolen) {
-        this.stolenToClaim = stolen;
+    /**
+     * Manually sets a list of items
+     * @param list_of_to_claim The list of items that we want to be in the shop's claim list.
+     */
+    public void setToClaim(List<ItemStack> list_of_to_claim) {
+        this.toClaim = list_of_to_claim;
     }
     
-    public void addStolenToClaim(ItemStack stolenItem) {
-        stolenToClaim.add(stolenItem);
+    /**
+     * Adds items to claim list.
+     * @param item item(s) to add.
+     */
+    public void addToClaim(ItemStack...item) {
+        toClaim.addAll(Arrays.asList(item));
     }
 
-    public ItemStack claimStolenToClaim() {
-        if (!stolenToClaim.isEmpty()) {
-            ItemStack tempIs = stolenToClaim.get(0);
-            stolenToClaim.remove(tempIs);
+    /**
+     * Retrieves the first item in the claim list, then removes it from it.
+     * Calling this method in a for statement is the best way to use it.
+     * If the list is empty, this method will return null.
+     * @return The first item in the claim list, null if there are no items.
+     */
+    public ItemStack pullFirstToClaim() {
+        if (!toClaim.isEmpty()) {
+            ItemStack tempIs = toClaim.get(0);
+            toClaim.remove(tempIs);
             return tempIs;
         }
         return null;
@@ -459,23 +485,37 @@ public class Shop {//TODO add load/save interface
     public boolean removeProtectedChest(Location chest) {
         return protectedChests.remove(chest);
     }
+    
+    
     /*
-     * 
      * Player timer threads for page flipping.
-     * 
      */
+    
     private static Map<String, Pager> timers = new HashMap<>();
 
+    /**
+     * Retrieves a pager from a player.
+     * @param player Player with the pager we want to retrieve.
+     * @return The correspondent pager, null if a player has no pager.
+     */
     public static Pager getPager(String player) {
         return timers.get(player);
     }
     
+    /**
+     * Safely cleans all pagers.
+     */
     public static void resetPagers(){
         for(String pl:timers.keySet()){
             removePager(pl);
         }
     }
-    
+
+    /**
+     * Safely deletes a player's pager.
+     * If a pager is not present it will do nothing.
+     * @param player Player who's pager is going to be removed.
+     */
     public static void removePager(String player) {
         Pager pg = timers.get(player);
         if (pg == null) {
@@ -492,10 +532,9 @@ public class Shop {//TODO add load/save interface
 
     /**
      * This method allows for safe pager add. If a pager is present it will be
-     * stopped and replaced with the new pager.
+     * stopped and replaced with the new pager. 
      *
-     * @param player
-     * @param pager
+     * @param player Player to add pager to.
      */
     public static void addPager(String player) {
         if (timers.containsKey(player)) {
@@ -511,11 +550,16 @@ public class Shop {//TODO add load/save interface
         pager.start();
         timers.put(player, pager);
     }
-    // ------- MISC
+    
+    
+    // ------- UTILS
 
     /**
      * Exports all protected chests and their location to a string.
-     *
+     * The string exported is ready to be read and parsed.
+     * String format:
+     *  worldname,x,y,z
+     * separated with ;.
      * @return a string with world and location of protected chest.
      */
     public String exportProtectedToString() {
@@ -530,29 +574,6 @@ public class Shop {//TODO add load/save interface
         } else {
             return "";
         }
-    }
-
-    /**
-     * Exports a string with all stolen items that are waiting to be collected.
-     *
-     * @return
-     * @Deprecated
-     */
-    @Deprecated
-    public String exportToClaim() {
-        String s = "";
-        for (ItemStack tempIS : stolenToClaim) {
-            if (tempIS != null) {
-                s += "," + tempIS.getTypeId() + ":" + tempIS.getAmount() + ":" + tempIS.getDurability() + ":" + tempIS.getData().getData();
-                Price p = new Price(tempIS);
-                for (Price tmp : prices.keySet()) { //TODO maybe a better way to do this?
-                    if (tmp.equals(p) && tmp.hasDescription()) {
-                        s += ":" + tmp.getDescription();
-                    }
-                }
-            }
-        }
-        return (s.length() > 0) ? s.substring(1) : "";
     }
 
     /**
@@ -599,7 +620,7 @@ public class Shop {//TODO add load/save interface
      */
     
    /**
-    * Gets the price for that single item and relative quantity.
+    * Gets the price for a single item and its amount.
     * @param shop Shop where to bring the price.
     * @param ist Item we want to check price to.
     * @return The price for that item. If not present, the price will be 0.0
@@ -609,7 +630,7 @@ public class Shop {//TODO add load/save interface
         if (ist != null) {
             Price itm = new Price(ist);
             if (shop.hasPrice(itm)) {
-                int amount = ((RealShopping.isTool(ist.getTypeId())) ? 1 : ist.getAmount());
+                int amount = ((RealShopping.isTool(ist.getType())) ? 1 : ist.getAmount());
                 itm.setAmount(amount);
                 double cost = shop.getPrice(itm);
                 if (cost > 0.0) {
@@ -619,7 +640,7 @@ public class Shop {//TODO add load/save interface
                         cost *= pcnt / 100f;
                     }
                     cost *= shop.getBuyFor() / 100f;
-                    payment += cost * (RealShopping.isTool(itm.getType()) ? (double) amount / (double) RealShopping.getMaxDur(itm.getType()) : amount);//Convert items durability to item amount
+                    payment += cost * (RealShopping.isTool(ist.getType()) ? (double) amount / (double) RealShopping.getMaxDur(ist.getType()) : amount);//Convert items durability to item amount
                 }
             }
         }
@@ -628,7 +649,7 @@ public class Shop {//TODO add load/save interface
     
     
     /**
-     * Sells an item to the store.
+     * Sells items to the store.
      * In order to work, this method must be called from a player that actually <i>is</i>
      * in a store.
      * @param p Player that is going to sell an item.
@@ -683,7 +704,7 @@ public class Shop {//TODO add load/save interface
                         if (Config.isEnableAI()) {
                             shop.addStat(new Statistic(new Price(key), key.getAmount(), false));
                         }
-                        shop.addStolenToClaim(key);
+                        shop.addToClaim(key);
                     }
                 } else {
                     p.sendMessage(ChatColor.RED + LangPack.OWNER + own + LangPack.CANTAFFORDTOBUYITEMSFROMYOUFOR + payment + LangPack.UNIT);

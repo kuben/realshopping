@@ -20,22 +20,32 @@ class RSPrices extends RSCommand {
 
 	@Override
 	protected boolean execute() {
-	    if(args.length == 2 && args[0].equalsIgnoreCase("search")){
-	        if(player != null)
-	            if(RealShopping.getPInv(player) != null){
-	                return searchItem(RealShopping.getPInv(player).getShop(), RSUtils.pullPrice(args[1], this.player));
+            int startargs = 0;
+            Shop store;
+            if(hasStore(args)) {
+                startargs = 1;
+                store = RealShopping.getShop(args[0]);
+            } else store = RealShopping.getPInv(player).getShop();
+	    if(args.length - startargs == 2 && args[startargs].equalsIgnoreCase("search")){
+	        if(player != null) {
+	            if(RealShopping.hasPInv(player)){
+	                return searchItem(store, RSUtils.pullPrice(args[startargs + 1], this.player));
 	            } else sender.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
+                }
 	        else sender.sendMessage(ChatColor.RED + LangPack.YOUHAVETOUSETHESTOREARGUMENTWHENEXECUTINGTHISCOMMANDFROMCONSOLE);
 	        return false;
-	    } else if (args.length == 3 && args[1].equalsIgnoreCase("search")){
-	        return searchItem(RealShopping.getShop(args[0]), RSUtils.pullPrice(args[1], this.player));
 	    }
 	    
 	    if(setVars() == false) return false;
-		
-		return Shop.prices(sender, page, shop);
+            return Shop.prices(sender, page, shop);
 	}
 	
+        private boolean hasStore(String[] args) {
+            if(args.length > 1 && RealShopping.getShop(args[0]) != null) {
+                return true;
+            }
+            return false;
+        }
 	
 	/**
 	 * Sets the <i>shop</i> and <i>page</i> variables.

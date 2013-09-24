@@ -280,7 +280,7 @@ public class RSPlayerInventory {
             if (iS != null) {
                 Price temp = new Price(iS);
                 int amount;
-                if (RealShopping.isTool(iS.getTypeId())) {
+                if (RealShopping.isTool(iS.getType())) {
                     amount = 1;
                 } else {
                     amount = iS.getAmount();

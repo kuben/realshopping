@@ -6,11 +6,9 @@ import com.github.kuben.realshopping.Shop;
 import org.bukkit.Bukkit;
 
 /**
- * Pager class that stores the page a player is reading from an ItemFrame with
- * paper. This thread must be unique for each player. Default page time is 5
- * seconds. Be aware that this thread must be "notified" after stop variabile
- * set, because it is in wait() and its action is performed every time you
- * notify this.
+ * Pager class that stores the page a player is reading. This thread must be unique for each player and keeps track
+ * of the pages a player reads. When the thread is notified before X seconds (default: 5) it will switch page, 
+ * otherwise it will go back to page 1.
  *
  * @author stengun
  */
@@ -52,6 +50,7 @@ public class Pager extends Thread {
                 } else stop = true;
             } catch (InterruptedException ex) {
                 RealShopping.logsevere(ex.getStackTrace().toString());
+                stop = true;
             }
         }
     }
