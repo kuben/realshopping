@@ -594,6 +594,11 @@ public class RSUtils {
         return retval;
     }
 	
+    /**
+     * Formats an integer to a string with the ordinal number and the correct suffix 
+     * @param value The integer which is the ordinal number. Example: 2
+     * @return The finished string. Example: "2nd" (when using the English LangPack)
+     */
     public static String formatNum(int value) {
         int hunRem = value % 100;
         int tenRem = value % 10;

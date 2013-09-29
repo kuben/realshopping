@@ -25,9 +25,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -36,13 +38,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
+
 import net.h31ix.updater.Updater;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -62,6 +68,7 @@ import com.github.stengun.realshopping.ClassSerialization;
 public class RealShopping extends JavaPlugin {//TODO stores case sensitive, players case preserving
     private Updater updater;
     private StatUpdater statUpdater;
+    private Reporter reporter;
     private Notificator notificatorThread;
 
     //Constants
@@ -106,6 +113,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     public void onEnable(){
         setUpdater(null);
         statUpdater = null;
+        reporter = null;
         notificatorThread = null;
         playerSettings = new HashSet<>();
         eePairs = new HashMap<>();
@@ -124,8 +132,6 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         notificator = new HashMap<>();
         forbiddenInStore = new HashSet<>();
         tpLocBlacklist = false;
-
-        //Config.resetVars(); Don't know why I had this, the vars are set in the beginning of Config.initialize() anyways
 
         entrance = null;
         exit = null;
@@ -317,6 +323,8 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
             statUpdater = new StatUpdater();
             statUpdater.start();
         }
+        reporter = new Reporter();
+        reporter.start();
         RealShopping.loginfo(LangPack.REALSHOPPINGINITIALIZED);
     }
 
@@ -1109,7 +1117,6 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
             boolean end = false;
             while ((s = br.readLine()) != null && !end) {
                 boolean notHeader = true;
-
                 if (what != TempFiles.SHIPPEDPACKAGES 
                         && what != TempFiles.TOCLAIM
                         && what != TempFiles.INVENTORIES 
@@ -1127,7 +1134,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                 }
 
                 if (!notHeader) {
-                    break;
+                    continue;
                 }
                 switch (what) {
                     //TODO convert load with object stream
@@ -1188,8 +1195,10 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                         break;
                     case STATS:
                         tempShop = getShop(s.split(";")[0]);
-                        for(int i = 1;i < s.split(";").length;i++){
-                            tempShop.addStat(new Statistic(s.split(";")[i]));
+                        if(tempShop != null){//Statistics will be dropped if a shop doesn't exist anymore.
+                            for(int i = 1;i < s.split(";").length;i++){
+                                tempShop.addStat(new Statistic(s.split(";")[i]));
+                            }
                         }
                         break;
                     case NOTIFICATIONS:
@@ -1764,6 +1773,14 @@ class Reporter extends Thread {
      * In minutes, for how long the thread should sleep between runs. Has to be at least 10
      */
     public final int PERIOD;
+    
+    private final ChatColor LP = ChatColor.LIGHT_PURPLE;
+    private final ChatColor DP = ChatColor.DARK_PURPLE;
+    private final ChatColor GR = ChatColor.GREEN;
+    private final ChatColor DG = ChatColor.DARK_GREEN;
+    private final ChatColor RD = ChatColor.RED;
+    private final ChatColor DR = ChatColor.DARK_RED;
+    private final ChatColor RESET = ChatColor.RESET;
 
     public Reporter() {
         running = true;
@@ -1778,19 +1795,92 @@ class Reporter extends Thread {
                     Player player = Bukkit.getPlayerExact(ps.getPlayer());
                     if(player == null) continue;//Player is not online, don't bother TODO send report as notification in this case
                     for(Shop shop:RSUtils.getOwnedShops(player.getName()))//Get all shops of player
-                        if(ps.getReports(shop))
+                        if(ps.gettingReports(shop))
                             if(ps.updatePeriodAndCheckIfTimeToSendReport(shop)){//Check if it is time to send a report
-                                //Send!
-                                player.sendMessage(ChatColor.BLUE + "Report for store " + ChatColor.DARK_BLUE + shop.getName() + ChatColor.BLUE + ".");
+                                long lastReport = ps.getLastReport(shop);
+                                boolean first = false;
+                                if(lastReport < 0){
+                                    first = true;
+                                    lastReport *= -1;
+                                }
+                                
+                                SimpleDateFormat formatter = new SimpleDateFormat("HH:mm dd/MM/yy");
+                                player.sendMessage(GR + "Report for store " + DG + shop.getName() + GR + " for the period between "
+                                        + DG + formatter.format(new Date(lastReport)) + GR + " and now.");
+                                
+                                Map<Integer, Integer> soldItems = new HashMap<>();//ID - amount sold
+                                Map<Integer, Integer> boughtItems = new HashMap<>();//ID - amount bought
+                                for(Statistic stat:shop.getStats()){
+                                    //if(stat.getTime() < lastReport) continue;
+                                    int id = stat.getItem().getType();
+                                    if(stat.isBought()){
+                                        int oldAm = boughtItems.containsKey(id)?boughtItems.get(id):0;
+                                        boughtItems.put(id, oldAm + stat.getAmount());
+                                    } else {
+                                        int oldAm = soldItems.containsKey(id)?soldItems.get(id):0;
+                                        soldItems.put(id, oldAm + stat.getAmount());
+                                    }
+                                }
+
+                                Integer[] topSold = getTop(soldItems, 3);//Get top 3 bought and sold items
+                                Integer[] topBought = getTop(boughtItems, 3);
+                                if(topSold.length > 0 || topBought.length > 0){//At least one sold or bought item
+                                    player.sendMessage(GR + "    Top Sold                    Top Bought");
+                                    for(int i = 0;i < Math.min(topSold.length, topBought.length);i++){
+                                        //Max length of name + dash + amount is 26
+                                        //If the sold string is shorter than that, spacing will be increased
+                                        String DASH = " - ";
+                                        String SPACE = "  ";//Two spaces is minimum spacing
+                                        String S_AMOUNT = topSold[i]!=null?soldItems.get(topSold[i])+"":"";
+                                        String S_NAME = topSold[i]!=null?
+                                                            cut("[" + topSold[i] + "] " + Material.getMaterial(topSold[i]).name(), S_AMOUNT):
+                                                            " N/A";
+                                       
+                                        String B_AMOUNT = topBought[i]!=null?boughtItems.get(topBought[i])+"":"";
+                                        String B_NAME = topSold[i]!=null?
+                                                            cut("[" + topBought[i] + "] " + Material.getMaterial(topBought[i]).name(), B_AMOUNT):
+                                                            " N/A";
+                                        int ln = S_NAME.length() + DASH.length() + S_AMOUNT.length();
+                                        for(int j = 26;ln < j;j--) SPACE += " ";
+                                        
+                                        player.sendMessage("    " + GR + S_NAME + DG + DASH + GR + S_AMOUNT + SPACE + B_NAME + DG + DASH + GR + B_AMOUNT);
+                                    }
+                                }
+                                ps.setLastReport(shop);
                             }
                 }
                 
-                Thread.sleep(PERIOD);
+                Thread.sleep(PERIOD * 60 * 1000);
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
+    }
+    
+    private String cut(String name, String amount){
+        //DASH length is 3, so 23 is maxlength - DASH.length()
+        if(name.length() <= 23 - amount.length()) return name;//Don't cut
+        return name.substring(0, 23 - amount.length());
+    }
+    
+    private Integer[] getTop(Map<Integer, Integer> map, int howmany){
+        Integer[] top = new Integer[howmany];
+        Map<Integer, Integer> clone = new HashMap<>(map);
+        for(int i = 0;i < howmany;i++){
+            Integer topId = null;
+            int topAmount = 0;
+            for(Integer id:clone.keySet())
+                if(clone.get(id) > topAmount){
+                    topId = id;
+                    topAmount = clone.get(id);
+                }
+            
+           if(topId == null) break;
+           top[i] = topId;
+           clone.remove(topId);
+        }
+        return top;
     }
 }
 

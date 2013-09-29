@@ -40,6 +40,14 @@ public class Config {
 
 	public static boolean debug;
 	
+	/*
+	 * To add:
+	 * allow reports (period)
+	 * max notifications per user
+	 * max notifications overall
+	 * 
+	 */
+	
 	private static boolean keepstolen;
 	private static boolean enableSelling;
 	private static boolean autoprotect;

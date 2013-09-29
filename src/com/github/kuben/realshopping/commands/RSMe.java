@@ -2,6 +2,7 @@ package com.github.kuben.realshopping.commands;
 
 import java.util.Locale;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 
@@ -10,6 +11,7 @@ import com.github.kuben.realshopping.Config;
 import com.github.kuben.realshopping.Shop;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.LangPack;
+import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.exceptions.RealShoppingException;
 
 /**
@@ -30,23 +32,18 @@ class RSMe extends RSPlayerCommand {
 			+ LP + "favnots" + ChatColor.RESET + ", "
 			+ LP  + "soldnots" + ChatColor.RESET + ", "
 			+ LP  + "boughtnots" + ChatColor.RESET + ", "
-			+ LP  + "ainots" + ChatColor.RESET + ", "
+            + LP  + "reports" + ChatColor.RESET + ", "
+            + LP  + "ainots" + ChatColor.RESET + ", "
 			+ LP  + "changeonai" + ChatColor.RESET + ".";
 	
 	public RSMe(CommandSender sender, String[] args) {
 		super(sender, args);
 	}
 
-	/*
-	 * Config:
-	 * Allow reports ()
-	 * 
-	 */
 	//TODO add settings to rsstores (X:timely spending limit for buying)
 	//TODO idea: notify about store favorited (implement this into reports)
 	//TODO add clear and list
 	//TODO check AI with config
-	//TODO add allow reports to config
 	//TODO add reading notifications command
 	//TODO view favorites
 	
@@ -95,6 +92,9 @@ class RSMe extends RSPlayerCommand {
 					case "boughtnots":
 						player.sendMessage(boughtNots(val, shop));
 						break;
+					case "reports":
+					    player.sendMessage(reports(val, shop));
+					    break;
 					case "ainots":
 						player.sendMessage(aiNots(val, shop));
 						break;
@@ -310,6 +310,44 @@ class RSMe extends RSPlayerCommand {
 				}
 		}
 	}
+	
+    private String reports(String val, Shop shop) throws NumberFormatException, RealShoppingException {
+        switch(val){
+            case "":
+                String status;
+                if(shop == null){
+                    String s = settings.getReports() == 0?"no":settings.getReports()+"";
+                    status = "." + DG + " Currently set to " + LP + s + RESET + DG + ".";
+                } else {
+                    Integer i = settings.getReports(shop);
+                    String s = (String)((i == null)?"default":(i == 0?"no":i));
+                    status = "." + DG + " Currently set to " + LP + s + DG + " for store " + ChatColor.YELLOW + shop.getName() + DG + ".";
+                }
+                return "Sets if Reports are enabled, and how often it reports should be sent. " +//FIXME more text
+                    "Options are: " + LP + "no" + RESET +", or any integer to enable and interval to the integer." + status;
+            case "default":
+                if(shop == null) throw new RealShoppingException(RealShoppingException.Type.SYNTAX_ERROR);
+                settings.defaultGetAINots(shop);
+                return LangPack.STORE + DG + shop.getName() + GR + " now using default value.";
+            default:
+                String suffix;//Technically not a suffix
+                if(shop == null) suffix = "your stores";
+                else suffix = "store " + DG + shop.getName() + GR;
+                
+                switch(val.toLowerCase(Locale.ENGLISH)){
+                    case "no":
+                        if(shop == null) settings.setGetReports(0);
+                        else settings.setGetReports(0, shop);
+                        return GR + "Reports disabled for " + suffix + ".";
+                    default:
+                        int i = Integer.parseInt(val);
+                        if(i <= 0) return "Error";//FIXME
+                        if(shop == null) settings.setGetReports(i);
+                        else settings.setGetReports(i, shop);
+                        return GR + "Reports enabled, and will run every " + RSUtils.formatNum(i) + " interval for " + suffix + ".";
+                }
+        }
+    }
 	
 	/**
 	 * Sets whether or not the Automatic Store Management is enabled, and how many places a store needs to gain or lose in popularity for the player to be notified.

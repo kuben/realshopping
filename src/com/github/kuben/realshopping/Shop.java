@@ -564,7 +564,7 @@ public class Shop {//TODO add load/save interface
     public String exportStats() {
         String s = "";
         for (Statistic stat : stats) {
-            s += ";" + stat.getTime() + ":" + stat.isBought() + ":" + stat.getItem().toString(stat.getAmount());
+            s += ";" + stat.getTime() + ":" + stat.isBought() + ":" + stat.getItem().export(stat.getAmount());
         }
         return s;
     }
