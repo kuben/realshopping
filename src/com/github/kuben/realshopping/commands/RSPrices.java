@@ -5,7 +5,6 @@ import com.github.kuben.realshopping.Price;
 import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
-import java.util.Map;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
@@ -101,39 +100,22 @@ class RSPrices extends RSCommand {
 	    return false;
 	}
 	
-	private boolean searchItem(Shop shop, Price price){
-		boolean noMatches = true;
-		if(price.getData() != -1){//Item with specific data value requested
-			double cost = shop.getPrice(price);
-			String onSlStr = "";
-			if(shop.hasSale(price)){//There is a sale on that item.
-				int pcnt = 100 - shop.getSale(price);
-				cost *= pcnt/100f;
-				onSlStr = ChatColor.GREEN + LangPack.ONSALE;
-			}
-			sender.sendMessage(ChatColor.BLUE + "" + price.formattedString() + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
-			return true;
-		}
-		Map<Price, Integer> tempMap = shop.getPrices();
-		for(Price p:tempMap.keySet()){
-			if(p.getType() == price.getType()){//Match
-				int cost = tempMap.get(p);
-				String onSlStr = "";
-					if(shop.hasSale(p.stripOffData()) || shop.hasSale(p)){//There is a sale on that item.
-						int pcnt = -1;
-						if(shop.hasSale(p.stripOffData())) pcnt = 100 - shop.getSale(p.stripOffData());
-						if(shop.hasSale(p))  pcnt = 100 - shop.getSale(p);
-						cost *= pcnt/100f;
-					onSlStr = ChatColor.GREEN + LangPack.ONSALE;
-				}
-				noMatches = false;
-				sender.sendMessage(ChatColor.BLUE + "" + p + " " + Material.getMaterial(p.getType()) + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
-			}
-		}
-		if(noMatches){
-                    sender.sendMessage(ChatColor.RED + "No matches for " + ChatColor.DARK_RED + price.formattedString());
-		}
-		return true;
+	private boolean searchItem(Shop shop, Price p){
+            if(shop.hasPrice(p)) {//Match
+                double cost = shop.getPrice(p);
+                String onSlStr = "";
+                    if(shop.hasSale(p.stripOffData()) || shop.hasSale(p)){//There is a sale on that item.
+                        int pcnt = -1;
+                        if(shop.hasSale(p.stripOffData())) pcnt = 100 - shop.getSale(p.stripOffData());
+                        if(shop.hasSale(p))  pcnt = 100 - shop.getSale(p);
+                        cost *= pcnt/100f;
+                    onSlStr = ChatColor.GREEN + LangPack.ONSALE;
+                }
+                sender.sendMessage(ChatColor.BLUE + "" + Material.getMaterial(p.getType()) + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
+            } else {
+                sender.sendMessage(ChatColor.RED + "No matches for " + ChatColor.DARK_RED + p.formattedString());
+            }
+            return true;
 	}
 	
 	@Override
