@@ -86,6 +86,14 @@ public class Shop {//TODO add load/save interface
         RealShopping.addEntranceExit(ep, this);
     }
     public boolean removeEntranceExit(Location en, Location ex){ return RealShopping.removeEntranceExit(this, en, ex); }//TODO add to rsset and rssetstores
+    public boolean removeEEPair(CommandSender player,int index) {
+        boolean retval = false;
+        EEPair[] pairs = RealShopping.getEEPairMap(this).keySet().toArray(new EEPair[0]);
+        if(index >= pairs.length || index < 0) return false;
+        retval = RealShopping.removeEntranceExit(this, pairs[index]);
+        player.sendMessage("EEPair removed: "+ pairs[index].toString());
+        return retval;
+    }
     public int clearEntrancesExits(){ return RealShopping.clearEntrancesExits(this); }
     public boolean hasEntrance(Location en){ return RealShopping.hasEntrance(this, en); }
     public boolean hasExit(Location ex){ return RealShopping.hasExit(this, ex); }
@@ -613,12 +621,38 @@ public class Shop {//TODO add load/save interface
         return tempMap;
     }
 
+    
     /*
      * 
      * Static Methods
      * 
      */
     
+    /**
+     * Lists all Entrance - Exit pairs of a given shop.
+     * The list is ordered with numbers, you can use these numbers for delete purposes.
+     * @param sender Player who wrote the command.
+     * @param page Page we want to see.
+     * @param shop Shop wich we need to list the pairs.
+     * @return 
+     */
+    public static boolean listEEPairs(CommandSender sender, int page, Shop shop) {
+        Map<EEPair, Shop> pairmap = RealShopping.getEEPairMap(shop);
+        if(pairmap.isEmpty()) return false;
+        EEPair[] pairs = pairmap.keySet().toArray(new EEPair[0]);
+        if((page-1)*9 >= pairs.length) {
+            sender.sendMessage(ChatColor.RED + LangPack.THEREARENTTHATMANYPAGES);
+            return false;
+        }
+        for(int i = 9*(page-1);i<9*page;i++) {
+            EEPair ee = pairs[i];
+            sender.sendMessage(i + " - " + ee.toString() + " for shop " + shop.getName());
+        }
+        if(page*9 < pairs.length){//Not last
+            sender.sendMessage(LangPack.MOREITEMSONPAGE + ChatColor.YELLOW + (page + 1));
+        }
+        return true;
+    }
    /**
     * Gets the price for a single item and its amount.
     * @param shop Shop where to bring the price.
@@ -751,34 +785,22 @@ public class Shop {//TODO add load/save interface
                         sender.sendMessage(ChatColor.GREEN + LangPack.THEREISA + ChatColor.DARK_GREEN + shop.getFirstSale()
                                 + ChatColor.GREEN + LangPack.PCNTOFFSALEAT + ChatColor.DARK_GREEN + shop.getName());
                     }
-                    if(page*9 < keys.length){//Not last
-                        for(int i = 9*(page-1);i < 9*page;i++){
-                            int cost = tempMap.get(keys[i]);
-                            String onSlStr = "";
-                            if(shop.hasSale(keys[i])){//There is a sale on that item.
-                                int pcnt = -1;
-                                //if(shop.hasSale(keys[i].stripOffData())) pcnt = 100 - shop.getSale(keys[i].stripOffData());
-                                if(shop.hasSale(keys[i]))  pcnt = 100 - shop.getSale(keys[i]);
-                                cost *= pcnt/100f;
-                                onSlStr = ChatColor.GREEN + LangPack.ONSALE;
-                            }
-                            sender.sendMessage(ChatColor.BLUE + "" + keys[i].formattedString() + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
+                    for(int i = 9*(page-1);i < 9*page;i++){
+                        int cost = tempMap.get(keys[i]);
+                        String onSlStr = "";
+                        if(shop.hasSale(keys[i])){//There is a sale on that item.
+                            int pcnt = -1;
+                            //if(shop.hasSale(keys[i].stripOffData())) pcnt = 100 - shop.getSale(keys[i].stripOffData());
+                            if(shop.hasSale(keys[i]))  pcnt = 100 - shop.getSale(keys[i]);
+                            cost *= pcnt/100f;
+                            onSlStr = ChatColor.GREEN + LangPack.ONSALE;
                         }
-                        sender.sendMessage(LangPack.MOREITEMSONPAGE + ChatColor.YELLOW + (page + 1));
-                    } else {//Last page
-                        for(int i = 9*(page-1);i < keys.length;i++){
-                            int cost = tempMap.get(keys[i]);
-                            String onSlStr = "";
-                            if(shop.hasSale(keys[i])){//There is a sale on that item.
-                                int pcnt = -1;
-                                //if(shop.hasSale(keys[i].stripOffData())) pcnt = 100 - shop.getSale(keys[i].stripOffData());
-                                if(shop.hasSale(keys[i]))  pcnt = 100 - shop.getSale(keys[i]);
-                                cost *= pcnt/100f;
-                                onSlStr = ChatColor.GREEN + LangPack.ONSALE;
-                            }
-                            sender.sendMessage(ChatColor.BLUE + "" + keys[i].formattedString() + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
-                        }
+                        sender.sendMessage(ChatColor.BLUE + "" + keys[i].formattedString() + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
                     }
+                    if(page*9 < keys.length){//Not last
+                        sender.sendMessage(LangPack.MOREITEMSONPAGE + ChatColor.YELLOW + (page + 1));
+                    }
+                        
                 } else {
                     sender.sendMessage(ChatColor.RED + LangPack.THEREARENTTHATMANYPAGES);
                 }

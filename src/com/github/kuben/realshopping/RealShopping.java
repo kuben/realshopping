@@ -1522,11 +1522,28 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 /*
  * Entrance-exit stuff
  */
+    protected static Map<EEPair, Shop> getEEPairMap(Shop shop){
+        Map<EEPair, Shop> retval = new HashMap<>();
+        for(EEPair ee: eePairs.keySet()) {
+            if(eePairs.get(ee) == shop) retval.put(ee, shop);
+        }
+        return retval;
+    }
+    
     protected static boolean addEntranceExit(EEPair eePair, Shop shop){
         if(eePairs.containsKey(eePair)) return false;
         eePairs.put(eePair, shop);
         return true;
     }
+    
+    protected static boolean removeEntranceExit(Shop shop, EEPair pairs) {
+        if(eePairs.get(pairs) == shop) {
+            eePairs.remove(pairs);
+            return true;
+        }
+        return false;
+    }
+    
     protected static boolean removeEntranceExit(Shop shop, Location en, Location ex){
         for(EEPair ee:eePairs.keySet()){
             if(ee.hasEntrance(en) && ee.hasExit(ex) && eePairs.get(ee).equals(shop)){

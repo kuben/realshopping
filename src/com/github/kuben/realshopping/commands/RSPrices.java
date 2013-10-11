@@ -6,7 +6,6 @@ import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
 import org.bukkit.ChatColor;
-import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 
 class RSPrices extends RSCommand {
@@ -101,33 +100,44 @@ class RSPrices extends RSCommand {
 	}
 	
 	private boolean searchItem(Shop shop, Price p){
-            if(shop.hasPrice(p)) {//Match
+            if(shop.hasPrice(p)) {
                 double cost = shop.getPrice(p);
                 String onSlStr = "";
                     if(shop.hasSale(p.stripOffData()) || shop.hasSale(p)){//There is a sale on that item.
                         int pcnt = -1;
-                        if(shop.hasSale(p.stripOffData())) pcnt = 100 - shop.getSale(p.stripOffData());
+                        if(shop.hasSale(p.stripOffData())) pcnt = 100 - shop.getSale(p.stripOffData()); // TODO remove stripoff, change it with .isSimilar() in checks.
                         if(shop.hasSale(p))  pcnt = 100 - shop.getSale(p);
                         cost *= pcnt/100f;
                     onSlStr = ChatColor.GREEN + LangPack.ONSALE;
                 }
-                sender.sendMessage(ChatColor.BLUE + "" + Material.getMaterial(p.getType()) + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
-            } else {
-                sender.sendMessage(ChatColor.RED + "No matches for " + ChatColor.DARK_RED + p.formattedString());
+                sender.sendMessage(
+                        ChatColor.BLUE.toString() + p.formattedString() 
+                        + ChatColor.BLACK + " - " 
+                        + ChatColor.RED + cost/100f 
+                        + LangPack.UNIT + onSlStr);
+                return false;
             }
+            sender.sendMessage(
+                    ChatColor.RED + "No matches for " 
+                    + ChatColor.DARK_RED + p.formattedString());
             return true;
 	}
 	
 	@Override
 	protected Boolean help(){
-		//Check if help was asked for
-		if(args.length > 0 && args[0].equalsIgnoreCase("help")){
-			sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rsprices [STORE] [PAGE|search ITEM]");
-			sender.sendMessage(LangPack.RSPRICESHELP + ChatColor.DARK_PURPLE + "STORE"
-					+ ChatColor.RESET + LangPack.RSPRICESHELP2 + ChatColor.LIGHT_PURPLE + "PAGE"
-					+ ChatColor.RESET + LangPack.RSPRICESHELP3);
-			return true;
-		}
-		return null;
+            //Check if help was asked for
+            if(args.length > 0 && args[0].equalsIgnoreCase("help")){
+                sender.sendMessage(
+                        ChatColor.DARK_GREEN + LangPack.USAGE 
+                        + ChatColor.RESET + "/rsprices [STORE] [PAGE|search ITEM]");
+                sender.sendMessage(
+                        LangPack.RSPRICESHELP 
+                        + ChatColor.DARK_PURPLE + "STORE"
+                        + ChatColor.RESET + LangPack.RSPRICESHELP2 
+                        + ChatColor.LIGHT_PURPLE + "PAGE"
+                        + ChatColor.RESET + LangPack.RSPRICESHELP3);
+                return true;
+            }
+            return null;
 	}
 }
