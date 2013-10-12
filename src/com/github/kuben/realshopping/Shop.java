@@ -640,7 +640,7 @@ public class Shop {//TODO add load/save interface
                         RSEconomy.withdraw(own, payment / 100f);//If player owned store, withdraw from owner
                         if(!sold.isEmpty()) {
                             p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sold.size() + LangPack.ITEMSFOR + payment / 100f + LangPack.UNIT);
-                            RealShopping.sendNotification(own, LangPack.YOURSTORE + shop.getName() 
+                            RealShopping.sendNotification(own, LangPack.YOURSTORE + shop.getName()
                                     + LangPack.BOUGHTSTUFFFOR 
                                     + payment / 100f + LangPack.UNIT 
                                     + LangPack.FROM + p.getName());

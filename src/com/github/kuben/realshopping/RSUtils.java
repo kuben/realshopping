@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -214,6 +215,35 @@ public class RSUtils {
             return new Location(Bukkit.getServer().getWorld(world), Double.parseDouble(s.split(",")[0].trim()), Double.parseDouble(s.split(",")[1].trim()), Double.parseDouble(s.split(",")[2].trim()));
     }
 
+    /**
+     * Formats an integer representing any amount of seconds to a string in the format of "Xd Yh Wm Us"
+     * where X is the number of days, Y number of hours, W number of minutes and U number of seconds.
+     * If any of those is 0, it is not shown.
+     * @param period How many seconds
+     * @return a simple representation of the time.
+     */
+    public static String secsToDHMS(int period){
+        int remainder = period;
+        String STRING = "";
+        if(remainder >= 86_400){//How many days
+            int days = (int) Math.floor(remainder / 86_400);
+            remainder = remainder % 86_400;
+            STRING += days + "d ";
+        }
+        if(remainder >= 3600){//How many hours
+            int hrs = (int) Math.floor(remainder / 3600);
+            remainder = remainder % 3600;
+            STRING += hrs + "h ";
+        }
+        if(remainder >= 60){//How many minutes
+            int mins = (int) Math.floor(remainder / 60);
+            remainder = remainder % 60;
+            STRING += mins + "m ";
+        }
+        if(remainder > 0) STRING += remainder + "s";
+        return STRING;
+    }
+    
     /*
      * 
      * Booleans and gets

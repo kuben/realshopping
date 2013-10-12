@@ -145,7 +145,7 @@ public class PSetting {
 	    if(last > 0) return last;//All fine
 	    
 	    //First report, return a reasonable timestamp as a NEGATIVE value
-	    int PERIOD = 10;//FIXME gotta add this to config
+	    int PERIOD = Config.getReporterPeriod();
 	    last = System.currentTimeMillis() - (PERIOD * reportsInterval);
 	    return last * -1;
 	}

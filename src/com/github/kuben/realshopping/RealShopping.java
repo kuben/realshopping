@@ -53,6 +53,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.craftbukkit.libs.jline.internal.Log;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -99,6 +100,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     private static Location exit;
 
     private boolean smallReload = false;
+    private static long lastMaxNotsLimitMessage = 0;
 
     private static Logger log;
     public static String working;
@@ -1407,7 +1409,11 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     
     public static void loginfo(String msg) {
         log.log(Level.INFO, msg);
-    }//TODO start using this?
+    }
+    
+    public static void logwarning(String msg) {
+        log.log(Level.WARNING, msg);
+    }
 
     /*
      * 
@@ -1649,18 +1655,23 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
      * Notifications methods
      * 
      */
-
+    
     /**
      * Adds a message to the list of pending notifications.
      * The message will be delivered next time the Notificator thread is running and the player is online. 
      * @param who The name of the player which the message should be sent to.
      * @param what The message
+     * @return True if the message was successfully appended. False if the player's list is full, or the maximum 
+     * amount of allowed notifications for the server has been reached.
      */
-    public static void sendNotification(String who, String what){
+    public static boolean sendNotification(String who, String what){
         if(Config.getNotTimespan() >= 500){
+            if(isNotsLimitReached()) return false;
             if(!notificator.containsKey(who)) notificator.put(who, new ArrayList<String>());
+            if(notificator.get(who).size() >= Config.getMaxPendingUserNots()) return false;
             notificator.get(who).add(what);
         }
+        return true;
     }
 
     /**
@@ -1720,6 +1731,42 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         if(notificator.containsKey(player)) notificator.get(player).remove(not);
     }
     
+    /**
+     * Checks if the overall server notifications limit is reached. If it is, this method also 
+     * prints an message about it in the server log. However, if a message already has been printed 
+     * during the last hour, it will not be printed again.
+     * @return True if the limit is reached, false otherwise.
+     */
+    private static boolean isNotsLimitReached(){
+        if(countNotifications() < Config.getMaxPendingNots()) return false;
+        if(lastMaxNotsLimitMessage < System.currentTimeMillis() - 3_600_000){//Last message was over an hour ago; safe to send another without spamming the console
+            logwarning("The limit (" + Config.getMaxPendingNots() + ") of pending notifications has been reached. No more notifications will be sent unless players "
+                    + "read their messages or the limit is raised.");
+            lastMaxNotsLimitMessage = System.currentTimeMillis();
+        }
+        return true;
+    }
+    
+    /**
+     * Counts the number of pending notifications for the entire server.
+     * @return How many notifications there are.
+     */
+    private static int countNotifications(){
+        int i = 0;
+        for(String s:notificator.keySet())
+            i += notificator.get(s).size();
+        return i;
+    }
+    
+    /**
+     * Counts the number of pending notifications for one player.
+     * @return How many notifications the player has.
+     */
+    private static int countNotifications(String player){
+        if(notificator.containsKey(player)) return notificator.get(player).size();
+        return 0;
+    }
+    
     /*
      * 
      * Misc.
@@ -1770,7 +1817,7 @@ class Reporter extends Thread {
 
     public boolean running;
     /**
-     * In minutes, for how long the thread should sleep between runs. Has to be at least 10
+     * In seconds, for how long the thread should sleep between runs. Has to be at least 600
      */
     public final int PERIOD;
     
@@ -1784,8 +1831,9 @@ class Reporter extends Thread {
 
     public Reporter() {
         running = true;
-        //Check if PERIOD >= 10
-        PERIOD = 10;
+        if(Config.getReporterPeriod() > 600)
+            PERIOD = Config.getReporterPeriod();
+        else PERIOD = 600;
     }
 
     public void run() {

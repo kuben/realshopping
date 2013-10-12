@@ -21,6 +21,8 @@ import com.github.kuben.realshopping.exceptions.RealShoppingException;
  */
 class RSMe extends RSPlayerCommand {
 
+    private final ChatColor RD = ChatColor.RED;
+    private final ChatColor DR = ChatColor.DARK_RED;
 	private final ChatColor LP = ChatColor.LIGHT_PURPLE;
 	private final ChatColor DP = ChatColor.DARK_PURPLE;
 	private final ChatColor GR = ChatColor.GREEN;
@@ -82,7 +84,7 @@ class RSMe extends RSPlayerCommand {
 				
 				settings = RealShopping.getPlayerSettings(player.getName());
 				
-				switch(sett){//TODO reports
+				switch(sett){
 					case "favnots":
 						player.sendMessage(favNots(val, shop));
 						break;
@@ -323,8 +325,10 @@ class RSMe extends RSPlayerCommand {
                     String s = (String)((i == null)?"default":(i == 0?"no":i));
                     status = "." + DG + " Currently set to " + LP + s + DG + " for store " + ChatColor.YELLOW + shop.getName() + DG + ".";
                 }
-                return "Sets if Reports are enabled, and how often it reports should be sent. " +//FIXME more text
-                    "Options are: " + LP + "no" + RESET +", or any integer to enable and interval to the integer." + status;
+                String INTERVAL = RSUtils.secsToDHMS(Config.getReporterPeriod());
+                return "Sets if Reports are enabled, and how often reports should be sent. The standard interval for this server is "
+                    + INTERVAL + " and reports for your store can be sent at any multiplier of the standard integer."
+                    + "Options are: " + LP + "no" + RESET +", or any integer to enable and interval to the integer." + status;
             case "default":
                 if(shop == null) throw new RealShoppingException(RealShoppingException.Type.SYNTAX_ERROR);
                 settings.defaultGetAINots(shop);
@@ -341,7 +345,7 @@ class RSMe extends RSPlayerCommand {
                         return GR + "Reports disabled for " + suffix + ".";
                     default:
                         int i = Integer.parseInt(val);
-                        if(i <= 0) return "Error";//FIXME
+                        if(i <= 0) return RD + "Error: The interval has to be an integer higher than zero.";
                         if(shop == null) settings.setGetReports(i);
                         else settings.setGetReports(i, shop);
                         return GR + "Reports enabled, and will run every " + RSUtils.formatNum(i) + " interval for " + suffix + ".";

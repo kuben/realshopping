@@ -268,8 +268,8 @@ class RSStores extends RSCommand {
                                     sender.sendMessage(DG + "" + pcnt + GR + LangPack.PCNTOFF + DG + i + GR + LangPack.ITEMS);
                                     int subs = 0;
                                     for(PSetting pS:RealShopping.getPlayerSettings()){
-                                        if(pS.getSalesNotifications(shop)) RealShopping.sendNotification(pS.getPlayer(), 
-                                               GR + LangPack.STORE + DG + shop.getName() + GR + " now has a " + DG + pcnt + GR + "% off sale for " + DG + i + GR + LangPack.ITEMS);//LANG
+                                        if(pS.getSalesNotifications(shop) && RealShopping.sendNotification(pS.getPlayer(), 
+                                               GR + LangPack.STORE + DG + shop.getName() + GR + " now has a " + DG + pcnt + GR + "% off sale for " + DG + i + GR + LangPack.ITEMS))//LANG
                                         subs++;
                                     }
                                     if(subs > 0) sender.sendMessage(GR + "Informed " + DG + subs + GR + " subscribers about the sale.");//LANG
@@ -291,8 +291,8 @@ class RSStores extends RSCommand {
                                         sender.sendMessage(DG + "" + pcnt + GR + LangPack.PCNTOFF + DG + j + GR + LangPack.ITEMS);
                                         int subs = 0;
                                         for(PSetting pS:RealShopping.getPlayerSettings()){
-                                            if(pS.getSalesNotifications(shop)) RealShopping.sendNotification(pS.getPlayer(), 
-                                                   GR + LangPack.STORE + DG + shop.getName() + GR + " now has a " + DG + pcnt + GR + "% off sale for " + DG + i + GR + LangPack.ITEMS);
+                                            if(pS.getSalesNotifications(shop) && RealShopping.sendNotification(pS.getPlayer(), 
+                                                   GR + LangPack.STORE + DG + shop.getName() + GR + " now has a " + DG + pcnt + GR + "% off sale for " + DG + i + GR + LangPack.ITEMS))
                                             subs++;
                                         }
                                         if(subs > 0) sender.sendMessage(GR + "Informed " + DG + subs + GR + " subscribers about the sale.");
@@ -342,8 +342,8 @@ class RSStores extends RSCommand {
 	    if(msg.length() <= MAX){
 	        int i = 0;
 	        for(PSetting pS:RealShopping.getPlayerSettings()){
-	            if(pS.getBroadcastNotifications(shop)) RealShopping.sendNotification(pS.getPlayer(), 
-	                    LP + "[" + DP + shop.getName() + LP + "] " + RESET + msg);
+	            if(pS.getBroadcastNotifications(shop) && RealShopping.sendNotification(pS.getPlayer(), 
+	                    LP + "[" + DP + shop.getName() + LP + "] " + RESET + msg))
 	            i++;
 	        }
 	        if(i == 0) sender.sendMessage(RD + "I'm sorry, but your store doesn't have any subscribers. This broadcast won't reach anybody.");//LANG
