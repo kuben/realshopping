@@ -879,6 +879,8 @@ public class Shop {//TODO add load/save interface
                         l = tempShop.getCorrEntrance(l);
                         RealShopping.removePInv(player);
                         removePager(player.getName());
+                        l.setPitch(player.getLocation().getPitch());
+                        l.setYaw(player.getLocation().getYaw());
                         player.teleport(l.add(0.5, 0, 0.5));
                         player.sendMessage(ChatColor.GREEN + LangPack.YOULEFT + ChatColor.DARK_GREEN + tempShop.getName());
                         return true;
@@ -907,8 +909,9 @@ public class Shop {//TODO add load/save interface
             if(tempShop != null){//Enter shop
                 Location ex = tempShop.getCorrExit(l);
                 if(!tempShop.isBanned(player.getName().toLowerCase())){
+                    ex.setPitch(player.getLocation().getPitch());
+                    ex.setYaw(player.getLocation().getYaw());
                     player.teleport(ex.add(0.5, 0, 0.5));
-
                     RealShopping.addPInv(new RSPlayerInventory(player, tempShop));
                     player.sendMessage(ChatColor.GREEN + LangPack.YOUENTERED + ChatColor.DARK_GREEN + tempShop.getName());
 
