@@ -645,9 +645,12 @@ public class Shop {//TODO add load/save interface
             return false;
         }
         for(int i = 9*(page-1);i<9*page;i++) {
+            if(i >= pairs.length) break;
             EEPair ee = pairs[i];
-            sender.sendMessage(i + " - " + ee.toString() + " for shop " + shop.getName());
+            sender.sendMessage(i + " -----------------\n" + 
+                    ee.toString() + "\nFor shop "+ ChatColor.GREEN + shop.getName());
         }
+        sender.sendMessage("  -----------------");
         if(page*9 < pairs.length){//Not last
             sender.sendMessage(LangPack.MOREITEMSONPAGE + ChatColor.YELLOW + (page + 1));
         }
