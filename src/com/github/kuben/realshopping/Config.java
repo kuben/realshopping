@@ -211,45 +211,43 @@ public class Config {
     }
 
     static int readConfigLine(String line){
-        int beginning = 0;
         boolean comment = false;
-        while(true){
-            if(line.length() <= beginning){
-                comment = true;//Empty line, break.
-                break;
-            }
-            if(line.charAt(beginning) != ' ' && line.charAt(beginning) != '\t'){//Continue searching if space or tab
-                if(line.charAt(beginning) == '#') comment = true;
-                break;
-            }
-            beginning++;
+        // Separate comments, check the non comment if is empty.
+        // Then trim spaces.
+        String setting = "";
+        if(!line.equals("#")){
+            setting = line.split("#")[0];
+            setting = setting.trim();
         }
+        if(setting.isEmpty()) comment = true;
+
         if(!comment){
-            String s = line.substring(beginning, line.length()).split("#")[0].trim();
-            if(s.length() > HEADER.length() && s.substring(0, HEADER.length()).equals(HEADER)){//If header
-                version = Float.parseFloat(s.substring(HEADER.length()));
+            if(setting.length() > HEADER.length() && setting.substring(0, HEADER.length()).equals(HEADER)){//If header
+                version = Float.parseFloat(setting.substring(HEADER.length()));
                 if(version == RealShopping.VERFLOAT) return 1;
-            } else {
-                if(s.equals("debug")){
-                    debug = true;
-                } else if(s.length() > 8 && s.substring(0, 5).equals("zone ")){
-                    String tempS = s.substring(5);
-                    int nr = Integer.parseInt(tempS.split(":")[0]);
-                    if(zoneArray.length >= nr)//If delivery-zones hasn't been initialized yet this zone will be ignored
-                        if(tempS.split(":")[1].equalsIgnoreCase("world")){
-                            if(tempS.endsWith("%")) zoneArray[nr - 1] = new Zone(true, Integer.parseInt(tempS.split(":")[2].split("%")[0]));
-                            else zoneArray[nr - 1] = new Zone(true, Double.parseDouble(tempS.split(":")[2]));
-                        } else {
-                            if(tempS.endsWith("%")) zoneArray[nr - 1] = new Zone(Integer.parseInt(tempS.split(":")[1]), Integer.parseInt(tempS.split(":")[2].split("%")[0]));
-                            else zoneArray[nr - 1] = new Zone(Integer.parseInt(tempS.split(":")[1]), Double.parseDouble(tempS.split(":")[2]));
-                        }
-                } else {
-                    for(Setting sett:Setting.values()){
-                        if(sett.configString.equals(s.split(":")[0])){
-                            if(s.indexOf(":") + 1 > s.length()) sett.setVar(s.substring(s.indexOf(":") + 1));
-                            return sett.orderValue;
-                        }
+                return 0;
+            }
+            if(setting.equals("debug")){
+                debug = true;
+                return 0;
+            }
+            if(setting.length() > 8 && setting.substring(0, 5).equals("zone ")){
+                String tempS = setting.substring(5);
+                int nr = Integer.parseInt(tempS.split(":")[0]);
+                if(zoneArray.length >= nr)//If delivery-zones hasn't been initialized yet this zone will be ignored
+                    if(tempS.split(":")[1].equalsIgnoreCase("world")){
+                        if(tempS.endsWith("%")) zoneArray[nr - 1] = new Zone(true, Integer.parseInt(tempS.split(":")[2].split("%")[0]));
+                        else zoneArray[nr - 1] = new Zone(true, Double.parseDouble(tempS.split(":")[2]));
+                    } else {
+                        if(tempS.endsWith("%")) zoneArray[nr - 1] = new Zone(Integer.parseInt(tempS.split(":")[1]), Integer.parseInt(tempS.split(":")[2].split("%")[0]));
+                        else zoneArray[nr - 1] = new Zone(Integer.parseInt(tempS.split(":")[1]), Double.parseDouble(tempS.split(":")[2]));
                     }
+                return 0;
+            }
+            for(Setting sett:Setting.values()){
+                if(sett.configString.equals(setting.split(":")[0])){
+                    if(setting.indexOf(":") + 1 < setting.length()) sett.setVar(setting.substring(setting.indexOf(":") + 1)); //lolvut?
+                    return sett.orderValue;
                 }
             }
         }
@@ -454,7 +452,7 @@ public class Config {
                     notTimespan = Integer.parseInt(setting);
                     break;
                 case REPORTERPERIOD:
-                    reporterPeriod = Integer.parseInt(setting);
+                    reporterPeriod = RSUtils.getTimeInt(setting);
                     break;
                 case MAXPENDINGNOTS:
                     maxPendingNots = Integer.parseInt(setting);

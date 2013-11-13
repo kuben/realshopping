@@ -18,12 +18,6 @@
  */
 package com.github.kuben.realshopping;
 
-import com.github.kuben.realshopping.commands.RSCommandExecutor;
-import com.github.kuben.realshopping.exceptions.RealShoppingException;
-import com.github.kuben.realshopping.listeners.RSPlayerListener;
-import com.github.kuben.realshopping.prompts.PromptMaster;
-import com.github.stengun.realshopping.ClassSerialization;
-import com.github.stengun.realshopping.PriceParser;
 import com.github.stengun.realshopping.SellInventoryListener;
 import java.io.BufferedReader;
 import java.io.File;
@@ -60,12 +54,9 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.craftbukkit.libs.jline.internal.Log;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.github.kuben.realshopping.RSEconomy;
-import com.github.kuben.realshopping.Shop;
 import com.github.kuben.realshopping.commands.RSCommandExecutor;
 import com.github.kuben.realshopping.exceptions.RealShoppingException;
 import com.github.kuben.realshopping.listeners.RSPlayerListener;
@@ -1551,17 +1542,26 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         }
         return retval;
     }
-
+    public static String[] getPlayersInStore(String store){
+        String pString = "";
+        for(RSPlayerInventory pInv:PInvSet){
+            if(pInv.getShop().getName().equals(store)){
+                if(!pString.equals("")) pString += ",";
+                pString += pInv.getPlayer();
+            }
+        }
+        return pString.split(",");
+    }
     public Updater getUpdater() { return updater; }
     public void setUpdater(Updater updater) { this.updater = updater; }
 
     public static Set<String> getNotificatorKeys(){ return notificator.keySet(); }
     public static List<String> getNotifications(String player){ return new ArrayList<>(notificator.get(player)); }
 
-    public static boolean isTool(int item){ return maxDurMap.containsKey(item); }
-    public static int getMaxDur(int item){ return maxDurMap.get(item); }
+    public static boolean isTool(Material item){ return maxDurMap.containsKey(item); }
+    public static int getMaxDur(Material item){ return maxDurMap.get(item); }
 
-    public static boolean isForbiddenInStore(int item){ return forbiddenInStore.contains(item); }
+    public static boolean isForbiddenInStore(Material item){ return forbiddenInStore.contains(item); }
 
     public static List<String> getSortedAliases(){ return sortedAliases; }
     public static Map<String, Integer[]> getAliasesMap(){ return aliasesMap; }
@@ -1690,9 +1690,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 /*
  * Notificator stuff
  */
-    public static Set<String> getNotificatorKeys(){ return notificator.keySet(); }
-    public static List<String> getNotifications(String player){ return notificator.get(player); }
-    public static void sendNotification(String who, String what){
+    public static boolean sendNotification(String who, String what){
         if(Config.getNotTimespan() >= 500){
             if(isNotsLimitReached()) return false;
             if(!notificator.containsKey(who)) notificator.put(who, new ArrayList<String>());
