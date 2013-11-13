@@ -205,7 +205,10 @@ public class PriceParser {
             }
         }
         metahash = Integer.parseInt(price.getElementsByTagName("meta").item(0).getTextContent());
-        amount = Integer.parseInt(price.getElementsByTagName("amount").item(0).getTextContent());
+        if(price.getElementsByTagName("amount").getLength() > 0){
+            amount = Integer.parseInt(price.getElementsByTagName("amount").item(0).getTextContent());
+        }
+        
         if (price.getElementsByTagName("description").getLength() != 0) {
             desc = price.getElementsByTagName("description").item(0).getTextContent();
         }

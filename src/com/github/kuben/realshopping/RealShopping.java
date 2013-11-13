@@ -32,9 +32,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -43,10 +45,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
+
 import net.h31ix.updater.Updater;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -55,13 +60,23 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.craftbukkit.libs.jline.internal.Log;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-//TODO better storing of database files
+import com.github.kuben.realshopping.RSEconomy;
+import com.github.kuben.realshopping.Shop;
+import com.github.kuben.realshopping.commands.RSCommandExecutor;
+import com.github.kuben.realshopping.exceptions.RealShoppingException;
+import com.github.kuben.realshopping.listeners.RSPlayerListener;
+import com.github.kuben.realshopping.prompts.PromptMaster;
+import com.github.stengun.realshopping.PriceParser;
+import com.github.stengun.realshopping.ClassSerialization;
+
 public class RealShopping extends JavaPlugin {//TODO stores case sensitive, players case preserving
     private Updater updater;
     private StatUpdater statUpdater;
+    private Reporter reporter;
     private Notificator notificatorThread;
 
     //Constants
@@ -92,6 +107,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     private static Location exit;
 
     private boolean smallReload = false;
+    private static long lastMaxNotsLimitMessage = 0;
 
     private static Logger log;
     public static String working;
@@ -106,6 +122,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     public void onEnable(){
         setUpdater(null);
         statUpdater = null;
+        reporter = null;
         notificatorThread = null;
         playerSettings = new HashSet<>();
         eePairs = new HashMap<>();
@@ -124,8 +141,6 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         notificator = new HashMap<>();
         forbiddenInStore = new HashSet<>();
         tpLocBlacklist = false;
-
-        Config.resetVars();
 
         entrance = null;
         exit = null;
@@ -318,6 +333,8 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
             statUpdater = new StatUpdater();
             statUpdater.start();
         }
+        reporter = new Reporter();
+        reporter.start();
         RealShopping.loginfo(LangPack.REALSHOPPINGINITIALIZED);
     }
 
@@ -1111,7 +1128,6 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
             boolean end = false;
             while ((s = br.readLine()) != null && !end) {
                 boolean notHeader = true;
-
                 if (what != TempFiles.SHIPPEDPACKAGES 
                         && what != TempFiles.TOCLAIM
                         && what != TempFiles.INVENTORIES 
@@ -1129,7 +1145,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                 }
 
                 if (!notHeader) {
-                    break;
+                    continue;
                 }
                 switch (what) {
                     //TODO convert load with object stream
@@ -1190,8 +1206,10 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                         break;
                     case STATS:
                         tempShop = getShop(s.split(";")[0]);
-                        for(int i = 1;i < s.split(";").length;i++){
-                            tempShop.addStat(new Statistic(s.split(";")[i]));
+                        if(tempShop != null){//Statistics will be dropped if a shop doesn't exist anymore.
+                            for(int i = 1;i < s.split(";").length;i++){
+                                tempShop.addStat(new Statistic(s.split(";")[i]));
+                            }
                         }
                         break;
                     case NOTIFICATIONS:
@@ -1400,7 +1418,11 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     
     public static void loginfo(String msg) {
         log.log(Level.INFO, msg);
-    }//TODO start using this?
+    }
+    
+    public static void logwarning(String msg) {
+        log.log(Level.WARNING, msg);
+    }
 
 // ----------------- Plugin management methods.
 
@@ -1529,7 +1551,21 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         }
         return retval;
     }
-    
+
+    public Updater getUpdater() { return updater; }
+    public void setUpdater(Updater updater) { this.updater = updater; }
+
+    public static Set<String> getNotificatorKeys(){ return notificator.keySet(); }
+    public static List<String> getNotifications(String player){ return new ArrayList<>(notificator.get(player)); }
+
+    public static boolean isTool(int item){ return maxDurMap.containsKey(item); }
+    public static int getMaxDur(int item){ return maxDurMap.get(item); }
+
+    public static boolean isForbiddenInStore(int item){ return forbiddenInStore.contains(item); }
+
+    public static List<String> getSortedAliases(){ return sortedAliases; }
+    public static Map<String, Integer[]> getAliasesMap(){ return aliasesMap; }
+
     protected static boolean addEntranceExit(EEPair eePair, Shop shop){
         if(eePairs.containsKey(eePair)) return false;
         eePairs.put(eePair, shop);
@@ -1658,38 +1694,113 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     public static List<String> getNotifications(String player){ return notificator.get(player); }
     public static void sendNotification(String who, String what){
         if(Config.getNotTimespan() >= 500){
+            if(isNotsLimitReached()) return false;
             if(!notificator.containsKey(who)) notificator.put(who, new ArrayList<String>());
+            if(notificator.get(who).size() >= Config.getMaxPendingUserNots()) return false;
             notificator.get(who).add(what);
         }
+        return true;
     }
 
-/*
- * Misc
- */
-    public static String[] getPlayersInStore(String store){
-        String pString = "";
-        for(RSPlayerInventory pInv:PInvSet){
-            if(pInv.getShop().getName().equals(store)){
-                if(!pString.equals("")) pString += ",";
-                pString += pInv.getPlayer();
+    /**
+     * Cancels all notifications about sales from a certain store if they haven't been delivered yet.
+     * @param store The store which the notifications concern.
+     */
+    public static void cancelSaleNotification(String store){
+        String beginning = ChatColor.GREEN + LangPack.STORE + ChatColor.DARK_GREEN + store + ChatColor.GREEN + " now has a ";
+        
+        for(String p:notificator.keySet())
+            for(String not:new ArrayList<>(notificator.get(p)))
+                if(not.length() > beginning.length() && not.substring(0, beginning.length()).equals(beginning))
+                    notificator.get(p).remove(not);
+    }
+    
+    /**
+     * Cancels all broadcasts from a certain store if they haven't been delivered yet.
+     * @param store The store which the broadcasts concern.
+     */
+    public static void cancelBroadcasts(String store){
+        String beginning = ChatColor.LIGHT_PURPLE + "[" + ChatColor.DARK_PURPLE + store + ChatColor.LIGHT_PURPLE + "] " + ChatColor.RESET;
+        
+        for(String p:notificator.keySet())
+            for(String not:new ArrayList<>(notificator.get(p)))
+                if(not.length() > beginning.length() && not.substring(0, beginning.length()).equals(beginning))
+                    notificator.get(p).remove(not);
+    }
+    
+    /**
+     * Cancels any number of broadcasts (beginning with the most recent) from a certain store if they haven't been delivered yet.
+     * @param store The store which the notifications concern.
+     * @param amount The number of broadcasts to cancel.
+     */
+    public static void cancelBroadcasts(String store, int amount){
+        String beginning = ChatColor.LIGHT_PURPLE + "[" + ChatColor.DARK_PURPLE + store + ChatColor.LIGHT_PURPLE + "] " + ChatColor.RESET;
+        
+        for(String p:notificator.keySet()){
+            List<String> nots = new ArrayList<>(notificator.get(p));
+            for(int i = nots.size() - 1,j = amount;i >= 0 && j > 0;i--){//Continue as long as there are notifications left AND amount has not been exceeded
+                String not = nots.get(i);
+                if(not.length() > beginning.length() && not.substring(0, beginning.length()).equals(beginning)){
+                    notificator.get(p).remove(not);
+                    j--;//One less broadcast to cancel
+                }
             }
         }
-        return pString.split(",");
     }
-    public Updater getUpdater() { return updater; }
-    public void setUpdater(Updater updater) { this.updater = updater; }
-    public static boolean isTool(Material item){ return maxDurMap.containsKey(item); }
+    
     /**
-     * Gets max durability of an Item.
-     * @param item
-     * @return Max durability of an item.
-     * @deprecated because you can use Material.getMaxDurability().
+     * Removed a notification from the pending notifications list. You need to have an exact copy of the String object to do this.
+     * 
+     * This is meant to be used by the Notificator class after a message has been delivered.
+     * @param player The player to whom the notification was meant to be sent.
+     * @param not The notification.
      */
-    @Deprecated
-    public static int getMaxDur(Material item){ return maxDurMap.get(item); }
-    public static boolean isForbiddenInStore(Material item){ return forbiddenInStore.contains(item); }
-    public static List<String> getSortedAliases(){ return sortedAliases; }
-    public static Map<String, Integer[]> getAliasesMap(){ return aliasesMap; }
+    protected static void removeNotification(String player, String not){
+        if(notificator.containsKey(player)) notificator.get(player).remove(not);
+    }
+    
+    /**
+     * Checks if the overall server notifications limit is reached. If it is, this method also 
+     * prints an message about it in the server log. However, if a message already has been printed 
+     * during the last hour, it will not be printed again.
+     * @return True if the limit is reached, false otherwise.
+     */
+    private static boolean isNotsLimitReached(){
+        if(countNotifications() < Config.getMaxPendingNots()) return false;
+        if(lastMaxNotsLimitMessage < System.currentTimeMillis() - 3_600_000){//Last message was over an hour ago; safe to send another without spamming the console
+            logwarning("The limit (" + Config.getMaxPendingNots() + ") of pending notifications has been reached. No more notifications will be sent unless players "
+                    + "read their messages or the limit is raised.");
+            lastMaxNotsLimitMessage = System.currentTimeMillis();
+        }
+        return true;
+    }
+    
+    /**
+     * Counts the number of pending notifications for the entire server.
+     * @return How many notifications there are.
+     */
+    private static int countNotifications(){
+        int i = 0;
+        for(String s:notificator.keySet())
+            i += notificator.get(s).size();
+        return i;
+    }
+    
+    /**
+     * Counts the number of pending notifications for one player.
+     * @return How many notifications the player has.
+     */
+    private static int countNotifications(String player){
+        if(notificator.containsKey(player)) return notificator.get(player).size();
+        return 0;
+    }
+    
+    /*
+     * 
+     * Misc.
+     * 
+     */
+    
     public File getPFile(){
         return this.getFile();
     }
@@ -1712,12 +1823,12 @@ class Notificator extends Thread {
     public void run() {
         try {
             while (running) {
-                for (String s : RealShopping.getNotificatorKeys()) {
-                    if (Bukkit.getPlayerExact(s) != null) {
-                        List<String> nots = RealShopping.getNotifications(s);
-                        for (int i = 0; i < 10 && 0 < nots.size(); i++) {
-                            Bukkit.getPlayerExact(s).sendMessage(ChatColor.LIGHT_PURPLE + "[RealShopping] " + ChatColor.RESET + nots.get(0));
-                            nots.remove(0);
+                for(String p:RealShopping.getNotificatorKeys()){
+                    Player player = Bukkit.getPlayerExact(p);
+                    if(player != null){
+                        for(String not:RealShopping.getNotifications(p)){
+                            player.sendMessage(ChatColor.LIGHT_PURPLE + "[RealShopping] " + ChatColor.RESET + not);
+                            RealShopping.removeNotification(p, not);
                         }
                     }
                 }
@@ -1727,6 +1838,125 @@ class Notificator extends Thread {
             e.printStackTrace();
         }
 
+    }
+}
+
+class Reporter extends Thread {
+
+    public boolean running;
+    /**
+     * In seconds, for how long the thread should sleep between runs. Has to be at least 600
+     */
+    public final int PERIOD;
+    
+    private final ChatColor LP = ChatColor.LIGHT_PURPLE;
+    private final ChatColor DP = ChatColor.DARK_PURPLE;
+    private final ChatColor GR = ChatColor.GREEN;
+    private final ChatColor DG = ChatColor.DARK_GREEN;
+    private final ChatColor RD = ChatColor.RED;
+    private final ChatColor DR = ChatColor.DARK_RED;
+    private final ChatColor RESET = ChatColor.RESET;
+
+    public Reporter() {
+        running = true;
+        if(Config.getReporterPeriod() > 600)
+            PERIOD = Config.getReporterPeriod();
+        else PERIOD = 600;
+    }
+
+    public void run() {
+        try {
+            while (running) {
+                for(PSetting ps:RealShopping.getPlayerSettings()){//Get all player settings
+                    Player player = Bukkit.getPlayerExact(ps.getPlayer());
+                    if(player == null) continue;//Player is not online, don't bother TODO send report as notification in this case
+                    for(Shop shop:RSUtils.getOwnedShops(player.getName()))//Get all shops of player
+                        if(ps.gettingReports(shop))
+                            if(ps.updatePeriodAndCheckIfTimeToSendReport(shop)){//Check if it is time to send a report
+                                long lastReport = ps.getLastReport(shop);
+                                boolean first = false;
+                                if(lastReport < 0){
+                                    first = true;
+                                    lastReport *= -1;
+                                }
+                                
+                                SimpleDateFormat formatter = new SimpleDateFormat("HH:mm dd/MM/yy");
+                                player.sendMessage(GR + "Report for store " + DG + shop.getName() + GR + " for the period between "
+                                        + DG + formatter.format(new Date(lastReport)) + GR + " and now.");
+                                
+                                Map<Integer, Integer> soldItems = new HashMap<>();//ID - amount sold
+                                Map<Integer, Integer> boughtItems = new HashMap<>();//ID - amount bought
+                                for(Statistic stat:shop.getStats()){
+                                    //if(stat.getTime() < lastReport) continue;
+                                    int id = stat.getItem().getType();
+                                    if(stat.isBought()){
+                                        int oldAm = boughtItems.containsKey(id)?boughtItems.get(id):0;
+                                        boughtItems.put(id, oldAm + stat.getAmount());
+                                    } else {
+                                        int oldAm = soldItems.containsKey(id)?soldItems.get(id):0;
+                                        soldItems.put(id, oldAm + stat.getAmount());
+                                    }
+                                }
+
+                                Integer[] topSold = getTop(soldItems, 3);//Get top 3 bought and sold items
+                                Integer[] topBought = getTop(boughtItems, 3);
+                                if(topSold.length > 0 || topBought.length > 0){//At least one sold or bought item
+                                    player.sendMessage(GR + "    Top Sold                    Top Bought");
+                                    for(int i = 0;i < Math.min(topSold.length, topBought.length);i++){
+                                        //Max length of name + dash + amount is 26
+                                        //If the sold string is shorter than that, spacing will be increased
+                                        String DASH = " - ";
+                                        String SPACE = "  ";//Two spaces is minimum spacing
+                                        String S_AMOUNT = topSold[i]!=null?soldItems.get(topSold[i])+"":"";
+                                        String S_NAME = topSold[i]!=null?
+                                                            cut("[" + topSold[i] + "] " + Material.getMaterial(topSold[i]).name(), S_AMOUNT):
+                                                            " N/A";
+                                       
+                                        String B_AMOUNT = topBought[i]!=null?boughtItems.get(topBought[i])+"":"";
+                                        String B_NAME = topSold[i]!=null?
+                                                            cut("[" + topBought[i] + "] " + Material.getMaterial(topBought[i]).name(), B_AMOUNT):
+                                                            " N/A";
+                                        int ln = S_NAME.length() + DASH.length() + S_AMOUNT.length();
+                                        for(int j = 26;ln < j;j--) SPACE += " ";
+                                        
+                                        player.sendMessage("    " + GR + S_NAME + DG + DASH + GR + S_AMOUNT + SPACE + B_NAME + DG + DASH + GR + B_AMOUNT);
+                                    }
+                                }
+                                ps.setLastReport(shop);
+                            }
+                }
+                
+                Thread.sleep(PERIOD * 60 * 1000);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+    }
+    
+    private String cut(String name, String amount){
+        //DASH length is 3, so 23 is maxlength - DASH.length()
+        if(name.length() <= 23 - amount.length()) return name;//Don't cut
+        return name.substring(0, 23 - amount.length());
+    }
+    
+    private Integer[] getTop(Map<Integer, Integer> map, int howmany){
+        Integer[] top = new Integer[howmany];
+        Map<Integer, Integer> clone = new HashMap<>(map);
+        for(int i = 0;i < howmany;i++){
+            Integer topId = null;
+            int topAmount = 0;
+            for(Integer id:clone.keySet())
+                if(clone.get(id) > topAmount){
+                    topId = id;
+                    topAmount = clone.get(id);
+                }
+            
+           if(topId == null) break;
+           top[i] = topId;
+           clone.remove(topId);
+        }
+        return top;
     }
 }
 

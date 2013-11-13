@@ -331,13 +331,13 @@ public class Shop {//TODO add load/save interface
     }
 
     public boolean clonePrices(String store) {
-            if(store == null){
-                    prices = getLowestPrices();
-                    return true;
-            }
-            if(!RealShopping.shopExists(store)) return false;
-            prices = new HashMap<>(RealShopping.getShop(store).prices);
+        if(store == null){
+            prices = getLowestPrices();
             return true;
+        }
+        if(!RealShopping.shopExists(store)) return false;
+        prices = new HashMap<>(RealShopping.getShop(store).prices);
+        return true;
     }
 
     public void setPrices(Map<Price, Integer[]> prices) {
@@ -593,7 +593,7 @@ public class Shop {//TODO add load/save interface
     public String exportStats() {
         String s = "";
         for (Statistic stat : stats) {
-            s += ";" + stat.getTime() + ":" + stat.isBought() + ":" + stat.getItem().toString(stat.getAmount());
+            s += ";" + stat.getTime() + ":" + stat.isBought() + ":" + stat.getItem().export(stat.getAmount());
         }
         return s;
     }

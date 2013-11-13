@@ -150,6 +150,15 @@ public final class Price {
     }
 
     /**
+     * The method which correctly returns a string containing type, data , amount sold, and eventually description for statistics.
+     * @param amount The amount of items sold.
+     * @return A string ready to be used in saveHelper for statistics.
+     */
+    public String export(int amount){
+        return type + ":" + data + ":" + (description!=null?description + ":":"") + amount;
+    }
+    
+    /**
      * Returns a string that represents this Price object and that can be parsed by Price(String ) constructor.
      * @return Constructor ready string for this object.
      */
