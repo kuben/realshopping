@@ -1145,7 +1145,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                             conf.load(f);
                             for (String player : conf.getKeys(false)) {
                                 PInvSet.add(ClassSerialization.loadInventory(conf.getConfigurationSection(player)));
-                                Shop.addPager(player);
+                                if(Bukkit.getPlayer(player) != null) Shop.addPager(player);
                             }
                         } catch (InvalidConfigurationException ex) {
                             Logger.getLogger(RealShopping.class.getName()).log(Level.SEVERE, null, ex);
