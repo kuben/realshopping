@@ -435,6 +435,7 @@ public class RSUtils {
         }
         return newInv;
     }
+    
     public static boolean collectShipped(Location l, Player p, int id) {
         if(l.getBlock().getState() instanceof Chest){
             if(!RealShopping.hasPInv(p) || RealShopping.getPInv(p).getShop().getOwner().equals(p.getName())){
@@ -446,11 +447,18 @@ public class RSUtils {
                             int i = 0;
                             if(p.getLocation().getWorld().equals(RealShopping.getShippedToCollect(p.getName(), id - 1).getLocationSent().getWorld())){//Same world
                                 double dist = p.getLocation().distance(RealShopping.getShippedToCollect(p.getName(), id - 1).getLocationSent());
-                                while(i < Config.getZoneArray().length && dist > Config.getZoneArray()[i].getBounds() && dist != -1){
+                                while (i<Config.getZoneArray().length) {
+                                    if (Config.getZoneArray().length-i > 1 && dist > Config.getZoneArray()[i].getBounds()) {
                                         i++;
+                                        continue;
+                                    }
+                                    break;
                                 }
                             } else {
-                                while(i < Config.getZoneArray().length && Config.getZoneArray()[i].getBounds() > -1){
+                                while(i<Config.getZoneArray().length) {
+                                    if(Config.getZoneArray().length-i == 1 || Config.getZoneArray()[i].getBounds() < 0){
+                                        break;
+                                    }
                                     i++;
                                 }
                             }
