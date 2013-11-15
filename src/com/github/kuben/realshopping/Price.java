@@ -34,7 +34,7 @@ import org.bukkit.material.MaterialData;
 public final class Price {
     private int type,metahash,amount;
     private byte data;
-    private String description,easyname;
+    private String description,easyname,name;
     private boolean isgeneric = false;
     
     public Price(int type){
@@ -48,6 +48,7 @@ public final class Price {
         this.data = data;
         this.metahash = metahash;
         this.description = null;
+        this.name = null;
         this.easyname = Material.getMaterial(type).toString();
         this.amount = 1;
     }
@@ -61,15 +62,15 @@ public final class Price {
         //this.amount = itm.getAmount();
         final int prime = 31;
         if(itm.hasItemMeta()) {
-            if(this.type == 387) { // prototype for books. I hash only 1 page to avoid overflow.
+            if(this.type == Material.WRITTEN_BOOK.getId()) { // prototype for books. I hash only 1 page to avoid overflow.
                 BookMeta bm = (BookMeta) itm.getItemMeta();
                 this.metahash = metahash + (bm.getPage(1).hashCode() * prime);
                 this.metahash = metahash + (bm.getAuthor().hashCode()*prime);
                 this.metahash = metahash + (bm.getTitle().hashCode()*prime);
-                this.easyname = "Written Book: " + bm.getTitle();
+                this.name = bm.getTitle();
             }
             else {
-                this.easyname = Material.getMaterial(type).toString();
+                this.name = itm.getItemMeta().hasDisplayName()?itm.getItemMeta().getDisplayName():null;
                 this.metahash = itm.getItemMeta().hashCode();
             }
         }
@@ -91,7 +92,11 @@ public final class Price {
         this.metahash = Integer.parseInt(tmp[3]);
         this.easyname = Material.getMaterial(type).toString();
         if(tmp.length >4){
-            this.description = tmp[4];
+            this.name = tmp[4];
+        } this.name = null;
+        
+        if(tmp.length >5){
+            this.description = tmp[5];
         } else this.description = null;
     }
     /**
@@ -140,6 +145,18 @@ public final class Price {
     public byte getData() {
             return data;
     }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public boolean hasName() {
+        return this.name != null;
+    }
+    
+    public String getName() {
+        return name;
+    }
     
     /**
      * Returns the human readable name of this item.
@@ -148,8 +165,7 @@ public final class Price {
     public String getEasyname() {
         return easyname;
     }
-
-    
+  
     /**
      * Returns a standard formatted string.
      * This string will be of this format:
@@ -165,7 +181,8 @@ public final class Price {
         return  ChatColor.BLUE + easyname + ((amount>1)?" * "+ ChatColor.GREEN + amount + ChatColor.RESET:"")+ 
                 ChatColor.BLACK + " - " + ChatColor.RED + cost + LangPack.UNIT + 
                 (sale!=null? " " + ChatColor.GREEN + LangPack.ONSALE + " " + sale +"%":"") + ChatColor.RESET +
-                (hasDescription()?"\n┗━ Description: " + description:"");
+                (name!=null?ChatColor.YELLOW + (this.type == Material.WRITTEN_BOOK.getId()?"\n┗━ Title: ": "\n┗━ Name: ") + ChatColor.GRAY + name: "") +
+                (hasDescription()?ChatColor.YELLOW + "\n┗━ Description: "+ ChatColor.GRAY + description:"");
     }
     /**
      * Formats this object with a stat formatted string with amount of this Price object.
@@ -187,7 +204,7 @@ public final class Price {
      * @return A string ready to be used in saveHelper for statistics.
      */
     public String export(int amount){
-        return type + ":" + data + ":" + (description!=null?description + ":":"") + amount;
+        return type + ":" + data + ":" + (hasName()?name + ":":"") + amount;
     }
     
     /**
@@ -196,7 +213,7 @@ public final class Price {
      */
     @Override
     public String toString() {
-        return type+":"+data+":"+amount+":"+metahash+(hasDescription()?":"+description:"");
+        return type + ":" + data + ":" + amount + ":" + metahash + (hasName()?name + ":":"") + (hasDescription()?":"+description:"");
     }
 
     @Override

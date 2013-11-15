@@ -139,8 +139,13 @@ public class PriceParser {
                 item.appendChild(amount);
                 
                 if (obitm.hasDescription()) {
-                    Element itemname = doc.createElement("description");
-                    itemname.setTextContent(obitm.getDescription());
+                    Element itemdesc = doc.createElement("description");
+                    itemdesc.setTextContent(obitm.getDescription());
+                    item.appendChild(itemdesc);
+                }
+                if (obitm.hasName()) {
+                    Element itemname = doc.createElement("name");
+                    itemname.setTextContent(obitm.getName());
                     item.appendChild(itemname);
                 }
                 shop.appendChild(item);
@@ -183,7 +188,7 @@ public class PriceParser {
         Integer[] itemcost;
         int itemid = 0;
         byte itemdata = -1;
-        String desc = null;
+        String desc = null,name = null;
         int metahash;
         int amount = 1;
         //costs setting
@@ -215,9 +220,13 @@ public class PriceParser {
         if (price.getElementsByTagName("description").getLength() != 0) {
             desc = price.getElementsByTagName("description").item(0).getTextContent();
         }
+        if (price.getElementsByTagName("name").getLength() != 0) {
+            name = price.getElementsByTagName("name").item(0).getTextContent();
+        }
 
         Price p = new Price(itemid, itemdata, metahash);
         p.setDescription(desc);
+        p.setName(name);
         p.setAmount(amount);
         return new Object[]{p, itemcost};
     }

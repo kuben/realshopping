@@ -145,7 +145,8 @@ public class SellInventory {
             lore.add("Shop doesn't accept this.");
         } else {
             String singleprice,stackprice;
-            singleprice = String.valueOf(Shop.sellPrice(shop, itm)/itm.getAmount());
+            double temprice = (int)((Shop.sellPrice(shop, itm)/itm.getAmount()) * 100);
+            singleprice = String.valueOf(temprice/100);
             stackprice = String.valueOf(Shop.sellPrice(shop, itm));
             lore.add("Stack Price: "+stackprice);
             lore.add("Single Item Price: "+singleprice);

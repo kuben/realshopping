@@ -689,7 +689,8 @@ public class Shop {//TODO add load/save interface
                         cost *= pcnt / 100f;
                     }
                     cost *= shop.getBuyFor() / 100f;
-                    payment += cost * (RealShopping.isTool(ist.getType()) ? (double) amount / (double) RealShopping.getMaxDur(ist.getType()) : amount);//Convert items durability to item amount
+                    int maxdur = RealShopping.getMaxDur(ist.getType());
+                    payment = (int)(cost * (RealShopping.isTool(ist.getType()) ? (maxdur - ist.getDurability())/maxdur : amount));// Durability is treated as Malus for prices.
                 }
             }
         }
