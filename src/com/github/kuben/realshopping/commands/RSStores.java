@@ -277,11 +277,18 @@ class RSStores extends RSCommand {
                                 else sender.sendMessage(RD + LangPack.NOITEMSARESOLDINTHESTORE);
                                 return true;
                             } else {//If args.length > 3
-                                String[] keys = args[3].split(",");
+                                String[] keys;
+                                boolean generic = false;
+                                if(args[3].equals("-g") && args.length>4) {
+                                    generic = true;
+                                    keys =args[4].split(",");
+                                } else keys = args[3].split(",");
+
                                 if(keys.length > 0){
                                     int i = 0, j = 0;
                                     for(;i < keys.length;i++){
                                         Price tempP = RSUtils.pullPrice(keys[i],this.player);
+                                        tempP.setGeneric(generic);
                                         if(shop.hasPrice(tempP)){
                                             shop.addSale(tempP, pcnt);
                                             j++;

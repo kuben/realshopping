@@ -4,7 +4,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 
-import com.github.kuben.realshopping.Config;
 import com.github.kuben.realshopping.LangPack;
 import com.github.kuben.realshopping.Price;
 import com.github.kuben.realshopping.RSUtils;
@@ -84,11 +83,11 @@ class RSSetPrices extends RSCommand {
         itmprice.setDescription(description);
         itmprice.setAmount(amount);
         shop.setPrice(itmprice, priminmax[0]);
-        sender.sendMessage(GR + LangPack.PRICEFOR + itmprice.formattedString() + LangPack.SETTO + priminmax[0]/100f + LangPack.UNIT);
+        sender.sendMessage(GR + LangPack.PRICEFOR + itmprice.getEasyname() + LangPack.SETTO + priminmax[0]/100f + LangPack.UNIT);
         if(priminmax.length > 1) {
             if(priminmax[1] > 0 && priminmax[2] > 0) {
                 shop.setMinMax(itmprice, priminmax[1], priminmax[2]);
-                sender.sendMessage(GR + LangPack.SETMINIMALANDMAXIMALPRICESFOR + itmprice.formattedString());
+                sender.sendMessage(GR + LangPack.SETMINIMALANDMAXIMALPRICESFOR + itmprice.getEasyname());
             } else sender.sendMessage(RD + "A negative number " + LangPack.ISNOTAPROPERARGUMENT +", Skipped min and max prices.");
         }
         return true;
@@ -101,7 +100,7 @@ class RSSetPrices extends RSCommand {
             String dString = p.getData()>-1?"("+p.getData()+")":"";
             if(shop.hasPrice(p)){
                 shop.removePrice(p);
-                sender.sendMessage(RD + LangPack.REMOVEDPRICEFOR + DR + p.formattedString() + dString);
+                sender.sendMessage(RD + LangPack.REMOVEDPRICEFOR + DR + p.getEasyname() + dString);
                     return true;
             } else {
                 sender.sendMessage(RD + LangPack.COULDNTFINDPRICEFOR + DR + Material.getMaterial(p.getType()) + dString);
@@ -144,7 +143,7 @@ class RSSetPrices extends RSCommand {
 
     private boolean showMinMax(){
         Price p = RSUtils.pullPrice(comArgs[0],this.player);
-        String name = p.formattedString();
+        String name = p.getEasyname();
         if(shop.hasMinMax(p)){
             sender.sendMessage(GR + LangPack.STORE + DG + shop.getName() + GR + LangPack.HASAMINIMALPRICEOF + DG + shop.getMin(p)/100f + GR + LangPack.UNIT
                     + LangPack.ANDAMAXIMALPRICEOF + DG + shop.getMax(p)/100f + GR + LangPack.UNIT+ LangPack.FOR + ChatColor.BLUE + name);
@@ -154,7 +153,7 @@ class RSSetPrices extends RSCommand {
 
     private boolean clearMinMax(){
         Price p = RSUtils.pullPrice(comArgs[0],this.player);
-        String name = p.formattedString();
+        String name = p.getEasyname();
         if(shop.hasMinMax(p)){
             shop.clearMinMax(p);
             sender.sendMessage(GR + LangPack.CLEAREDMINIMALANDMAXIMALPRICESFOR + ChatColor.BLUE + name);
@@ -168,7 +167,7 @@ class RSSetPrices extends RSCommand {
             Price p = (Price)o[0];
             Integer[] i = (Integer[])o[1];
             shop.setMinMax(p, i[0], i[1]);
-            String name = p.formattedString();
+            String name = p.getEasyname();
             sender.sendMessage(GR + LangPack.SETMINIMALANDMAXIMALPRICESFOR + ChatColor.BLUE + name);
             return true;
         } catch (NumberFormatException e) {

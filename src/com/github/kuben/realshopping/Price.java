@@ -19,6 +19,7 @@
 
 package com.github.kuben.realshopping;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
@@ -33,8 +34,9 @@ import org.bukkit.material.MaterialData;
 public final class Price {
     private int type,metahash,amount;
     private byte data;
-    private String description;
-
+    private String description,easyname;
+    private boolean isgeneric = false;
+    
     public Price(int type){
         this(type,Byte.parseByte("0"));
     }
@@ -46,6 +48,7 @@ public final class Price {
         this.data = data;
         this.metahash = metahash;
         this.description = null;
+        this.easyname = Material.getMaterial(type).toString();
         this.amount = 1;
     }
     /**
@@ -63,8 +66,12 @@ public final class Price {
                 this.metahash = metahash + (bm.getPage(1).hashCode() * prime);
                 this.metahash = metahash + (bm.getAuthor().hashCode()*prime);
                 this.metahash = metahash + (bm.getTitle().hashCode()*prime);
+                this.easyname = "Written Book: " + bm.getTitle();
             }
-            else this.metahash = itm.getItemMeta().hashCode();
+            else {
+                this.easyname = Material.getMaterial(type).toString();
+                this.metahash = itm.getItemMeta().hashCode();
+            }
         }
         if(RealShopping.isTool(itm.getType())){ // Prototype for different Durability on items.
             this.metahash = (this.metahash + (itm.getDurability() * prime))*prime;
@@ -82,13 +89,14 @@ public final class Price {
         this.data = Byte.parseByte(tmp[1]);
         this.amount = Integer.parseInt(tmp[2]);
         this.metahash = Integer.parseInt(tmp[3]);
+        this.easyname = Material.getMaterial(type).toString();
         if(tmp.length >4){
             this.description = tmp[4];
-        }
+        } else this.description = null;
     }
     /**
      * This method creates a dummy itemstack of this object.
-     * Use only in situations where you need an itemstack and a presence of ItemMeta is irrelevant.
+     * Use only in situations where you need an itemstack and a presence of ItemMeta is is not needeed.
      * @return Dummy itemstack object.
      */
     public ItemStack toItemStack(){
@@ -97,6 +105,14 @@ public final class Price {
             return tempIS;
     }
 
+    public void setGeneric(boolean generic) {
+        this.isgeneric = generic;
+    }
+
+    public boolean isIsgeneric() {
+        return isgeneric;
+    }
+    
     public int getAmount() {
         return amount;
     }
@@ -124,24 +140,40 @@ public final class Price {
     public byte getData() {
             return data;
     }
-    @Deprecated
-    public Price stripOffData(){
-            return new Price(type);
+    
+    /**
+     * Returns the human readable name of this item.
+     * @return Easy name for this item.
+    */
+    public String getEasyname() {
+        return easyname;
     }
 
+    
     /**
-     * Returns a standard formatted string like
-     * ID:DATA MATNAME [- NAME]
+     * Returns a standard formatted string.
+     * This string will be of this format:
+     * EASYNAME - COST [SALE STATUS]
+     * Amount: AMOUNT
+     * [Description: DESCRIPTION]
      * where MATNAME is the material name, NAME can be the hint string (if present) of that item.
+     * @param cost This is the cost we must print for this item.
+     * @param sale Triggers the activation of "ON SALE" green indicator near the item name.
      * @return Display formatted string for this object.
      */
-    public String formattedString(){
-        return type + (data > 0?":"+data:"") + " " + Material.getMaterial(type).toString() +" * "+ amount + (hasDescription() ? " - "+description:"");
+    public String formattedString(double cost, Integer sale){
+        return  ChatColor.BLUE + easyname + ((amount>1)?" * "+ ChatColor.GREEN + amount + ChatColor.RESET:"")+ 
+                ChatColor.BLACK + " - " + ChatColor.RED + cost + LangPack.UNIT + 
+                (sale!=null? " " + ChatColor.GREEN + LangPack.ONSALE + " " + sale +"%":"") + ChatColor.RESET +
+                (hasDescription()?"\n┗━ Description: " + description:"");
     }
     /**
-     * Formats this object with a stat formatted string with amount.
+     * Formats this object with a stat formatted string with amount of this Price object.
      * The format will be:
-     * ID:DATA:AMOUNT[:DESCRIPTION]
+     * [Price tostring format]:amount
+     * 
+     * This amount must not be confused with Price amount that indicates 
+     * how many items are sold with that cost.
      * @param amount amount of that item.
      * @return this formatted object.
      */
@@ -178,18 +210,23 @@ public final class Price {
         return result;
     }
     
+    public boolean similarButHash(Object obj) {
+        if (obj == null || getClass() != obj.getClass()) return false;
+        if (this == obj) return true;
+        Price other = (Price) obj;
+        return type == other.type;
+    }
     /**
      * Checks if these two objects are similar (if are of the same type but data,amount and meta).
      * @param obj
      * @return true if similar.
      */
     public boolean similar(Object obj) {
-        if (obj == null || getClass() != obj.getClass()) return false;
-        if (this == obj) return true;
-        Price other = (Price) obj;
-        if (type != other.type) return false;
-        if(metahash != other.metahash) return false;
-        return true;
+        if(similarButHash(obj)) {
+            Price other = (Price)obj;
+            return metahash == other.metahash;
+        }
+        return false;
     }
     
     /**

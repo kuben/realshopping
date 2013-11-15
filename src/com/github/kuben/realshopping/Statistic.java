@@ -45,6 +45,6 @@ final class Statistic {
     
 @Override
     public String toString(){
-            return (bought?"bought ":"sold ") + item.formattedString() + " x" + amount;
+            return (bought?"bought ":"sold ") + item.getEasyname() + " x" + amount;
     }
 }

@@ -355,8 +355,19 @@ public class Shop {//TODO add load/save interface
         return !sale.isEmpty();
     }
 
-    public boolean hasSale(Price p) {
-        return sale.containsKey(p);
+    public boolean hasSimilarSale(Price p) {
+        for(Price pri:sale.keySet()){
+            if(pri.similar(p)) return true;
+        }
+        return false;
+    }
+    public Integer hasSale(Price p) {
+        for(Price salpri:sale.keySet()) {
+            if((salpri.isIsgeneric() && p.similarButHash(salpri)) || salpri.equals(p) ||salpri.similarData(p)) {
+                return sale.get(salpri);
+            }
+        }
+        return null;
     }
 
     public void clearSales() {
@@ -368,8 +379,9 @@ public class Shop {//TODO add load/save interface
     }
 
     public Integer getSale(Price p) {
-        if (hasSale(p)) {
-            return sale.get(p);
+        Integer saleval = hasSale(p);
+        if (saleval != null) {
+            return saleval;
         }
         return 0;
     }
@@ -672,7 +684,7 @@ public class Shop {//TODO add load/save interface
                 double cost = shop.getPrice(itm);
                 if (cost > 0.0) {
                     int pcnt;
-                    if (shop.hasSale(itm)) {
+                    if (shop.hasSale(itm)!=null) {
                         pcnt = 100 - shop.getSale(itm);
                         cost *= pcnt / 100f;
                     }
@@ -780,27 +792,25 @@ public class Shop {//TODO add load/save interface
      */
     public static boolean prices(CommandSender sender, int page, Shop shop){//In 0.50+ pages start from 1
         if(shop.hasPrices()){
+            int maxitems = 6; //how many items we want to show
             Map<Price, Integer> tempMap = shop.getPrices();
             if(!tempMap.isEmpty()){
                 Price[] keys = tempMap.keySet().toArray(new Price[0]);
-                if((page-1)*9 < keys.length){//If page exists
+                if((page-1)*maxitems < keys.length){//If page exists
                     if(shop.hasSales()){
                         sender.sendMessage(ChatColor.GREEN + LangPack.THEREISA + ChatColor.DARK_GREEN + shop.getFirstSale()
                                 + ChatColor.GREEN + LangPack.PCNTOFFSALEAT + ChatColor.DARK_GREEN + shop.getName());
                     }
-                    for(int i = 9*(page-1);i < 9*page;i++){
+                    for(int i = maxitems*(page-1);i < maxitems*page;i++){
+                        if(i>=tempMap.size()) break;
                         int cost = tempMap.get(keys[i]);
-                        String onSlStr = "";
-                        if(shop.hasSale(keys[i])){//There is a sale on that item.
-                            int pcnt = -1;
-                            //if(shop.hasSale(keys[i].stripOffData())) pcnt = 100 - shop.getSale(keys[i].stripOffData());
-                            if(shop.hasSale(keys[i]))  pcnt = 100 - shop.getSale(keys[i]);
+                        if(shop.hasSale(keys[i])!=null){//There is a sale on that item.
+                            int pcnt = 100 - shop.getSale(keys[i]);
                             cost *= pcnt/100f;
-                            onSlStr = ChatColor.GREEN + LangPack.ONSALE;
                         }
-                        sender.sendMessage(ChatColor.BLUE + "" + keys[i].formattedString() + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
+                        sender.sendMessage(keys[i].formattedString(cost/100f,shop.hasSale(keys[i])));
                     }
-                    if(page*9 < keys.length){//Not last
+                    if(page*maxitems < keys.length){//Not last
                         sender.sendMessage(LangPack.MOREITEMSONPAGE + ChatColor.YELLOW + (page + 1));
                     }
                         

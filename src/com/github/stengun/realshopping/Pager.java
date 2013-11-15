@@ -18,6 +18,7 @@ public class Pager extends Thread {
     private boolean stop;
     private long time, stamp;
     private String player;
+    private final int howmanyitms = 6;
 
     public Pager(String player) {
         super();
@@ -40,7 +41,7 @@ public class Pager extends Thread {
                     if (total > time) {
                         page = 1;
                     } else {
-                        if(page*9 < shop.getPrices().size()) {
+                        if(page*howmanyitms < shop.getPrices().size()) {
                             page += 1;
                         } else {
                             page = 1;

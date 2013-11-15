@@ -102,24 +102,16 @@ class RSPrices extends RSCommand {
 	private boolean searchItem(Shop shop, Price p){
             if(shop.hasPrice(p)) {
                 double cost = shop.getPrice(p);
-                String onSlStr = "";
-                    if(shop.hasSale(p.stripOffData()) || shop.hasSale(p)){//There is a sale on that item.
-                        int pcnt = -1;
-                        if(shop.hasSale(p.stripOffData())) pcnt = 100 - shop.getSale(p.stripOffData()); // TODO remove stripoff, change it with .isSimilar() in checks.
-                        if(shop.hasSale(p))  pcnt = 100 - shop.getSale(p);
-                        cost *= pcnt/100f;
-                    onSlStr = ChatColor.GREEN + LangPack.ONSALE;
+                if(shop.hasSale(p) != null){//There is a sale on that item.
+                    int pcnt = 100 - shop.getSale(p);
+                    cost *= pcnt/100f;
                 }
-                sender.sendMessage(
-                        ChatColor.BLUE.toString() + p.formattedString() 
-                        + ChatColor.BLACK + " - " 
-                        + ChatColor.RED + cost/100f 
-                        + LangPack.UNIT + onSlStr);
+                sender.sendMessage(p.formattedString(cost/100f,shop.hasSale(p)));
                 return false;
             }
             sender.sendMessage(
                     ChatColor.RED + "No matches for " 
-                    + ChatColor.DARK_RED + p.formattedString());
+                    + ChatColor.DARK_RED + p.getEasyname());
             return true;
 	}
 	
