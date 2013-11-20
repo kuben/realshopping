@@ -1,10 +1,13 @@
 package com.github.kuben.realshopping;
 
+import com.github.kuben.realshopping.exceptions.RealShoppingException;
+import com.github.kuben.realshopping.exceptions.RealShoppingException.Type;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.github.kuben.realshopping.Reporter;
 import com.github.kuben.realshopping.exceptions.RealShoppingException;
 import com.github.kuben.realshopping.exceptions.RealShoppingException.Type;
 
@@ -32,7 +35,9 @@ public class PSetting {
 	
 	//Global
 	private FavNots favNots;
-//	private int getReports;//0 means off, X means X hours interval?
+	private int reportsInterval;//0 means off, X means X periods interval
+	private int reportPeriodsLeft;//To be decreased by the Reporter class. When zero, the report is sent, and the variable reset to the value of getReports
+	private long lastReport;
 	private int getSoldNots;  //-1 means no, 0 for all items
 	private int getBoughtNots;//X means for items over X cost
 	private int getAINots;//0 is no, X is TRESHOLD
@@ -40,31 +45,37 @@ public class PSetting {
 	
 	//Store specific
 	private Map<Shop, FavNots> favNotsMap;
-//	private Map<Shop, Integer> getReportsMap;
+	private Map<Shop, Integer> reportIntervalsMap;
+	private Map<Shop, Integer> reportPeriodsLeftMap;
+	private Map<Shop, Long> lastReportsMap;
 	private Map<Shop, Integer> getSoldNotsMap;
 	private Map<Shop, Integer> getBoughtNotsMap;
 	private Map<Shop, Integer> getAINotsMap;
 	private Map<Shop, Integer> changeOnAIMap;
 	
 	public PSetting(String player){
-		System.out.println("Creating new PSetting for player " + player);
+		if(Config.debug) RealShopping.loginfo("Creating new PSetting for player " + player);
 		
 		this.player = player;
 		favShops = new HashSet<Shop>();
 		
 		favNots = FavNots.BOTH;
-//		getReports = 0;
+		reportsInterval = 0;
+		reportPeriodsLeft = reportsInterval;
+		lastReport = 0;
 		getSoldNots = -1;
 		getBoughtNots = 0;
 		getAINots = 0;
 		changeOnAI = 0;
 		
-		favNotsMap = new HashMap<Shop, FavNots>();
-//		getReportsMap = new HashMap<Shop, Integer>();
-		getSoldNotsMap = new HashMap<Shop, Integer>();
-		getBoughtNotsMap = new HashMap<Shop, Integer>();
-		getAINotsMap = new HashMap<Shop, Integer>();
-		changeOnAIMap = new HashMap<Shop, Integer>();
+		favNotsMap = new HashMap<>();
+		reportIntervalsMap = new HashMap<>();
+		reportPeriodsLeftMap = new HashMap<>();
+		lastReportsMap = new HashMap<>();
+		getSoldNotsMap = new HashMap<>();
+		getBoughtNotsMap = new HashMap<>();
+		getAINotsMap = new HashMap<>();
+		changeOnAIMap = new HashMap<>();
 	}
 	
 //	public PSetting(String importStr){ }
@@ -99,6 +110,47 @@ public class PSetting {
 	 */
 	
 	public String getPlayer(){ return player; }
+	
+	public boolean gettingReports(Shop shop){
+	    if(reportIntervalsMap.containsKey(shop)) return reportIntervalsMap.get(shop) > 0;
+	    return reportsInterval > 0;
+	}
+
+	public boolean updatePeriodAndCheckIfTimeToSendReport(Shop shop){//This assumes gettingReports() returns true
+	    if(reportIntervalsMap.containsKey(shop)){
+	        if(!reportPeriodsLeftMap.containsKey(shop)) reportPeriodsLeftMap.put(shop, reportIntervalsMap.get(shop));//Init, if not initialized
+	        
+	        int newval = reportPeriodsLeftMap.get(shop) - 1;
+	        reportPeriodsLeftMap.put(shop, newval);//Decrease
+	        
+	        if(newval <= 0){//Time to send a report!
+	            reportPeriodsLeftMap.put(shop, reportIntervalsMap.get(shop));//Reset
+	            return true;
+	        }
+	        return false;
+	    }
+	    
+        reportPeriodsLeft -= 1;//Decrease
+        
+        if(reportPeriodsLeft <= 0){//Send a report!
+            reportPeriodsLeft = reportsInterval;//Reset
+            return true;
+        }
+        return false;
+	}
+	
+	public long getLastReport(Shop shop){
+	    long last;
+	    if(lastReportsMap.containsKey(shop)) last = lastReportsMap.get(shop);
+	    else last = lastReport;
+	    
+	    if(last > 0) return last;//All fine
+	    
+	    //First report, return a reasonable timestamp as a NEGATIVE value
+	    int PERIOD = Config.getReporterPeriod();
+	    last = System.currentTimeMillis() - (PERIOD * reportsInterval);
+	    return last * -1;
+	}
 	
 	public boolean getSalesNotifications(Shop shop) {
 		FavNots o;
@@ -138,7 +190,7 @@ public class PSetting {
 		if(changeOnAIMap.containsKey(shop)) return changeOnAIMap.get(shop) > 0;
 		return changeOnAI > 0;
 	}
-
+	
 	public int changeOnAIPercentage(Shop shop) {
 		if(changeOnAIMap.containsKey(shop)) return changeOnAIMap.get(shop);
 		return changeOnAI;
@@ -151,14 +203,14 @@ public class PSetting {
 	 */
 	
 	public FavNots getFavNots() { return favNots; }
-//	public int getReports() { return getReports; }
+	public int getReports() { return reportsInterval; }
 	public int getSoldNots() { return getSoldNots; }
 	public int getBoughtNots() { return getBoughtNots; }
 	public int getAINots() { return getAINots; }
 	public int getChangeOnAI() { return changeOnAI; }
 	
 	public FavNots getFavNots(Shop shop) { return favNotsMap.get(shop); }
-//	public Integer getReports(Shop shop) { return getReportsMap.get(shop); }
+	public Integer getReports(Shop shop) { return reportIntervalsMap.get(shop); }
 	public Integer getSoldNots(Shop shop) { return getSoldNotsMap.get(shop); }
 	public Integer getBoughtNots(Shop shop) { return getBoughtNotsMap.get(shop); }
 	public Integer getAINots(Shop shop) { return getAINotsMap.get(shop); }
@@ -174,12 +226,17 @@ public class PSetting {
 	public void setFavNots(FavNots favNots, Shop shop) { favNotsMap.put(shop, favNots); }
 	public void defaultFavNots(Shop shop){ favNotsMap.remove(shop); }
 	
-/*	public void setGetReports(int getReports){ this.getReports = getReports; }
+	public void setGetReports(int getReports){ this.reportsInterval = getReports; }
 	public void setGetReports(int getReports, Shop shop) throws RealShoppingException {
 		if(shop.getOwner().equals("@admin")) throw new RealShoppingException(Type.FEATURE_NOT_AVAIABLE_FOR_ADMIN_STORES);
-		getReportsMap.put(shop, getReports);
+		reportIntervalsMap.put(shop, getReports);
 	}
-	public void defaultGetReports(Shop shop){ getReportsMap.remove(shop); }*/
+	public void defaultGetReports(Shop shop){ reportIntervalsMap.remove(shop); }
+	
+	public void setLastReport(Shop shop){
+	    if(reportIntervalsMap.containsKey(shop)) lastReportsMap.put(shop, System.currentTimeMillis());
+	    lastReport = System.currentTimeMillis();
+	}
 	
 	public void setGetSoldNots(int getSoldNots) { this.getSoldNots = getSoldNots; }
 	public void setGetSoldNots(int getSoldNots, Shop shop) throws RealShoppingException {

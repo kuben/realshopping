@@ -20,47 +20,104 @@ class RSSet extends RSPlayerCommand {
 	@Override
 	protected boolean execute() {
 		if(!RealShopping.hasPInv(player)){
-			if (args.length == 1 && args[0].equalsIgnoreCase("prompt")){
-				return PromptMaster.createConversation(PromptType.SETUP_STORE, player);
-			} else if (args.length == 1 && args[0].equalsIgnoreCase("entrance")){
-				RealShopping.setEntrance(player);
+                    if(args.length == 1) {
+                        switch(args[0].toLowerCase()) {
+                            case "prompt":
+                                return PromptMaster.createConversation(PromptType.SETUP_STORE, player);
+                            case "entrance":
+                                RealShopping.setEntrance(player);
 				player.sendMessage(ChatColor.GREEN + LangPack.ENTRANCEVARIABLESETTO + RSUtils.locAsString(RealShopping.getEntrance()));
 				return true;
-			} else if (args.length == 1 && args[0].equalsIgnoreCase("exit")){
-				RealShopping.setExit(player);
+                            case "exit":
+                                RealShopping.setExit(player);
 				player.sendMessage(ChatColor.GREEN + LangPack.EXITVARIABLESETTO + RSUtils.locAsString(RealShopping.getExit()));
 				return true;
-			} else if (args.length == 2 && args[0].equalsIgnoreCase("createstore")){
-				if(RealShopping.hasEntrance()){
-					if(RealShopping.hasExit()){
-						if(args[1].equals("help")){
-							sender.sendMessage(ChatColor.RED + LangPack.YOUCANTNAMEASTORETHAT);
-							return true;
-						}
-				    	if(!RealShopping.shopExists(args[1])){//Create
-				    		RealShopping.addShop(new Shop(args[1], player.getWorld().getName(), "@admin"));
-				    	}
-				    	try {
-					    	RealShopping.getShop(args[1]).addEntranceExit(RealShopping.getEntrance(), RealShopping.getExit());
-					    	RealShopping.updateEntrancesDb();
-							player.sendMessage(ChatColor.RED + args[1] + LangPack.WASCREATED);
-				    	} catch(RealShoppingException e){
-				    		player.sendMessage(ChatColor.RED + LangPack.THIS_ENTRANCE_AND_EXIT_PAIR_IS_ALREADY_USED);
-				    	}
-						return true;
-					} else player.sendMessage(ChatColor.RED + LangPack.THERSNOEXITSET);
+                            default:
+                                return false;
+                        }
+                    }
+                    if(args.length == 2) {
+                        switch(args[0].toLowerCase()) {
+                            case "createstore":
+                                if(!RealShopping.hasEntrance()) {
+                                    player.sendMessage(ChatColor.RED + LangPack.THERESNOENTRANCESET);
+                                    return true;
+                                }
+                                if(!RealShopping.hasExit()) {
+                                    player.sendMessage(ChatColor.RED + LangPack.THERSNOEXITSET);
+                                    return true;
+                                }
+                                if(args[1].equals("help")){
+                                    sender.sendMessage(ChatColor.RED + LangPack.YOUCANTNAMEASTORETHAT);
+                                    return true;
+                                }
+                                if(!RealShopping.shopExists(args[1])){//Create
+                                    RealShopping.addShop(new Shop(args[1], player.getWorld().getName(), "@admin"));
+                                    player.sendMessage(ChatColor.RED + args[1] + LangPack.WASCREATED);
+                                }
+                            case "addeepair":
+                                if(RealShopping.hasEntrance()){
+                                    if(RealShopping.hasExit()){
+                                        if(RealShopping.shopExists(args[1])){//Create
+                                            try {
+                                                RealShopping.getShop(args[1]).addEntranceExit(RealShopping.getEntrance(), RealShopping.getExit());
+                                                RealShopping.updateEntrancesDb();
+                                                player.sendMessage(ChatColor.GREEN + "Entrance/exit pair was added successfully");
+                                            } catch(RealShoppingException e){
+                                                player.sendMessage(ChatColor.RED + LangPack.THIS_ENTRANCE_AND_EXIT_PAIR_IS_ALREADY_USED);
+                                            }
+                                                return true;
+                                            }
+                                        } else player.sendMessage(ChatColor.RED + LangPack.THERSNOEXITSET);
 				} else player.sendMessage(ChatColor.RED + LangPack.THERESNOENTRANCESET);
-			} else if (args.length == 2 && args[0].equalsIgnoreCase("delstore")){
-				if(RealShopping.shopExists(args[1])){
-					if(RealShopping.getPlayersInStore(args[1])[0].equals("")){
-						RealShopping.getShop(args[1]).clearEntrancesExits();
-						RealShopping.removeShop(args[1]);
-						player.sendMessage(ChatColor.RED + args[1] + LangPack.WASREMOVED);
-						RealShopping.updateEntrancesDb();
-					} else player.sendMessage(ChatColor.RED + LangPack.STORENOTEMPTY);
-					return true;
+                                return false;
+                            case "delstore":
+                                if(RealShopping.shopExists(args[1])){
+                                    if(RealShopping.getPlayersInStore(args[1])[0].equals("")){
+                                        RealShopping.getShop(args[1]).clearEntrancesExits();
+                                        RealShopping.removeShop(args[1]);
+                                        player.sendMessage(ChatColor.RED + args[1] + LangPack.WASREMOVED);
+                                        RealShopping.updateEntrancesDb();
+                                    } else player.sendMessage(ChatColor.RED + LangPack.STORENOTEMPTY);
+                                    return true;
 				} else player.sendMessage(ChatColor.RED + args[1] + LangPack.WASNTFOUND);
-			}
+                            default:
+                                return false;
+                        }
+                    }
+                    if(args.length == 3) {
+                        switch(args[0].toLowerCase()){
+                            case "deleepair":
+                                if(RealShopping.shopExists(args[1])) {
+                                    try {
+                                        int index = Integer.parseInt(args[2]);
+                                        Shop shop = RealShopping.getShop(args[1]);
+                                        shop.removeEEPair(player,index);
+                                        RealShopping.updateEntrancesDb();
+                                    } catch (NumberFormatException e) {
+                                        player.sendMessage("Index is not a number, aborting.");
+                                        return false;
+                                    }
+                                    return true;
+                                }
+                                return false;
+                            case "listeepairs":
+                                if(RealShopping.shopExists(args[1])) {
+                                    int page = 1;
+                                    try {
+                                        page = Integer.parseInt(args[2]);
+                                    } catch (NumberFormatException e) {
+                                        player.sendMessage("Page is not a number, printing the first page.");
+                                    } finally {
+                                        Shop.listEEPairs(sender, page, RealShopping.getShop(args[1]));
+                                    }
+                                    return true;
+                                }
+                                return false;
+                            default:
+                                return false;
+                        }
+                    }
 		} else player.sendMessage(ChatColor.RED + LangPack.YOU_CANT_USE_THIS_COMMAND_INSIDE_A_STORE);
 		return false;
 	}

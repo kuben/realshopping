@@ -53,7 +53,6 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
@@ -61,6 +60,7 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.Inventory;
@@ -69,7 +69,23 @@ import org.bukkit.inventory.ItemStack;
 public class RSPlayerListener implements Listener {
 
     private static Set<GeneralListener> listenerSet = new HashSet<>();
-
+    
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onConnect(PlayerJoinEvent event) {
+        String player = event.getPlayer().getName();
+        if(RealShopping.hasPInv(player)) {
+            Shop.addPager(player);
+        }
+    }
+    
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onDisconnect(PlayerQuitEvent event) {
+        String player = event.getPlayer().getName();
+        if(RealShopping.hasPInv(player)) {
+            Shop.removePager(player);
+        }
+    }
+    
     @EventHandler(priority = EventPriority.HIGH)
     public void onTeleport(PlayerTeleportEvent event) {
         Player player = event.getPlayer();
@@ -130,9 +146,8 @@ public class RSPlayerListener implements Listener {
         if (RealShopping.hasPInv(player)) {
             RSPlayerInventory pinv = RealShopping.getPInv(player);
             Shop shop = pinv.getShop();
-            if (!RealShopping.getPInv(player).hasPaid()) {
+            if (!pinv.hasPaid()) {
                 List<ItemStack> newdrops = new LinkedList<>();
-
                 for (ItemStack itm : event.getDrops()) {
                     if (itm == null) {
                         continue;
@@ -149,13 +164,11 @@ public class RSPlayerListener implements Listener {
                                 newdrops.add(itm);
                                 ItemStack stole = new ItemStack(itm);
                                 stole.setAmount(amount - haveamount);
-
-                                shop.addStolenToClaim(stole);
+                                shop.addToClaim(stole);
                                 player.getInventory().remove(stole);
-
                             }
                         } else {
-                            shop.addStolenToClaim(itm);
+                            shop.addToClaim(itm);
                             pinv.removeItem(itm, itm.getAmount());
                             player.getInventory().remove(itm);
                         }
@@ -263,13 +276,16 @@ public class RSPlayerListener implements Listener {
                                 }
                             } else if (player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType() == Material.BROWN_MUSHROOM) {
                                 if (Config.isEnableSelling()) {
-                                    if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-                                        if (RealShopping.getPInv(player).getShop().getBuyFor() > 0) {
-                                            Inventory tempInv = Bukkit.createInventory(null, 36, LangPack.SELLTOSTORE);
-                                            player.openInventory(tempInv);
-                                        } else {
-                                            player.sendMessage(ChatColor.RED + LangPack.NOTBUYINGFROMPLAYERS);
-                                        }
+                                    if (RealShopping.getPInv(player).getShop().getBuyFor() > 0) {
+                                        if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
+                                            player.sendMessage("I will pay " + Shop.sellPrice(RealShopping.getPInv(player).getShop(), player.getItemInHand()) + "for that item.");
+                                        }else
+                                            if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                                                Inventory tempInv = Bukkit.createInventory(null, 36, LangPack.SELLTOSTORE);
+                                                player.openInventory(tempInv);
+                                            }
+                                    } else {
+                                        player.sendMessage(ChatColor.RED + LangPack.NOTBUYINGFROMPLAYERS);
                                     }
                                 } else {
                                     player.sendMessage(ChatColor.RED + LangPack.SELLINGTOSTORESISNOTENABLEDONTHISSERVER);
@@ -279,7 +295,7 @@ public class RSPlayerListener implements Listener {
                     }
                 }
             }
-            if (RealShopping.hasPInv(player) && event.getItem() != null && RealShopping.isForbiddenInStore(event.getItem().getTypeId())) {
+            if (RealShopping.hasPInv(player) && event.getItem() != null && RealShopping.isForbiddenInStore(event.getItem().getType())) {
                 if (event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR) {
                     player.sendMessage(ChatColor.RED + LangPack.YOUCANTUSETHATITEMINSTORE);
                     event.setUseItemInHand(Result.DENY);
@@ -328,18 +344,6 @@ public class RSPlayerListener implements Listener {
                     event.setCancelled(true);
                     ((DoubleChest) event.getInventory().getHolder()).getInventory().getViewers().remove(event.getPlayer());
                     ((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + "[RealShopping] " + LangPack.THISCHESTISPROTECTED);
-                }
-            }
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGH)
-    public void onInventoryCloseEvent(InventoryCloseEvent event) {
-        Player player = (Player) event.getPlayer();
-        if (!launchConversationListener(player, event)) {//Redirects event if player is in conversation, otherwise as usual
-            if (event.getInventory().getTitle().equals(LangPack.SELLTOSTORE)) {//TODO consider if this is a good idea, Probably isn't. Create own class extending inventory???
-                if (RealShopping.hasPInv(player)) {//If player is in store
-                    Shop.sellToStore(player, event.getInventory().getContents());
                 }
             }
         }

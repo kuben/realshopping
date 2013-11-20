@@ -76,6 +76,8 @@ public class PriceParser {
         DocumentBuilder builder = dbf.newDocumentBuilder();
         Document doc = builder.parse(f);
         doc.getDocumentElement().normalize();
+        if(doc.getDocumentElement().getAttribute("version").equals("") || 
+            Float.parseFloat(doc.getDocumentElement().getAttribute("version")) < RealShopping.VERFLOAT) doc = convertPrices(doc);
 
         NodeList shops = doc.getElementsByTagName("shop");
         for (int i = 0; i < shops.getLength(); i++) {
@@ -97,7 +99,7 @@ public class PriceParser {
      * @throws TransformerException
      */
     public static void savePriceMap(Set<Shop> shopset) throws ParserConfigurationException, FileNotFoundException, TransformerConfigurationException, TransformerException {
-        File f = new File(MANDIR + "prices.xml");//Reset file
+        //File f = new File(MANDIR + "prices.xml");//Reset file
         //if(f.exists()) f.delete();
 
         DocumentBuilderFactory dbfac = DocumentBuilderFactory.newInstance();
@@ -105,6 +107,7 @@ public class PriceParser {
         Document doc = docBuilder.newDocument();
 
         Element root = doc.createElement("prices");
+        root.setAttribute("version", Float.toString(RealShopping.VERFLOAT));
         doc.appendChild(root);
         doc.appendChild(doc.createComment("If you want to manually edit this file, do it when your server is down. Your changes won't be saved otherwise!"));
 
@@ -136,8 +139,13 @@ public class PriceParser {
                 item.appendChild(amount);
                 
                 if (obitm.hasDescription()) {
-                    Element itemname = doc.createElement("description");
-                    itemname.setTextContent(obitm.getDescription());
+                    Element itemdesc = doc.createElement("description");
+                    itemdesc.setTextContent(obitm.getDescription());
+                    item.appendChild(itemdesc);
+                }
+                if (obitm.hasName()) {
+                    Element itemname = doc.createElement("name");
+                    itemname.setTextContent(obitm.getName());
                     item.appendChild(itemname);
                 }
                 shop.appendChild(item);
@@ -180,7 +188,7 @@ public class PriceParser {
         Integer[] itemcost;
         int itemid = 0;
         byte itemdata = -1;
-        String desc = null;
+        String desc = null,name = null;
         int metahash;
         int amount = 1;
         //costs setting
@@ -205,14 +213,51 @@ public class PriceParser {
             }
         }
         metahash = Integer.parseInt(price.getElementsByTagName("meta").item(0).getTextContent());
-        amount = Integer.parseInt(price.getElementsByTagName("amount").item(0).getTextContent());
+        if(price.getElementsByTagName("amount").getLength() > 0){
+            amount = Integer.parseInt(price.getElementsByTagName("amount").item(0).getTextContent());
+        }
+        
         if (price.getElementsByTagName("description").getLength() != 0) {
             desc = price.getElementsByTagName("description").item(0).getTextContent();
+        }
+        if (price.getElementsByTagName("name").getLength() != 0) {
+            name = price.getElementsByTagName("name").item(0).getTextContent();
         }
 
         Price p = new Price(itemid, itemdata, metahash);
         p.setDescription(desc);
+        p.setName(name);
         p.setAmount(amount);
         return new Object[]{p, itemcost};
+    }
+    
+    private static Document convertPrices(Document actual) throws ParserConfigurationException {
+        Element root = actual.getDocumentElement();
+        root.setAttribute("version", Float.toString(RealShopping.VERFLOAT));
+        
+        NodeList shops = actual.getElementsByTagName("shop");
+        for(int i = 0; i<shops.getLength();i++) {
+            if (shops.item(i).getNodeType() != Node.ELEMENT_NODE) {
+                continue;
+            }
+            NodeList prices = ((Element)shops.item(i)).getChildNodes();
+            for( int j=0;j<prices.getLength();j++) {
+                if (prices.item(j).getNodeType() != Node.ELEMENT_NODE) {
+                    continue;
+                }
+                
+                Element price = (Element)prices.item(j);
+                String id = price.getAttribute("id");
+                if(!id.contains(":")) price.setAttribute("id", id+":0");
+                
+                Element meta = actual.createElement("meta");
+                meta.setTextContent("0");
+                Element amount = actual.createElement("amount");
+                amount.setTextContent("1");
+                price.appendChild(meta);
+                price.appendChild(amount);
+            }
+        }
+        return actual;
     }
 }

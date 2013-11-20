@@ -48,7 +48,7 @@ class RSStores extends RSCommand {
 		//Check if help was asked for
 		if(args.length == 0 || args[0].equalsIgnoreCase("help")){
 			if(args.length == 0){
-				sender.sendMessage(DG + LangPack.USAGE + RESET + "/rsstores store [buyfor ...|collect ...|ban ...|unban ...|kick ...|startsale ...|endsale|broadcast ...");
+				sender.sendMessage(DG + LangPack.USAGE + RESET + "/rsstores STORE [buyfor ...|collect ...|ban ...|unban ...|kick ...|startsale ...|endsale|broadcast ...");
 				sender.sendMessage(LangPack.FOR_HELP_FOR_A_SPECIFIC_COMMAND_TYPE_ + LP + "/rsstores help " + DP + "COMMAND");
 			} else if(args.length == 1){
 				sender.sendMessage(GR + LangPack.RSSTORESHELP + LangPack.YOU_CAN_GET_MORE_HELP_ABOUT_ + MORE_HELP);
@@ -77,7 +77,7 @@ class RSStores extends RSCommand {
 			            sender.sendMessage(LangPack.USAGE + LP + "endsale" + RESET + LangPack.ENDSALEHELP);
 			            break;
 			        case "broadcast":
-			            sender.sendMessage(LangPack.USAGE + LP + "broadcast " + DP + "MESSAGE" + RESET + ". Help text to be added..");//TODO add help text
+			            sender.sendMessage(LangPack.USAGE + LP + "broadcast (-c [" + DP + "AMOUNT" + LP + "])|" + DP + "MESSAGE" + RESET + ". Help text to be added..");//TODO add help text
 			            break;
 			    }
 			}
@@ -111,7 +111,7 @@ class RSStores extends RSCommand {
 				}
 			}
 		} else {
-			sender.sendMessage(args[0] + LangPack.DOESNTEXIST);
+			sender.sendMessage(DR + args[0] + RD + LangPack.DOESNTEXIST);
 			return false;
 		}
 		return true;
@@ -147,12 +147,12 @@ class RSStores extends RSCommand {
 					if(Config.isAllowFillChests()){
 						if(!RealShopping.hasPInv(player) || shop.getOwner().equals(player.getName())){
 							if(player.getLocation().getBlock().getState() instanceof Chest){
-								if(shop.hasStolenToClaim()){
+								if(shop.hasToClaim()){
 									if(amount == 0 || amount > 27) amount = 27;
 									ItemStack[] tempIs = new ItemStack[27];
 									int i = 0;
 									for(;i < amount;i++){
-										tempIs[i] = shop.claimStolenToClaim();
+										tempIs[i] = shop.pullFirstToClaim();
 										if(tempIs[i] == null) break;
 									}
 									ItemStack[] oldCont = ((Chest)player.getLocation().getBlock().getState()).getBlockInventory().getContents();
@@ -170,7 +170,7 @@ class RSStores extends RSCommand {
 				} else {
 					int i = 0;
 					for(;amount == 0 || i < amount;i++){
-						ItemStack tempIs = shop.claimStolenToClaim();
+						ItemStack tempIs = shop.pullFirstToClaim();
 						if(tempIs != null) player.getWorld().dropItem(player.getLocation(), tempIs);
 						else break;
 					}
@@ -264,21 +264,46 @@ class RSStores extends RSCommand {
                                 for(;i < keys.length;i++){
                                     shop.addSale(keys[i], pcnt);
                                 }
-                                if(pcnt > 0) sender.sendMessage(DG + "" + pcnt + GR + LangPack.PCNTOFF + DG + i + GR + LangPack.ITEMS);
+                                if(i > 0){
+                                    sender.sendMessage(DG + "" + pcnt + GR + LangPack.PCNTOFF + DG + i + GR + LangPack.ITEMS);
+                                    int subs = 0;
+                                    for(PSetting pS:RealShopping.getPlayerSettings()){
+                                        if(pS.getSalesNotifications(shop) && RealShopping.sendNotification(pS.getPlayer(), 
+                                               GR + LangPack.STORE + DG + shop.getName() + GR + " now has a " + DG + pcnt + GR + "% off sale for " + DG + i + GR + LangPack.ITEMS))//LANG
+                                        subs++;
+                                    }
+                                    if(subs > 0) sender.sendMessage(GR + "Informed " + DG + subs + GR + " subscribers about the sale.");//LANG
+                                }
                                 else sender.sendMessage(RD + LangPack.NOITEMSARESOLDINTHESTORE);
                                 return true;
                             } else {//If args.length > 3
-                                String[] keys = args[3].split(",");
+                                String[] keys;
+                                boolean generic = false;
+                                if(args[3].equals("-g") && args.length>4) {
+                                    generic = true;
+                                    keys =args[4].split(",");
+                                } else keys = args[3].split(",");
+
                                 if(keys.length > 0){
                                     int i = 0, j = 0;
                                     for(;i < keys.length;i++){
                                         Price tempP = RSUtils.pullPrice(keys[i],this.player);
+                                        tempP.setGeneric(generic);
                                         if(shop.hasPrice(tempP)){
                                             shop.addSale(tempP, pcnt);
                                             j++;
                                         }
                                     }
-                                    if(pcnt > 0) sender.sendMessage(DG + "" + pcnt + GR + LangPack.PCNTOFF + DG + j + GR + LangPack.ITEMS);
+                                    if(j > 0){
+                                        sender.sendMessage(DG + "" + pcnt + GR + LangPack.PCNTOFF + DG + j + GR + LangPack.ITEMS);
+                                        int subs = 0;
+                                        for(PSetting pS:RealShopping.getPlayerSettings()){
+                                            if(pS.getSalesNotifications(shop) && RealShopping.sendNotification(pS.getPlayer(), 
+                                                   GR + LangPack.STORE + DG + shop.getName() + GR + " now has a " + DG + pcnt + GR + "% off sale for " + DG + i + GR + LangPack.ITEMS))
+                                            subs++;
+                                        }
+                                        if(subs > 0) sender.sendMessage(GR + "Informed " + DG + subs + GR + " subscribers about the sale.");
+                                    }
                                     else sender.sendMessage(RD + LangPack.NOITEMSARESOLDINTHESTORE);
                                     return true;
                                 } else sender.sendMessage(DR + args[3] + RD + LangPack.ISNOTAVALIDARGUMENT);
@@ -294,12 +319,25 @@ class RSStores extends RSCommand {
 	}
 	
 	private boolean endsale(){
+	    RealShopping.cancelSaleNotification(shop.getName());
 		shop.clearSales();
 		sender.sendMessage(GR + LangPack.SALEENDED);
 		return true;
 	}
 	
 	private boolean broadcast(){
+	    if(args[2].equals("-c")){//Check for the -c flag
+	        if(args.length > 3 && args[3].matches("[0-9]+")){
+	            int i = Integer.parseInt(args[3]);
+	            RealShopping.cancelBroadcasts(shop.getName(), i);//Cancel X most recent broadcasts
+	            sender.sendMessage(GR + "Cancelled the " + DG + i + GR + " most recent pending broadcasts from " + DG + shop.getName() + GR + ".");
+	        } else {
+	            RealShopping.cancelBroadcasts(shop.getName());//Cancel all broadcasts.
+	            sender.sendMessage(GR + "Cancelled all pending broadcasts from " + DG + shop.getName() + GR + ".");
+	        }
+	        return true;
+	    }
+	    
 	    final int MAX = 60;//I think this is a good length for a broadcast.
 	    String msg = "";
 	    
@@ -311,8 +349,8 @@ class RSStores extends RSCommand {
 	    if(msg.length() <= MAX){
 	        int i = 0;
 	        for(PSetting pS:RealShopping.getPlayerSettings()){
-	            if(pS.getBroadcastNotifications(shop)) RealShopping.sendNotification(pS.getPlayer(), 
-	                    LP + "[" + DP + shop.getName() + LP + "] " + RESET + msg);
+	            if(pS.getBroadcastNotifications(shop) && RealShopping.sendNotification(pS.getPlayer(), 
+	                    LP + "[" + DP + shop.getName() + LP + "] " + RESET + msg))
 	            i++;
 	        }
 	        if(i == 0) sender.sendMessage(RD + "I'm sorry, but your store doesn't have any subscribers. This broadcast won't reach anybody.");//LANG

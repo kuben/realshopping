@@ -19,6 +19,7 @@
 
 package com.github.kuben.realshopping;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
@@ -33,8 +34,9 @@ import org.bukkit.material.MaterialData;
 public final class Price {
     private int type,metahash,amount;
     private byte data;
-    private String description;
-
+    private String description,easyname,name;
+    private boolean isgeneric = false;
+    
     public Price(int type){
         this(type,Byte.parseByte("0"));
     }
@@ -46,6 +48,8 @@ public final class Price {
         this.data = data;
         this.metahash = metahash;
         this.description = null;
+        this.name = null;
+        this.easyname = Material.getMaterial(type).toString();
         this.amount = 1;
     }
     /**
@@ -58,15 +62,19 @@ public final class Price {
         //this.amount = itm.getAmount();
         final int prime = 31;
         if(itm.hasItemMeta()) {
-            if(this.type == 387) { // prototype for books. I hash only 1 page to avoid overflow.
+            if(this.type == Material.WRITTEN_BOOK.getId()) { // prototype for books. I hash only 1 page to avoid overflow.
                 BookMeta bm = (BookMeta) itm.getItemMeta();
                 this.metahash = metahash + (bm.getPage(1).hashCode() * prime);
                 this.metahash = metahash + (bm.getAuthor().hashCode()*prime);
                 this.metahash = metahash + (bm.getTitle().hashCode()*prime);
+                this.name = bm.getTitle();
             }
-            else this.metahash = itm.getItemMeta().hashCode();
+            else {
+                this.name = itm.getItemMeta().hasDisplayName()?itm.getItemMeta().getDisplayName():null;
+                this.metahash = itm.getItemMeta().hashCode();
+            }
         }
-        if(RealShopping.isTool(itm.getTypeId())){ // Prototype for different Durability on items.
+        if(RealShopping.isTool(itm.getType())){ // Prototype for different Durability on items.
             this.metahash = (this.metahash + (itm.getDurability() * prime))*prime;
         }
     }
@@ -82,13 +90,18 @@ public final class Price {
         this.data = Byte.parseByte(tmp[1]);
         this.amount = Integer.parseInt(tmp[2]);
         this.metahash = Integer.parseInt(tmp[3]);
+        this.easyname = Material.getMaterial(type).toString();
         if(tmp.length >4){
-            this.description = tmp[4];
-        }
+            this.name = tmp[4];
+        } this.name = null;
+        
+        if(tmp.length >5){
+            this.description = tmp[5];
+        } else this.description = null;
     }
     /**
      * This method creates a dummy itemstack of this object.
-     * Use only in situations where you need an itemstack and a presence of ItemMeta is irrelevant.
+     * Use only in situations where you need an itemstack and a presence of ItemMeta is is not needeed.
      * @return Dummy itemstack object.
      */
     public ItemStack toItemStack(){
@@ -97,6 +110,14 @@ public final class Price {
             return tempIS;
     }
 
+    public void setGeneric(boolean generic) {
+        this.isgeneric = generic;
+    }
+
+    public boolean isIsgeneric() {
+        return isgeneric;
+    }
+    
     public int getAmount() {
         return amount;
     }
@@ -124,24 +145,52 @@ public final class Price {
     public byte getData() {
             return data;
     }
-    @Deprecated
-    public Price stripOffData(){
-            return new Price(type);
-    }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public boolean hasName() {
+        return this.name != null;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
     /**
-     * Returns a standard formatted string like
-     * ID:DATA MATNAME [- NAME]
+     * Returns the human readable name of this item.
+     * @return Easy name for this item.
+    */
+    public String getEasyname() {
+        return easyname;
+    }
+  
+    /**
+     * Returns a standard formatted string.
+     * This string will be of this format:
+     * EASYNAME - COST [SALE STATUS]
+     * Amount: AMOUNT
+     * [Description: DESCRIPTION]
      * where MATNAME is the material name, NAME can be the hint string (if present) of that item.
+     * @param cost This is the cost we must print for this item.
+     * @param sale Triggers the activation of "ON SALE" green indicator near the item name.
      * @return Display formatted string for this object.
      */
-    public String formattedString(){
-        return type+(data > 0?":"+data:"")+" "+Material.getMaterial(type).toString() +" * "+ amount + (hasDescription() ? " - "+description:"");
+    public String formattedString(double cost, Integer sale){
+        return  ChatColor.BLUE + easyname + ((amount>1)?" * "+ ChatColor.GREEN + amount + ChatColor.RESET:"")+ 
+                ChatColor.BLACK + " - " + ChatColor.RED + cost + LangPack.UNIT + 
+                (sale!=null? " " + ChatColor.GREEN + LangPack.ONSALE + " " + sale +"%":"") + ChatColor.RESET +
+                (name!=null?ChatColor.YELLOW + (this.type == Material.WRITTEN_BOOK.getId()?"\n┗━ Title: ": "\n┗━ Name: ") + ChatColor.GRAY + name: "") +
+                (hasDescription()?ChatColor.YELLOW + "\n┗━ Description: "+ ChatColor.GRAY + description:"");
     }
     /**
-     * Formats this object with a stat formatted string with amount.
+     * Formats this object with a stat formatted string with amount of this Price object.
      * The format will be:
-     * ID:DATA:AMOUNT[:DESCRIPTION]
+     * [Price tostring format]:amount
+     * 
+     * This amount must not be confused with Price amount that indicates 
+     * how many items are sold with that cost.
      * @param amount amount of that item.
      * @return this formatted object.
      */
@@ -150,12 +199,21 @@ public final class Price {
     }
 
     /**
+     * The method which correctly returns a string containing type, data , amount sold, and eventually description for statistics.
+     * @param amount The amount of items sold.
+     * @return A string ready to be used in saveHelper for statistics.
+     */
+    public String export(int amount){
+        return type + ":" + data + ":" + (hasName()?name + ":":"") + amount;
+    }
+    
+    /**
      * Returns a string that represents this Price object and that can be parsed by Price(String ) constructor.
      * @return Constructor ready string for this object.
      */
     @Override
     public String toString() {
-        return type+":"+data+":"+amount+":"+metahash+(hasDescription()?":"+description:"");
+        return type + ":" + data + ":" + amount + ":" + metahash + (hasName()?name + ":":"") + (hasDescription()?":"+description:"");
     }
 
     @Override
@@ -169,18 +227,23 @@ public final class Price {
         return result;
     }
     
+    public boolean similarButHash(Object obj) {
+        if (obj == null || getClass() != obj.getClass()) return false;
+        if (this == obj) return true;
+        Price other = (Price) obj;
+        return type == other.type;
+    }
     /**
      * Checks if these two objects are similar (if are of the same type but data,amount and meta).
      * @param obj
      * @return true if similar.
      */
     public boolean similar(Object obj) {
-        if (obj == null || getClass() != obj.getClass()) return false;
-        if (this == obj) return true;
-        Price other = (Price) obj;
-        if (type != other.type) return false;
-        if(metahash != other.metahash) return false;
-        return true;
+        if(similarButHash(obj)) {
+            Price other = (Price)obj;
+            return metahash == other.metahash;
+        }
+        return false;
     }
     
     /**

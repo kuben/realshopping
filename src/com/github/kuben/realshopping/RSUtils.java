@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -42,8 +43,8 @@ public class RSUtils {
     }
 
     /**
-     * Accepts and parses item descriptors (for chests)
-     * Supports aliases, data values, stack sizes and multiple items.
+     * Accepts and parses item descriptors (for chests),
+     * supports aliases, data values, stack sizes and multiple items.
      * 
      * Return an array the same size as the amount items (max. 27)
      */
@@ -102,7 +103,7 @@ public class RSUtils {
         }
         byte data = Byte.parseByte(s[1]);
         int id = Integer.parseInt(s[0]);
-        if(id == -1) {
+        if(id < 0) {
             return new Price(ply.getItemInHand());
         }
         if(s.length > 1){
@@ -111,8 +112,8 @@ public class RSUtils {
     }
 
     /**
-     * Builds an object[] containing Price, cost and eventual minmax
-     * It structure is o[0] = Price, o[1] = Integer[].
+     * Builds an object[] containing Price, cost and eventual minmax.
+     * Its structure is o[0] = Price, o[1] = Integer[].
      * The Integer[] contains cost in [0] and, if present, min and max in [1] and [2].
      * @return Array object with Price and Integer[] of costs, min and max.
      */
@@ -142,23 +143,23 @@ public class RSUtils {
         }
         int id = Integer.parseInt(s[0]);
 
-        if( id == -1) 
+        if( id < 0) 
             p = new Price(ply.getItemInHand());
         else 
             p = new Price(id, data);
         return new Object[]{p, i};
     }
 
-    /*
-     * Returns object containing Price and minmax
-     * o[0] = Price, o[1] = Integer[] minmax
+    /**
+     * Returns an object containing Price and minmax.
+     * The structure is o[0] = Price, o[1] = Integer[] minmax
      */
     public static Object[] pullPriceMinMax(String str, Player ply){//No commas on this one
             String s[] = parseAliases(str).split(":");
             Price p = null;
             Integer i[] = new Integer[]{(int)(Float.parseFloat(s[s.length-2])*100), (int)(Float.parseFloat(s[s.length-1])*100)};
             int id = Integer.parseInt(s[0]); 
-            if( id == -1) { //control that I want hand held item
+            if( id < 0) { //control that I want hand held item
                     p = new Price(ply.getItemInHand());
                     return new Object[]{p,i};
             }
@@ -173,9 +174,9 @@ public class RSUtils {
             int newLn = 0;
             for(ItemStack iS:IS){
                     if(iS != null){
-                            String tempStr = "[" + ChatColor.RED + iS.getType() + (RealShopping.isTool(iS.getTypeId())
-                                                            ?ChatColor.RESET + LangPack.WITH + ChatColor.GREEN + (RealShopping.getMaxDur(iS.getTypeId()) - iS.getDurability())
-                                                            + ChatColor.RESET +  "/" + ChatColor.GREEN + RealShopping.getMaxDur(iS.getTypeId()) + ChatColor.RESET + LangPack.USESLEFT + "] "
+                            String tempStr = "[" + ChatColor.RED + iS.getType() + (RealShopping.isTool(iS.getType())
+                                                            ?ChatColor.RESET + LangPack.WITH + ChatColor.GREEN + (RealShopping.getMaxDur(iS.getType()) - iS.getDurability())
+                                                            + ChatColor.RESET +  "/" + ChatColor.GREEN + RealShopping.getMaxDur(iS.getType()) + ChatColor.RESET + LangPack.USESLEFT + "] "
                                                             :ChatColor.RESET + " * " + ChatColor.GREEN + iS.getAmount() + ChatColor.RESET + "] " + ChatColor.BLACK + ChatColor.RESET);
                             if((str + tempStr).substring(newLn).length() > 96){//84+12
                                     str += "\n";
@@ -214,6 +215,35 @@ public class RSUtils {
             return new Location(Bukkit.getServer().getWorld(world), Double.parseDouble(s.split(",")[0].trim()), Double.parseDouble(s.split(",")[1].trim()), Double.parseDouble(s.split(",")[2].trim()));
     }
 
+    /**
+     * Formats an integer representing any amount of seconds to a string in the format of "Xd Yh Wm Us"
+     * where X is the number of days, Y number of hours, W number of minutes and U number of seconds.
+     * If any of those is 0, it is not shown.
+     * @param period How many seconds
+     * @return a simple representation of the time.
+     */
+    public static String secsToDHMS(int period){
+        int remainder = period;
+        String STRING = "";
+        if(remainder >= 86_400){//How many days
+            int days = (int) Math.floor(remainder / 86_400);
+            remainder = remainder % 86_400;
+            STRING += days + "d ";
+        }
+        if(remainder >= 3600){//How many hours
+            int hrs = (int) Math.floor(remainder / 3600);
+            remainder = remainder % 3600;
+            STRING += hrs + "h ";
+        }
+        if(remainder >= 60){//How many minutes
+            int mins = (int) Math.floor(remainder / 60);
+            remainder = remainder % 60;
+            STRING += mins + "m ";
+        }
+        if(remainder > 0) STRING += remainder + "s";
+        return STRING;
+    }
+    
     /*
      * 
      * Booleans and gets
@@ -359,7 +389,7 @@ public class RSUtils {
                     if(i == null) continue;
                     Price x = new Price(i);
                     if(tempshop.hasPrice(x) && bought.containsKey(x)){ //Player owns this item (bought)
-                        int amount = RealShopping.isTool(i.getTypeId())?1:i.getAmount();
+                        int amount = RealShopping.isTool(i.getType())?1:i.getAmount();
                         ItemStack r = i.clone();
                         if(amount > bought.get(x)){
                             r.setAmount(bought.get(x));
@@ -405,6 +435,7 @@ public class RSUtils {
         }
         return newInv;
     }
+    
     public static boolean collectShipped(Location l, Player p, int id) {
         if(l.getBlock().getState() instanceof Chest){
             if(!RealShopping.hasPInv(p) || RealShopping.getPInv(p).getShop().getOwner().equals(p.getName())){
@@ -416,11 +447,18 @@ public class RSUtils {
                             int i = 0;
                             if(p.getLocation().getWorld().equals(RealShopping.getShippedToCollect(p.getName(), id - 1).getLocationSent().getWorld())){//Same world
                                 double dist = p.getLocation().distance(RealShopping.getShippedToCollect(p.getName(), id - 1).getLocationSent());
-                                while(i < Config.getZoneArray().length && dist > Config.getZoneArray()[i].getBounds() && dist != -1){
+                                while (i<Config.getZoneArray().length) {
+                                    if (Config.getZoneArray().length-i > 1 && dist > Config.getZoneArray()[i].getBounds()) {
                                         i++;
+                                        continue;
+                                    }
+                                    break;
                                 }
                             } else {
-                                while(i < Config.getZoneArray().length && Config.getZoneArray()[i].getBounds() > -1){
+                                while(i<Config.getZoneArray().length) {
+                                    if(Config.getZoneArray().length-i == 1 || Config.getZoneArray()[i].getBounds() < 0){
+                                        break;
+                                    }
                                     i++;
                                 }
                             }
@@ -542,7 +580,7 @@ public class RSUtils {
                 if(x != null){
                     Price tempPI = new Price(x);
                     if(stolen.containsKey(tempPI)){//Has stolen item
-                        int diff = stolen.get(tempPI) - (RealShopping.isTool(x.getTypeId())?1:x.getAmount());
+                        int diff = stolen.get(tempPI) - (RealShopping.isTool(x.getType())?1:x.getAmount());
                         if(diff >= 0){//If + then even more stolen left
                             stolen.put(tempPI, diff);
                             x = null;
@@ -562,24 +600,24 @@ public class RSUtils {
         if(!own.equals("@admin")){//Return items if player store.
             for(Price key:stolen2.keySet()){
                 ItemStack tempIS = key.toItemStack();
-                if(RealShopping.isTool(key.getType())){
-                    if(stolen2.get(key) > RealShopping.getMaxDur(key.getType()))
-                        while(RealShopping.getMaxDur(key.getType()) < stolen2.get(key)){//If more than one stack/full tool
-                            RealShopping.getPInv(p).getShop().addStolenToClaim(tempIS.clone());
-                            stolen2.put(key, stolen2.get(key) - RealShopping.getMaxDur(key.getType()));
+                if(RealShopping.isTool(tempIS.getType())){
+                    if(stolen2.get(key) > RealShopping.getMaxDur(tempIS.getType()))
+                        while(RealShopping.getMaxDur(tempIS.getType()) < stolen2.get(key)){//If more than one stack/full tool
+                            RealShopping.getPInv(p).getShop().addToClaim(tempIS.clone());
+                            stolen2.put(key, stolen2.get(key) - RealShopping.getMaxDur(tempIS.getType()));
                         }
-                    tempIS.setDurability((short) (RealShopping.getMaxDur(key.getType()) - stolen2.get(key)));
-                    RealShopping.getPInv(p).getShop().addStolenToClaim(tempIS);
+                    tempIS.setDurability((short) (RealShopping.getMaxDur(tempIS.getType()) - stolen2.get(key)));
+                    RealShopping.getPInv(p).getShop().addToClaim(tempIS);
                 } else {
                     if(stolen2.get(key) > Material.getMaterial(key.getType()).getMaxStackSize())
                         while(Material.getMaterial(key.getType()).getMaxStackSize() < stolen2.get(key)){//If more than one stack/full tool
                             ItemStack tempIStemp = tempIS.clone();
                             tempIStemp.setAmount(Material.getMaterial(key.getType()).getMaxStackSize());
-                            RealShopping.getPInv(p).getShop().addStolenToClaim(tempIStemp);
+                            RealShopping.getPInv(p).getShop().addToClaim(tempIStemp);
                             stolen2.put(key, stolen2.get(key) - Material.getMaterial(key.getType()).getMaxStackSize());
                         }
                     tempIS.setAmount(stolen2.get(key));
-                    RealShopping.getPInv(p).getShop().addStolenToClaim(tempIS);
+                    RealShopping.getPInv(p).getShop().addToClaim(tempIS);
                 }
             }
         }
@@ -594,6 +632,11 @@ public class RSUtils {
         return retval;
     }
 	
+    /**
+     * Formats an integer to a string with the ordinal number and the correct suffix 
+     * @param value The integer which is the ordinal number. Example: 2
+     * @return The finished string. Example: "2nd" (when using the English LangPack)
+     */
     public static String formatNum(int value) {
         int hunRem = value % 100;
         int tenRem = value % 10;

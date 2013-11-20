@@ -1,5 +1,6 @@
 package com.github.kuben.realshopping;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 
 public final class EEPair {//An entrance and exit
@@ -33,7 +34,9 @@ public final class EEPair {//An entrance and exit
 
     @Override
     public String toString() {
-        return "Entrance: " + entrance + ", exit: " + exit;
+        return ChatColor.GOLD + "Entrance" + ChatColor.WHITE + ": X " + entrance.getX() + "; Y " + entrance.getY() + "; Z " + entrance.getZ() + "\n" +
+                ChatColor.GOLD + "Exit" + ChatColor.WHITE +": X " + exit.getX() + "; Y " + exit.getY() + "; Z " + exit.getZ() + "\n" +
+                ChatColor.GOLD + "World" + ChatColor.WHITE +": " + entrance.getWorld().getName();
     }
 
     @Override

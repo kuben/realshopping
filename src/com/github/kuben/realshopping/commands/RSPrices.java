@@ -5,9 +5,7 @@ import com.github.kuben.realshopping.Price;
 import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
-import java.util.Map;
 import org.bukkit.ChatColor;
-import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 
 class RSPrices extends RSCommand {
@@ -20,22 +18,32 @@ class RSPrices extends RSCommand {
 
 	@Override
 	protected boolean execute() {
-	    if(args.length == 2 && args[0].equalsIgnoreCase("search")){
-	        if(player != null)
-	            if(RealShopping.getPInv(player) != null){
-	                return searchItem(RealShopping.getPInv(player).getShop(), RSUtils.pullPrice(args[1], this.player));
+            int startargs = 0;
+            Shop store;
+            if(hasStore(args)) {
+                startargs = 1;
+                store = RealShopping.getShop(args[0]);
+            } else store = RealShopping.getPInv(player).getShop();
+	    if(args.length - startargs == 2 && args[startargs].equalsIgnoreCase("search")){
+	        if(player != null) {
+	            if(RealShopping.hasPInv(player)){
+	                return searchItem(store, RSUtils.pullPrice(args[startargs + 1], this.player));
 	            } else sender.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
+                }
 	        else sender.sendMessage(ChatColor.RED + LangPack.YOUHAVETOUSETHESTOREARGUMENTWHENEXECUTINGTHISCOMMANDFROMCONSOLE);
 	        return false;
-	    } else if (args.length == 3 && args[1].equalsIgnoreCase("search")){
-	        return searchItem(RealShopping.getShop(args[0]), RSUtils.pullPrice(args[1], this.player));
 	    }
 	    
 	    if(setVars() == false) return false;
-		
-		return Shop.prices(sender, page, shop);
+            return Shop.prices(sender, page, shop);
 	}
 	
+        private boolean hasStore(String[] args) {
+            if(args.length > 1 && RealShopping.getShop(args[0]) != null) {
+                return true;
+            }
+            return false;
+        }
 	
 	/**
 	 * Sets the <i>shop</i> and <i>page</i> variables.
@@ -91,51 +99,37 @@ class RSPrices extends RSCommand {
 	    return false;
 	}
 	
-	private boolean searchItem(Shop shop, Price price){
-		boolean noMatches = true;
-		if(price.getData() != -1){//Item with specific data value requested
-			double cost = shop.getPrice(price);
-			String onSlStr = "";
-			if(shop.hasSale(price)){//There is a sale on that item.
-				int pcnt = 100 - shop.getSale(price);
-				cost *= pcnt/100f;
-				onSlStr = ChatColor.GREEN + LangPack.ONSALE;
-			}
-			sender.sendMessage(ChatColor.BLUE + "" + price.formattedString() + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
-			return true;
-		}
-		Map<Price, Integer> tempMap = shop.getPrices();
-		for(Price p:tempMap.keySet()){
-			if(p.getType() == price.getType()){//Match
-				int cost = tempMap.get(p);
-				String onSlStr = "";
-					if(shop.hasSale(p.stripOffData()) || shop.hasSale(p)){//There is a sale on that item.
-						int pcnt = -1;
-						if(shop.hasSale(p.stripOffData())) pcnt = 100 - shop.getSale(p.stripOffData());
-						if(shop.hasSale(p))  pcnt = 100 - shop.getSale(p);
-						cost *= pcnt/100f;
-					onSlStr = ChatColor.GREEN + LangPack.ONSALE;
-				}
-				noMatches = false;
-				sender.sendMessage(ChatColor.BLUE + "" + p + " " + Material.getMaterial(p.getType()) + ChatColor.BLACK + " - " + ChatColor.RED + cost/100f + LangPack.UNIT + onSlStr);
-			}
-		}
-		if(noMatches){
-                    sender.sendMessage(ChatColor.RED + "No matches for " + ChatColor.DARK_RED + price.formattedString());
-		}
-		return true;
+	private boolean searchItem(Shop shop, Price p){
+            if(shop.hasPrice(p)) {
+                double cost = shop.getPrice(p);
+                if(shop.hasSale(p) != null){//There is a sale on that item.
+                    int pcnt = 100 - shop.getSale(p);
+                    cost *= pcnt/100f;
+                }
+                sender.sendMessage(p.formattedString(cost/100f,shop.hasSale(p)));
+                return false;
+            }
+            sender.sendMessage(
+                    ChatColor.RED + "No matches for " 
+                    + ChatColor.DARK_RED + p.getEasyname());
+            return true;
 	}
 	
 	@Override
 	protected Boolean help(){
-		//Check if help was asked for
-		if(args.length > 0 && args[0].equalsIgnoreCase("help")){
-			sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rsprices [STORE] [PAGE|search ITEM]");
-			sender.sendMessage(LangPack.RSPRICESHELP + ChatColor.DARK_PURPLE + "STORE"
-					+ ChatColor.RESET + LangPack.RSPRICESHELP2 + ChatColor.LIGHT_PURPLE + "PAGE"
-					+ ChatColor.RESET + LangPack.RSPRICESHELP3);
-			return true;
-		}
-		return null;
+            //Check if help was asked for
+            if(args.length > 0 && args[0].equalsIgnoreCase("help")){
+                sender.sendMessage(
+                        ChatColor.DARK_GREEN + LangPack.USAGE 
+                        + ChatColor.RESET + "/rsprices [STORE] [PAGE|search ITEM]");
+                sender.sendMessage(
+                        LangPack.RSPRICESHELP 
+                        + ChatColor.DARK_PURPLE + "STORE"
+                        + ChatColor.RESET + LangPack.RSPRICESHELP2 
+                        + ChatColor.LIGHT_PURPLE + "PAGE"
+                        + ChatColor.RESET + LangPack.RSPRICESHELP3);
+                return true;
+            }
+            return null;
 	}
 }
