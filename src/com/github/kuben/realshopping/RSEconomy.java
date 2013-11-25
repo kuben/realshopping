@@ -221,16 +221,16 @@ class StatUpdater extends Thread {
                                             + RSUtils.formatNum(provMap.get(s).get(i)) + " (" + ChatColor.GREEN + "+" + diff + ChatColor.RESET + LangPack.SINCE+ sinceStr + ")" + LangPack.PROVIDEROF + Material.getMaterial(i));
                                     else if(diff <= sett.AINotsMinStep(tempShop)*-1) RealShopping.sendNotification(tempShop.getOwner(), LangPack.YOURSTORE + s + LangPack.ISNOWTHE
                                             + RSUtils.formatNum(provMap.get(s).get(i)) + " (" + ChatColor.RED + diff + ChatColor.RESET + LangPack.SINCE + sinceStr + ")" + LangPack.PROVIDEROF + Material.getMaterial(i));
-                                    if(sett.getChangePricesOnAI(tempShop) && diff != 0){//If change prices on AI
+                                    if(sett.getChangePricesOnAI(tempShop) && diff != 0){//If change PrintPrices on AI
                                         if(tempShop.hasPrice(new Price(i))){
-                                            int newPrice = (int) (tempShop.getPrice(new Price(i)));
+                                            int newPrice = (int) (tempShop.getCostPerUnit(new Price(i)));
                                             newPrice *= (diff >= sett.AINotsMinStep(tempShop))?1f + (sett.AINotsMinStep(tempShop) / 100f):1f - (sett.AINotsMinStep(tempShop) / 100f);
                                             if(tempShop.hasMinMax(new Price(i))){
                                                 if(newPrice > tempShop.getMax(new Price(i))) newPrice = tempShop.getMax(new Price(i));
                                                 else if(newPrice < tempShop.getMin(new Price(i))) newPrice = tempShop.getMin(new Price(i));
                                             }
-                                            if(newPrice != tempShop.getPrice(new Price(i))){
-                                                tempShop.setPrice(new Price(i), newPrice);
+                                            if(newPrice != tempShop.getCostPerUnit(new Price(i))){
+                                                tempShop.setCost(new Price(i), newPrice);
                                                 if(diff >= sett.AINotsMinStep(tempShop)) RealShopping.sendNotification(tempShop.getOwner(), LangPack.RAISEDTHEPRICEFOR+ Material.getMaterial(i) + LangPack.BY
                                                         + sett.changeOnAIPercentage(tempShop) + "%" +LangPack.TO + newPrice);
                                                 else if(diff <= sett.AINotsMinStep(tempShop)*-1) RealShopping.sendNotification(tempShop.getOwner(), LangPack.LOWEREDTHEPRICEFOR + Material.getMaterial(i) + LangPack.BY

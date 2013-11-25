@@ -120,7 +120,7 @@ public class RSPlayerInventory {
 
     public int toPay(Inventory[] invs, Shop shop) {
         int toPay = 0;
-        if (shop.hasPrices()) {//If shop has prices
+        if (shop.hasPrices()) {//If shop has PrintPrices
             Map<Price, Integer> newInv = invToPInv();
 
             //Old inv = items
@@ -147,7 +147,7 @@ public class RSPlayerInventory {
                         }
                     }
                     key.setAmount(amount);
-                    double cost = shop.getPrice(key) * amount;
+                    double cost = shop.getCostPerUnit(key) * amount;
                     int pcnt = 100 - shop.getSale(key);
                     
                     toPay += (int) (cost * pcnt / 100f);
@@ -202,7 +202,7 @@ public class RSPlayerInventory {
      */
     public Map<Price, Integer> getBoughtWait(Inventory[] invs) {
         Map<Price, Integer> surplus = new HashMap<>();
-        if (shop.hasPrices()) {//If shop has prices
+        if (shop.hasPrices()) {//If shop has PrintPrices
             Map<Price, Integer> newInv = invToPInv();
             Map<Price, Integer> oldInv = RSUtils.joinMaps(bought, items);
 

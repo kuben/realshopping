@@ -400,7 +400,7 @@ class RSMe extends RSPlayerCommand {
 	}
 	
 	/**
-	 * Sets whether or not the Automatic Store Management will change prices automatically, and if yes - how many percent.
+	 * Sets whether or not the Automatic Store Management will change PrintPrices automatically, and if yes - how many percent.
 	 *
 	 * @param val The string the player typed as an argument which is to be parsed to a value, or an empty string if the <b>VALUE</b> argument was omitted.
 	 * @param shop The shop which the setting is for (when using <i>/rsme setone</i>) or null when it is a global setting.

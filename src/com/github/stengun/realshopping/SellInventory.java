@@ -1,3 +1,22 @@
+/*
+ * RealShopping Bukkit plugin for Minecraft
+ * Copyright 2013 Jakub Fojt
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *     
+ */
+
 package com.github.stengun.realshopping;
 
 import com.github.kuben.realshopping.Price;
@@ -15,14 +34,14 @@ import org.bukkit.inventory.meta.ItemMeta;
 /**
  * A custom class for Sell to store inventories.
  * This class works as a "wrapper" of Inventory, providing item price visualization in its Lore lines.
- * This will facilitate the reading of the sell prices while selling items to a shop.
+ This will facilitate the reading of the sell PrintPrices while selling items to a shop.
  * @author stengun
  */
 public class SellInventory {
 
-    private Inventory inventory;
+    private final Inventory inventory;
     private ItemStack[] real_contents;
-    private Shop shop;
+    private final Shop shop;
 
     public SellInventory(Player p, Inventory inventory) {
         this.inventory = inventory;

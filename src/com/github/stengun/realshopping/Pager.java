@@ -1,3 +1,22 @@
+/*
+ * RealShopping Bukkit plugin for Minecraft
+ * Copyright 2013 Jakub Fojt
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *     
+ */
+
 package com.github.stengun.realshopping;
 
 import com.github.kuben.realshopping.RSPlayerInventory;
@@ -41,13 +60,13 @@ public class Pager extends Thread {
                     if (total > time) {
                         page = 1;
                     } else {
-                        if(page*howmanyitms < shop.getPrices().size()) {
+                        if(page*howmanyitms < shop.getCosts().size()) {
                             page += 1;
                         } else {
                             page = 1;
                         }
                     }
-                    Shop.prices(Bukkit.getPlayer(player), page, shop);
+                    Shop.PrintPrices(Bukkit.getPlayer(player), page, shop);
                 } else stop = true;
             } catch (InterruptedException ex) {
                 RealShopping.logsevere(ex.getStackTrace().toString());

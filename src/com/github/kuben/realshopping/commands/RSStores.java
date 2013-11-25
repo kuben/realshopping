@@ -259,7 +259,7 @@ class RSStores extends RSCommand {
                         if(shop.hasPrices()){
                             shop.clearSales();
                             if(args.length == 3){
-                                Price[] keys = shop.getPrices().keySet().toArray(new Price[0]);
+                                Price[] keys = shop.getCosts().keySet().toArray(new Price[0]);
                                 int i = 0;
                                 for(;i < keys.length;i++){
                                     shop.addSale(keys[i], pcnt);

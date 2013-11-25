@@ -45,8 +45,8 @@ public class RSUtils {
     /**
      * Accepts and parses item descriptors (for chests),
      * supports aliases, data values, stack sizes and multiple items.
-     * 
-     * Return an array the same size as the amount items (max. 27)
+     * @param str string to parse.
+     * @return an array the same size as the amount items (max. 27)
      */
     public static int[][] pullItems(String str) throws NumberFormatException {
         String[] strs = new String[27];
@@ -77,7 +77,7 @@ public class RSUtils {
      * Accepts and parses any single item descriptor
      * Supports aliases, data values and stack sizes.
      * Does not parse mulitple items ( , ) or ( * )
-     * 
+     * @param str String to parse.
      * @return An array of the same size as the amount of ' : '
      */
     public static int[] pullItem(String str) throws NumberFormatException {
@@ -93,6 +93,12 @@ public class RSUtils {
         return id;
     }
 
+    /**
+     * Builds a Price object from a String.
+     * @param str String to read
+     * @param ply player that called this method
+     * @return The correct price for this string. Null if there were problems.
+     */
     public static Price pullPrice(String str, Player ply){//No commas on this one
         String[] s = new String[2];
         if(parseAliases(str).contains(":"))
@@ -107,7 +113,7 @@ public class RSUtils {
             return new Price(ply.getItemInHand());
         }
         if(s.length > 1){
-                return new Price(id,data);
+            return new Price(id,data);
         } else return new Price(id);
     }
 
@@ -115,12 +121,15 @@ public class RSUtils {
      * Builds an object[] containing Price, cost and eventual minmax.
      * Its structure is o[0] = Price, o[1] = Integer[].
      * The Integer[] contains cost in [0] and, if present, min and max in [1] and [2].
+     * 
+     * @param str String to parse.
+     * @param ply Player that called this method.
      * @return Array object with Price and Integer[] of costs, min and max.
      */
     public static Object[] pullPriceCostMinMax(String str, Player ply){//No commas on this one
         String[] s = parseAliases(str).split(":");
-        Price p = null;
-        Integer[] i = null;
+        Price p;
+        Integer[] i;
         byte data = 0;
 
         //ID:[DATA]:PRICE:[MIN]:[MAX]
@@ -153,10 +162,13 @@ public class RSUtils {
     /**
      * Returns an object containing Price and minmax.
      * The structure is o[0] = Price, o[1] = Integer[] minmax
+     * @param str String to parse.
+     * @param ply Player that called this method.
+     * @return An object[] containing [0] = Price and [1] = Integer[] min and max vals.
      */
     public static Object[] pullPriceMinMax(String str, Player ply){//No commas on this one
             String s[] = parseAliases(str).split(":");
-            Price p = null;
+            Price p;
             Integer i[] = new Integer[]{(int)(Float.parseFloat(s[s.length-2])*100), (int)(Float.parseFloat(s[s.length-1])*100)};
             int id = Integer.parseInt(s[0]); 
             if( id < 0) { //control that I want hand held item
@@ -249,21 +261,25 @@ public class RSUtils {
      * Booleans and gets
      * 
      */
-
+/**
+ * Checks if a location is allowed for teleporting while in a store.
+ * @param l Location we want to teleport to.
+ * @return true if location is not prohibited, false otherwise.
+ */
     public static boolean allowTpOutOfStore(Location l){
             Location[] keys = RealShopping.getTpLocsKeysArray();
-            boolean allow = RealShopping.isTpLocBlacklist()?true:false;
+            boolean allow = RealShopping.isTpLocBlacklist();
             for(Location loc:keys){
-                    if(l.getWorld() == loc.getWorld());
+                if(l.getWorld() == loc.getWorld()) {
                     int xDif = l.getBlockX() - loc.getBlockX();
                     int yDif = l.getBlockY() - loc.getBlockY();
                     int zDif = l.getBlockZ() - loc.getBlockZ();
                     double temp = Math.sqrt(Math.pow(Math.max(xDif, xDif * -1), 2) + Math.pow(Math.max(yDif, yDif * -1), 2) + Math.pow(Math.max(zDif, zDif * -1), 2));
                     if(temp <= RealShopping.getTpLoc(loc)){//Is in zone
-                            if(allow) allow = false;
-                            else allow = true;
+                            allow = !allow;
                             break;
-                    }		
+                    }
+                } else allow = false;
             }
             return allow;
     }
@@ -280,22 +296,20 @@ public class RSUtils {
             Location[] nearest = null;
             Map<Location, Double> locDist = new HashMap<>();
             for(Location l:keys)
-                    if(loc.getWorld().equals(l.getWorld()))
-                            locDist.put(l, loc.distance(l));
+                if(loc.getWorld().equals(l.getWorld()))
+                    locDist.put(l, loc.distance(l));
 
             if(!locDist.isEmpty()){
-                    ValueComparator bvc =  new ValueComparator(locDist);
-                    TreeMap<Location,Double> sorted_map = new TreeMap<>(bvc);
-                    sorted_map.putAll(locDist);
+                ValueComparator bvc =  new ValueComparator(locDist);
+                TreeMap<Location,Double> sorted_map = new TreeMap<>(bvc);
+                sorted_map.putAll(locDist);
 
 
-                    if(sorted_map.size() < maxAmount) nearest = new Location[sorted_map.size()];
-                    else nearest = new Location[maxAmount];
+                if(sorted_map.size() < maxAmount) nearest = new Location[sorted_map.size()];
+                else nearest = new Location[maxAmount];
 
-                    keys = sorted_map.keySet().toArray(new Location[0]);
-                    for(int i = 0;i < nearest.length;i++){
-                            nearest[i] = keys[i];
-                    }
+                keys = sorted_map.keySet().toArray(new Location[0]);
+                System.arraycopy(keys, 0, nearest, 0, nearest.length);
             }
 
             return nearest;
@@ -313,59 +327,39 @@ public class RSUtils {
             if(shop.getOwner().toLowerCase().equals(player.toLowerCase())) shopList.add(shop);
         return shopList.toArray(new Shop[0]);
     }
+    
     /**
      * We check for minecarts near the pay block.
      * @param l Location where to check for shopping carts.
      * @return An array containing all storage carts found.
      */
     public static StorageMinecart[] checkForCarts(Location l){
-            Location[] aL = new Location[]{	l.clone().subtract(0, 1, 0)		// [6][7][8]
-                                                                            , l.clone().subtract(-1, 1, 0)	// [5][0][1]
-                                                                            , l.clone().subtract(-1, 1, -1)	// [4][3][2]
-                                                                            , l.clone().subtract(0, 1, -1)
-                                                                            , l.clone().subtract(1, 1, -1)
-                                                                            , l.clone().subtract(1, 1, 0)
-                                                                            , l.clone().subtract(1, 1, 1)
-                                                                            , l.clone().subtract(0, 1, 1)
-                                                                            , l.clone().subtract(-1, 1, 1)};
-            Block[] b = new Block[]{	aL[0].getBlock()
-                                                                    , aL[1].getBlock()
-                                                                    , aL[2].getBlock()
-                                                                    , aL[3].getBlock()
-                                                                    , aL[4].getBlock()
-                                                                    , aL[5].getBlock()
-                                                                    , aL[6].getBlock()
-                                                                    , aL[7].getBlock()
-                                                                    , aL[8].getBlock()};
-            StorageMinecart firstCart = null;//First cart found on first block
-            if(Config.isAllowFillChests() && Config.isCartEnabledW(l.getWorld().getName())){
-            Object[] mcArr = l.getWorld().getEntitiesByClass(StorageMinecart.class).toArray();
-            String rails = "";
-            for(int i = 0;i < b.length;i++){//Get rails in area
-                    if(b[i].getType() == Material.RAILS || b[i].getType() == Material.POWERED_RAIL || b[i].getType() == Material.DETECTOR_RAIL){
-                            rails += "," + i;
+        Block[] b = new Block[]{  
+                                  l.clone().subtract(0, 1, 0).getBlock()
+                                , l.clone().subtract(-1, 1, 0).getBlock()
+                                , l.clone().subtract(-1, 1, -1).getBlock()
+                                , l.clone().subtract(0, 1, -1).getBlock()
+                                , l.clone().subtract(1, 1, -1).getBlock()
+                                , l.clone().subtract(1, 1, 0).getBlock()
+                                , l.clone().subtract(1, 1, 1).getBlock()
+                                , l.clone().subtract(0, 1, 1).getBlock()
+                                , l.clone().subtract(-1, 1, 1).getBlock()
+        };
+        List<StorageMinecart> retval = new ArrayList<>();
+        if(Config.isAllowFillChests() && Config.isCartEnabledW(l.getWorld().getName())){
+            List<StorageMinecart> mcArr = new LinkedList<>(l.getWorld().getEntitiesByClass(StorageMinecart.class));
+            for (Block b1 : b) {
+                if (b1.getType() == Material.RAILS || b1.getType() == Material.POWERED_RAIL || b1.getType() == Material.DETECTOR_RAIL) {
+                    Location blkLoc = b1.getLocation();
+                    for(StorageMinecart mcart:mcArr) {
+                        if(mcart.getLocation().getBlock().getLocation().equals(blkLoc)) {
+                            retval.add(mcart);
+                        }
                     }
+                }
             }
-            if(!rails.equals("")){
-                    for(int j = 1;j < rails.split(",").length;j++){//Repeat for every rail in area until a minecart is found
-                            int areaInt = Integer.parseInt(rails.split(",")[j]);
-                            int k = 0;
-                            boolean hasCart = false;
-                            for(;k < mcArr.length;k++){//Repeat until a minecart is found on the block, or no minecarts are found
-                                    if(((StorageMinecart)mcArr[k]).getLocation().getBlock().getLocation().equals(aL[areaInt])){//If minecart is on the rail
-                                            hasCart = true;
-                                            break;
-                                    }
-                            }
-                            if(hasCart){
-                                    firstCart = (StorageMinecart)mcArr[k];
-                                    break;
-                            }
-                    }
-            }
-            }
-            if(firstCart == null) return new StorageMinecart[0];
-            else return new StorageMinecart[]{firstCart};//TODO add more carts
+        }
+        return retval.toArray(new StorageMinecart[0]);
     }
 
     public static boolean shipCartContents(StorageMinecart sM, Player p) {
@@ -656,12 +650,19 @@ public class RSUtils {
     }
 
 
-    public static int getTimeInt(String s){//In seconds
-            if(s.equals("hour")) return 3600;
-            else if(s.equals("day")) return 86400;
-            else if(s.equals("week")) return 604800;
-            else if(s.equals("month")) return 2592000;
-            else return Integer.parseInt(s);
+    public static int getTimeInt(String s){ //In seconds
+        switch (s) {
+            case "hour":
+                return 3600;
+            case "day":
+                return 86400;
+            case "week":
+                return 604800;
+            case "month":
+                return 2592000;
+            default:
+                return Integer.parseInt(s);
+        }
     }
 
     public static String getTimeString(int t){

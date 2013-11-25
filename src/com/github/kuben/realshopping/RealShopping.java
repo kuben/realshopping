@@ -305,8 +305,8 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         loadTemporaryFile(TempFiles.TOCLAIM);
         loadTemporaryFile(TempFiles.STATS);
         loadTemporaryFile(TempFiles.NOTIFICATIONS);
-        //TODO load psettings and load default prices
-        //TODO modify default prices
+        //TODO load psettings and load default PrintPrices
+        //TODO modify default PrintPrices
 
         f = new File(MANDIR + "langpacks/");
         if (!f.exists()) {
@@ -347,7 +347,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
             if(notificatorThread != null) notificatorThread.running = false;
             if(statUpdater != null) statUpdater.running = false;
             PriceParser.savePriceMap(shopSet);
-            //Write prices to xml
+            //Write PrintPrices to xml
 
 
         } catch (FileNotFoundException e) {
@@ -1507,15 +1507,10 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
      * @param player An object representing the player.
      * @return true if they do, false if they don't.
      */
-    public static boolean hasPInv(String player){ return getPInv(player)==null?false:true; }
+    public static boolean hasPInv(String player){ return getPInv(player)!=null; }
     public static boolean hasPInv(Player player){ return hasPInv(player.getName()); }
     public static boolean removePInv(Player player){
-        for(RSPlayerInventory pInv:PInvSet)
-            if(pInv.getPlayer().equals(player.getName())){
-                PInvSet.remove(pInv);
-                return true;
-            }
-        return false;
+        return removePInv(player.getName());
     }
     
     /**

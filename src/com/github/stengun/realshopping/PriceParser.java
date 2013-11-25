@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *     
  */
+
 package com.github.stengun.realshopping;
 
 import com.github.kuben.realshopping.Price;
@@ -48,8 +49,8 @@ import org.xml.sax.SAXException;
 
 /**
  * Price.xml parser implemented with DOM xml parser. This class is a replacement
- * for realshopping's SAX parser, implemented for parsing prices.xml. The save
- * format is created to give the ability to save the new Price structure.
+ for realshopping's SAX parser, implemented for parsing PrintPrices.xml. The save
+ format is created to give the ability to save the new Price structure.
  *
  * @author stengun
  */
@@ -92,14 +93,14 @@ public class PriceParser {
     /**
      * Saves to file the entire shop/price map.
      *
-     * @param shopset Map where to take shops and prices.
+     * @param shopset Map where to take shops and PrintPrices.
      * @throws ParserConfigurationException
      * @throws FileNotFoundException
      * @throws TransformerConfigurationException
      * @throws TransformerException
      */
     public static void savePriceMap(Set<Shop> shopset) throws ParserConfigurationException, FileNotFoundException, TransformerConfigurationException, TransformerException {
-        //File f = new File(MANDIR + "prices.xml");//Reset file
+        //File f = new File(MANDIR + "PrintPrices.xml");//Reset file
         //if(f.exists()) f.delete();
 
         DocumentBuilderFactory dbfac = DocumentBuilderFactory.newInstance();

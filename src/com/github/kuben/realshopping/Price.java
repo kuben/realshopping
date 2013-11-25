@@ -1,6 +1,6 @@
 /*
  * RealShopping Bukkit plugin for Minecraft
- * Copyright 2013 Jakub Fojt
+ * Copyright 2013 Jakub Fojt, Roberto Benfatto
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.material.MaterialData;
+
 /**
  * This class represents a price for an item inside the store.
  * The price must be unique for custom items (the ones that have a different ItemMeta()).

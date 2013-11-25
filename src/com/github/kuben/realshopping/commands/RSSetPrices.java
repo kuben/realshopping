@@ -82,7 +82,7 @@ class RSSetPrices extends RSCommand {
         if(itmprice == null || priminmax == null) return false;
         itmprice.setDescription(description);
         itmprice.setAmount(amount);
-        shop.setPrice(itmprice, priminmax[0]);
+        shop.setCost(itmprice, priminmax[0]);
         sender.sendMessage(GR + LangPack.PRICEFOR + itmprice.getEasyname() + LangPack.SETTO + priminmax[0]/100f + LangPack.UNIT);
         if(priminmax.length > 1) {
             if(priminmax[1] > 0 && priminmax[2] > 0) {

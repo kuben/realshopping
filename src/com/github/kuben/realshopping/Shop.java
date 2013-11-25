@@ -242,13 +242,13 @@ public class Shop {//TODO add load/save interface
     }
 
     /**
-     * Gets, if present, a compatible price for given item.
+     * Gets, if present, the cost for given item.
      * The returned price amount will be less or equal than given one, and if not present
      * this method will return 0.
      * @param p Price to check.
      * @return The correct price for the item, 0.0 if not present.
      */
-    public double getPrice(Price p) {
+    public double getCostPerUnit(Price p) {
         Price found = new Price(p.getType());
         found.setAmount(0);
         for(Price pr:prices.keySet()) {
@@ -264,7 +264,7 @@ public class Shop {//TODO add load/save interface
         return retval;
     }
 
-    public Map<Price, Integer> getPrices() {
+    public Map<Price, Integer> getCosts() {
         Map<Price, Integer> temp = new HashMap<>();
         for (Price p : prices.keySet().toArray(new Price[0])) {
             temp.put(p, prices.get(p)[0]);
@@ -282,7 +282,7 @@ public class Shop {//TODO add load/save interface
  * @param i Integer object with new price.
  * @return null if the item was not present, otherwise will set the price and return the old one.
  */
-    public Integer setPrice(Price p, Integer i) {
+    public Integer setCost(Price p, Integer i) {
         Integer retval = null;
         if(prices.containsKey(p)) {
             retval = prices.get(p)[0];
@@ -316,14 +316,14 @@ public class Shop {//TODO add load/save interface
 
     public boolean setMinMax(Price p, Integer min, Integer max) {
         if (prices.containsKey(p)) {
-            prices.put(p, new Integer[]{(int)getPrice(p), min, max});
+            prices.put(p, new Integer[]{(int)getCostPerUnit(p), min, max});
             return true;
         }
         return false;
     }
 
     public void clearMinMax(Price p) {
-        setPrice(p, (int)getPrice(p));
+        setCost(p, (int)getCostPerUnit(p));
     }
 
     public void clearPrices() {
@@ -619,13 +619,13 @@ public class Shop {//TODO add load/save interface
         Map<Price, Integer[]> tempMap = new HashMap<>();
         for(Shop shop : RealShopping.getShops()) {
             if(!shop.getName().equals(name)) {
-                Price[] keys2 = shop.getPrices().keySet().toArray(new Price[0]);
+                Price[] keys2 = shop.getCosts().keySet().toArray(new Price[0]);
                 for(Price p : keys2) {
                     if(tempMap.containsKey(p)){
-                        if(tempMap.get(p)[0] > shop.getPrice(p))
-                            tempMap.put(p, new Integer[] { (int)shop.getPrice(p) });
+                        if(tempMap.get(p)[0] > shop.getCostPerUnit(p))
+                            tempMap.put(p, new Integer[] { (int)shop.getCostPerUnit(p) });
                         else
-                            tempMap.put(p, new Integer[] { (int)shop.getPrice(p) });
+                            tempMap.put(p, new Integer[] { (int)shop.getCostPerUnit(p) });
                     }
                 }
             }
@@ -681,7 +681,7 @@ public class Shop {//TODO add load/save interface
             if (shop.hasPrice(itm)) {
                 int amount = ((RealShopping.isTool(ist.getType())) ? 1 : ist.getAmount());
                 itm.setAmount(amount);
-                double cost = shop.getPrice(itm);
+                double cost = shop.getCostPerUnit(itm);
                 if (cost > 0.0) {
                     int pcnt;
                     if (shop.hasSale(itm)!=null) {
@@ -689,7 +689,7 @@ public class Shop {//TODO add load/save interface
                         cost *= pcnt / 100f;
                     }
                     cost *= shop.getBuyFor() / 100f;
-                    payment = (int)(cost * (RealShopping.isTool(ist.getType()) ? (RealShopping.getMaxDur(ist.getType()) - ist.getDurability())/RealShopping.getMaxDur(ist.getType()) : amount));// Durability is treated as Malus for prices.
+                    payment = (int)(cost * (RealShopping.isTool(ist.getType()) ? (RealShopping.getMaxDur(ist.getType()) - ist.getDurability())/RealShopping.getMaxDur(ist.getType()) : amount));// Durability is treated as Malus for PrintPrices.
                 }
             }
         }
@@ -782,18 +782,18 @@ public class Shop {//TODO add load/save interface
     }
 
     /**
-     * Prints on screen the shop's prices.
+     * Prints on screen the shop's PrintPrices.
      * Prices are divided by pages, every page is composed of 9 lines. With this
      * method you must choose the page you want to see.
      * @param sender Player who wrote the command.
      * @param page Requested page.
      * @param shop Shop where to bring the price list.
-     * @return true if the command was executed without problems. False if the store has no prices.
+     * @return true if the command was executed without problems. False if the store has no PrintPrices.
      */
-    public static boolean prices(CommandSender sender, int page, Shop shop){//In 0.50+ pages start from 1
+    public static boolean PrintPrices(CommandSender sender, int page, Shop shop){//In 0.50+ pages start from 1
         if(shop.hasPrices()){
             int maxitems = 6; //how many items we want to show
-            Map<Price, Integer> tempMap = shop.getPrices();
+            Map<Price, Integer> tempMap = shop.getCosts();
             if(!tempMap.isEmpty()){
                 Price[] keys = tempMap.keySet().toArray(new Price[0]);
                 if((page-1)*maxitems < keys.length){//If page exists

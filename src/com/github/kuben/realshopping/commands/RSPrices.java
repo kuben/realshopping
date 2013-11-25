@@ -35,7 +35,7 @@ class RSPrices extends RSCommand {
 	    }
 	    
 	    if(setVars() == false) return false;
-            return Shop.prices(sender, page, shop);
+            return Shop.PrintPrices(sender, page, shop);
 	}
 	
         private boolean hasStore(String[] args) {
@@ -48,8 +48,8 @@ class RSPrices extends RSCommand {
 	/**
 	 * Sets the <i>shop</i> and <i>page</i> variables.
 	 * 
-	 * Is to be called before Shop.prices
-	 * @return True if everything went well and Shop.prices can be called, false if not and false should be returned by {@link #execute()}.
+	 * Is to be called before Shop.PrintPrices
+	 * @return True if everything went well and Shop.PrintPrices can be called, false if not and false should be returned by {@link #execute()}.
 	 */
 	private boolean setVars(){
 	    //No arguments
@@ -101,7 +101,7 @@ class RSPrices extends RSCommand {
 	
 	private boolean searchItem(Shop shop, Price p){
             if(shop.hasPrice(p)) {
-                double cost = shop.getPrice(p);
+                double cost = shop.getCostPerUnit(p);
                 if(shop.hasSale(p) != null){//There is a sale on that item.
                     int pcnt = 100 - shop.getSale(p);
                     cost *= pcnt/100f;
