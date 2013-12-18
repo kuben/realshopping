@@ -70,7 +70,7 @@ class RSSetPrices extends RSCommand {
                 Object[] o = RSUtils.pullPriceCostMinMax(comArgs[0],this.player);
                 if(o == null || o.length < 2) return false;
                 itmprice = (Price)o[0];
-                if(itmprice.getType() == 0) {
+                if(itmprice.getType() == Material.AIR) {
                     sender.sendMessage(RD + "You aren't holding anything.");
                     return false;
                 }
@@ -97,13 +97,13 @@ class RSSetPrices extends RSCommand {
         
         try {
             Price p = RSUtils.pullPrice(comArgs[0],this.player);
-            String dString = p.getData()>-1?"("+p.getData()+")":"";
+            String dString = p.getData() != null?"("+p.getData().toString()+")":"";
             if(shop.hasPrice(p)){
                 shop.removePrice(p);
                 sender.sendMessage(RD + LangPack.REMOVEDPRICEFOR + DR + p.getEasyname() + dString);
                     return true;
             } else {
-                sender.sendMessage(RD + LangPack.COULDNTFINDPRICEFOR + DR + Material.getMaterial(p.getType()) + dString);
+                sender.sendMessage(RD + LangPack.COULDNTFINDPRICEFOR + DR + p.getType() + dString);
             }
         } catch (NumberFormatException e) {
             sender.sendMessage(DR + comArgs[0] + RD + LangPack.ISNOTAPROPER_);

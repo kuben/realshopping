@@ -33,24 +33,26 @@ import org.bukkit.material.MaterialData;
  */
         
 public final class Price {
-    private int type,metahash,amount;
-    private byte data;
+    private Material type;
+    private int metahash,amount;
+    private MaterialData data;
     private String description,easyname,name;
     private boolean isgeneric = false;
     
-    public Price(int type){
-        this(type,Byte.parseByte("0"));
+    public Price(Material type){
+        this(type,new MaterialData(type));
     }
-    public Price(int type, byte data){
-        this(new MaterialData(type, data).toItemStack());
+    public Price(Material type, MaterialData data){
+        this(new ItemStack(type));
+        this.data = data;
     }
-    public Price(int type, byte data, int metahash){
+    public Price(Material type, MaterialData data, int metahash){
         this.type = type;
         this.data = data;
         this.metahash = metahash;
         this.description = null;
         this.name = null;
-        this.easyname = Material.getMaterial(type).toString();
+        this.easyname = type.toString();
         this.amount = 1;
     }
     /**
@@ -59,11 +61,11 @@ public final class Price {
      * @param itm Itemstack from where taking the values.
      */
     public Price(ItemStack itm) {
-        this(itm.getTypeId(),itm.getData().getData(),0);
+        this(itm.getType(),itm.getData(),0);
         //this.amount = itm.getAmount();
         final int prime = 31;
         if(itm.hasItemMeta()) {
-            if(this.type == Material.WRITTEN_BOOK.getId()) { // prototype for books. I hash only 1 page to avoid overflow.
+            if(this.type == Material.WRITTEN_BOOK) { // prototype for books. I hash only 1 page to avoid overflow.
                 BookMeta bm = (BookMeta) itm.getItemMeta();
                 this.metahash = metahash + (bm.getPage(1).hashCode() * prime);
                 this.metahash = metahash + (bm.getAuthor().hashCode()*prime);
@@ -84,14 +86,15 @@ public final class Price {
      * The string must be formatted as follows:
      * ID:data:amount:metahash[:description]
      * @param s A string representing a price object.
+     * @deprecated
      */
     public Price(String s){
         String[] tmp = s.split(":");
-        this.type = Integer.parseInt(tmp[0]);
-        this.data = Byte.parseByte(tmp[1]);
+//        this.type = Integer.parseInt(tmp[0]);
+//        this.data = Byte.parseByte(tmp[1]);
         this.amount = Integer.parseInt(tmp[2]);
         this.metahash = Integer.parseInt(tmp[3]);
-        this.easyname = Material.getMaterial(type).toString();
+//        this.easyname = Material.getMaterial(type).toString();
         if(tmp.length >4){
             this.name = tmp[4];
         } this.name = null;
@@ -106,7 +109,8 @@ public final class Price {
      * @return Dummy itemstack object.
      */
     public ItemStack toItemStack(){
-            ItemStack tempIS = new MaterialData(type, data).toItemStack();
+            ItemStack tempIS = new ItemStack(this.type);
+            tempIS.setData(this.data);
             //tempIS.setAmount(amount);
             return tempIS;
     }
@@ -139,11 +143,11 @@ public final class Price {
         return !(description == null || description.equals("") || description.isEmpty());
     }
 
-    public int getType() {
+    public Material getType() {
             return type;
     }
 
-    public byte getData() {
+    public MaterialData getData() {
             return data;
     }
 
@@ -182,7 +186,7 @@ public final class Price {
         return  ChatColor.BLUE + easyname + ((amount>1)?" * "+ ChatColor.GREEN + amount + ChatColor.RESET:"")+ 
                 ChatColor.BLACK + " - " + ChatColor.RED + cost + LangPack.UNIT + 
                 (sale!=null? " " + ChatColor.GREEN + LangPack.ONSALE + " " + sale +"%":"") + ChatColor.RESET +
-                (name!=null?ChatColor.YELLOW + (this.type == Material.WRITTEN_BOOK.getId()?"\n┗━ Title: ": "\n┗━ Name: ") + ChatColor.GRAY + name: "") +
+                (name!=null?ChatColor.YELLOW + (this.type == Material.WRITTEN_BOOK?"\n┗━ Title: ": "\n┗━ Name: ") + ChatColor.GRAY + name: "") +
                 (hasDescription()?ChatColor.YELLOW + "\n┗━ Description: "+ ChatColor.GRAY + description:"");
     }
     /**
@@ -221,8 +225,8 @@ public final class Price {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + data;
-        result = prime * result + type;
+        result = prime * result + data.hashCode();
+        result = prime * result + type.hashCode();
         result = prime * result + amount;
         result = prime * result + metahash;
         return result;

@@ -63,6 +63,7 @@ import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.stengun.realshopping.PriceParser;
 import com.github.stengun.realshopping.ClassSerialization;
+import org.bukkit.material.MaterialData;
 
 public class RealShopping extends JavaPlugin {//TODO stores case sensitive, players case preserving
     private Updater updater;
@@ -84,7 +85,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     private static Map<Price, Integer[]> defPrices;
     private static Map<Material, Integer> maxDurMap;
     private static List<String> sortedAliases;
-    private static Map<String, Integer[]> aliasesMap;
+    private static Map<String, Object[]> aliasesMap;
     private static Set<Material> forbiddenInStore;
     private static Map<String, Location> playerEntrances;
     private static Map<String, Location> playerExits;
@@ -409,7 +410,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         if(Config.debug) loginfo("Finished updating shops.db in " + (System.nanoTime() - tstamp) + "ns");
     }
 
-    private void initMaxDur(){
+    private void initMaxDur(){ //TODO this is useless since we can use materialdata
         maxDurMap.put(Material.IRON_SPADE,251);//Iron tools
         maxDurMap.put(Material.IRON_PICKAXE,251);
         maxDurMap.put(Material.IRON_AXE,251);
@@ -501,14 +502,14 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     }
 
     private void initAliases() {
-        aliasesMap.put("hand", new Integer[]{-1});
-        aliasesMap.put("stone", new Integer[]{1});
-        aliasesMap.put("grass", new Integer[]{2});
-        aliasesMap.put("dirt", new Integer[]{3});
-        aliasesMap.put("cobble", new Integer[]{4});
-        aliasesMap.put("cobblestone", new Integer[]{4});
-        aliasesMap.put("plank", new Integer[]{5});
-        aliasesMap.put("oakplank", new Integer[]{5, 0});
+        aliasesMap.put("hand", null);
+        aliasesMap.put("stone", new Object[] {Material.STONE});
+        aliasesMap.put("grass", new Object[] {Material.GRASS});
+        aliasesMap.put("dirt", new Object[] {Material.DIRT});
+        aliasesMap.put("cobble", new Object[] {Material.COBBLESTONE});
+        aliasesMap.put("cobblestone", new Object[] {Material.COBBLESTONE});
+        aliasesMap.put("plank", new Object[] {Material.WOOD,new MaterialData(Material.WOOD)});
+        aliasesMap.put("oakplank", Material.WOOD);
         aliasesMap.put("spruceplank", new Integer[]{5, 1});
         aliasesMap.put("brichplank", new Integer[]{5, 2});
         aliasesMap.put("jungleplank", new Integer[]{5, 3});
@@ -1558,7 +1559,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     public static boolean isForbiddenInStore(Material item){ return forbiddenInStore.contains(item); }
 
     public static List<String> getSortedAliases(){ return sortedAliases; }
-    public static Map<String, Integer[]> getAliasesMap(){ return aliasesMap; }
+    public static Map<String, Material> getAliasesMap(){ return aliasesMap; }
 
     protected static boolean addEntranceExit(EEPair eePair, Shop shop){
         if(eePairs.containsKey(eePair)) return false;
@@ -1878,17 +1879,17 @@ class Reporter extends Thread {
                                 
                                 Map<Integer, Integer> soldItems = new HashMap<>();//ID - amount sold
                                 Map<Integer, Integer> boughtItems = new HashMap<>();//ID - amount bought
-                                for(Statistic stat:shop.getStats()){
-                                    //if(stat.getTime() < lastReport) continue;
-                                    int id = stat.getItem().getType();
-                                    if(stat.isBought()){
-                                        int oldAm = boughtItems.containsKey(id)?boughtItems.get(id):0;
-                                        boughtItems.put(id, oldAm + stat.getAmount());
-                                    } else {
-                                        int oldAm = soldItems.containsKey(id)?soldItems.get(id):0;
-                                        soldItems.put(id, oldAm + stat.getAmount());
-                                    }
-                                }
+//                                for(Statistic stat:shop.getStats()){
+//                                    //if(stat.getTime() < lastReport) continue;
+//                                    int id = stat.getItem().getType();
+//                                    if(stat.isBought()){
+//                                        int oldAm = boughtItems.containsKey(id)?boughtItems.get(id):0;
+//                                        boughtItems.put(id, oldAm + stat.getAmount());
+//                                    } else {
+//                                        int oldAm = soldItems.containsKey(id)?soldItems.get(id):0;
+//                                        soldItems.put(id, oldAm + stat.getAmount());
+//                                    }
+//                                }
 
                                 Integer[] topSold = getTop(soldItems, 3);//Get top 3 bought and sold items
                                 Integer[] topBought = getTop(boughtItems, 3);

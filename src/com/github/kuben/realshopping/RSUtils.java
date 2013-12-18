@@ -18,6 +18,7 @@ import org.bukkit.block.Chest;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.minecart.StorageMinecart;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.MaterialData;
 
 public class RSUtils {
 
@@ -29,17 +30,13 @@ public class RSUtils {
      * 
      */
 
-    private static String parseAliases(String str){
-            String s = str.toLowerCase();
+    private static List<Material> parseAliases(String str){
+            List<Material> retval = new ArrayList<>();
             for(String st:RealShopping.getSortedAliases()){
-                    String replacement = "";
-                    for(Integer i:RealShopping.getAliasesMap().get(st)){
-                            if(!replacement.equals("")) replacement += ":";
-                            replacement += i;
-                    }
-                    s = s.replaceAll(st, replacement);
+                    Material alias = RealShopping.getAliasesMap().get(st);
+                    if(alias != null) retval.add(alias);
             }
-            return s;
+            return retval;
     }
 
     /**
@@ -107,9 +104,10 @@ public class RSUtils {
             s[0] = parseAliases(str);
             s[1] = "0";
         }
-        byte data = Byte.parseByte(s[1]);
-        int id = Integer.parseInt(s[0]);
-        if(id < 0) {
+        //TODO temporary test
+        Material id = Material.getMaterial(Integer.parseInt(s[0]));
+        MaterialData data = new MaterialData(id,Byte.parseByte(s[1]));
+        if(id == null) {
             return new Price(ply.getItemInHand());
         }
         if(s.length > 1){
@@ -149,13 +147,13 @@ public class RSUtils {
             default:
                 i = new Integer[]{-1};
                 break;
-        }
-        int id = Integer.parseInt(s[0]);
-
-        if( id < 0) 
+        }//TODO temporary fix
+        Material id = Material.getMaterial(Integer.parseInt(s[0]));
+        MaterialData dt = new MaterialData(id, data);
+        if( id == null) 
             p = new Price(ply.getItemInHand());
         else 
-            p = new Price(id, data);
+            p = new Price(id, dt);
         return new Object[]{p, i};
     }
 
