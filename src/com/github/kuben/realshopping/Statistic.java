@@ -22,8 +22,9 @@ final class Statistic {
         String[] s = imp.split(":");
         this.timestamp = Long.parseLong(s[0]);
         this.bought = Boolean.parseBoolean(s[1]);
-        this.item = new Price(Integer.parseInt(s[2]), Byte.parseByte(s[3]), Integer.parseInt(s[4])); // Why store Price item?
-        if(s.length > 6) item.setDescription(s[5]);
+        this.item = null;
+//        this.item = new Price(Integer.parseInt(s[2]), Byte.parseByte(s[3]), Integer.parseInt(s[4])); // Why store Price item?
+//        if(s.length > 6) item.setDescription(s[5]);
         this.amount = Integer.parseInt(s[s.length -1]);
     }
 

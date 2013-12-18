@@ -29,14 +29,29 @@ public class RSUtils {
      * Utils and formatting functions
      * 
      */
-
-    private static List<Material> parseAliases(String str){
-            List<Material> retval = new ArrayList<>();
-            for(String st:RealShopping.getSortedAliases()){
-                    Material alias = RealShopping.getAliasesMap().get(st);
-                    if(alias != null) retval.add(alias);
-            }
-            return retval;
+    /**
+     * Parses a string and checks for correct use of aliases.
+     * If the alias is not found this will throw a Nullpointer exception.
+     * The constructed Object is an Object array.
+     * @param str
+     * @return
+     * @throws NullPointerException 
+     */
+    private static Object[] parseAliases(String str) throws NullPointerException {
+        String[] s = str.split(":");
+        if(!RealShopping.getAliasesMap().containsKey(s[0])) throw new NullPointerException("No item with this name found.");
+        Object[] almap = RealShopping.getAliasesMap().get(s[0]);
+        Price p;
+        if(almap == null) return new Object[]{null,s[1]};
+        if(almap.length>1) 
+            p = new Price((Material)almap[0],(MaterialData)almap[1]);
+        else {
+            p = new Price((Material)almap[0]);
+        }
+        List<Object> o = new LinkedList<>();
+        o.add(p);
+        o.add(almap[almap.length -1]);
+        return o.toArray(new Object[0]);
     }
 
     /**
@@ -45,7 +60,7 @@ public class RSUtils {
      * @param str string to parse.
      * @return an array the same size as the amount items (max. 27)
      */
-    public static int[][] pullItems(String str) throws NumberFormatException {
+    public static Object[][] pullItems(String str) throws NumberFormatException {
         String[] strs = new String[27];
         int l = 0;
         for(String s:str.split(",")){//Repeat for every item
@@ -58,14 +73,12 @@ public class RSUtils {
             }
             if(i >= 27) break;
         }
-        int[][] ids = new int[l][3];
+        Object[][] ids = new Object[l][2];
         for(int i = 0;i < l;i++){
-            int[] id = pullItem(strs[i]);
-            ids[i][0] = id[0];
-            if(id.length > 1) ids[i][1] = id[1];
-            else ids[i][1] = 0;
-            if(id.length > 2) ids[i][2] = id[2];
-            else ids[i][2] = 0;//Full stack
+            Object[] id = pullItem(strs[i]);
+            ids[i][0] = (Price)id[0];
+            if(id.length > 1) ids[i][1] = (Integer)id[1];
+            else ids[i][1] = 0; //fullstack
         }
         return ids;
     }
@@ -77,17 +90,16 @@ public class RSUtils {
      * @param str String to parse.
      * @return An array of the same size as the amount of ' : '
      */
-    public static int[] pullItem(String str) throws NumberFormatException {
-        String s = parseAliases(str);//Check for aliases
-
-        //Parse resulting string
-        int[] id = new int[s.split(":").length];
-        int i = 0;
-        for(String ss:s.split(":")){
-                id[i] = Integer.parseInt(ss);
-                i++;
+    public static Object[] pullItem(String str) throws NumberFormatException {
+        Object[] parsed = null;
+        try {
+            parsed  = parseAliases(str);
+        } catch (NullPointerException ex) {
+            return null;
         }
-        return id;
+        if(parsed == null) return null;
+        for(int i = 1;i<parsed.length;i++) parsed[i] = Integer.parseInt((String)parsed[i]);
+        return parsed;
     }
 
     /**
@@ -97,22 +109,16 @@ public class RSUtils {
      * @return The correct price for this string. Null if there were problems.
      */
     public static Price pullPrice(String str, Player ply){//No commas on this one
-        String[] s = new String[2];
-        if(parseAliases(str).contains(":"))
-            s = parseAliases(str).split(":");
-        else {
-            s[0] = parseAliases(str);
-            s[1] = "0";
-        }
-        //TODO temporary test
-        Material id = Material.getMaterial(Integer.parseInt(s[0]));
-        MaterialData data = new MaterialData(id,Byte.parseByte(s[1]));
-        if(id == null) {
+        Object[] parsed = parseAliases(str);
+        
+        if(parsed != null) {
+            Material id = (Material) parsed[0];
+            MaterialData data = null;
+            if(parsed.length > 1) data = (MaterialData) parsed[1];
+            return new Price(id,data);
+        } else {
             return new Price(ply.getItemInHand());
         }
-        if(s.length > 1){
-            return new Price(id,data);
-        } else return new Price(id);
     }
 
     /**
@@ -125,36 +131,14 @@ public class RSUtils {
      * @return Array object with Price and Integer[] of costs, min and max.
      */
     public static Object[] pullPriceCostMinMax(String str, Player ply){//No commas on this one
-        String[] s = parseAliases(str).split(":");
-        Price p;
-        Integer[] i;
-        byte data = 0;
-
-        //ID:[DATA]:PRICE:[MIN]:[MAX]
-        switch(s.length){
-            case 5:
-                data = Byte.parseByte(s[1]);
-            case 4:
-                i = new Integer[]{(int)(Float.parseFloat(s[s.length-3])*100), (int)(Float.parseFloat(s[s.length-2])*100), (int)(Float.parseFloat(s[s.length-1])*100)};
-                break;
-            case 3:
-                data = Byte.parseByte(s[1]);
-            case 2:
-                i = new Integer[]{(int)(Float.parseFloat(s[s.length - 1])*100)};
-                break;
-            case 1:
-                return null;
-            default:
-                i = new Integer[]{-1};
-                break;
-        }//TODO temporary fix
-        Material id = Material.getMaterial(Integer.parseInt(s[0]));
-        MaterialData dt = new MaterialData(id, data);
-        if( id == null) 
-            p = new Price(ply.getItemInHand());
-        else 
-            p = new Price(id, dt);
-        return new Object[]{p, i};
+        Object[] parsed = parseAliases(str);
+        if(parsed[0] == null) parsed[0] = new Price(ply.getItemInHand());
+        Integer[] costs = {-1,null,null};
+        for(int i=1;i<parsed.length;i++){
+            if(i<costs.length || i >= costs.length) break;
+            costs[i-1] = Integer.parseInt((String)parsed[i]);
+        }
+        return new Object[]{parsed[0], costs};
     }
 
     /**
@@ -165,18 +149,7 @@ public class RSUtils {
      * @return An object[] containing [0] = Price and [1] = Integer[] min and max vals.
      */
     public static Object[] pullPriceMinMax(String str, Player ply){//No commas on this one
-            String s[] = parseAliases(str).split(":");
-            Price p;
-            Integer i[] = new Integer[]{(int)(Float.parseFloat(s[s.length-2])*100), (int)(Float.parseFloat(s[s.length-1])*100)};
-            int id = Integer.parseInt(s[0]); 
-            if( id < 0) { //control that I want hand held item
-                    p = new Price(ply.getItemInHand());
-                    return new Object[]{p,i};
-            }
-            if(s.length > 3)//Has data
-                    p = new Price(id,Byte.parseByte(s[1]));
-            else p = new Price(id);
-            return new Object[]{p, i};
+            return pullPriceCostMinMax(str, ply);
     }
 
     public static String formatItemStackToMess(ItemStack[] IS){
@@ -601,12 +574,12 @@ public class RSUtils {
                     tempIS.setDurability((short) (RealShopping.getMaxDur(tempIS.getType()) - stolen2.get(key)));
                     RealShopping.getPInv(p).getShop().addToClaim(tempIS);
                 } else {
-                    if(stolen2.get(key) > Material.getMaterial(key.getType()).getMaxStackSize())
-                        while(Material.getMaterial(key.getType()).getMaxStackSize() < stolen2.get(key)){//If more than one stack/full tool
+                    if(stolen2.get(key) > key.getType().getMaxStackSize())
+                        while(key.getType().getMaxStackSize() < stolen2.get(key)){//If more than one stack/full tool
                             ItemStack tempIStemp = tempIS.clone();
-                            tempIStemp.setAmount(Material.getMaterial(key.getType()).getMaxStackSize());
+                            tempIStemp.setAmount(key.getType().getMaxStackSize());
                             RealShopping.getPInv(p).getShop().addToClaim(tempIStemp);
-                            stolen2.put(key, stolen2.get(key) - Material.getMaterial(key.getType()).getMaxStackSize());
+                            stolen2.put(key, stolen2.get(key) - key.getType().getMaxStackSize());
                         }
                     tempIS.setAmount(stolen2.get(key));
                     RealShopping.getPInv(p).getShop().addToClaim(tempIS);

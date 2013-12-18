@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.lang.ArrayUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -43,7 +42,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.material.MaterialData;
 
 public class Shop {//TODO add load/save interface
 
@@ -105,15 +103,15 @@ public class Shop {//TODO add load/save interface
      * Chest functions
      * [0] is ID, [1] is data, [2] is amount(0 if full stack)
      */
-    private Map<Location, ArrayList<Integer[]>> chests = new HashMap<>();
+    private Map<Location, ArrayList<Object[]>> chests = new HashMap<>();
 
-    public Map<Location, ArrayList<Integer[]>> getChests() {
+    public Map<Location, ArrayList<Object[]>> getChests() {
         return chests;
     }
 
     public boolean addChest(Location l) {
         if (!chests.containsKey(l)) {
-            chests.put(l, new ArrayList<Integer[]>());
+            chests.put(l, new ArrayList<Object[]>());
             if (Config.isAutoprotect()) {
                 protectedChests.add(l);
             }
@@ -137,14 +135,14 @@ public class Shop {//TODO add load/save interface
         return chests.containsKey(l);
     }
 
-    public int addChestItem(Location l, int[][] id) {
+    public int addChestItem(Location l, Object[][] id) {
         int j = -1;
         if (chests.containsKey(l)) {
             j++;
-            for (int[] i : id) {
+            for (Object[] i : id) {
                 if (chests.get(l).size() < 27) {
-                    if (Material.getMaterial(i[0]) != null) {
-                        chests.get(l).add(ArrayUtils.toObject(i));
+                    if (i[0] != null) {
+                        chests.get(l).add(i);
                         j++;
                     }
                 }
@@ -163,9 +161,9 @@ public class Shop {//TODO add load/save interface
                         if (am == iS.getType().getMaxStackSize()) {
                             am = 0;
                         }
-                        chests.get(l).add(new Integer[]{iS.getTypeId(), (int) iS.getData().getData(), am});
+                        chests.get(l).add(new Object[]{new Price(iS), am});
                     } else {
-                        chests.get(l).add(new Integer[]{0, 0, 0});
+                        chests.get(l).add(new Object[]{null, 0});
                     }
                 }
             }
@@ -173,15 +171,15 @@ public class Shop {//TODO add load/save interface
         return false;
     }
 
-    public int delChestItem(Location l, int[][] id) {
+    public int delChestItem(Location l, Object[][] id) {
         int j = -1;
         if (chests.containsKey(l)) {
             j++;
-            for (int[] i : id) {
+            for (Object[] i : id) {
                 boolean match = false;
                 int k = 0;
                 for (; k < chests.get(l).size(); k++) {
-                    if (chests.get(l).get(k)[0] == i[0] && chests.get(l).get(k)[1] == i[1]) {
+                    if (chests.get(l).get(k)[0] == i[0]) {
                         match = true;
                         break;
                     }
@@ -938,9 +936,9 @@ public class Shop {//TODO add load/save interface
                             chest.getBlockInventory().clear();
                             ItemStack[] itemStack = new ItemStack[27];
                             int k = 0;
-                            for(Integer[] j:tempShop.getChests().get(chestArr[i])){
-                                itemStack[k] = new MaterialData(j[0],j[1].byteValue())
-                                .toItemStack((j[2]==0)?Material.getMaterial(j[0]).getMaxStackSize():j[2]);
+                            for(Object[] j:tempShop.getChests().get(chestArr[i])){
+                                itemStack[k] = ((Price)j[0]).toItemStack();
+                                itemStack[k].setAmount((Integer)j[2]==0?itemStack[k].getMaxStackSize():(Integer)j[2]);
                                 k++;
                             }
                             chest.getBlockInventory().setContents(itemStack);

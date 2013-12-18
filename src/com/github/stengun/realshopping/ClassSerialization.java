@@ -31,9 +31,11 @@ import java.util.List;
 import java.util.Map;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.MaterialData;
 
 /**
  * This class helps with serialization of specific objects that cannot be saved because
@@ -193,8 +195,8 @@ public class ClassSerialization {
         Map<Price, Integer> retval = new HashMap<>();
 
         for (String s : itms.getKeys(false)) {
-            int type = itms.getConfigurationSection(s).getInt("type");
-            byte data = (byte) itms.getConfigurationSection(s).getInt("data");
+            Material type = Material.getMaterial(itms.getConfigurationSection(s).getString("type"));
+            MaterialData data = new MaterialData(type, (byte)itms.getConfigurationSection(s).getInt("data"));
             int iamount = itms.getConfigurationSection(s).getInt("iamount");
             int amount = itms.getConfigurationSection(s).getInt("amount");
             int metahash = itms.getConfigurationSection(s).getInt("metahash");

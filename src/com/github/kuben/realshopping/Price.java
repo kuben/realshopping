@@ -44,7 +44,7 @@ public final class Price {
     }
     public Price(Material type, MaterialData data){
         this(new ItemStack(type));
-        this.data = data;
+        this.data = data==null?new MaterialData(type):data;
     }
     public Price(Material type, MaterialData data, int metahash){
         this.type = type;

@@ -27,7 +27,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import com.github.kuben.realshopping.Config;
 import com.github.kuben.realshopping.LangPack;
 import com.github.kuben.realshopping.RealShopping;
 
@@ -70,7 +69,7 @@ public class RSCommandExecutor implements CommandExecutor {
 			else if(cmd.getName().equalsIgnoreCase("realshopping")) return new RealShoppingCommand(sender, args).exec();
 			else if(cmd.getName().equalsIgnoreCase("rsimport")) return new RSImport(sender, args).exec();
 		} catch(Exception e){
-			if(Config.debug == true) e.printStackTrace();
+			e.printStackTrace();
 		}
     	return false;
 	}

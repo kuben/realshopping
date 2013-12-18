@@ -41,6 +41,8 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import org.bukkit.Material;
+import org.bukkit.material.MaterialData;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -187,7 +189,7 @@ public class PriceParser {
 
     private static Object[] parsePrices(Element price) {
         Integer[] itemcost;
-        int itemid = 0;
+        Material itemid = null;
         byte itemdata = -1;
         String desc = null,name = null;
         int metahash;
@@ -206,7 +208,7 @@ public class PriceParser {
         itemcost = icos.toArray(new Integer[0]);
         //id setting
         if (price.getAttribute("id") != null) {
-            itemid = Integer.parseInt(price.getAttribute("id").split(":")[0]);
+            itemid = Material.getMaterial(price.getAttribute("id").split(":")[0]);
             if(price.getAttribute("id").split(":").length > 1) {
                 itemdata = Byte.parseByte(price.getAttribute("id").split(":")[1]);
             } else {
@@ -225,7 +227,7 @@ public class PriceParser {
             name = price.getElementsByTagName("name").item(0).getTextContent();
         }
 
-        Price p = new Price(itemid, itemdata, metahash);
+        Price p = new Price(itemid, new MaterialData(itemid, itemdata), metahash);
         p.setDescription(desc);
         p.setName(name);
         p.setAmount(amount);
@@ -248,7 +250,7 @@ public class PriceParser {
                 }
                 
                 Element price = (Element)prices.item(j);
-                String id = price.getAttribute("id");
+                String id = Material.getMaterial(Integer.parseInt(price.getAttribute("id"))).toString();
                 if(!id.contains(":")) price.setAttribute("id", id+":0");
                 
                 Element meta = actual.createElement("meta");

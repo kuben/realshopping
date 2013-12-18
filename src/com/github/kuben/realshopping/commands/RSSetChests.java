@@ -71,7 +71,7 @@ class RSSetChests extends RSPlayerCommand {
 	
 	private boolean delitems(){
 		try {
-			int[][] ids = RSUtils.pullItems(args[1]);
+			Object[][] ids = RSUtils.pullItems(args[1]);
 			int j = tempShop.delChestItem(l, ids);
 			if(j > -1){
 				sender.sendMessage(ChatColor.RED + LangPack.REMOVED + j + LangPack.ITEMS);

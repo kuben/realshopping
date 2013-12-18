@@ -143,9 +143,9 @@ class FinalPrompt extends MessagePrompt{
 					    		XSSFCell costC = row.getCell(4);
 					    		try{
 					    			if(costC != null && costC.getCellType() == XSSFCell.CELL_TYPE_FORMULA){
-					    				Price p;
-					    				if(data == 0) p = new Price(ID);
-					    				else p = new Price(ID, data);
+					    				Price p = null;
+//					    				if(data == 0) p = new Price(ID);
+//					    				else p = new Price(ID, data);
 	            						int cost = Float.valueOf(costC.getNumericCellValue() + "").intValue();
 					    				Integer[] f = new Integer[]{cost};
 					    				RealShopping.addDefPrice(p, f);
