@@ -80,12 +80,11 @@ public class Shop {//TODO add load/save interface
      * Entrance/Exit
      * 
      */
-    //TODO add to rsset and rssetstores
     public void addEntranceExit(Location en, Location ex) throws RealShoppingException{ 
         EEPair ep = new EEPair(en, ex);
         RealShopping.addEntranceExit(ep, this);
     }
-    public boolean removeEntranceExit(Location en, Location ex){ return RealShopping.removeEntranceExit(this, en, ex); }//TODO add to rsset and rssetstores
+    public boolean removeEntranceExit(Location en, Location ex){ return RealShopping.removeEntranceExit(this, en, ex); }
     public boolean removeEEPair(CommandSender player,int index) {
         boolean retval = false;
         EEPair[] pairs = RealShopping.getEEPairMap(this).keySet().toArray(new EEPair[0]);
@@ -106,7 +105,7 @@ public class Shop {//TODO add load/save interface
      * Chest functions
      * [0] is ID, [1] is data, [2] is amount(0 if full stack)
      */
-    private Map<Location, ArrayList<Integer[]>> chests = new HashMap<Location, ArrayList<Integer[]>>();
+    private Map<Location, ArrayList<Integer[]>> chests = new HashMap<>();
 
     public Map<Location, ArrayList<Integer[]>> getChests() {
         return chests;
@@ -464,7 +463,7 @@ public class Shop {//TODO add load/save interface
     }
 
     /**
-     * Retrieves the first item in the claim list, then removes it from it.
+     * Retrieves the first item in the claim list, removing it.
      * Calling this method in a for statement is the best way to use it.
      * If the list is empty, this method will return null.
      * @return The first item in the claim list, null if there are no items.
@@ -514,7 +513,7 @@ public class Shop {//TODO add load/save interface
     private static Map<String, Pager> timers = new HashMap<>();
 
     /**
-     * Retrieves a pager from a player.
+     * Retrieves a pager of a player.
      * @param player Player with the pager we want to retrieve.
      * @return The correspondent pager, null if a player has no pager.
      */
@@ -582,7 +581,7 @@ public class Shop {//TODO add load/save interface
      * separated with ;.
      * @return a string with world and location of protected chest.
      */
-    public String exportProtectedToString() {
+    public String exportProtectedToString() { // TODO convert chest export to YAML format.
         if (!protectedChests.isEmpty()) {
             String tempS = "";
             for (Location tempL : protectedChests) {
@@ -602,7 +601,7 @@ public class Shop {//TODO add load/save interface
      *
      * @return All stats converted to string.
      */
-    public String exportStats() {
+    public String exportStats() { //TODO convert stats export to YAML format.
         String s = "";
         for (Statistic stat : stats) {
             s += ";" + stat.getTime() + ":" + stat.isBought() + ":" + stat.getItem().export(stat.getAmount());

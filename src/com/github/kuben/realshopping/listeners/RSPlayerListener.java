@@ -204,7 +204,7 @@ public class RSPlayerListener implements Listener {
         
         if (event.hasBlock()) {
             Block b = event.getClickedBlock();
-            // We are clicking on a possible entrance?
+            // We are clicking on a possible entrance? (a glass block or a door/iron door if doors are enabled)
             if (   event.getAction() == Action.RIGHT_CLICK_BLOCK
                 && ( b.getType() == Material.GLASS 
                      ||  b.getType() == Material.THIN_GLASS 
@@ -224,9 +224,10 @@ public class RSPlayerListener implements Listener {
                 }
             }
             // We are clicking on an obsidian block while inside a store?
+            // Take action depending on the block above the obsidian one.
             if(b.getType() == Material.OBSIDIAN && RealShopping.hasPInv(player)) {
                 switch(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType()) {
-                    case STEP:
+                    case STEP: // Cash block
                         Inventory[] carts = null;
                         if (Config.isAllowFillChests() && Config.isCartEnabledW(player.getWorld().getName())) {
                             StorageMinecart[] SM = RSUtils.checkForCarts(event.getClickedBlock().getLocation());
@@ -244,7 +245,7 @@ public class RSPlayerListener implements Listener {
                             player.sendMessage(LangPack.YOURARTICLESCOST + RealShopping.getPInv(player).toPay(carts) / 100f + LangPack.UNIT);
                         }
                         return;
-                    case RED_MUSHROOM:
+                    case RED_MUSHROOM: // Shipment block
                         if (event.getAction() == Action.RIGHT_CLICK_BLOCK && player.hasPermission("realshopping.rspay")) {
                             if (Config.isAllowFillChests()) {
                                 if (Config.isCartEnabledW(player.getWorld().getName())) {
@@ -261,7 +262,7 @@ public class RSPlayerListener implements Listener {
                             return;
                         }
                         return;
-                    case BROWN_MUSHROOM:
+                    case BROWN_MUSHROOM: // Sell to store block
                         if (Config.isEnableSelling()) {
                             if (RealShopping.getPInv(player).getShop().getBuyFor() > 0) {
                                 if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
@@ -295,7 +296,6 @@ public class RSPlayerListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGH)
-    //TODO remove code duplication u mad
     public void onInventoryOpenEvent(InventoryOpenEvent event) {
         if (Config.isDisableEnderchests()) {
             if (RealShopping.hasPInv((Player) event.getPlayer()) && event.getInventory().getType() == InventoryType.ENDER_CHEST) {
@@ -304,22 +304,23 @@ public class RSPlayerListener implements Listener {
                 return;
             }
         }
-        if (event.getInventory().getHolder() instanceof Chest) {
-            if (!RealShopping.hasPInv((Player) event.getPlayer())) {//If player is not in store
+        if (!RealShopping.hasPInv((Player) event.getPlayer())) {
+            boolean canceled = false;
+            if (event.getInventory().getHolder() instanceof Chest) {
+                //If player is not in store
                 if (RSUtils.isChestProtected(((Chest) event.getInventory().getHolder()).getLocation())) {
-                    event.setCancelled(true);
-                    ((Chest) event.getInventory().getHolder()).getInventory().getViewers().remove(event.getPlayer());
-                    ((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + "[RealShopping] " + LangPack.THISCHESTISPROTECTED);
+                    canceled = true;
                 }
-            }
-        } else if (event.getInventory().getHolder() instanceof DoubleChest) {
-            if (!RealShopping.hasPInv((Player) event.getPlayer())) {//If player is not in store
+            } else if (event.getInventory().getHolder() instanceof DoubleChest) {
                 if (RSUtils.isChestProtected(((Chest) ((DoubleChest) event.getInventory().getHolder()).getLeftSide()).getLocation())
                         | RSUtils.isChestProtected(((Chest) ((DoubleChest) event.getInventory().getHolder()).getRightSide()).getLocation())) {
-                    event.setCancelled(true);
-                    ((DoubleChest) event.getInventory().getHolder()).getInventory().getViewers().remove(event.getPlayer());
-                    ((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + "[RealShopping] " + LangPack.THISCHESTISPROTECTED);
+                    canceled = true;
                 }
+            }
+            if(canceled){
+                event.setCancelled(canceled);
+                event.getInventory().getHolder().getInventory().getViewers().remove(event.getPlayer());
+                ((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + "[RealShopping] " + LangPack.THISCHESTISPROTECTED);
             }
         }
     }

@@ -127,24 +127,48 @@ class RSSet extends RSPlayerCommand {
 		//Check if help was asked for
 		if(args.length == 0 || args[0].equalsIgnoreCase("help")){
 			if(args.length == 0){
-				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE + ChatColor.RESET + "/rsset prompt|entrance|exit|createstore|delstore [NAME]");
+				sender.sendMessage(ChatColor.DARK_GREEN + LangPack.USAGE
+                                        + ChatColor.RESET + "/rsset prompt|entrance|exit|createstore|delstore|addeepair|deleepair|listeepairs [NAME]");
 				sender.sendMessage(LangPack.FOR_HELP_FOR_A_SPECIFIC_COMMAND_TYPE_ + ChatColor.LIGHT_PURPLE + "/rsset help " + ChatColor.DARK_PURPLE + "COMMAND");
 			} else if(args.length == 1){
 				sender.sendMessage(LangPack.RSSETHELP + LangPack.YOU_CAN_GET_MORE_HELP_ABOUT_
-						+ ChatColor.LIGHT_PURPLE + "prompt, entrance, exit, createstore, delstore, delen");
+						+ ChatColor.LIGHT_PURPLE + "prompt, entrance, exit, createstore, delstore, addeepair, deleepair, listeepairs");
 			} else {
-				if(args[1].equals("prompt")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "prompt" + ChatColor.RESET + LangPack.STARTS_AN_INTERACTIVE_PROMPT
-						+ LangPack.ALL_CONVERSATIONS_CAN_BE_ABORTED_WITH_ + ChatColor.LIGHT_PURPLE + "quit");
-				else if(args[1].equals("entrance")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "entrance"
-						+ ChatColor.RESET + LangPack.RSSETENTRANCEHELP);
-				else if(args[1].equals("exit")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "exit"
-						+ ChatColor.RESET + LangPack.RSSETEXITHELP);
-				else if(args[1].equals("createstore")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "createstore NAME"
-						+ ChatColor.RESET + LangPack.RSSETCREATEHELP);
-				else if(args[1].equals("delstore")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "delstore NAME"
-						+ ChatColor.RESET + LangPack.RSSETDELSTOREHELP);
-				else if(args[1].equals("delen")) sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "delen"//FIXME needs to be added
+                            switch(args[1].toLowerCase()) {
+                                case "prompt":
+                                    sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "prompt" + ChatColor.RESET + LangPack.STARTS_AN_INTERACTIVE_PROMPT
+                                            + LangPack.ALL_CONVERSATIONS_CAN_BE_ABORTED_WITH_ + ChatColor.LIGHT_PURPLE + "quit");
+                                    return true;
+                                case "entrance":
+                                    sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "entrance"
+                                            + ChatColor.RESET + LangPack.RSSETENTRANCEHELP);
+                                    return true;
+                                case "exit":
+                                    sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "exit"
+                                            + ChatColor.RESET + LangPack.RSSETEXITHELP);
+                                    return true;
+                                case "createstore":
+                                    sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "createstore NAME"
+                                            + ChatColor.RESET + LangPack.RSSETCREATEHELP);
+                                    return true;
+                                case "delstore":
+                                    sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "delstore NAME"
+                                            + ChatColor.RESET + LangPack.RSSETDELSTOREHELP);
+                                    return true;
+                                case "addeepair":
+                                    sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "addeepair NAME"
 						+ ChatColor.RESET + LangPack.RSSETDELENHELP);
+                                    return true;
+                                case "deleepair":
+                                    sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "deleepair NAME INDEX"
+						+ ChatColor.RESET + LangPack.RSSETDELENHELP);
+                                    return true;
+                                case "listeepairs":
+                                    sender.sendMessage(LangPack.USAGE + ChatColor.LIGHT_PURPLE + "listeepairs NAME PAGE"
+						+ ChatColor.RESET + LangPack.RSSETDELENHELP);
+                                default:
+                                    return true;
+                            }
 			}
 			return true;
 		}

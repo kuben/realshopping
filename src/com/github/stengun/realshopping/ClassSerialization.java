@@ -42,6 +42,13 @@ import org.bukkit.inventory.ItemStack;
  * @author stengun
  */
 public class ClassSerialization {
+    //TODO Saveshop /loadshop
+    //TODO savejailed / loadjailed
+    //TODO savetplocs / loadtplocs
+    //TODO saveprotectedchests / loadprotectedchests
+    //TODO savetoclaim / loadtoclaim
+    //TODO savestats / loadstats
+    //TODO savenotifications / loadnotifications
     
     /**
      * Correctly saves a list of ItemStack objects into a ConfigurationSection.

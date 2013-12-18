@@ -70,7 +70,7 @@ public class SellInventory {
     
     /**
      * Adds Items to the inventory.
-     * Thi method returns the items it can't add in the inventory.
+     * This method returns the items it can't add in the inventory.
      * @param iss Items to add
      * @return If the method can't add more items, the exceeded ones are returned in a map.
      */
@@ -161,14 +161,14 @@ public class SellInventory {
         ItemMeta meta = retval.getItemMeta();
         
         if(!shop.hasPrices() || !shop.hasPrice(new Price(itm))){
-            lore.add("Shop doesn't accept this.");
+            lore.add("Shop doesn't buy this.");
         } else {
             String singleprice,stackprice;
             double temprice = (int)((Shop.sellPrice(shop, itm)/itm.getAmount()) * 100);
             singleprice = String.valueOf(temprice/100);
             stackprice = String.valueOf(Shop.sellPrice(shop, itm));
-            lore.add("Stack Price: "+stackprice);
-            lore.add("Single Item Price: "+singleprice);
+            lore.add("Price for entire stack: "+stackprice);
+            lore.add("Price for single item: "+singleprice);
         }
         meta.setLore(lore);
         

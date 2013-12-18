@@ -1139,7 +1139,6 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                     continue;
                 }
                 switch (what) {
-                    //TODO convert load with object stream
                     case INVENTORIES:
                         try {
                             conf.load(f);
@@ -1226,7 +1225,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         File f = null;
         String header = null;
         try {
-            switch (what) {
+            switch (what) { //TODO convert that load stuff to YAML
                 case INVENTORIES:
                     f = new File(MANDIR + "inventories.db");
                     header = "Inventories database for RealShopping v";
@@ -1633,8 +1632,8 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     }
     public static void setEntrance(Player player) { entrance = player.getLocation().getBlock().getLocation(); }//TODO Rename?
     public static void setExit(Player player) { exit = player.getLocation().getBlock().getLocation(); }
-    public static boolean hasEntrance(){ return !entrance.equals(""); }
-    public static boolean hasExit(){ return !exit.equals(""); }
+    public static boolean hasEntrance(){ return entrance != null; }
+    public static boolean hasExit(){ return exit != null; }
     public static Location getEntrance() { return entrance; }
     public static Location getExit() { return exit; }
     public static Location addPlayerEntrance(Player player){ return playerEntrances.put(player.getName(), player.getLocation().getBlock().getLocation()); }
