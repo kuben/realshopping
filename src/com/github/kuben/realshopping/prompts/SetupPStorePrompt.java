@@ -215,7 +215,7 @@ public class SetupPStorePrompt implements Prompt {
         					tempShop.clearEntrancesExits();
         					RealShopping.removeShop(tempShop.getName());
         					rtrn = ChatColor.GREEN + LangPack.DELETED_ + ChatColor.DARK_AQUA + context.getSessionData("shop") + ChatColor.GREEN + " .";
-        					RealShopping.updateEntrancesDb();
+        					RealShopping.updateShopsDb();
         				} else rtrn = ChatColor.RED + LangPack.STORENOTEMPTY;
         			} else rtrn = ChatColor.DARK_RED + "Error #2001";
         			context.setSessionData("ID", "second");

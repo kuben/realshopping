@@ -52,7 +52,7 @@ class RSSetStores extends RSPlayerCommand {
 				    		try {
 								RealShopping.getShop(args[1]).addEntranceExit(RealShopping.getPlayerEntrance(player.getName())
 									, RealShopping.getPlayerExit(player.getName()));
-					    		RealShopping.updateEntrancesDb();
+					    		RealShopping.updateShopsDb();
 					    		player.sendMessage(ChatColor.GREEN + args[1] + LangPack.WASCREATED);
 							} catch (RealShoppingException e) {
 								player.sendMessage(ChatColor.RED + LangPack.THIS_ENTRANCE_AND_EXIT_PAIR_IS_ALREADY_USED);
@@ -70,7 +70,7 @@ class RSSetStores extends RSPlayerCommand {
 							RealShopping.getShop(args[1]).clearEntrancesExits();
 							RealShopping.removeShop(args[1]);
 							player.sendMessage(ChatColor.RED + args[1] + LangPack.WASREMOVED);
-							RealShopping.updateEntrancesDb();
+							RealShopping.updateShopsDb();
 						} else player.sendMessage(ChatColor.RED + LangPack.STORENOTEMPTY);
 					} else player.sendMessage(ChatColor.RED + LangPack.YOUARENOTTHEOWNEROFTHISSTORE);
 					return true;

@@ -6,9 +6,9 @@ final class Statistic {
     final private long timestamp;
     final private boolean bought;
 
-    public Statistic(Price item, int amount, boolean bought){
+    public Statistic(Price item, int soldamount, boolean bought){
         this.item = item;
-        this.amount = amount;
+        this.amount = soldamount;
         this.timestamp = System.currentTimeMillis();
         this.bought = bought;
     }
@@ -16,13 +16,14 @@ final class Statistic {
  * Rebuilding statistic from a string.
  * The format of the string must be
  * TIMESTAMP:BOUGHT:ID:DATA[:DESCRIPTION]:AMOUNT
- * @param imp 
+ * @param imp
+ * @deprecated Use the YAML importer for that.
  */
     public Statistic(String imp){
         String[] s = imp.split(":");
         this.timestamp = Long.parseLong(s[0]);
         this.bought = Boolean.parseBoolean(s[1]);
-        this.item = new Price(Integer.parseInt(s[2]), Byte.parseByte(s[3]), Integer.parseInt(s[4])); // Why store Price item?
+        this.item = new Price(Integer.parseInt(s[2]), Byte.parseByte(s[3]), Integer.parseInt(s[4]));
         if(s.length > 6) item.setDescription(s[5]);
         this.amount = Integer.parseInt(s[s.length -1]);
     }

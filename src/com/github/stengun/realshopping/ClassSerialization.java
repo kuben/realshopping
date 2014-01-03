@@ -19,10 +19,15 @@
 
 package com.github.stengun.realshopping;
 
+import com.github.kuben.realshopping.EEPair;
 import com.github.kuben.realshopping.Price;
 import com.github.kuben.realshopping.RSPlayerInventory;
+import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.ShippedPackage;
+import com.github.kuben.realshopping.Shop;
+import com.github.kuben.realshopping.exceptions.RealShoppingException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -42,13 +47,57 @@ import org.bukkit.inventory.ItemStack;
  * @author stengun
  */
 public class ClassSerialization {
-    //TODO Saveshop /loadshop
-    //TODO savejailed / loadjailed
-    //TODO savetplocs / loadtplocs
-    //TODO saveprotectedchests / loadprotectedchests
-    //TODO savetoclaim / loadtoclaim
+    //TODO Test Saveshop /loadshop
+    //TODO Test savejailed / loadjailed
+    //TODO Test savetplocs / loadtplocs
+    //TODO Test integrated into shop saveprotectedchests / loadprotectedchests
+    //TODO Test savetoclaim / loadtoclaim
     //TODO savestats / loadstats
-    //TODO savenotifications / loadnotifications
+    //TODO Test savenotifications / loadnotifications
+    
+    /**
+     * Correctly saves a location.
+     * @param loc Location we need to save.
+     * @param destination Configuration section where to write.
+     */
+    public static void saveLocation(Location loc, ConfigurationSection destination) {
+        destination.set("world", loc.getWorld().getName());
+        destination.set("location", RSUtils.locAsString(loc));
+    }
+    
+    /**
+     * Loads a location from a YAML parsed document.
+     * @param section Section where to take stuff.
+     * @return Location loaded.
+     */
+    public static Location loadLocation(ConfigurationSection section) {
+        return RSUtils.stringToLoc(section.getString("world"),section.getString("location"));
+    }
+    
+    /**
+     * Correctly saves a list of pending notifications to a configuration section of a YAML formatted document.
+     * @param notification List of notifications as string.
+     * @param destination The configuration section ready for save.
+     */
+    public static void saveNotifications(Collection<String> notification, ConfigurationSection destination) {
+        int i = 0;
+        for(String s: notification) {
+            destination.set(Integer.toString(i++), s);
+        }
+    }
+    
+    /**
+     * Loads all notifications saved into a configuration section.
+     * @param section Section where we need to load notifications.
+     * @return List containing all the notifications.
+     */
+    public static List<String> loadNotifications(ConfigurationSection section) {
+        List<String> retval = new ArrayList<>();
+        for(String i:section.getKeys(false)) {
+            retval.add(section.getString(i));
+        }
+        return retval;
+    }
     
     /**
      * Correctly saves a list of ItemStack objects into a ConfigurationSection.
@@ -175,9 +224,83 @@ public class ClassSerialization {
         ConfigurationSection contents = source.getConfigurationSection("contents");
         return new ShippedPackage(loadItemStack(contents).toArray(new ItemStack[0]), cost, loc, date);
     }
-
+    /**
+     * Saves a Shop object inside a section of a YAML formatted document.
+     * The data we save is composed by shop's name, owner, world, an eventual buyfor,
+     * all of its eepairs and banned players.
+     * @param shop Shop we want to save.
+     * @param destination Section of the document
+     */
+    public static void saveShop(Shop shop,ConfigurationSection destination) {
+        
+        destination.set("owner",shop.getOwner());
+        destination.set("buyfor",shop.getBuyFor());
+        destination.set("world",shop.getWorld());
+        
+        ConfigurationSection banned = destination.createSection("banned");
+        String temp = "";
+        for(String b : shop.getBanned()) {
+            temp = temp + (temp.equals("")?b:";" + b);
+        }
+        banned.set("names", temp);
+        int i=0;
+        
+        ConfigurationSection eepairs = destination.createSection("eepairs");
+        for(EEPair ee:shop.getEEpairSet()){
+            ConfigurationSection tmp = eepairs.createSection(Integer.toString(i++));
+            saveEEPair(ee, tmp);
+        }
+        
+        ConfigurationSection chests = destination.createSection("protectedchests");
+        i=0;
+        for(Location lo:shop.getProtectedChests()) {
+            saveLocation(lo, chests.createSection(Integer.toString(i++)));
+        }
+    }
+    /**
+     * Given a Configuration section, this method will try to load a Shop object from it.
+     * @param section Section where whe want to load the shop object.
+     * @return Returns a correctly built shop object.
+     * @throws RealShoppingException If EEPairs are duplicated when inserting, this exception is thrown.
+     */
+    public static Shop loadShop(ConfigurationSection section) throws RealShoppingException {
+        String name = section.getName();
+        String owner = section.getString("owner");
+        String world = section.getString("world");
+        Shop shop = new Shop(name, world, owner);
+        
+        int buyfor = section.getInt("buyfor");
+        shop.setBuyFor(buyfor);
+        
+        ConfigurationSection banlist = section.getConfigurationSection("banned");
+        for(String banned:banlist.getString("names").split(";")) {
+            shop.addBanned(banned);
+        }
+        
+        ConfigurationSection eepairs = section.getConfigurationSection("eepairs");
+        for(String key : eepairs.getKeys(false)) {
+            shop.addEEPair(loadEEPair(eepairs.getConfigurationSection(key)));
+        }
+        
+        ConfigurationSection chests = section.getConfigurationSection("protectedchests");
+        for(String chs:chests.getKeys(false)) {
+            shop.addProtectedChest(loadLocation(chests.getConfigurationSection(chs)));
+        }
+        return shop;
+    }
     
     // -----------------------  Private static methods.
+    private static EEPair loadEEPair(ConfigurationSection pairs) {
+        Location entrance = loadLocation(pairs.getConfigurationSection("entrance"));
+        Location exit = loadLocation(pairs.getConfigurationSection("exit"));
+        return new EEPair(entrance, exit);
+    }
+    
+    private static void saveEEPair(EEPair ee,ConfigurationSection destination) {
+        saveLocation(ee.getEntrance(),destination.createSection("entrance"));
+        saveLocation(ee.getExit(), destination.createSection("exit"));
+    }
+    
     private static void savePriceMap(Price p, ConfigurationSection bought, Integer amount) {
         bought.set("type", p.getType());
         bought.set("data", p.getData());

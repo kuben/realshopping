@@ -52,7 +52,7 @@ public class ChestFreeManageListener extends GeneralListener implements Appliabl
 			if(getShop().isChest(l)) getShop().setChestContents(l, toUpdate.get(l));
 		}
 		RSPlayerListener.killConversationListener(this);
-		RealShopping.updateEntrancesDb();
+		RealShopping.updateShopsDb();
 		return toUpdate.size();
 	}
 	

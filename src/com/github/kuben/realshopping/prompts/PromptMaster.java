@@ -81,7 +81,7 @@ public class PromptMaster {
 	}
 	
 	private static boolean createIPConv(Conversable c){
-	    final Map<Object, Object> convMap = new HashMap<Object, Object>();
+	    final Map<Object, Object> convMap = new HashMap<>();
 	    convMap.put("data", "first");
 	    Conversation conv = convF.withFirstPrompt(new ImportPrompt()).withPrefix(prefix).withTimeout(30)
 	    		.withEscapeSequence("cancel").withEscapeSequence("quit").withEscapeSequence("exit")//Can also be done with a custom ConversationCanceller instead. 

@@ -31,14 +31,14 @@ class RSSetChests extends RSPlayerCommand {
         			if (args.length == 1 && args[0].equalsIgnoreCase("create")){
         				if(tempShop.addChest(l)){
         					player.sendMessage(ChatColor.RED + LangPack.CHESTCREATED);
-        					RealShopping.updateEntrancesDb();
+        					RealShopping.updateShopsDb();
         				}
         				else player.sendMessage(ChatColor.RED + LangPack.ACHESTALREADYEXISTSONTHISLOCATION);
         				return true;
         			} else if (args.length == 1 && args[0].equalsIgnoreCase("del")){
         				if(tempShop.delChest(l)){
         					player.sendMessage(ChatColor.RED + LangPack.CHESTREMOVED);
-        					RealShopping.updateEntrancesDb();
+        					RealShopping.updateShopsDb();
         				}
         				else player.sendMessage(ChatColor.RED + LangPack.COULDNTFINDCHESTONTHISLOCATION);
         				return true;
@@ -58,7 +58,7 @@ class RSSetChests extends RSPlayerCommand {
 			int j = tempShop.addChestItem(l, RSUtils.pullItems(args[1]));
 			if(j > -1){
 				sender.sendMessage(ChatColor.RED + LangPack.ADDED + j + LangPack.ITEMS);
-				RealShopping.updateEntrancesDb();
+				RealShopping.updateShopsDb();
 				return true;
 			} else {
 				sender.sendMessage(ChatColor.RED + LangPack.THISCHESTDOESNTEXIST);
@@ -75,7 +75,7 @@ class RSSetChests extends RSPlayerCommand {
 			int j = tempShop.delChestItem(l, ids);
 			if(j > -1){
 				sender.sendMessage(ChatColor.RED + LangPack.REMOVED + j + LangPack.ITEMS);
-				RealShopping.updateEntrancesDb();
+				RealShopping.updateShopsDb();
 				return true;
 			} else {
 				sender.sendMessage(ChatColor.RED + LangPack.THISCHESTDOESNTEXIST);

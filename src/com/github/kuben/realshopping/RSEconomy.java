@@ -38,41 +38,41 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 public class RSEconomy {
 
     private static Economy econ;//Vault economy
-	private static Map<String, Long> accounts = new HashMap<>();//Stores pennies
-	//Simple and lightweight economy
+    private static Map<String, Long> accounts = new HashMap<>();//Stores pennies
+    //Simple and lightweight economy
 
-	public static double getBalance(String p){
-		if(econ != null) return econ.getBalance(p);
-		if(accounts.containsKey(p)) return accounts.get(p).doubleValue()/100;
-		else {
-			accounts.put(p, 0l);
-			return 0;
-		}
-	}
-	
-	public static boolean withdraw(String p, double amount){
-		if(econ != null) return econ.withdrawPlayer(p, amount).transactionSuccess();
-		if(accounts.containsKey(p))
-			if(accounts.get(p) >= amount * 100){
-				accounts.put(p, accounts.get(p) - (long)(amount * 100));
-				return true;
-			} else return false;
-		else {
-			accounts.put(p, 0l);
-			return false;
-		}
-	}
-	
-	public static boolean deposit(String p, float amount){
-		if(econ != null) return econ.depositPlayer(p, amount).transactionSuccess();
-		if(accounts.containsKey(p)){
-			accounts.put(p, accounts.get(p) + (long)(amount * 100));
-			return true;
-		} else {
-			accounts.put(p, (long)amount * 100);
-			return true;
-		}
-	}
+    public static double getBalance(String p){
+        if(econ != null) return econ.getBalance(p);
+        if(accounts.containsKey(p)) return accounts.get(p).doubleValue()/100;
+        else {
+            accounts.put(p, 0l);
+            return 0;
+        }
+    }
+
+    public static boolean withdraw(String p, double amount){
+        if(econ != null) return econ.withdrawPlayer(p, amount).transactionSuccess();
+        if(accounts.containsKey(p))
+            if(accounts.get(p) >= amount * 100){
+                accounts.put(p, accounts.get(p) - (long)(amount * 100));
+                return true;
+            } else return false;
+        else {
+            accounts.put(p, 0l);
+            return false;
+        }
+    }
+
+    public static boolean deposit(String p, float amount){
+        if(econ != null) return econ.depositPlayer(p, amount).transactionSuccess();
+        if(accounts.containsKey(p)){
+            accounts.put(p, accounts.get(p) + (long)(amount * 100));
+            return true;
+        } else {
+            accounts.put(p, (long)amount * 100);
+            return true;
+        }
+    }
 	
 	
     public static boolean setupEconomy() {
@@ -89,59 +89,58 @@ public class RSEconomy {
     	}
     	
     	if(econ == null) {
-    		RealShopping.loginfo("Vault/Economy plugin not found. Initializing internal economy.");
-    		
-    		File f;
-    		FileInputStream fstream;
-    		BufferedReader br;
-    		try {
-    			f = new File(RealShopping.MANDIR + "econ.db");
-    			if(f.exists()){
-    				fstream = new FileInputStream(f);
-    				br = new BufferedReader(new InputStreamReader(fstream));
-    				String s;
-    				while ((s = br.readLine()) != null){
-    					if(!s.equals("Internal Economy for RealShopping"))
-    						accounts.put(s.split(":")[0], Long.parseLong(s.split(":")[1]));//Name - Pinv
-    				}
-    				fstream.close();
-    				br.close();
-    			}
-    			f.delete();
-    		} catch (Exception e){
-				e.printStackTrace();
-    			RealShopping.loginfo("Failed while reading econ.db");
-    		}
-    		return false;
+            RealShopping.loginfo("Vault/Economy plugin not found. Initializing internal economy.");
+
+            File f;
+            FileInputStream fstream;
+            BufferedReader br;
+            try {
+                f = new File(RealShopping.MANDIR + "econ.db");
+                if(f.exists()){
+                    fstream = new FileInputStream(f);
+                    br = new BufferedReader(new InputStreamReader(fstream));
+                    String s;
+                    while ((s = br.readLine()) != null){
+                        if(!s.equals("Internal Economy for RealShopping"))
+                            accounts.put(s.split(":")[0], Long.parseLong(s.split(":")[1]));//Name - Pinv
+                    }
+                    fstream.close();
+                    br.close();
+                }
+                f.delete();
+            } catch (Exception e){
+                e.printStackTrace();
+                RealShopping.loginfo("Failed while reading econ.db");
+            }
+            return false;
     	} else return true;
     }
     
     public static void export(){
     	if(econ == null && !accounts.isEmpty()){
-        	String[] keys = accounts.keySet().toArray(new String[0]);
-        	File f = new File(RealShopping.MANDIR + "econ.db");
-        	
-			if(!f.exists())
-				try {
-					f.createNewFile();
-					PrintWriter pW;
-					pW = new PrintWriter(f);
-					pW.println("Internal Economy for RealShopping");
-		        	for(String s:keys){
-		        		pW.println(s + ":" + accounts.get(s));
-		        	}
-		        	pW.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+            String[] keys = accounts.keySet().toArray(new String[0]);
+            File f = new File(RealShopping.MANDIR + "econ.db");
+            if(!f.exists())
+                try {
+                    f.createNewFile();
+                    PrintWriter pW;
+                    pW = new PrintWriter(f);
+                    pW.println("Internal Economy for RealShopping");
+                for(String s:keys){
+                    pW.println(s + ":" + accounts.get(s));
+                }
+                pW.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
     	}
     }
 }
 
 class StatUpdater extends Thread {
 
-    public static Map<String, Map<Integer, Integer>> provMap = new HashMap<String, Map<Integer, Integer>>();
-    public boolean running;
+    private static Map<String, Map<Integer, Integer>> provMap = new HashMap<>();
+    private boolean running;
 
     public StatUpdater(){
         running = true;
@@ -157,8 +156,12 @@ class StatUpdater extends Thread {
             e.printStackTrace();
         }
     }
-
-    public static void updateStats(){
+    
+    public synchronized void setStop(boolean stop) {
+        this.running = stop;
+    }
+    
+    private static void updateStats(){
         long tStamp = System.nanoTime();
         Map<Integer, TreeMap<String, Integer>> statsMap = new HashMap<Integer, TreeMap<String, Integer>>();
         for(Shop shop:RealShopping.getShops()){

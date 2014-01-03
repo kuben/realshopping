@@ -82,16 +82,24 @@ public class Shop {//TODO add load/save interface
      */
     public void addEntranceExit(Location en, Location ex) throws RealShoppingException{ 
         EEPair ep = new EEPair(en, ex);
-        RealShopping.addEntranceExit(ep, this);
+        this.addEEPair(ep);
     }
+    
+    public void addEEPair(EEPair ee) throws RealShoppingException{
+        RealShopping.addEntranceExit(ee, this);
+    }
+    
     public boolean removeEntranceExit(Location en, Location ex){ return RealShopping.removeEntranceExit(this, en, ex); }
     public boolean removeEEPair(CommandSender player,int index) {
         boolean retval = false;
-        EEPair[] pairs = RealShopping.getEEPairMap(this).keySet().toArray(new EEPair[0]);
+        EEPair[] pairs = getEEpairSet().toArray(new EEPair[0]);
         if(index >= pairs.length || index < 0) return false;
         retval = RealShopping.removeEntranceExit(this, pairs[index]);
         player.sendMessage("EEPair removed: "+ pairs[index].toString());
         return retval;
+    }
+    public Set<EEPair> getEEpairSet() {
+        return RealShopping.getEEPairSet(this);
     }
     public int clearEntrancesExits(){ return RealShopping.clearEntrancesExits(this); }
     public boolean hasEntrance(Location en){ return RealShopping.hasEntrance(this, en); }
@@ -580,6 +588,7 @@ public class Shop {//TODO add load/save interface
      *  worldname,x,y,z
      * separated with ;.
      * @return a string with world and location of protected chest.
+     * @deprecated
      */
     public String exportProtectedToString() { // TODO convert chest export to YAML format.
         if (!protectedChests.isEmpty()) {
@@ -593,6 +602,10 @@ public class Shop {//TODO add load/save interface
         } else {
             return "";
         }
+    }
+    
+    public Set<Location> getProtectedChests() {
+        return protectedChests;
     }
 
     /**
@@ -648,9 +661,8 @@ public class Shop {//TODO add load/save interface
      * @return 
      */
     public static boolean listEEPairs(CommandSender sender, int page, Shop shop) {
-        Map<EEPair, Shop> pairmap = RealShopping.getEEPairMap(shop);
-        if(pairmap.isEmpty()) return false;
-        EEPair[] pairs = pairmap.keySet().toArray(new EEPair[0]);
+        if(shop.getEEpairSet().isEmpty()) return false;
+        EEPair[] pairs = shop.getEEpairSet().toArray(new EEPair[0]);
         if((page-1)*9 >= pairs.length) {
             sender.sendMessage(ChatColor.RED + LangPack.THEREARENTTHATMANYPAGES);
             return false;

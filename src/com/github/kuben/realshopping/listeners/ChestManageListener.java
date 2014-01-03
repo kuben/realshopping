@@ -100,7 +100,7 @@ public class ChestManageListener extends GeneralListener implements SignalReceiv
 		for(Location l:selected){
 			getShop().clearChestItems(l);
 		}
-		RealShopping.updateEntrancesDb();
+		RealShopping.updateShopsDb();
 		return selected.size();
 	}
 	
@@ -110,7 +110,7 @@ public class ChestManageListener extends GeneralListener implements SignalReceiv
 			getShop().addChestItem(l, ids);
 			i++;
 		}
-		RealShopping.updateEntrancesDb();
+		RealShopping.updateShopsDb();
 		return new int[]{ids.length, i};
 	}
 	
@@ -120,7 +120,7 @@ public class ChestManageListener extends GeneralListener implements SignalReceiv
 			getShop().delChestItem(l, ids);
 			i++;
 		}
-		RealShopping.updateEntrancesDb();
+		RealShopping.updateShopsDb();
 		return new int[]{ids.length, i};
 	}
 

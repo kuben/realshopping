@@ -191,7 +191,7 @@ class RSStores extends RSCommand {
 						shop.setBuyFor(pcnt);
 						if(pcnt > 0) sender.sendMessage(GR + LangPack.BUYSFOR + DG + pcnt + GR + LangPack.PCNTOFORIGINAL);
 						else sender.sendMessage(RD + LangPack.NOTBUYINGFROMPLAYERS);
-						RealShopping.updateEntrancesDb();
+						RealShopping.updateShopsDb();
 						return true;
 					} else sender.sendMessage(RD + LangPack.YOUCANTUSEAVALUEBELLOW0);
 				} else sender.sendMessage(RD + LangPack.YOUCANTUSEAVALUEOVER100);
@@ -209,7 +209,7 @@ class RSStores extends RSCommand {
 			shop.addBanned(args[2].toLowerCase());
 			sender.sendMessage(GR + LangPack.BANNED + DG + args[2] + GR + LangPack.FROMSTORE);
 		}
-		RealShopping.updateEntrancesDb();
+		RealShopping.updateShopsDb();
 		return true;
 	}
 	
@@ -219,7 +219,7 @@ class RSStores extends RSCommand {
  				shop.removeBanned(args[2].toLowerCase());
  				sender.sendMessage(DG + args[2] + GR + LangPack.ISNOLONGERBANNEDFROMYOURSTORE);
  			} else sender.sendMessage(DR + args[2] + RD + LangPack.WASNTBANNEDFROMYOURSTORE);
- 			RealShopping.updateEntrancesDb();
+ 			RealShopping.updateShopsDb();
  			return true;
 	}
 	

@@ -176,7 +176,7 @@ public class Config {
                     int i = 0;
                     while ((s = br.readLine()) != null){
                         if(i==0){
-                            pW.println("Properties file for RealShopping " + RealShopping.VERSION);
+                            pW.println("Properties file for RealShopping v" + RealShopping.VERFLOAT);
                             pW.println("## Do not edit above line!");
                             pW.println("## The rest of a line after a hashtag is a comment and will be ignored.");
                             pW.println("#");

@@ -99,7 +99,7 @@ public class SetupStoreListener extends GeneralListener implements Appliable {
 					r++;
 				}
 			}
-			RealShopping.updateEntrancesDb();
+			RealShopping.updateShopsDb();
 			RSPlayerListener.killConversationListener(this);
 		}
 		return r;

@@ -67,7 +67,7 @@ public class ChestListener extends GeneralListener implements Appliable {
 			else getShop().delChest(l);
 		}
 		RSPlayerListener.killConversationListener(this);
-		RealShopping.updateEntrancesDb();
+		RealShopping.updateShopsDb();
 		return selected.size();
 	}
 

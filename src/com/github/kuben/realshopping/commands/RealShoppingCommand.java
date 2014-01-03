@@ -27,7 +27,7 @@ class RealShoppingCommand extends RSCommand {
 			return false;
 		}
 		int i = 0;
-		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "RealShopping [" + RealShopping.VERSION + "] - A shop plugin for Bukkit made by kuben0");i++;
+		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "RealShopping [ v" + RealShopping.VERFLOAT + "] - A shop plugin for Bukkit made by kuben0");i++;
 		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + LangPack.LOADED_CONFIG_SETTINGS);i++;
 		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "enable-automatic-updates:"+Config.getAutoUpdateStr(Config.getAutoUpdate()));i++;
 		if(i >= (pg-1)*10 && i < pg*10) sender.sendMessage(ChatColor.GREEN + "auto-protect-chests:"+Config.isAutoprotect());i++;

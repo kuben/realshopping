@@ -211,7 +211,13 @@ public class RSPlayerListener implements Listener {
                      ||( Config.isEnableDoors() 
                          && ( b.getType() == Material.WOODEN_DOOR || b.getType() == Material.IRON_DOOR_BLOCK ))))
             {
-                event.setCancelled(true);
+                Location plloc = player.getLocation().getBlock().getLocation().clone();
+                for(Shop s : RealShopping.getShops()) {
+                    if(s.hasEntrance(plloc) || s.hasExit(plloc)) {
+                        event.setCancelled(true);
+                        break;
+                    }
+                }
                 if (RealShopping.hasPInv(player)) {
                     if (player.hasPermission("realshopping.rsexit")) {
                         Shop.exit(player, false);
@@ -222,6 +228,7 @@ public class RSPlayerListener implements Listener {
                     Shop.enter(player, false);
                     return;
                 }
+                event.setCancelled(true);
             }
             // We are clicking on an obsidian block while inside a store?
             // Take action depending on the block above the obsidian one.

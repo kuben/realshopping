@@ -25,7 +25,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -72,7 +71,6 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 
     //Constants
     public static final String MANDIR = "plugins/RealShopping/";
-    public static final String VERSION = "v0.51";
     public static final float VERFLOAT = 0.51f;
 
     //Vars
@@ -193,39 +191,138 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         }
 
         File f;
-        FileInputStream fstream;
-        BufferedReader br;
+        
+        loadShopsDb();
+
         try {
-            f = new File(MANDIR + "shops.db");
+            PriceParser.loadPriceMap();
+        } catch (Exception e){
+            e.printStackTrace();
+            loginfo("Failed while reading prices.xml");
+        }
+
+        loadTemporaryFile(TempFiles.INVENTORIES);
+        loadTemporaryFile(TempFiles.JAILED);
+        loadTemporaryFile(TempFiles.TPLOCS);
+        loadTemporaryFile(TempFiles.SHIPPEDPACKAGES);
+        loadTemporaryFile(TempFiles.TOCLAIM);
+        loadTemporaryFile(TempFiles.STATS);
+        loadTemporaryFile(TempFiles.NOTIFICATIONS);
+        //TODO load psettings and load default PrintPrices
+        //TODO modify default PrintPrices
+
+        f = new File(MANDIR + "langpacks/");
+        if (!f.exists()) {
+            f.mkdir();
+        }
+        LangPack.initialize(Config.getLangpack());
+        initForbiddenInStore();
+        initMaxDur();
+        initAliases();
+        if (Config.getNotTimespan() >= 500) {
+            notificatorThread = new Notificator();
+            notificatorThread.start();
+        }
+        if (Config.isEnableAI()) {
+            statUpdater = new StatUpdater();
+            statUpdater.start();
+        }
+        reporter = new Reporter();
+        reporter.start();
+        RealShopping.loginfo(LangPack.REALSHOPPINGINITIALIZED);
+    }
+
+    @Override
+    public void onDisable() {
+        try {
+            updateShopsDb();
+            PromptMaster.abandonAllConversations();
+            //TODO disable executor
+            saveTemporaryFile(TempFiles.INVENTORIES);//Inventories
+            saveTemporaryFile(TempFiles.JAILED);//Jailed
+            saveTemporaryFile(TempFiles.TPLOCS);//TpLocs
+            saveTemporaryFile(TempFiles.SHIPPEDPACKAGES);//Shipped Packages
+            saveTemporaryFile(TempFiles.TOCLAIM);//toClaim
+            saveTemporaryFile(TempFiles.STATS);//Stats
+            saveTemporaryFile(TempFiles.NOTIFICATIONS);//Notifications
+            RSEconomy.export();//This will only happen if econ is null
+            Shop.resetPagers();
+            if(notificatorThread != null) notificatorThread.running = false;
+            if(statUpdater != null) statUpdater.setStop(false);
+            PriceParser.savePriceMap(shopSet);
+            //Write PrintPrices to xml
+
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        } catch (TransformerConfigurationException e) {
+            e.printStackTrace();
+        } catch (TransformerException e) {
+            e.printStackTrace();
+        }
+        log.info(LangPack.REALSHOPPINGDISABLED);
+    }
+    
+    private boolean loadShopsDb() {
+        String path = MANDIR + "shops.db";
+        FileConfiguration conf = new YamlConfiguration();
+        try {
+            File f = new File(path);
             if (!f.exists()) {
                 f.createNewFile();
-            } else {
-                fstream = new FileInputStream(f);
+            }
+            conf.load(f);
+            for(String sh:conf.getKeys(false)) {
+                if(sh.equals("version")) continue;
+                shopSet.add(ClassSerialization.loadShop(conf.getConfigurationSection(sh)));
+            }
+        } catch (IOException ex) {
+            logsevere("IO Error while reading " + path);
+            return false;
+        } catch (InvalidConfigurationException ex) {
+            RealShopping.logwarning("Error loading YAML shops.db, replacing with old shops.db converter.");
+            return shopsdbConverter(path);
+        } catch (RealShoppingException ex) {
+            logwarning("Warning: " + ex.getType().toString());
+            return false;
+        }
+        return true;
+    }
+    
+    private boolean shopsdbConverter(String path) {
+        try { //TODO make a converter for old shops.db format to new one.
+            File f = new File(path);
+            if(!f.exists()) f.createNewFile();
+            BufferedReader br;
+            Float version;
+            try (FileInputStream fstream = new FileInputStream(f)) {
                 br = new BufferedReader(new InputStreamReader(fstream));
                 String s;
                 String header = "Shops database for RealShopping v";
-                Float version = 0f;
-                boolean notHeader = true;
+                version = 0f;
+                boolean notHeader = false;
                 while ((s = br.readLine()) != null){// Read shops.db
-                    notHeader = true;
-                    if(version == 0 && s.length() > header.length() && s.substring(0, header.length()).equals(header)){
+                    if(version == 0 && s.substring(0, header.length()).equals(header)){
                         version = Float.parseFloat(s.substring(header.length()));
-                        notHeader = false;
+                        notHeader = version.equals(VERFLOAT);
+                        continue;
                     }
                     if(notHeader) {
                         String[] tS = s.split(";")[0].split(":");
                         Shop tempShop = new Shop(tS[0], tS[1], (version >= 0.20)?tS[2]:"@admin");
                         if(version >= 0.30) tempShop.setBuyFor(Integer.parseInt(tS[3]));
                         /*
-                         * For versions 0.40 through 0.50 notifications and AI settings for stores are ignored.
-                         * The shop owner will just have to set them again, using /rsme.
-                         */
-                        for(int i = 
-                            (version >= 0.51f)?4:
-                            (version >= 0.40f)?8:
-                            (version >= 0.30f)?4:
-                            (version >= 0.20f)?3:2
-                            ;i < tS.length;i++){//The entrances + exits
+                        * For versions 0.40 through 0.50 notifications and AI settings for stores are ignored.
+                        * The shop owner will just have to set them again, using /rsme.
+                        */
+                        for(int i =
+                                (version >= 0.51f)?4:
+                                (version >= 0.40f)?8:
+                                (version >= 0.30f)?4:
+                                (version >= 0.20f)?3:2
+                                ;i < tS.length;i++){//The entrances + exits
                             String[] tSS = tS[i].split(",");
                             Location en = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[0]),Integer.parseInt(tSS[1]), Integer.parseInt(tSS[2]));
                             Location ex = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[3]),Integer.parseInt(tSS[4]), Integer.parseInt(tSS[5]));
@@ -274,136 +371,35 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                         shopSet.add(tempShop);
                     }
                 }
-                fstream.close();
-                br.close();
-                if (version < VERFLOAT)//Needs updating
-                {
-                    updateEntrancesDb();
-                }
             }
+            br.close();
+            updateShopsDb();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            loginfo("Failed while reading shops.db");
+            loginfo("Failed while reading/converting shops.db, File not found.");
+            return false;
         } catch (IOException e) {
             e.printStackTrace();
-            loginfo("Failed while reading shops.db");
+            loginfo("Failed while reading/converting shops.db, IO error.");
+            return false;
         }
-
-
-        try {
-            PriceParser.loadPriceMap();
-        } catch (Exception e){
-            e.printStackTrace();
-            loginfo("Failed while reading prices.xml");
-        }
-
-        loadTemporaryFile(TempFiles.INVENTORIES);
-        loadTemporaryFile(TempFiles.JAILED);
-        loadTemporaryFile(TempFiles.TPLOCS);
-        loadTemporaryFile(TempFiles.PROTECTEDCHESTS);
-        loadTemporaryFile(TempFiles.SHIPPEDPACKAGES);
-        loadTemporaryFile(TempFiles.TOCLAIM);
-        loadTemporaryFile(TempFiles.STATS);
-        loadTemporaryFile(TempFiles.NOTIFICATIONS);
-        //TODO load psettings and load default PrintPrices
-        //TODO modify default PrintPrices
-
-        f = new File(MANDIR + "langpacks/");
-        if (!f.exists()) {
-            f.mkdir();
-        }
-        LangPack.initialize(Config.getLangpack());
-        initForbiddenInStore();
-        initMaxDur();
-        initAliases();
-        if (Config.getNotTimespan() >= 500) {
-            notificatorThread = new Notificator();
-            notificatorThread.start();
-        }
-        if (Config.isEnableAI()) {
-            statUpdater = new StatUpdater();
-            statUpdater.start();
-        }
-        reporter = new Reporter();
-        reporter.start();
-        RealShopping.loginfo(LangPack.REALSHOPPINGINITIALIZED);
+        return true;
     }
-
-    @Override
-    public void onDisable() {
-        try {
-            PromptMaster.abandonAllConversations();
-            //TODO disable executor
-            saveTemporaryFile(TempFiles.INVENTORIES);//Inventories
-            saveTemporaryFile(TempFiles.JAILED);//Jailed
-            saveTemporaryFile(TempFiles.TPLOCS);//TpLocs
-            saveTemporaryFile(TempFiles.PROTECTEDCHESTS);//Protected chests
-            saveTemporaryFile(TempFiles.SHIPPEDPACKAGES);//Shipped Packages
-            saveTemporaryFile(TempFiles.TOCLAIM);//toClaim
-            saveTemporaryFile(TempFiles.STATS);//Stats
-            saveTemporaryFile(TempFiles.NOTIFICATIONS);//Notifications
-            RSEconomy.export();//This will only happen if econ is null
-            Shop.resetPagers();
-            if(notificatorThread != null) notificatorThread.running = false;
-            if(statUpdater != null) statUpdater.running = false;
-            PriceParser.savePriceMap(shopSet);
-            //Write PrintPrices to xml
-
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
-        } catch (TransformerConfigurationException e) {
-            e.printStackTrace();
-        } catch (TransformerException e) {
-            e.printStackTrace();
-        }
-        log.info(LangPack.REALSHOPPINGDISABLED);
-    }
-
-    public static void updateEntrancesDb(){
+    
+    public static void updateShopsDb(){
         //Update file
+        FileConfiguration conf = new YamlConfiguration();
         long tstamp = System.nanoTime();
         try {
             File f = new File(MANDIR + "shops.db");
             if(!f.exists()) f.createNewFile();
-            PrintWriter pW = new PrintWriter(f);
-            pW.println("Shops database for RealShopping " + VERSION);
+            conf.set("version", VERFLOAT);
             for(Shop shop:shopSet){
-                pW.print(shop.getName() + ":" + shop.getWorld() + ":" + shop.getOwner() + ":" + shop.getBuyFor());
-                //If notifications and AI is enabled is now stored with the player settings
-                for(EEPair ee:eePairs.keySet()){
-                    if(eePairs.get(ee).equals(shop)){
-                        System.out.println(":" + RSUtils.locAsString(ee.getEntrance()) + "," + RSUtils.locAsString(ee.getExit()));
-                        pW.print(":" + RSUtils.locAsString(ee.getEntrance()) + "," + RSUtils.locAsString(ee.getExit()));
-                    }
-                }
-                Map<Location, ArrayList<Integer[]>> tempChests = shop.getChests();
-                Location[] chestLocs = tempChests.keySet().toArray(new Location[0]);
-                for(int j = 0;j < chestLocs.length;j++){
-                    String items = "";
-                    for(Integer[] ii:tempChests.get(chestLocs[j])){
-                        if(!items.equals("")) items += ",";
-                        items += ii[0];
-                        if(ii.length > 1 && ii[1] != 0) items += ":" + ii[1];
-                        if(ii.length > 2 && ii[2] != 0) items += ":" + ii[2];
-                    }
-                    pW.print(";" + RSUtils.locAsString(chestLocs[j]) + "[ " + items + "]");
-                }
-                String[] banned = shop.getBanned().toArray(new String[0]);
-                if(banned.length > 0){
-                    pW.print("BANNED_");
-                    for(int j = 0;j < banned.length;j++){
-                        if(j > 0) pW.print(",");
-                        pW.print(banned[j]);
-                    }
-
-                }
-                pW.println();
+                ClassSerialization.saveShop(shop, conf.createSection(shop.getName()));
             }
-            pW.close();
+            conf.save(f);
         } catch (IOException e) {
+            RealShopping.logsevere("Error while saving shops.db");
             e.printStackTrace();
         }
         if(Config.debug) loginfo("Finished updating shops.db in " + (System.nanoTime() - tstamp) + "ns");
@@ -1108,203 +1104,103 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         Collections.sort(sortedAliases, new StringLengthComparator());//Actually sort the keys
     }
 
-    private void loadHelper(File f, String header, TempFiles what) throws FileNotFoundException, IOException {
-        if (f.exists()) {
-            String s;
-            float version = 0f;
-            FileInputStream fstream = new FileInputStream(f);
-            BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
-            YamlConfiguration conf = new YamlConfiguration();
-            Shop tempShop;
-            boolean end = false;
-            while ((s = br.readLine()) != null && !end) {
-                boolean notHeader = true;
-                if (what != TempFiles.SHIPPEDPACKAGES 
-                        && what != TempFiles.TOCLAIM
-                        && what != TempFiles.INVENTORIES 
-                        && version == 0 && s.length() > header.length() 
-                        && s.substring(0, header.length()).equals(header)) {
-                    notHeader = false;
-                    String vStr = s.substring(header.length());
-                    if (what == TempFiles.TPLOCS) {
-                        if (vStr.substring(5).equals("Blacklist")) {
-                            tpLocBlacklist = true;
-                        }
-                        vStr = vStr.substring(0, 4);
-                    }
-                    version = Float.parseFloat(vStr);
-                }
-
-                if (!notHeader) {
-                    continue;
-                }
-                switch (what) {
-                    case INVENTORIES:
-                        try {
-                            conf.load(f);
-                            for (String player : conf.getKeys(false)) {
-                                PInvSet.add(ClassSerialization.loadInventory(conf.getConfigurationSection(player)));
-                                if(Bukkit.getPlayer(player) != null) Shop.addPager(player);
-                            }
-                        } catch (InvalidConfigurationException ex) {
-                            Logger.getLogger(RealShopping.class.getName()).log(Level.SEVERE, null, ex);
-                        } finally {
-                            end = true;
-                        }
-                        break;
-                    case JAILED:
-                        jailedPlayers.put(s.split(";")[0], RSUtils.stringToLoc(s.split(";")[1], s.split(";")[2]));
-                        break;
-                    case TPLOCS:
-                        forbiddenTpLocs.put(RSUtils.stringToLoc(s.split(";")[0], s.split(";")[1]), Integer.parseInt(s.split(";")[2]));
-                        break;
-                    case PROTECTEDCHESTS:
-                        getShop(s.split(";")[0]).addProtectedChest(new Location(getServer().getWorld(s.split(";")[1].split(",")[0])
-                                ,Double.parseDouble(s.split(";")[1].split(",")[1])
-                                ,Double.parseDouble(s.split(";")[1].split(",")[2])
-                                ,Double.parseDouble(s.split(";")[1].split(",")[3])));
-                        break;
-                    case SHIPPEDPACKAGES:
-                        try {
-                            conf.load(f);
-                            for(String pl:conf.getKeys(false)){
-                                List<ShippedPackage> packs = new LinkedList<>();
-                                ConfigurationSection players = conf.getConfigurationSection(pl);
-                                for(String pkg:players.getKeys(false)){
-                                    packs.add(ClassSerialization.loadShippedPackage(players.getConfigurationSection(pkg)));
-                                }
-                                shippedToCollect.put(pl, packs);
-                            }
-                        } catch (InvalidConfigurationException ex) {
-                           logsevere(ex.getStackTrace().toString());
-                        } finally {
-                            end = true;
-                        }
-                        break;
-                    case TOCLAIM:
-                        try {
-                            conf.load(f);
-                            for(String shops:conf.getKeys(false)) {
-                                ConfigurationSection stolen = conf.getConfigurationSection(shops);
-                                getShop(shops).setToClaim(ClassSerialization.loadItemStack(stolen));
-                            }
-                        } catch (InvalidConfigurationException ex) {
-                            logsevere(ex.getStackTrace().toString());
-                        } finally {
-                            end = true;
-                        }
-                        break;
-                    case STATS:
-                        tempShop = getShop(s.split(";")[0]);
-                        if(tempShop != null){//Statistics will be dropped if a shop doesn't exist anymore.
-                            for(int i = 1;i < s.split(";").length;i++){
-                                tempShop.addStat(new Statistic(s.split(";")[i]));
-                            }
-                        }
-                        break;
-                    case NOTIFICATIONS:
-                        List<String> l = new ArrayList<>();
-                        for (int i = 1; i < s.split("\"").length; i++) {
-                            l.add(s.split("\"")[i]);
-                        }
-                        if (!l.isEmpty()) {
-                            notificator.put(s.split("\"")[0], l);
-                        }
-                    default:
-                        break;
-                }
-            }
-
-            fstream.close();
-            br.close();
-        }
-        f.delete();
-    }
-
     private void loadTemporaryFile(TempFiles what) {
-        File f = null;
-        String header = null;
+        YamlConfiguration conf = new YamlConfiguration();
+        Float version;
         try {
-            switch (what) { //TODO convert that load stuff to YAML
+            File f = new File(getCorrectPath(what));
+            conf.load(f);
+            version = Float.parseFloat(conf.getString("version"));
+            if(version == null) version = VERFLOAT;
+        } catch (InvalidConfigurationException ex) {
+            logsevere("Error reading " + what.toString());
+            return;
+        } catch (IOException ex) {
+            logwarning("IO Error while reading " + what.toString() + ": " + ex.getMessage());
+            return;
+        }
+        if(version < VERFLOAT) loginfo("Reading a precedent configuration file.");
+        for(String key:conf.getKeys(false)) {
+            if(key.equals("version")) continue;
+            switch (what) {
                 case INVENTORIES:
-                    f = new File(MANDIR + "inventories.db");
-                    header = "Inventories database for RealShopping v";
-                    loadHelper(f, header, what);
+                    PInvSet.add(ClassSerialization.loadInventory(conf.getConfigurationSection(key)));
+                    if(Bukkit.getPlayer(key) != null) Shop.addPager(key);
                     break;
                 case JAILED:
-                    f = new File(MANDIR + "jailed.db");
-                    header = "Jailed players database for RealShopping v";
-                    loadHelper(f, header, what);
+                    jailedPlayers.put(key, ClassSerialization.loadLocation(conf.getConfigurationSection(key)));
                     break;
                 case TPLOCS:
-                    f = new File(MANDIR + "allowedtplocs.db");
-                    header = "Allowed teleport locations for RealShopping v";
-                    loadHelper(f, header, what);
-                    break;
-                case PROTECTEDCHESTS:
-                    f = new File(MANDIR + "protectedchests.db");
-                    header = "Protected chests for RealShopping v";
-                    loadHelper(f, header, what);
+                    Integer val = conf.getConfigurationSection(key).getInt("isForbidden");
+                    forbiddenTpLocs.put(ClassSerialization.loadLocation(conf.getConfigurationSection(key)),val);
                     break;
                 case SHIPPEDPACKAGES:
-                    f = new File(MANDIR + "shipped.db");
-                    header = "Shipped Packages database for RealShopping v";
-                    loadHelper(f, header, what);
+                    List<ShippedPackage> packs = new LinkedList<>();
+                    ConfigurationSection players = conf.getConfigurationSection(key);
+                    for(String pkg:players.getKeys(false)){
+                        packs.add(ClassSerialization.loadShippedPackage(players.getConfigurationSection(pkg)));
+                    }
+                    shippedToCollect.put(key, packs);
                     break;
                 case TOCLAIM:
-                    f = new File(MANDIR + "toclaim.db");
-                    header = "Stolen items database for RealShopping v";
-                    loadHelper(f, header, what);
-                    break;
-                case STATS:
-                    f = new File(MANDIR + "stats.db");
-                    header = "Statistics database for RealShopping v";
-                    loadHelper(f, header, what);
+                    ConfigurationSection stolen = conf.getConfigurationSection(key);
+                    getShop(key).setToClaim(ClassSerialization.loadItemStack(stolen));
                     break;
                 case NOTIFICATIONS:
-                    f = new File(MANDIR + "notifications.db");
-                    header = "Notifications database for RealShopping v";
-                    loadHelper(f, header, what);
+                    notificator.put(key, ClassSerialization.loadNotifications(conf.getConfigurationSection(key)));
                 default:
                     break;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            RealShopping.loginfo("Failed while reading " + f.getName());
         }
     }
-
-    private void saveHelper(File f, String header, Object[] keys, TempFiles what) throws IOException {
-        if (!f.exists()) {
-            f.createNewFile();
+    
+    private String getCorrectPath(TempFiles what) {
+        switch (what) { //TODO convert that load stuff to YAML
+            case INVENTORIES:
+                return MANDIR + "inventories.db";
+            case JAILED:
+                return MANDIR + "jailed.db";
+            case TPLOCS:
+                return MANDIR + "allowedtplocs.db";
+            case PROTECTEDCHESTS:
+                return MANDIR + "protectedchests.db";
+            case SHIPPEDPACKAGES:
+                return MANDIR + "shipped.db";
+            case TOCLAIM:
+                return MANDIR + "toclaim.db";
+            case STATS:
+                return MANDIR + "stats.db";
+            case NOTIFICATIONS:
+                return MANDIR + "notifications.db";
+            default:
+                return "";
         }
-        PrintWriter pW;
+  
+    }
+    
+    private boolean saveTemporaryFile(TempFiles what) {
         FileConfiguration conf = new YamlConfiguration();
-        pW = new PrintWriter(f);
-        for (int i = 0; i < keys.length; i++) {
-            if (what != TempFiles.SHIPPEDPACKAGES && what != TempFiles.INVENTORIES && what != TempFiles.TOCLAIM && i == 0) {
-                pW.println(header);
-            }
-            String line = "";
+        conf.set("version", VERFLOAT);
+        try {
             switch (what) {
-                //TODO convert saves with object stream.
                 case INVENTORIES:
-                    for (Object k : keys) {
-                        RSPlayerInventory pinv = (RSPlayerInventory) k;
+                    for (RSPlayerInventory pinv : PInvSet) {
                         ConfigurationSection player = conf.createSection(pinv.getPlayer());
                         ClassSerialization.saveInventory(pinv, player);
                     }
-                    conf.save(f);
                     break;
                 case JAILED:
-                    line = ((String) keys[i]) + ";" + jailedPlayers.get((String) keys[i]).getWorld().getName() + ";" + RSUtils.locAsString(jailedPlayers.get((String) keys[i]));
+                    for(String ply:jailedPlayers.keySet()) {
+                        ClassSerialization.saveLocation(jailedPlayers.get(ply), conf.createSection(ply));
+                    }
                     break;
                 case TPLOCS:
-                    line = ((Location) keys[i]).getWorld().getName() + ";" + RSUtils.locAsString((Location) keys[i]) + ";" + forbiddenTpLocs.get((Location) keys[i]);
-                    break;
-                case PROTECTEDCHESTS:
-                    String protStr = ((Shop)keys[i]).exportProtectedToString();
-                    if(!protStr.equals("")) line = ((Shop) keys[i]).getName() + ";" + protStr;
+                    int j=0;
+                    for(Location loc:forbiddenTpLocs.keySet()) {
+                        ConfigurationSection tmp = conf.createSection(Integer.toString(j++));
+                        ClassSerialization.saveLocation(loc, tmp);
+                        tmp.set("isForbidden", forbiddenTpLocs.get(loc));
+                    }
                     break;
                 case SHIPPEDPACKAGES:
                     for (String s : shippedToCollect.keySet()) {
@@ -1314,92 +1210,31 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                             ClassSerialization.saveShippedPackage(pkg, date);
                         }
                     }
-                    conf.save(f);
                     break;
                 case TOCLAIM:
-                    for(Object k : keys) {
-                        Shop shop = (Shop)k;
+                    for(Shop shop : shopSet) {
+                        if(shop.getToClaim().isEmpty()) break;
                         ConfigurationSection shopsec = conf.createSection(shop.getName());
                         ClassSerialization.saveItemStackList(shop.getToClaim(), shopsec);
                     }
-                    conf.save(f);
-                    break;
-                case STATS:
-                    String statStr = ((Shop)keys[i]).exportStats();
-                    if(!statStr.equals(""))	line = ((Shop)keys[i]).getName() + statStr;
                     break;
                 case NOTIFICATIONS:
-                    String s = ""; // what?
-                    for(String ss:notificator.get((String)keys[i])){
-                        s += "\""+ss;
+                    for(String ply: notificator.keySet()) {
+                        ClassSerialization.saveNotifications(notificator.get(ply), conf.createSection(ply));
                     }
-                    break;
-                default:
-                    return;
-            }
-            if (!line.equals("")) {
-                pW.println(line);
-            }
-        }
-        pW.close();
-    }
-
-    private boolean saveTemporaryFile(TempFiles what) {
-        File f = null;
-        String header;
-
-        try {
-            switch (what) {
-                case INVENTORIES:
-                    f = new File(MANDIR + "inventories.db");
-                    header = "Inventories database for RealShopping " + VERSION;
-                    saveHelper(f, header, PInvSet.toArray(), what);
-                    break;
-                case JAILED:
-                    f = new File(MANDIR + "jailed.db");
-                    header = "Jailed players database for RealShopping " + VERSION;
-                    saveHelper(f, header, jailedPlayers.keySet().toArray(), what);
-                    break;
-                case TPLOCS:
-                    f = new File(MANDIR + "allowedtplocs.db");
-                    header = "Allowed teleport locations for RealShopping " + VERSION + " " + (tpLocBlacklist ? "Blacklist" : "Whitelist");
-                    saveHelper(f, header, forbiddenTpLocs.keySet().toArray(), what);
-                    break;
-                case PROTECTEDCHESTS:
-                    f = new File(MANDIR + "protectedchests.db");
-                    header = "Protected chests for RealShopping " + VERSION;
-                    saveHelper(f, header, shopSet.toArray(), what);
-                    break;
-                case SHIPPEDPACKAGES:
-                    f = new File(MANDIR + "shipped.db");
-                    header = "Shipped Packages database for RealShopping " + VERSION;
-                    saveHelper(f, header, shippedToCollect.keySet().toArray(), what);
-                    break;
-                case TOCLAIM:
-                    f = new File(MANDIR + "toclaim.db");
-                    header = "Stolen items database for RealShopping " + VERSION;
-                    saveHelper(f, header, shopSet.toArray(), what);
-                    break;
-                case STATS:
-                    f = new File(MANDIR + "stats.db");
-                    header = "Statistics database for RealShopping " + VERSION;
-                    saveHelper(f, header, shopSet.toArray(), what);
-                    break;
-                case NOTIFICATIONS:
-                    f = new File(MANDIR + "notifications.db");
-                    header = "Notifications database for RealShopping " + VERSION;
-                    saveHelper(f, header, notificator.keySet().toArray(), what);
                     break;
                 default:
                     return false;
             }
-
-
-        } catch (Exception e) {
-            RealShopping.loginfo("Failed while saving " + f.getName());
+            File f = new File(getCorrectPath(what));
+            if(!f.exists()) f.createNewFile();
+            conf.save(f);
+        } catch (IOException e) {
+            RealShopping.loginfo("Failed while saving " + getCorrectPath(what));
             e.printStackTrace();
+            return false;
         }
-        return false;
+        return true;
     }
 
     public static void logsevere (String msg) {
@@ -1529,10 +1364,10 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 /*
  * Entrance-exit stuff
  */
-    protected static Map<EEPair, Shop> getEEPairMap(Shop shop){
-        Map<EEPair, Shop> retval = new HashMap<>();
+    protected static Set<EEPair> getEEPairSet(Shop shop){
+        Set<EEPair> retval = new HashSet<>();
         for(EEPair ee: eePairs.keySet()) {
-            if(eePairs.get(ee) == shop) retval.put(ee, shop);
+            if(eePairs.get(ee) == shop) retval.add(ee);
         }
         return retval;
     }
