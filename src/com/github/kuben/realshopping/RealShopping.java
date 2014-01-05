@@ -43,8 +43,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 
-import net.h31ix.updater.Updater;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -62,9 +60,11 @@ import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.stengun.realshopping.PriceParser;
 import com.github.stengun.realshopping.ClassSerialization;
+import net.gravitydevelopment.updater.Updater;
 
 public class RealShopping extends JavaPlugin {//TODO stores case sensitive, players case preserving
     private Updater updater;
+    
     private StatUpdater statUpdater;
     private Reporter reporter;
     private Notificator notificatorThread;
@@ -72,7 +72,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     //Constants
     public static final String MANDIR = "plugins/RealShopping/";
     public static final float VERFLOAT = 0.51f;
-
+    public final static int PLUGINDEVID = 41159;
     //Vars
     private static Set<RSPlayerInventory> PInvSet;//Changed to set
     private static Set<Shop> shopSet;
@@ -172,21 +172,12 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         Config.initialize();
         if (Config.getAutoUpdate() > 0) {
             if (Config.getAutoUpdate() == 5) {
-                setUpdater(new Updater(this, "realshopping", this.getFile(), Updater.UpdateType.DEFAULT, true));
+                setUpdater(new Updater(this, PLUGINDEVID, this.getFile(), Updater.UpdateType.DEFAULT, true));
                 if (getUpdater().getResult() == Updater.UpdateResult.SUCCESS) {
-                    RealShopping.loginfo(LangPack.REALSHOPPINGUPDATEDTO + getUpdater().getLatestVersionString() + LangPack.RESTARTTHESERVER_VERSION);
+                    RealShopping.loginfo(LangPack.REALSHOPPINGUPDATEDTO + getUpdater().getLatestName() + LangPack.RESTARTTHESERVER_VERSION);
                 }
             } else {
-                setUpdater(new Updater(this, "realshopping", this.getFile(), Updater.UpdateType.NO_DOWNLOAD, true));
-                if (getUpdater().getResult() == Updater.UpdateResult.UPDATE_AVAILABLE) {
-                    if (Config.getAutoUpdate() > 2) {
-                        newUpdate = getUpdater().getLatestVersionString() + LangPack.OFRE_UPDATECOMMAND;
-                    } else {
-                        newUpdate = getUpdater().getLatestVersionString()
-                                + LangPack.OFRE_UPDATEINFO + ChatColor.LIGHT_PURPLE + "/rsupdate info";
-                    }
-                    RealShopping.loginfo(newUpdate);
-                }
+                checkUpdates();
             }
         }
 
@@ -208,6 +199,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         loadTemporaryFile(TempFiles.TOCLAIM);
         loadTemporaryFile(TempFiles.STATS);
         loadTemporaryFile(TempFiles.NOTIFICATIONS);
+        //TODO Save/load stats
         //TODO load psettings and load default PrintPrices
         //TODO modify default PrintPrices
 
@@ -263,6 +255,21 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
             e.printStackTrace();
         }
         log.info(LangPack.REALSHOPPINGDISABLED);
+    }
+    
+    public boolean checkUpdates() {
+        setUpdater(new Updater(this, PLUGINDEVID, this.getFile(), Updater.UpdateType.NO_DOWNLOAD, true));
+        if (getUpdater().getResult() == Updater.UpdateResult.UPDATE_AVAILABLE) {
+            if (Config.getAutoUpdate() > 2) {
+                newUpdate = getUpdater().getLatestName() + LangPack.OFRE_UPDATECOMMAND;
+            } else {
+                newUpdate = getUpdater().getLatestName()
+                        + LangPack.OFRE_UPDATEINFO + ChatColor.LIGHT_PURPLE + "/rsupdate info";
+            }
+            RealShopping.loginfo(newUpdate);
+            return true;
+        }
+        return false;
     }
     
     private boolean loadShopsDb() {
@@ -1237,6 +1244,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         return true;
     }
 
+//-------------------------- loggers
     public static void logsevere (String msg) {
         log.log(Level.SEVERE, msg);
     }
@@ -1715,7 +1723,7 @@ class Reporter extends Thread {
                                 Map<Integer, Integer> boughtItems = new HashMap<>();//ID - amount bought
                                 for(Statistic stat:shop.getStats()){
                                     //if(stat.getTime() < lastReport) continue;
-                                    int id = stat.getItem().getType();
+                                    int id = stat.getMaterialData().getItemType().getId();
                                     if(stat.isBought()){
                                         int oldAm = boughtItems.containsKey(id)?boughtItems.get(id):0;
                                         boughtItems.put(id, oldAm + stat.getAmount());

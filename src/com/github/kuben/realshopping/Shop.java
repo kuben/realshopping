@@ -608,20 +608,6 @@ public class Shop {//TODO add load/save interface
         return protectedChests;
     }
 
-    /**
-     * Export all stats to String. This method is used to export stats when
-     * deactivating the plugin.
-     *
-     * @return All stats converted to string.
-     */
-    public String exportStats() { //TODO convert stats export to YAML format.
-        String s = "";
-        for (Statistic stat : stats) {
-            s += ";" + stat.getTime() + ":" + stat.isBought() + ":" + stat.getItem().export(stat.getAmount());
-        }
-        return s;
-    }
-
     @Override
     public String toString() {
         return "Shop " + name + (owner.equals("@admin") ? "" : " owned by " + owner) + " Prices: " + prices.toString();
@@ -762,7 +748,7 @@ public class Shop {//TODO add load/save interface
                     //Adding stats and claim items for owner
                     for (ItemStack key : sold) {
                         if (Config.isEnableAI()) {
-                            shop.addStat(new Statistic(new Price(key), key.getAmount(), false));
+                            shop.addStat(new Statistic(key.getData(), key.getAmount(), false));
                         }
                         shop.addToClaim(key);
                     }
@@ -871,7 +857,7 @@ public class Shop {//TODO add load/save interface
 
                 if (Config.isEnableAI()) {
                     for (Price key : bought.keySet()) {
-                        shop.addStat(new Statistic(key, bought.get(key), true));
+                        shop.addStat(new Statistic(key.getType(), key.getData(), bought.get(key), true));
                     }
                 }
 

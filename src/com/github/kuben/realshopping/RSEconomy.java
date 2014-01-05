@@ -163,13 +163,13 @@ class StatUpdater extends Thread {
     
     private static void updateStats(){
         long tStamp = System.nanoTime();
-        Map<Integer, TreeMap<String, Integer>> statsMap = new HashMap<Integer, TreeMap<String, Integer>>();
+        Map<Integer, TreeMap<String, Integer>> statsMap = new HashMap<>();
         for(Shop shop:RealShopping.getShops()){
             for(Statistic stat:shop.getStats()){
                 if((System.currentTimeMillis()/1000) - Config.getStatTimespan() < stat.getTime()/1000 && stat.isBought()){//Only past <timespan> and only bought
-                    if(!statsMap.containsKey(stat.getItem().getType())) statsMap.put(stat.getItem().getType(), new TreeMap<String, Integer>());
-                    if(!statsMap.get(stat.getItem().getType()).containsKey(shop.getName())) statsMap.get(stat.getItem().getType()).put(shop.getName(), 0);
-                    statsMap.get(stat.getItem().getType()).put(shop.getName(), statsMap.get(stat.getItem().getType()).get(shop.getName()) + stat.getAmount());
+                    if(!statsMap.containsKey(stat.getMaterialData().getItemTypeId())) statsMap.put(stat.getMaterialData().getItemTypeId(), new TreeMap<String, Integer>());
+                    if(!statsMap.get(stat.getMaterialData().getItemTypeId()).containsKey(shop.getName())) statsMap.get(stat.getMaterialData().getItemTypeId()).put(shop.getName(), 0);
+                    statsMap.get(stat.getMaterialData().getItemTypeId()).put(shop.getName(), statsMap.get(stat.getMaterialData().getItemTypeId()).get(shop.getName()) + stat.getAmount());
                 } else if((System.currentTimeMillis()/1000) - Math.max(Config.getCleanStatsOld(), Math.max(Config.getStatTimespan(), Config.getUpdateFreq())) > stat.getTime()/1000){
                     shop.removeStat(stat);	
                 }
