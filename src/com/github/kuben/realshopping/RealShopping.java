@@ -465,42 +465,16 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     }
 
     private void initForbiddenInStore(){
-        forbiddenInStore.add(Material.BREAD);//Bread
-        forbiddenInStore.add(Material.CAKE);//Cake
-        forbiddenInStore.add(Material.COOKED_CHICKEN);
-        forbiddenInStore.add(Material.COOKED_FISH);
-        forbiddenInStore.add(Material.COOKED_BEEF);
-        forbiddenInStore.add(Material.COOKIE);//Cookie
-        forbiddenInStore.add(Material.GOLDEN_APPLE);//Golden Apple
-        forbiddenInStore.add(Material.MELON);//Melon Slice
-        forbiddenInStore.add(Material.MUSHROOM_SOUP);//Mushroom Stew
-        forbiddenInStore.add(Material.RAW_BEEF);//Raw Beef
-        forbiddenInStore.add(Material.RAW_CHICKEN);//Raw Chicken
-        forbiddenInStore.add(Material.RAW_FISH);//Raw Fish
-        forbiddenInStore.add(Material.PORK);//Raw Porkchop
-        forbiddenInStore.add(Material.APPLE);//Red Apple
-        forbiddenInStore.add(Material.ROTTEN_FLESH);//Rotten Flesh
-        forbiddenInStore.add(Material.GRILLED_PORK);
-        forbiddenInStore.add(Material.CARROT_ITEM);//Carrot
-        forbiddenInStore.add(Material.POTATO_ITEM);//Potato
-        forbiddenInStore.add(Material.BAKED_POTATO);//Baked Potato
-        forbiddenInStore.add(Material.POISONOUS_POTATO);//Poisonous Potato
-        forbiddenInStore.add(Material.GOLDEN_CARROT);//Golden Carrot
-        forbiddenInStore.add(Material.PUMPKIN_PIE);//Pumpkin Pie
-
         forbiddenInStore.add(Material.BOW);//Bow
         forbiddenInStore.add(Material.SNOW_BALL);//Snowball
-        forbiddenInStore.add(Material.POTION);//Potion
-        forbiddenInStore.add(Material.EXP_BOTTLE);//Bottle o' enchanting
-        forbiddenInStore.add(Material.SPIDER_EYE);//Spider Eye
         forbiddenInStore.add(Material.FIREBALL);//Fire Charge
         forbiddenInStore.add(Material.EGG);//Egg
         forbiddenInStore.add(Material.ENDER_PEARL);//Ender Pearl
         forbiddenInStore.add(Material.EYE_OF_ENDER);//Eye of ender
         forbiddenInStore.add(Material.FIREWORK);//Firework Rocket
-        forbiddenInStore.add(Material.BOOK_AND_QUILL);//Book and Quill doesn't work
         forbiddenInStore.add(Material.MONSTER_EGG);//Spawning egg
         forbiddenInStore.add(Material.MONSTER_EGGS);
+        forbiddenInStore.add(Material.MINECART);
     }
 
     private void initAliases() {

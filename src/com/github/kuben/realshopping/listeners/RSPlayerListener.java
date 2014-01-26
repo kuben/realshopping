@@ -44,6 +44,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.minecart.StorageMinecart;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
@@ -53,23 +54,27 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockRedstoneEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerEditBookEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 public class RSPlayerListener implements Listener {
-
+    
     private static Set<GeneralListener> listenerSet = new HashSet<>();
     
     @EventHandler(priority = EventPriority.MONITOR)
@@ -115,9 +120,9 @@ public class RSPlayerListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void onDropItem(PlayerDropItemEvent event) {
         if (Config.isDisableDrop()) {
-            if (RealShopping.hasPInv(event.getPlayer())) {
-                event.setCancelled(true);
-                event.getPlayer().sendMessage(ChatColor.RED + LangPack.YOUCANNOTDROPITEMS_);
+            Player player = event.getPlayer();
+            if (discardEventInsideStore(player, event)) {
+                player.sendMessage(ChatColor.RED + LangPack.YOUCANNOTDROPITEMS_);
             }
         }
     }
@@ -125,9 +130,9 @@ public class RSPlayerListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void onBucketEvent(PlayerBucketEmptyEvent event) {
         if (Config.isDisableBuckets()) {
-            if (RealShopping.hasPInv(event.getPlayer())) {
-                event.setCancelled(true);
-                event.getPlayer().sendMessage(ChatColor.RED + LangPack.YOUCANNOTEMPTYBUCKETS_);
+            Player player = event.getPlayer();
+            if (discardEventInsideStore(player, event)){
+                player.sendMessage(ChatColor.RED + LangPack.YOUCANNOTEMPTYBUCKETS_);
             }
         }
     }
@@ -135,9 +140,9 @@ public class RSPlayerListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void onPreCraft(CraftItemEvent event) {
         if (Config.isDisableCrafting()) {
-            if (RealShopping.hasPInv((Player) event.getWhoClicked())) {
-                event.setCancelled(true);
-                Bukkit.getPlayerExact(event.getWhoClicked().getName()).sendMessage(ChatColor.RED + LangPack.YOUCANNOTCRAFTITEMS_);
+            Player player = (Player) event.getWhoClicked();
+            if (discardEventInsideStore(player, event)) {
+                Bukkit.getPlayerExact(player.getName()).sendMessage(ChatColor.RED + LangPack.YOUCANNOTCRAFTITEMS_);
             }
         }
     }
@@ -189,21 +194,57 @@ public class RSPlayerListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-        if (RealShopping.hasPInv(player)) {
-            player.sendMessage(ChatColor.RED + LangPack.YOUCANTUSETHATITEMINSTORE);
-            event.setCancelled(true);
+        if (discardEventInsideStore(player, event)) {
+            player.sendMessage(ChatColor.RED + "You can't break things");
         }
     }
     
     @EventHandler(priority = EventPriority.HIGH)
     public void onBlockPlace(BlockPlaceEvent event){
         Player player = event.getPlayer();
-        if (RealShopping.hasPInv(player)) {
-            player.sendMessage(ChatColor.RED + LangPack.YOUCANTUSETHATITEMINSTORE);
-            event.setCancelled(true);
+        if(discardEventInsideStore(player, event)){
+            player.sendMessage("You can't place blocks inside a store!");
         }
     }
-
+    
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onVehicleDamage(VehicleDamageEvent event) {
+        if(event.getAttacker() instanceof Player) {
+            Player p = (Player) event.getAttacker();
+            if(discardEventInsideStore(p, event)) {
+                p.sendMessage("You can't do that");
+            }
+        }
+    }
+    
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onEntityDamage(EntityDamageByEntityEvent event) {
+        if(event.getDamager() instanceof Player) {
+            Player p = (Player) event.getDamager();
+            if(discardEventInsideStore(p, event)) {
+                p.sendMessage("You can't do that");
+            }
+        }
+    }
+    
+    @EventHandler(priority = EventPriority.NORMAL)
+    public void onBookEdit(PlayerEditBookEvent event) {
+        Player player = event.getPlayer();
+        if(discardEventInsideStore(player, event)) {
+            player.sendMessage(ChatColor.RED + LangPack.YOUCANTUSETHATITEMINSTORE);
+            player.updateInventory();
+        }
+    }
+    
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onItemConsume(PlayerItemConsumeEvent event) {
+        Player player = event.getPlayer();
+        if(discardEventInsideStore(player, event)) {
+            player.sendMessage(ChatColor.RED + LangPack.YOUCANTUSETHATITEMINSTORE);
+            player.updateInventory();
+        }
+    }
+    
     @EventHandler(priority = EventPriority.HIGH)
     public void onInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
@@ -217,9 +258,7 @@ public class RSPlayerListener implements Listener {
             if (event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR) {
                 player.sendMessage(ChatColor.RED + LangPack.YOUCANTUSETHATITEMINSTORE);
                 event.setUseItemInHand(Result.DENY);
-                if (event.getItem().getTypeId() == 401 || event.getItem().getTypeId() == 385 || event.getItem().getTypeId() == 383) {//Ugly solution, doesn't work for book and quill
-                    event.setCancelled(true);
-                }
+                event.setCancelled(true);
             }
         }
         
@@ -388,6 +427,14 @@ public class RSPlayerListener implements Listener {
         }
     }
 
+    private <T extends Event & Cancellable> boolean discardEventInsideStore(Player player, T event) {
+        if(RealShopping.hasPInv(player) && !RealShopping.getPInv(player).getShop().getOwner().equals(player.getName())) {
+            event.setCancelled(true);
+            return true;
+        }
+        return false;
+    }
+    
     private boolean canOpenDoor(Location loc) {
         Location l = loc.getBlock().getLocation();
         Location l2 = loc.getBlock().getLocation().clone().subtract(0, 1, 0);

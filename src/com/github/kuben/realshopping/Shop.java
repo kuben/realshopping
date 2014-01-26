@@ -772,6 +772,7 @@ public class Shop {//TODO add load/save interface
             }
         }
         p.getInventory().addItem(cannotsell.toArray(new ItemStack[0]));
+        p.updateInventory();
         return sold;
     }
 
