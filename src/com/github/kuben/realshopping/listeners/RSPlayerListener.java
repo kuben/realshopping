@@ -212,23 +212,36 @@ public class RSPlayerListener implements Listener {
                          && ( b.getType() == Material.WOODEN_DOOR || b.getType() == Material.IRON_DOOR_BLOCK ))))
             {
                 Location plloc = player.getLocation().getBlock().getLocation().clone();
+                Location clickloc = b.getLocation().getBlock().getLocation().clone();
+                Location upper = new Location(clickloc.getWorld(), clickloc.getBlockX(), clickloc.getBlockY() + 1, clickloc.getBlockZ());
+                Location lower = new Location(clickloc.getWorld(), clickloc.getBlockX(), clickloc.getBlockY()- 1, clickloc.getBlockZ());
+                //Se la porta si trova su una entrata l'evento va sempre cancellato.
+                //Se il giocatore clicca su una entrata e il giocatore può entrare allora fallo entrare/uscire.
                 for(Shop s : RealShopping.getShops()) {
-                    if(s.hasEntrance(plloc) || s.hasExit(plloc)) {
+                    if(     s.hasEntrance(clickloc) || 
+                            s.hasEntrance(upper) ||
+                            s.hasEntrance(lower) ||
+                            s.hasExit(clickloc) ||
+                            s.hasExit(lower) ||
+                            s.hasExit(upper)) 
+                    {
                         event.setCancelled(true);
+                        if(s.hasEntrance(plloc) || s.hasExit(plloc)) {
+                            if (RealShopping.hasPInv(player)) {
+                                if (player.hasPermission("realshopping.rsexit")) {
+                                    Shop.exit(player, false);
+                                    return;
+                                }
+                            }
+                            if (player.hasPermission("realshopping.rsenter")) {
+                                Shop.enter(player, false);
+                                return;
+                            }
+                        }
                         break;
                     }
                 }
-                if (RealShopping.hasPInv(player)) {
-                    if (player.hasPermission("realshopping.rsexit")) {
-                        Shop.exit(player, false);
-                        return;
-                    }
-                }
-                if (player.hasPermission("realshopping.rsenter")) {
-                    Shop.enter(player, false);
-                    return;
-                }
-                event.setCancelled(true);
+                //event.setCancelled(true);
             }
             // We are clicking on an obsidian block while inside a store?
             // Take action depending on the block above the obsidian one.
