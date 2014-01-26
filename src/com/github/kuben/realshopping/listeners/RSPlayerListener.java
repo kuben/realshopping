@@ -50,6 +50,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
@@ -183,6 +185,24 @@ public class RSPlayerListener implements Listener {
             Shop.exit(player, false);
         }
     }
+    // Check block place - remove
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onBlockBreak(BlockBreakEvent event) {
+        Player player = event.getPlayer();
+        if (RealShopping.hasPInv(player)) {
+            player.sendMessage(ChatColor.RED + LangPack.YOUCANTUSETHATITEMINSTORE);
+            event.setCancelled(true);
+        }
+    }
+    
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onBlockPlace(BlockPlaceEvent event){
+        Player player = event.getPlayer();
+        if (RealShopping.hasPInv(player)) {
+            player.sendMessage(ChatColor.RED + LangPack.YOUCANTUSETHATITEMINSTORE);
+            event.setCancelled(true);
+        }
+    }
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onInteract(PlayerInteractEvent event) {
@@ -192,6 +212,7 @@ public class RSPlayerListener implements Listener {
             event.setCancelled(true);
             return;
         }
+        //Stiamo piazzando un blocco? stiamo usando un item?
         if (RealShopping.hasPInv(player) && event.getItem() != null && RealShopping.isForbiddenInStore(event.getItem().getType())) {
             if (event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR) {
                 player.sendMessage(ChatColor.RED + LangPack.YOUCANTUSETHATITEMINSTORE);
