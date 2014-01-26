@@ -469,6 +469,9 @@ public class Shop {//TODO add load/save interface
     public void addToClaim(ItemStack...item) {
         toClaim.addAll(Arrays.asList(item));
     }
+    public void addToClaim(List<ItemStack> items) {
+        toClaim.addAll(items);
+    }
 
     /**
      * Retrieves the first item in the claim list, removing it.
@@ -702,81 +705,76 @@ public class Shop {//TODO add load/save interface
      * @param iS Item that's going to be sold.
      * @return true if the item is sold, false if not or if the player is not in a store.
      */
+    
     public static boolean sellToStore(Player p, ItemStack[] iS) {
         if ( !Config.isEnableSelling() 
-                || !RealShopping.hasPInv(p) 
+                || !RealShopping.hasPInv(p)
                 || !RealShopping.getPInv(p).getShop().hasPrices() 
                 || RealShopping.getPInv(p).getShop().getBuyFor() < 1) 
         {
             return false;
         }
-        boolean retval = false;
+        boolean sold = true;
         RSPlayerInventory pinv = RealShopping.getPInv(p);
         Shop shop = pinv.getShop();
         float payment = 0.0f;
-        List<ItemStack> sold = new ArrayList<>();
-        List<ItemStack> returned = new ArrayList<>();
-        for (int i=0;i<iS.length;i++) {
-            ItemStack replacement = null;
-            if(iS[i] != null && iS[i].getAmount() >= pinv.getAmount(iS[i])) {
-                int exceed = iS[i].getAmount() - pinv.getAmount(iS[i]);
-                replacement = new ItemStack(iS[i]);
-                if(exceed > 0){
-                    replacement.setAmount(exceed);
-                }
-                iS[i].setAmount(pinv.getAmount(iS[i]));
+        List<ItemStack> cansell = new ArrayList<>();
+        List<ItemStack> cannotsell = new ArrayList<>();
+        // Separate objects that I can sell from objects that I can't
+        for(ItemStack itm : iS){
+            if(pinv.getAmount(itm) == 0 || sellPrice(shop,itm) == 0.0f) {
+                if (itm != null) cannotsell.add(itm);
+                continue;
             }
-            
-            float sellp = sellPrice(shop, iS[i]);
-            if(sellp > 0.0f) {
-                payment += sellp;
-                sold.add(iS[i]);
-            } else replacement = iS[i];
-            if(replacement != null) returned.add(replacement);
+            int excess = itm.getAmount() - pinv.getAmount(itm);
+            itm.setAmount(itm.getAmount() - excess);
+            pinv.removeItem(itm, itm.getAmount());
+            cansell.add(itm);
+            payment += sellPrice(shop, itm);
+            if(excess >0) {
+                ItemStack tmp = new ItemStack(itm);
+                tmp.setAmount(excess);
+                cannotsell.add(tmp);
+            }            
         }
-        if(!sold.isEmpty()) {
-            String own = shop.getOwner();
-            if (!own.equals("@admin")) {
-                if (RSEconomy.getBalance(own) >= payment) {
-                    RSEconomy.deposit(p.getName(), payment);
-                    RSEconomy.withdraw(own, payment);//If player owned store, withdraw from owner
-                    p.sendMessage(ChatColor.GREEN + LangPack.SOLD + sold.size() + LangPack.ITEMSFOR + payment + LangPack.UNIT);
-                    RealShopping.sendNotification(own, LangPack.YOURSTORE + shop.getName() 
-                            + LangPack.BOUGHTSTUFFFOR 
-                            + payment + LangPack.UNIT 
-                            + LangPack.FROM + p.getName());
-                    //Adding stats and claim items for owner
-                    for (ItemStack key : sold) {
+        // Calculate prices for items that can be sold. If this price cannot be afforded
+        // by shopkeeper the objects will be returned to the player.
+        if(!cansell.isEmpty()){
+            String owner = shop.getOwner();
+            if(owner.equals(p.getName())){
+                p.sendMessage(ChatColor.RED + "You can't sell to your own shop!");
+                cannotsell.addAll(cansell);
+                sold = false;
+            } else if(!owner.equals("@admin")){
+                if(RSEconomy.getBalance(owner) >= payment) {
+                    RSEconomy.withdraw(owner, payment);
+                    for (ItemStack itm : cansell) {
                         if (Config.isEnableAI()) {
-                            shop.addStat(new Statistic(key.getData(), key.getAmount(), false));
+                            shop.addStat(new Statistic(itm.getData(), itm.getAmount(), false));
                         }
-                        shop.addToClaim(key);
                     }
+                    shop.addToClaim(cansell);
+                    if (RealShopping.getPlayerSettings(owner).getBoughtNotifications(shop, (int) (payment)))
+                        RealShopping.sendNotification(owner, LangPack.YOURSTORE
+                                + shop.getName() + LangPack.BOUGHTSTUFFFOR
+                                + payment + LangPack.UNIT
+                                + LangPack.FROM + p.getName());
                 } else {
-                    p.sendMessage(ChatColor.RED + LangPack.OWNER + own + LangPack.CANTAFFORDTOBUYITEMSFROMYOUFOR + payment + LangPack.UNIT);
-                    p.getInventory().addItem(sold.toArray(new ItemStack[0]));
-                    sold.clear();
+                    p.sendMessage(ChatColor.RED + LangPack.OWNER + owner + LangPack.CANTAFFORDTOBUYITEMSFROMYOUFOR + payment + LangPack.UNIT);
+                    cannotsell.addAll(cansell);
+                    sold = false;
                 }
-            } else {
-                RSEconomy.deposit(p.getName(), payment);
-                RSEconomy.withdraw(own, payment);
-                p.sendMessage(ChatColor.GREEN + LangPack.SOLD + ChatColor.DARK_GREEN + sold.size() + ChatColor.GREEN + LangPack.ITEMSFOR
-                        + ChatColor.DARK_GREEN + payment + ChatColor.GREEN + LangPack.UNIT);
-                if (RealShopping.getPlayerSettings(own).getBoughtNotifications(shop, (int) (payment)))
-                    RealShopping.sendNotification(own, LangPack.YOURSTORE
-                            + shop.getName() + LangPack.BOUGHTSTUFFFOR
-                            + payment + LangPack.UNIT
-                            + LangPack.FROM + p.getName());
             }
-            for(ItemStack sold_item:sold) {
-                pinv.removeItem(sold_item, sold_item.getAmount());
-                retval = true;
+            if(sold) {
+                RSEconomy.deposit(p.getName(), payment);
+                p.sendMessage(ChatColor.GREEN + LangPack.SOLD + ChatColor.DARK_GREEN + cansell.size() + ChatColor.GREEN + LangPack.ITEMSFOR
+                        + ChatColor.DARK_GREEN + payment + ChatColor.GREEN + LangPack.UNIT);
             }
         }
-        // Return unsold items to the player and remove sold ones from pinv.
-        p.getInventory().addItem(returned.toArray(new ItemStack[0]));
-        return retval;
+        p.getInventory().addItem(cannotsell.toArray(new ItemStack[0]));
+        return sold;
     }
+
 
     /**
      * Prints on screen the shop's PrintPrices.
