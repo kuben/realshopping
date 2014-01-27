@@ -61,6 +61,8 @@ import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.stengun.realshopping.PriceParser;
 import com.github.stengun.realshopping.ClassSerialization;
 import net.gravitydevelopment.updater.Updater;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.MaterialData;
 
 public class RealShopping extends JavaPlugin {//TODO stores case sensitive, players case preserving
     private Updater updater;
@@ -365,7 +367,12 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                                         ids[j][2] = 0;
                                     }
                                 }
-                                tempShop.addChestItem(l, ids);
+                                List<ItemStack> ret = new ArrayList<>();
+                                for(int[] zot : ids) {
+                                    ItemStack tmp = new ItemStack((new MaterialData(zot[0], (byte)zot[1])).getItemType(), zot[3]);
+                                    ret.add(tmp);
+                                }
+                                tempShop.addChestItem(l, ret);
                             }
                         }
                         int bIdx = s.indexOf("BANNED_");

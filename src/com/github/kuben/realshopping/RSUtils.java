@@ -19,6 +19,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.minecart.StorageMinecart;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.MaterialData;
 
 public class RSUtils {
 
@@ -46,32 +47,28 @@ public class RSUtils {
     /**
      * Accepts and parses item descriptors (for chests),
      * supports aliases, data values, stack sizes and multiple items.
-     * @param str string to parse.
+     * @param strInput strInputing to parse.
      * @return an array the same size as the amount items (max. 27)
      */
-    public static int[][] pullItems(String str) throws NumberFormatException {
-        String[] strs = new String[27];
-        int l = 0;
-        for(String s:str.split(",")){//Repeat for every item
-            int m = 1, i = 0;//m is multiplier, i is how many times the loop has multiplied
-            if(s.contains("*")) m = Integer.parseInt(s.split("\\*")[1]);
-            while(i < m && l < 27){//Add as many times as requested
-                strs[l] = s.split("\\*")[0];
-                l++;
-                i++;
+    public static List<ItemStack> pullItems(String strInput) throws NumberFormatException {
+        // id:data:amount[*X],...
+        int occupied = 0;
+        List<ItemStack> retval = new ArrayList<>();
+        for(String s : strInput.split(",")){//Repeat for every item
+            String[] split = s.split("\\*");
+            int m = 1;
+            if(s.contains("*")) {
+                m = Integer.parseInt(split[1]);
+                if(m + occupied > 27) m = 27 - occupied;
             }
-            if(i >= 27) break;
+            ItemStack itm = pullItem(split[0]);
+            for(int i = 0; i<m; i++) {
+                retval.add(itm.clone());
+            }
+            occupied += m;
+            if (occupied == 27) break;
         }
-        int[][] ids = new int[l][3];
-        for(int i = 0;i < l;i++){
-            int[] id = pullItem(strs[i]);
-            ids[i][0] = id[0];
-            if(id.length > 1) ids[i][1] = id[1];
-            else ids[i][1] = 0;
-            if(id.length > 2) ids[i][2] = id[2];
-            else ids[i][2] = 0;//Full stack
-        }
-        return ids;
+        return retval;
     }
     
     /**
@@ -81,17 +78,30 @@ public class RSUtils {
      * @param str String to parse.
      * @return An array of the same size as the amount of ' : '
      */
-    public static int[] pullItem(String str) throws NumberFormatException {
+    public static ItemStack pullItem(String str) throws NumberFormatException {
         String s = parseAliases(str);//Check for aliases
 
         //Parse resulting string
-        int[] id = new int[s.split(":").length];
+        int[] ids = new int[s.split(":").length];
         int i = 0;
         for(String ss:s.split(":")){
-                id[i] = Integer.parseInt(ss);
+                ids[i] = Integer.parseInt(ss);
                 i++;
         }
-        return id;
+        byte data = 0;
+        int amount = 1,id = 0;
+        switch(ids.length) {
+            case 3:
+                data = (byte)ids[1];
+            case 2:
+                amount = ids[ids.length-1];
+            case 1:
+                id = ids[0];
+            default:
+                break;
+        }
+        if(data > 0) return new ItemStack((new MaterialData(id)).getItemType(), amount);
+        else return new ItemStack((new MaterialData(id,data)).getItemType(), amount);
     }
 
     /**

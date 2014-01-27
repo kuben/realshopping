@@ -14,7 +14,7 @@ import com.github.kuben.realshopping.prompts.PromptMaster.PromptType;
 class RSSetChests extends RSPlayerCommand {
 
 	private Shop tempShop;
-	private Location l;
+	private Location loc;
 	public RSSetChests(CommandSender sender, String[] args) {
 		super(sender, args);
 	}
@@ -27,16 +27,16 @@ class RSSetChests extends RSPlayerCommand {
 				if (args.length == 1 && args[0].equalsIgnoreCase("prompt")){
 					return PromptMaster.createConversation(PromptType.CHOOSE_CHESTS, player);
     			} else {
-    				l = new Location(player.getWorld(), player.getLocation().getBlockX(), player.getLocation().subtract(0, 0.875, 0).getBlockY(), player.getLocation().getBlockZ());
+    				loc = new Location(player.getWorld(), player.getLocation().getBlockX(), player.getLocation().subtract(0, 0.875, 0).getBlockY(), player.getLocation().getBlockZ());
         			if (args.length == 1 && args[0].equalsIgnoreCase("create")){
-        				if(tempShop.addChest(l)){
+        				if(tempShop.addChest(loc)){
         					player.sendMessage(ChatColor.RED + LangPack.CHESTCREATED);
         					RealShopping.updateShopsDb();
         				}
         				else player.sendMessage(ChatColor.RED + LangPack.ACHESTALREADYEXISTSONTHISLOCATION);
         				return true;
         			} else if (args.length == 1 && args[0].equalsIgnoreCase("del")){
-        				if(tempShop.delChest(l)){
+        				if(tempShop.delChest(loc)){
         					player.sendMessage(ChatColor.RED + LangPack.CHESTREMOVED);
         					RealShopping.updateShopsDb();
         				}
@@ -55,7 +55,7 @@ class RSSetChests extends RSPlayerCommand {
 
 	private boolean additems(){
 		try {
-			int j = tempShop.addChestItem(l, RSUtils.pullItems(args[1]));
+			int j = tempShop.addChestItem(loc, RSUtils.pullItems(args[1]));
 			if(j > -1){
 				sender.sendMessage(ChatColor.RED + LangPack.ADDED + j + LangPack.ITEMS);
 				RealShopping.updateShopsDb();
@@ -71,8 +71,7 @@ class RSSetChests extends RSPlayerCommand {
 	
 	private boolean delitems(){
 		try {
-			int[][] ids = RSUtils.pullItems(args[1]);
-			int j = tempShop.delChestItem(l, ids);
+			int j = tempShop.delChestItem(loc, RSUtils.pullItems(args[1]));
 			if(j > -1){
 				sender.sendMessage(ChatColor.RED + LangPack.REMOVED + j + LangPack.ITEMS);
 				RealShopping.updateShopsDb();

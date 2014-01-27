@@ -40,7 +40,7 @@ class RSSetPrices extends RSCommand {
         Price itmprice = null;
         Integer[] priminmax = null;
         int amount = 1;
-        boolean handheld = comArgs[0].split(":")[0].equals("hand") || Integer.parseInt(comArgs[0].split(":")[0]) < 0; //This is horrible, sorry.
+        boolean handheld = comArgs[0].split(":")[0].equals("hand"); //This is horrible, sorry.
         String description = "";
         
         switch(comArgs.length) {

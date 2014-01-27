@@ -24,6 +24,7 @@ import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.stengun.realshopping.Pager;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,7 +32,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.lang.ArrayUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -43,7 +43,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.material.MaterialData;
 
 public class Shop {//TODO add load/save interface
 
@@ -113,15 +112,15 @@ public class Shop {//TODO add load/save interface
      * Chest functions
      * [0] is ID, [1] is data, [2] is amount(0 if full stack)
      */
-    private Map<Location, ArrayList<Integer[]>> chests = new HashMap<>();
+    private Map<Location, Collection<ItemStack>> chests = new HashMap<>();
 
-    public Map<Location, ArrayList<Integer[]>> getChests() {
+    public Map<Location, Collection<ItemStack>> getChests() {
         return chests;
     }
 
     public boolean addChest(Location l) {
         if (!chests.containsKey(l)) {
-            chests.put(l, new ArrayList<Integer[]>());
+            chests.put(l, new ArrayList<ItemStack>());
             if (Config.isAutoprotect()) {
                 protectedChests.add(l);
             }
@@ -145,20 +144,15 @@ public class Shop {//TODO add load/save interface
         return chests.containsKey(l);
     }
 
-    public int addChestItem(Location l, int[][] id) {
-        int j = -1;
-        if (chests.containsKey(l)) {
-            j++;
-            for (int[] i : id) {
-                if (chests.get(l).size() < 27) {
-                    if (Material.getMaterial(i[0]) != null) {
-                        chests.get(l).add(ArrayUtils.toObject(i));
-                        j++;
-                    }
-                }
+    public int addChestItem(Location l, Collection<ItemStack> items) {
+        int added = 0;
+        if (chests.containsKey(l)) { //Se esiste una protected chest in quella locazione
+            if (items.size() + chests.get(l).size() < 27) {
+                chests.get(l).addAll(items);
+                added = items.size();
             }
         }
-        return j;
+        return added;
     }
 
     public boolean setChestContents(Location l, Inventory i) {
@@ -167,13 +161,7 @@ public class Shop {//TODO add load/save interface
                 chests.get(l).clear();
                 for (ItemStack iS : i.getContents()) {
                     if (iS != null) {
-                        int am = iS.getAmount();
-                        if (am == iS.getType().getMaxStackSize()) {
-                            am = 0;
-                        }
-                        chests.get(l).add(new Integer[]{iS.getTypeId(), (int) iS.getData().getData(), am});
-                    } else {
-                        chests.get(l).add(new Integer[]{0, 0, 0});
+                        chests.get(l).add(iS);
                     }
                 }
             }
@@ -181,26 +169,22 @@ public class Shop {//TODO add load/save interface
         return false;
     }
 
-    public int delChestItem(Location l, int[][] id) {
-        int j = -1;
+    public int delChestItem(Location l, Collection<ItemStack> items) {
+        int retval = 0;
+        List<ItemStack> newContent = new ArrayList<>(chests.get(l));
         if (chests.containsKey(l)) {
-            j++;
-            for (int[] i : id) {
-                boolean match = false;
-                int k = 0;
-                for (; k < chests.get(l).size(); k++) {
-                    if (chests.get(l).get(k)[0] == i[0] && chests.get(l).get(k)[1] == i[1]) {
-                        match = true;
+            for (ItemStack itm : chests.get(l)) {
+                for(ItemStack is : items) {
+                    if(is.isSimilar(itm)) {
+                        newContent.remove(itm);
                         break;
                     }
                 }
-                if (match) {
-                    chests.get(l).remove(k);
-                    j++;
-                }
             }
+            retval = chests.get(l).size() - newContent.size();
+            chests.put(l, newContent);
         }
-        return j;
+        return retval;
     }
 
     public int clearChestItems(Location l) {
@@ -935,9 +919,8 @@ public class Shop {//TODO add load/save interface
                             chest.getBlockInventory().clear();
                             ItemStack[] itemStack = new ItemStack[27];
                             int k = 0;
-                            for(Integer[] j:tempShop.getChests().get(chestArr[i])){
-                                itemStack[k] = new MaterialData(j[0],j[1].byteValue())
-                                .toItemStack((j[2]==0)?Material.getMaterial(j[0]).getMaxStackSize():j[2]);
+                            for(ItemStack j:tempShop.getChests().get(chestArr[i])){
+                                itemStack[k] = j;
                                 k++;
                             }
                             chest.getBlockInventory().setContents(itemStack);

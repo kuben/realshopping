@@ -15,6 +15,8 @@ import com.github.kuben.realshopping.LangPack;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.exceptions.RSListenerException;
 import com.github.kuben.realshopping.exceptions.RSListenerException.Type;
+import java.util.Collection;
+import org.bukkit.inventory.ItemStack;
 
 public class ChestManageListener extends GeneralListener implements SignalReceiver {
 	
@@ -59,9 +61,9 @@ public class ChestManageListener extends GeneralListener implements SignalReceiv
 			case DEL_ITEMS:
 				 if(sig instanceof Object[]){
 					Object[] o = (Object[]) sig;
-					if(o.length > 1 && o[1] instanceof int[][]){
-						if(SIG == SIGNAL.ADD_ITEMS) return additems((int[][]) o[1]);
-						else return delitems((int[][]) o[1]);
+					if(o.length > 1 && o[1] instanceof Collection){
+						if(SIG == SIGNAL.ADD_ITEMS) return additems((Collection)o[1]);
+						else return delitems((Collection)o[1]);
 					}
 				 }
 				 throw new RSListenerException(getPlayer(), Type.SIGNAL_MISMATCH);
@@ -104,24 +106,24 @@ public class ChestManageListener extends GeneralListener implements SignalReceiv
 		return selected.size();
 	}
 	
-	int[] additems(int[][] ids){
+	int[] additems(Collection<ItemStack> ids){
 		int i = 0;
 		for(Location l:selected){
 			getShop().addChestItem(l, ids);
 			i++;
 		}
 		RealShopping.updateShopsDb();
-		return new int[]{ids.length, i};
+		return new int[]{ids.size(), i};
 	}
 	
-	int[] delitems(int[][] ids){
+	int[] delitems(Collection<ItemStack> ids){
 		int i = 0;
 		for(Location l:selected){
 			getShop().delChestItem(l, ids);
 			i++;
 		}
 		RealShopping.updateShopsDb();
-		return new int[]{ids.length, i};
+		return new int[]{ids.size(), i};
 	}
 
 	void onEvent(Event event){
