@@ -40,7 +40,6 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.block.DoubleChest;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.minecart.StorageMinecart;
@@ -58,7 +57,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerEditBookEvent;
@@ -264,6 +262,11 @@ public class RSPlayerListener implements Listener {
         
         if (event.hasBlock()) {
             Block b = event.getClickedBlock();
+            if(b.getType() == Material.ENDER_CHEST && Config.isDisableEnderchests()) {
+                if(discardEventInsideStore(player, event)) {
+                    player.sendMessage(ChatColor.RED + LangPack.YOUCANNOTOPENENDERCHESTS_);
+                }
+            }
             // We are clicking on a possible entrance? (a glass block or a door/iron door if doors are enabled)
             if (   event.getAction() == Action.RIGHT_CLICK_BLOCK
                 && ( b.getType() == Material.GLASS 
@@ -377,31 +380,44 @@ public class RSPlayerListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onInventoryOpenEvent(InventoryOpenEvent event) {
-        if (Config.isDisableEnderchests()) {
-            if (RealShopping.hasPInv((Player) event.getPlayer()) && event.getInventory().getType() == InventoryType.ENDER_CHEST) {
-                event.setCancelled(true);
-                ((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + LangPack.YOUCANNOTOPENENDERCHESTS_);
-                return;
-            }
-        }
-        if (!RealShopping.hasPInv((Player) event.getPlayer())) {
-            boolean canceled = false;
-            if (event.getInventory().getHolder() instanceof Chest) {
-                //If player is not in store
-                if (RSUtils.isChestProtected(((Chest) event.getInventory().getHolder()).getLocation())) {
-                    canceled = true;
+        Player player = (Player) event.getPlayer();
+        boolean canceled = false;
+        String msg = ChatColor.RED + "You can't use that block inside a store.";
+        switch(event.getInventory().getType()) {
+            case HOPPER:
+                break;
+            case ENDER_CHEST:
+                if(Config.isDisableEnderchests()) {
+                    if(discardEventInsideStore(player, event)) {
+                        player.sendMessage(ChatColor.RED + LangPack.YOUCANNOTOPENENDERCHESTS_);
+                    }
                 }
-            } else if (event.getInventory().getHolder() instanceof DoubleChest) {
-                if (RSUtils.isChestProtected(((Chest) ((DoubleChest) event.getInventory().getHolder()).getLeftSide()).getLocation())
-                        | RSUtils.isChestProtected(((Chest) ((DoubleChest) event.getInventory().getHolder()).getRightSide()).getLocation())) {
-                    canceled = true;
+                break;
+            case CHEST:
+                if(!RealShopping.hasPInv(player)){
+                    if (event.getInventory().getHolder() instanceof Chest) {
+                        //If player is not in store
+                        if (RSUtils.isChestProtected(((Chest) event.getInventory().getHolder()).getLocation())) {
+                            canceled = true;
+                        }
+                    } else if (event.getInventory().getHolder() instanceof DoubleChest) {
+                        if (RSUtils.isChestProtected(((Chest) ((DoubleChest) event.getInventory().getHolder()).getLeftSide()).getLocation())
+                                | RSUtils.isChestProtected(((Chest) ((DoubleChest) event.getInventory().getHolder()).getRightSide()).getLocation())) {
+                            canceled = true;
+                        }
+                    }
                 }
-            }
-            if(canceled){
+                if(!canceled) break;
+                msg = ChatColor.RED + "[RealShopping] " + LangPack.THISCHESTISPROTECTED;
+                event.getInventory().getHolder().getInventory().getViewers().remove(player);
                 event.setCancelled(canceled);
-                event.getInventory().getHolder().getInventory().getViewers().remove(event.getPlayer());
-                ((CommandSender) event.getPlayer()).sendMessage(ChatColor.RED + "[RealShopping] " + LangPack.THISCHESTISPROTECTED);
-            }
+                player.sendMessage(msg);
+                break;
+            default:
+                if(discardEventInsideStore(player, event)){
+                    player.sendMessage(msg);
+                }
+                break;
         }
     }
 
