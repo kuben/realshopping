@@ -17,6 +17,7 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.minecart.StorageMinecart;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 public class RSUtils {
@@ -468,10 +469,10 @@ public class RSUtils {
                         if(cont){
                             RSEconomy.withdraw(p.getName(), cost/100f);
                             p.sendMessage(ChatColor.GREEN + "" + cost/100f + LangPack.UNIT + LangPack.WITHDRAWNFROMYOURACCOUNT);
-                            ItemStack[] contents = ((Chest)l.getBlock().getState()).getBlockInventory().getContents();
-                            for(ItemStack tempIS:contents) if(tempIS != null) p.getWorld().dropItem(p.getLocation(), tempIS);
-
-                            ((Chest)l.getBlock().getState()).getBlockInventory().setContents(RealShopping.getShippedToCollect(p.getName(), id - 1).getContents());
+                            Inventory chestinv = ((Chest)l.getBlock().getState()).getBlockInventory();
+                            for(ItemStack exceed : chestinv.addItem(RealShopping.getShippedToCollect(p.getName(), id - 1).getContents()).values()) {
+                                p.getWorld().dropItem(p.getLocation(),exceed);
+                            }
                             p.sendMessage(ChatColor.GREEN + LangPack.FILLEDCHESTWITH);
                             p.sendMessage(formatItemStackToMess(RealShopping.getShippedToCollect(p.getName(), id - 1).getContents()));
                             RealShopping.removeShippedToCollect(p.getName(), id - 1);
