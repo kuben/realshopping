@@ -34,7 +34,11 @@ class RSShipped extends RSPlayerCommand {
 		} else if(args.length == 2 && args[0].equalsIgnoreCase("collect")){
 			Location l = new Location(player.getWorld(), player.getLocation().getBlockX(), player.getLocation().subtract(0, 0.875, 0).getBlockY(), player.getLocation().getBlockZ());
 			try {
-				return RSUtils.collectShipped(l, player, Integer.parseInt(args[1]));
+                            if(RealShopping.hasPInv(player)) {
+                                sender.sendMessage(ChatColor.RED + LangPack.YOU_CANT_USE_THIS_COMMAND_INSIDE_A_STORE);
+                                return false;
+                            }
+                            return RSUtils.collectShipped(l, player, Integer.parseInt(args[1]));
 			} catch (NumberFormatException e){
 				sender.sendMessage(ChatColor.RED + args[1] + LangPack.ISNOTANINTEGER);
 			}
