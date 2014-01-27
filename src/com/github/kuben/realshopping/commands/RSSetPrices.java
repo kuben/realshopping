@@ -96,8 +96,16 @@ class RSSetPrices extends RSCommand {
     private boolean del(){
         
         try {
-            Price p = RSUtils.pullPrice(comArgs[0],this.player);
-            String dString = p.getData()>-1?"("+p.getData()+")":"";
+            Price p;
+            String dString;
+            if(comArgs[0].equals("index")) { // PORCATA
+                Integer id = Integer.parseInt(comArgs[1]);
+                if(id < 0) return false;
+                p = shop.getCosts().keySet().toArray(new Price[0])[id];
+            } else {
+                p = RSUtils.pullPrice(comArgs[0],this.player);
+            }
+            dString = p.getData()>-1?"("+p.getData()+")":"";
             if(shop.hasPrice(p)){
                 shop.removePrice(p);
                 sender.sendMessage(RD + LangPack.REMOVEDPRICEFOR + DR + p.getEasyname() + dString);

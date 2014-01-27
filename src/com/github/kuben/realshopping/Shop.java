@@ -804,7 +804,7 @@ public class Shop {//TODO add load/save interface
                             int pcnt = 100 - shop.getSale(keys[i]);
                             cost *= pcnt/100f;
                         }
-                        sender.sendMessage(keys[i].formattedString(cost/100f,shop.hasSale(keys[i])));
+                        sender.sendMessage(i + " - "+ keys[i].formattedString(cost/100f,shop.hasSale(keys[i])));
                     }
                     if(page*maxitems < keys.length){//Not last
                         sender.sendMessage(LangPack.MOREITEMSONPAGE + ChatColor.YELLOW + (page + 1));
