@@ -1384,6 +1384,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     }
     
     protected static boolean removeEntranceExit(Shop shop, EEPair pairs) {
+        if(RealShopping.getEEPairSet(shop).size() == 1) return false;
         if(eePairs.get(pairs) == shop) {
             eePairs.remove(pairs);
             return true;

@@ -95,7 +95,7 @@ public class Shop {//TODO add load/save interface
         EEPair[] pairs = getEEpairSet().toArray(new EEPair[0]);
         if(index >= pairs.length || index < 0) return false;
         retval = RealShopping.removeEntranceExit(this, pairs[index]);
-        player.sendMessage("EEPair removed: "+ pairs[index].toString());
+        if(retval) player.sendMessage("EEPair removed: "+ pairs[index].toString());
         return retval;
     }
     public Set<EEPair> getEEpairSet() {
