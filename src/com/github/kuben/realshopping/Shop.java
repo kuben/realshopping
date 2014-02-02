@@ -110,17 +110,17 @@ public class Shop {//TODO add load/save interface
     /*
      * 
      * Chest functions
-     * [0] is ID, [1] is data, [2] is amount(0 if full stack)
+     *
      */
-    private Map<Location, Collection<ItemStack>> chests = new HashMap<>();
+    private Map<Location, Collection<ItemStack>> refillingchests = new HashMap<>();
 
     public Map<Location, Collection<ItemStack>> getChests() {
-        return chests;
+        return refillingchests;
     }
 
     public boolean addChest(Location l) {
-        if (!chests.containsKey(l)) {
-            chests.put(l, new ArrayList<ItemStack>());
+        if (!refillingchests.containsKey(l)) {
+            refillingchests.put(l, new ArrayList<ItemStack>());
             if (Config.isAutoprotect()) {
                 protectedChests.add(l);
             }
@@ -131,8 +131,8 @@ public class Shop {//TODO add load/save interface
     }
 
     public boolean delChest(Location l) {
-        if (chests.containsKey(l)) {
-            chests.remove(l);
+        if (refillingchests.containsKey(l)) {
+            refillingchests.remove(l);
         } else {
             return false;
         }
@@ -141,14 +141,14 @@ public class Shop {//TODO add load/save interface
     }
 
     public boolean isChest(Location l) {
-        return chests.containsKey(l);
+        return refillingchests.containsKey(l);
     }
 
     public int addChestItem(Location l, Collection<ItemStack> items) {
         int added = 0;
-        if (chests.containsKey(l)) { //Se esiste una protected chest in quella locazione
-            if (items.size() + chests.get(l).size() < 27) {
-                chests.get(l).addAll(items);
+        if (refillingchests.containsKey(l)) { //Se esiste una protected chest in quella locazione
+            if (items.size() + refillingchests.get(l).size() < 27) {
+                refillingchests.get(l).addAll(items);
                 added = items.size();
             }
         }
@@ -156,12 +156,12 @@ public class Shop {//TODO add load/save interface
     }
 
     public boolean setChestContents(Location l, Inventory i) {
-        if (chests.containsKey(l)) {
+        if (refillingchests.containsKey(l)) {
             if (i != null) {
-                chests.get(l).clear();
+                refillingchests.get(l).clear();
                 for (ItemStack iS : i.getContents()) {
                     if (iS != null) {
-                        chests.get(l).add(iS);
+                        refillingchests.get(l).add(iS);
                     }
                 }
             }
@@ -171,9 +171,9 @@ public class Shop {//TODO add load/save interface
 
     public int delChestItem(Location l, Collection<ItemStack> items) {
         int retval = 0;
-        List<ItemStack> newContent = new ArrayList<>(chests.get(l));
-        if (chests.containsKey(l)) {
-            for (ItemStack itm : chests.get(l)) {
+        List<ItemStack> newContent = new ArrayList<>(refillingchests.get(l));
+        if (refillingchests.containsKey(l)) {
+            for (ItemStack itm : refillingchests.get(l)) {
                 for(ItemStack is : items) {
                     if(is.isSimilar(itm)) {
                         newContent.remove(itm);
@@ -181,17 +181,17 @@ public class Shop {//TODO add load/save interface
                     }
                 }
             }
-            retval = chests.get(l).size() - newContent.size();
-            chests.put(l, newContent);
+            retval = refillingchests.get(l).size() - newContent.size();
+            refillingchests.put(l, newContent);
         }
         return retval;
     }
 
     public int clearChestItems(Location l) {
         int j = -1;
-        if (chests.containsKey(l)) {
-            j = chests.get(l).size();
-            chests.get(l).clear();
+        if (refillingchests.containsKey(l)) {
+            j = refillingchests.get(l).size();
+            refillingchests.get(l).clear();
         }
         return j;
     }
@@ -569,7 +569,7 @@ public class Shop {//TODO add load/save interface
     // ------- UTILS
 
     /**
-     * Exports all protected chests and their location to a string.
+     * Exports all protected refillingchests and their location to a string.
      * The string exported is ready to be read and parsed.
      * String format:
      *  worldname,x,y,z
@@ -581,7 +581,7 @@ public class Shop {//TODO add load/save interface
         if (!protectedChests.isEmpty()) {
             String tempS = "";
             for (Location tempL : protectedChests) {
-                if (!chests.containsKey(tempL)) {
+                if (!refillingchests.containsKey(tempL)) {
                     tempS += ";" + tempL.getWorld().getName() + "," + (int) tempL.getX() + "," + (int) tempL.getY() + "," + (int) tempL.getZ();
                 }
             }
@@ -908,7 +908,7 @@ public class Shop {//TODO add load/save interface
                     RealShopping.addPInv(new RSPlayerInventory(player, tempShop));
                     player.sendMessage(ChatColor.GREEN + LangPack.YOUENTERED + ChatColor.DARK_GREEN + tempShop.getName());
 
-                    //Refill chests
+                    //Refill refillingchests
                     Location[] chestArr = tempShop.getChests().keySet().toArray(new Location[0]);
                     for(int i = 0;i < chestArr.length;i++){
                         Block tempChest = player.getWorld().getBlockAt(chestArr[i]);

@@ -256,6 +256,14 @@ public class ClassSerialization {
         for(Location lo:shop.getProtectedChests()) {
             saveLocation(lo, chests.createSection(Integer.toString(i++)));
         }
+        
+        ConfigurationSection refill = destination.createSection("refillchests");
+        i=0;
+        for(Location lo : shop.getChests().keySet()) {
+            ConfigurationSection tmp = refill.createSection(Integer.toString(i++));
+            saveLocation(lo, tmp.createSection("location"));
+            saveItemStackList(shop.getChests().get(lo), tmp.createSection("contents"));
+        }
     }
     /**
      * Given a Configuration section, this method will try to load a Shop object from it.
@@ -285,6 +293,14 @@ public class ClassSerialization {
         ConfigurationSection chests = section.getConfigurationSection("protectedchests");
         for(String chs:chests.getKeys(false)) {
             shop.addProtectedChest(loadLocation(chests.getConfigurationSection(chs)));
+        }
+        
+        ConfigurationSection refill = section.getConfigurationSection("refillchests");
+        for(String in : refill.getKeys(false)){
+            ConfigurationSection tmp = refill.getConfigurationSection(in);
+            Location l = loadLocation(tmp.getConfigurationSection("location"));
+            shop.addChest(l);
+            shop.addChestItem(l, loadItemStack(tmp.getConfigurationSection("contents")));
         }
         return shop;
     }
