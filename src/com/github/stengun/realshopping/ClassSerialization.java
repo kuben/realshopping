@@ -18,7 +18,6 @@
  */
 
 package com.github.stengun.realshopping;
-
 import com.github.kuben.realshopping.EEPair;
 import com.github.kuben.realshopping.Price;
 import com.github.kuben.realshopping.RSPlayerInventory;
@@ -26,6 +25,7 @@ import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.ShippedPackage;
 import com.github.kuben.realshopping.Shop;
+import com.github.kuben.realshopping.Statistic;
 import com.github.kuben.realshopping.exceptions.RealShoppingException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -47,13 +48,29 @@ import org.bukkit.inventory.ItemStack;
  * @author stengun
  */
 public class ClassSerialization {
-    //TODO Test Saveshop /loadshop
     //TODO Test savejailed / loadjailed
     //TODO Test savetplocs / loadtplocs
-    //TODO Test integrated into shop saveprotectedchests / loadprotectedchests
     //TODO Test savetoclaim / loadtoclaim
-    //TODO savestats / loadstats
+    //TODO Test savestats / loadstats
     //TODO Test savenotifications / loadnotifications
+    
+    /**
+     * Correctly saves a shop's item stat into a configuration section.
+     * @param stat
+     * @param destination 
+     */
+    public static void saveStatistic(Statistic stat, ConfigurationSection destination) {
+        destination.set("itemtype", stat.getItem().toString());
+        destination.set("amount", stat.getAmount());
+        destination.set("bought", stat.isBought());
+        destination.set("name", stat.getName());
+    }
+    
+    public static Statistic loadStatistic(ConfigurationSection section) {
+        Material mat = Material.getMaterial(section.getString("itemtype"));
+        Statistic st = new Statistic(mat, section.getString("name"), section.getInt("amount"), section.getBoolean("bought"));
+        return st;
+    }
     
     /**
      * Correctly saves a location.

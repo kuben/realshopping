@@ -1,26 +1,28 @@
 package com.github.kuben.realshopping;
 
-import org.bukkit.material.MaterialData;
+import org.bukkit.Material;
 
-final class Statistic {
-    final private MaterialData item;
+public final class Statistic {
+    final private Material item;
     final private int amount;
     final private long timestamp;
     final private boolean bought;
+    final private String name;
     
-    public Statistic(MaterialData mat, int soldamount, boolean bought) {
-        this(mat.getItemTypeId(), mat.getData(), soldamount, bought);
-    }
-    
-    public Statistic(int id, byte data, int soldamount, boolean bought){
-        this.item = new MaterialData(id, data);
+    public Statistic(Material mat, String name, int soldamount, boolean bought) {
+        this.item = mat;
         this.amount = soldamount;
-        this.timestamp = System.currentTimeMillis();
         this.bought = bought;
+        this.timestamp = System.currentTimeMillis();
+        this.name = name;
     }
 
-    public MaterialData getMaterialData() {
+    public Material getItem() {
         return item;
+    }
+    
+    public String getName() {
+        return name;
     }
     
     public int getAmount() {
@@ -35,8 +37,8 @@ final class Statistic {
         return bought;
     }
     
-@Override
+    @Override
     public String toString(){
-        return (bought?"bought ":"sold ") + item.getItemType().toString() + " x" + amount;
+        return (bought?"bought ":"sold ") + (name.isEmpty()?item.toString(): name) + " x" + amount;
     }
 }

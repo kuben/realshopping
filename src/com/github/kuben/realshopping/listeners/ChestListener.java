@@ -33,18 +33,18 @@ public class ChestListener extends GeneralListener implements Appliable {
 		if(event.getAction() == Action.RIGHT_CLICK_BLOCK){//Add to selection
 			event.setCancelled(true);
 			Location l = event.getClickedBlock().getLocation();
-			int id = (type == Type.ADD)?Material.GOLD_BLOCK.getId():Material.IRON_BLOCK.getId();
+			Material mat = (type == Type.ADD)?Material.GOLD_BLOCK:Material.IRON_BLOCK;
 			if(!selected.contains(l)){
 				if(type == Type.ADD || getShop().isChest(l)){
 					selected.add(l);
 					getPlayer().sendRawMessage(ChatColor.GREEN + LangPack.BLOCK_ADDED_TO_SELECTION);
-					blockChange(l, id);
+					blockChange(l, mat);
 				} else if(type == Type.REMOVE && !getShop().isChest(l)){
 					getPlayer().sendRawMessage(ChatColor.RED + LangPack.THEBLOCKYOUSELECTEDISNTACHEST);
 				}
 			} else {
 				getPlayer().sendRawMessage(ChatColor.RED + LangPack.BLOCK_ALREADY_SELECTED);
-				blockChange(l, id);
+				blockChange(l, mat);
 			}
 		} else if(event.getAction() == Action.LEFT_CLICK_BLOCK){//Remove from selection
 			event.setCancelled(true);

@@ -268,6 +268,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                 newUpdate = getUpdater().getLatestName()
                         + LangPack.OFRE_UPDATEINFO + ChatColor.LIGHT_PURPLE + "/rsupdate info";
             }
+            newUpdate = newUpdate.replace("null", "");
             RealShopping.loginfo(newUpdate);
             return true;
         }
@@ -1101,13 +1102,16 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
             version = Float.parseFloat(conf.getString("version"));
             if(version == null) version = VERFLOAT;
         } catch (InvalidConfigurationException ex) {
-            logsevere("Error reading " + what.toString());
+            logsevere("Error reading " + what.toString() + ": " + ex.getMessage());
+            return;
+        } catch (FileNotFoundException ex) {
+            loginfo("File " + what.toString() + " not found, skipping.");
             return;
         } catch (IOException ex) {
             logwarning("IO Error while reading " + what.toString() + ": " + ex.getMessage());
             return;
-        }
-        if(version < VERFLOAT) loginfo("Reading a precedent configuration file.");
+        } 
+        if(version < VERFLOAT) logwarning("Reading a configuration file for a precedent version: " + version.toString());
         for(String key:conf.getKeys(false)) {
             if(key.equals("version")) continue;
             switch (what) {
@@ -1136,6 +1140,11 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                     break;
                 case NOTIFICATIONS:
                     notificator.put(key, ClassSerialization.loadNotifications(conf.getConfigurationSection(key)));
+                    break;
+                case STATS:
+                    for(String g: conf.getConfigurationSection(key).getKeys(false)) {
+                        getShop(key).addStat(ClassSerialization.loadStatistic(conf.getConfigurationSection(g)));
+                    }
                 default:
                     break;
             }
@@ -1211,6 +1220,15 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                         ClassSerialization.saveNotifications(notificator.get(ply), conf.createSection(ply));
                     }
                     break;
+                case STATS:
+                    for(Shop shop : shopSet) {
+                        int i = 0;
+                        ConfigurationSection tmp = conf.createSection(shop.getName());
+                        for(Statistic stat : shop.getStats()) {
+                            ClassSerialization.saveStatistic(stat, tmp.createSection(Integer.toString(i++)));
+                        }
+                    }
+                    break;
                 default:
                     return false;
             }
@@ -1218,7 +1236,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
             if(!f.exists()) f.createNewFile();
             conf.save(f);
         } catch (IOException e) {
-            RealShopping.loginfo("Failed while saving " + getCorrectPath(what));
+            logwarning("Failed while saving " + getCorrectPath(what));
             e.printStackTrace();
             return false;
         }
@@ -1566,7 +1584,8 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     }
     
     /**
-     * Removed a notification from the pending notifications list. You need to have an exact copy of the String object to do this.
+     * Removed a notification from the pending notifications list.
+     * You need to have an exact copy of the String object to do this.
      * 
      * This is meant to be used by the Notificator class after a message has been delivered.
      * @param player The player to whom the notification was meant to be sent.
@@ -1691,7 +1710,7 @@ class Reporter extends Thread {
                         if(ps.gettingReports(shop))
                             if(ps.updatePeriodAndCheckIfTimeToSendReport(shop)){//Check if it is time to send a report
                                 long lastReport = ps.getLastReport(shop);
-                                boolean first = false;
+                                boolean first = false; // TODO What's that?
                                 if(lastReport < 0){
                                     first = true;
                                     lastReport *= -1;
@@ -1705,7 +1724,7 @@ class Reporter extends Thread {
                                 Map<Integer, Integer> boughtItems = new HashMap<>();//ID - amount bought
                                 for(Statistic stat:shop.getStats()){
                                     //if(stat.getTime() < lastReport) continue;
-                                    int id = stat.getMaterialData().getItemType().getId();
+                                    int id = stat.getItem().getId();
                                     if(stat.isBought()){
                                         int oldAm = boughtItems.containsKey(id)?boughtItems.get(id):0;
                                         boughtItems.put(id, oldAm + stat.getAmount());

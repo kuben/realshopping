@@ -43,8 +43,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.MaterialData;
 
-public class Shop {//TODO add load/save interface
+public class Shop {
 
     public Shop(String name, String world, String owner) {
         super();
@@ -734,7 +735,7 @@ public class Shop {//TODO add load/save interface
                     RSEconomy.withdraw(owner, payment);
                     for (ItemStack itm : cansell) {
                         if (Config.isEnableAI()) {
-                            shop.addStat(new Statistic(itm.getData(), itm.getAmount(), false));
+                            shop.addStat(new Statistic(itm.getType(), "", itm.getAmount(), false));
                         }
                     }
                     shop.addToClaim(cansell);
@@ -840,7 +841,7 @@ public class Shop {//TODO add load/save interface
 
                 if (Config.isEnableAI()) {
                     for (Price key : bought.keySet()) {
-                        shop.addStat(new Statistic(key.getType(), key.getData(), bought.get(key), true));
+                        shop.addStat(new Statistic(new MaterialData(key.getType(), key.getData()).getItemType(), key.getName(), bought.get(key), true)); 
                     }
                 }
 
