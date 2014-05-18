@@ -17,6 +17,7 @@ import org.bukkit.inventory.Inventory;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.exceptions.RSListenerException;
 import com.github.kuben.realshopping.LangPack;
+import com.github.stengun.realshopping.SerializationManager;
 
 public class ChestFreeManageListener extends GeneralListener implements Appliable {
 	
@@ -52,7 +53,7 @@ public class ChestFreeManageListener extends GeneralListener implements Appliabl
 			if(getShop().isChest(l)) getShop().setChestContents(l, toUpdate.get(l));
 		}
 		RSPlayerListener.killConversationListener(this);
-		RealShopping.updateShopsDb();
+		SerializationManager.saveShops();
 		return toUpdate.size();
 	}
 	

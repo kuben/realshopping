@@ -21,6 +21,7 @@ package com.github.kuben.realshopping;
 import com.github.kuben.realshopping.exceptions.RealShoppingException;
 import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
+import com.github.stengun.realshopping.Coupon;
 import com.github.stengun.realshopping.Pager;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,7 +60,7 @@ public class Shop {
      * Vars
      * 
      */
-    private String name, world, owner;//Admin stores: owner = @admin
+    private final String name, world, owner;//Admin stores: owner = @admin
     private int buyFor = 0;
 
     /*
@@ -568,29 +569,6 @@ public class Shop {
     
     
     // ------- UTILS
-
-    /**
-     * Exports all protected refillingchests and their location to a string.
-     * The string exported is ready to be read and parsed.
-     * String format:
-     *  worldname,x,y,z
-     * separated with ;.
-     * @return a string with world and location of protected chest.
-     * @deprecated
-     */
-    public String exportProtectedToString() { // TODO convert chest export to YAML format.
-        if (!protectedChests.isEmpty()) {
-            String tempS = "";
-            for (Location tempL : protectedChests) {
-                if (!refillingchests.containsKey(tempL)) {
-                    tempS += ";" + tempL.getWorld().getName() + "," + (int) tempL.getX() + "," + (int) tempL.getY() + "," + (int) tempL.getZ();
-                }
-            }
-            return (tempS.length() > 0) ? tempS.substring(1) : "";
-        } else {
-            return "";
-        }
-    }
     
     public Set<Location> getProtectedChests() {
         return protectedChests;
@@ -605,8 +583,7 @@ public class Shop {
         Map<Price, Integer[]> tempMap = new HashMap<>();
         for(Shop shop : RealShopping.getShops()) {
             if(!shop.getName().equals(name)) {
-                Price[] keys2 = shop.getCosts().keySet().toArray(new Price[0]);
-                for(Price p : keys2) {
+                for(Price p : shop.getCosts().keySet()) {
                     if(tempMap.containsKey(p)){
                         if(tempMap.get(p)[0] > shop.getCostPerUnit(p))
                             tempMap.put(p, new Integer[] { (int)shop.getCostPerUnit(p) });
@@ -691,20 +668,21 @@ public class Shop {
      * @return true if the item is sold, false if not or if the player is not in a store.
      */
     
-    public static boolean sellToStore(Player p, ItemStack[] iS) {
+    public static List<ItemStack> sellToStore(Player p, List<ItemStack> iS) {
+        List<ItemStack> cannotsell = new ArrayList<>();
         if ( !Config.isEnableSelling() 
                 || !RealShopping.hasPInv(p)
                 || !RealShopping.getPInv(p).getShop().hasPrices() 
                 || RealShopping.getPInv(p).getShop().getBuyFor() < 1) 
         {
-            return false;
+            return cannotsell;
         }
         boolean sold = true;
         RSPlayerInventory pinv = RealShopping.getPInv(p);
         Shop shop = pinv.getShop();
         float payment = 0.0f;
         List<ItemStack> cansell = new ArrayList<>();
-        List<ItemStack> cannotsell = new ArrayList<>();
+        //List<ItemStack> cannotsell = new ArrayList<>();
         // Separate objects that I can sell from objects that I can't
         for(ItemStack itm : iS){
             if(pinv.getAmount(itm) == 0 || sellPrice(shop,itm) == 0.0f) {
@@ -756,9 +734,10 @@ public class Shop {
                         + ChatColor.DARK_GREEN + payment + ChatColor.GREEN + LangPack.UNIT);
             }
         }
-        p.getInventory().addItem(cannotsell.toArray(new ItemStack[0]));
-        p.updateInventory();
-        return sold;
+        //p.getInventory().addItem(cannotsell.toArray(new ItemStack[0]));
+        //p.updateInventory();
+        //return sold;
+        return cannotsell;
     }
 
 
@@ -808,31 +787,40 @@ public class Shop {
         }
         return true;
     }
-
+    
     /**
      * Performs cart checkout and payment for purchased items.
      * @param player The player that is going to pay for purchased items.
      * @param invs All inventories a player have.
+     * @param discounts List of discount coupons
      * @return true if this command was executed correctly.
      */
-    public static boolean pay(Player player, Inventory[] invs) {
+    public static boolean pay(Player player, Inventory[] invs, List<Coupon> discounts) {
         if (RealShopping.hasPInv(player)) {
             RSPlayerInventory pinv = RealShopping.getPInv(player);
             Shop shop = pinv.getShop();
             if (shop.hasPrices()) {
-                int toPay = pinv.toPay(invs);
+                double toPay = pinv.toPay(invs);
                 if (toPay == 0) {
                     return false;
                 }
-                if (RSEconomy.getBalance(player.getName()) < toPay / 100f) {
-                    player.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOBUYTHINGSFOR + toPay / 100f + LangPack.UNIT);
+                //insert coupon discounts
+                int discount_percent = 0;
+                double discount = 0.;
+                if(discounts != null && discounts.size() > 0) {
+                    discount = 0;
+                }
+                toPay = (toPay - (toPay*discount_percent/100d));
+                toPay = (toPay > discount ? toPay - discount : 0);
+                if (RSEconomy.getBalance(player.getName()) < toPay / 100d) {
+                    player.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOBUYTHINGSFOR + toPay / 100d + LangPack.UNIT);
                     return true;
                 }
-                RSEconomy.withdraw(player.getName(), toPay/100f);
+                RSEconomy.withdraw(player.getName(), toPay/100d);
                 if(!shop.getOwner().equals("@admin")){
-                    RSEconomy.deposit(shop.getOwner(), toPay/100f);//If player owned store, pay player
-                    if(RealShopping.getPlayerSettings(player.getName()).getSoldNotifications(shop, toPay/100))//And send a notification perhaps
-                        RealShopping.sendNotification(shop.getOwner(), player.getName() + LangPack.BOUGHTSTUFFFOR + toPay/100f + LangPack.UNIT + LangPack.FROMYOURSTORE + shop.getName() + ".");
+                    RSEconomy.deposit(shop.getOwner(), toPay/100d);//If player owned store, pay player
+                    if(RealShopping.getPlayerSettings(player.getName()).getSoldNotifications(shop, toPay/100d))//And send a notification perhaps
+                        RealShopping.sendNotification(shop.getOwner(), player.getName() + LangPack.BOUGHTSTUFFFOR + toPay/100d + LangPack.UNIT + LangPack.FROMYOURSTORE + shop.getName() + ".");
                 }
                 Map<Price, Integer> bought = pinv.getBoughtWait(invs);
                 for (Price p : bought.keySet()) {
@@ -854,7 +842,16 @@ public class Shop {
         } else player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
         return false;
     }
-
+        /**
+     * Performs cart checkout and payment for purchased items.
+     * @param p The player that is going to pay for purchased items.
+     * @param invs All inventories a player have.
+     * @return true if this command was executed correctly.
+     * @deprecated 
+     */
+    public static boolean pay(Player p, Inventory[] invs){
+        return pay(p, invs, null);
+    }
     /**
      * Correctly exits a player from a store.
      * This command can be executed only if the player is on a tile marked for "store exit",

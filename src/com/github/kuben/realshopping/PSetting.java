@@ -163,12 +163,12 @@ public class PSetting {
         return o == FavNots.SALES || o == FavNots.BOTH;
     }
 
-    public boolean getSoldNotifications(Shop shop, int isover) {
+    public boolean getSoldNotifications(Shop shop, double isover) {
         if(getSoldNotsMap.containsKey(shop)) return getSoldNotsMap.get(shop) >= 0 && getSoldNotsMap.get(shop) <= isover;
         return getSoldNots >= 0 && getSoldNots <= isover;
     }
 
-    public boolean getBoughtNotifications(Shop shop, int isover) {
+    public boolean getBoughtNotifications(Shop shop, double isover) {
         if(getBoughtNotsMap.containsKey(shop)) return getBoughtNotsMap.get(shop) >= 0 && getBoughtNotsMap.get(shop) <= isover;
         return getBoughtNots >= 0 && getBoughtNots <= isover;
     }

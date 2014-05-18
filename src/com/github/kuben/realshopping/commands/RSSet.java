@@ -10,6 +10,7 @@ import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.exceptions.RealShoppingException;
 import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.kuben.realshopping.prompts.PromptMaster.PromptType;
+import com.github.stengun.realshopping.SerializationManager;
 
 class RSSet extends RSPlayerCommand {
 
@@ -61,7 +62,7 @@ class RSSet extends RSPlayerCommand {
                                         if(RealShopping.shopExists(args[1])){//Create
                                             try {
                                                 RealShopping.getShop(args[1]).addEntranceExit(RealShopping.getEntrance(), RealShopping.getExit());
-                                                RealShopping.updateShopsDb();
+                                                SerializationManager.saveShops();
                                                 player.sendMessage(ChatColor.GREEN + "Entrance/exit pair was added successfully");
                                             } catch(RealShoppingException e){
                                                 player.sendMessage(ChatColor.RED + LangPack.THIS_ENTRANCE_AND_EXIT_PAIR_IS_ALREADY_USED);
@@ -77,7 +78,7 @@ class RSSet extends RSPlayerCommand {
                                         RealShopping.getShop(args[1]).clearEntrancesExits();
                                         RealShopping.removeShop(args[1]);
                                         player.sendMessage(ChatColor.RED + args[1] + LangPack.WASREMOVED);
-                                        RealShopping.updateShopsDb();
+                                        SerializationManager.saveShops();
                                     } else player.sendMessage(ChatColor.RED + LangPack.STORENOTEMPTY);
                                     return true;
 				} else player.sendMessage(ChatColor.RED + args[1] + LangPack.WASNTFOUND);
@@ -93,7 +94,7 @@ class RSSet extends RSPlayerCommand {
                                         int index = Integer.parseInt(args[2]);
                                         Shop shop = RealShopping.getShop(args[1]);
                                         shop.removeEEPair(player,index);
-                                        RealShopping.updateShopsDb();
+                                        SerializationManager.saveShops();
                                     } catch (NumberFormatException e) {
                                         player.sendMessage("Index is not a number, aborting.");
                                         return false;

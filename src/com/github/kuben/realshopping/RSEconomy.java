@@ -65,7 +65,7 @@ public class RSEconomy {
         }
     }
 
-    public static boolean deposit(String p, float amount){
+    public static boolean deposit(String p, double amount){
         if(econ != null) return econ.depositPlayer(p, amount).transactionSuccess();
         if(accounts.containsKey(p)){
             accounts.put(p, accounts.get(p) + (long)(amount * 100));
@@ -164,6 +164,7 @@ class StatUpdater extends Thread {
     }
     
     private static void updateStats(){
+        if(provMap.isEmpty()) return;
         long tStamp = System.nanoTime();
         Map<Material, TreeMap<String, Integer>> statsMap = new HashMap<>();
         for(Shop shop:RealShopping.getShops()){

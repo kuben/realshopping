@@ -54,7 +54,7 @@ public class Pager extends Thread {
                 stamp = System.currentTimeMillis();
                 waitcheck();
                 RSPlayerInventory pinv = RealShopping.getPInv(player);
-                if(pinv != null){
+                if(pinv != null && !stop){
                     Shop shop = pinv.getShop();
                     long total = System.currentTimeMillis() - stamp;
                     if (total > time) {

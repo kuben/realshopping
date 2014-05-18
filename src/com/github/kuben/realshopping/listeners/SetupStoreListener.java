@@ -16,6 +16,7 @@ import com.github.kuben.realshopping.LangPack;
 import com.github.kuben.realshopping.Shop;
 import com.github.kuben.realshopping.exceptions.RSListenerException;
 import com.github.kuben.realshopping.exceptions.RealShoppingException;
+import com.github.stengun.realshopping.SerializationManager;
 
 public class SetupStoreListener extends GeneralListener implements Appliable {
 	
@@ -99,7 +100,7 @@ public class SetupStoreListener extends GeneralListener implements Appliable {
 					r++;
 				}
 			}
-			RealShopping.updateShopsDb();
+			SerializationManager.saveShops();
 			RSPlayerListener.killConversationListener(this);
 		}
 		return r;

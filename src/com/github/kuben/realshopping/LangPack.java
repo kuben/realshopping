@@ -417,8 +417,19 @@ public class LangPack {
 	public static String EE_PAIRS_FROM_STORE_;
 	public static String DO_YOU_REALLY_WANT_TO_DELETE_;
 	public static String AND_ALL_ITS_;
-	
-	public static void initialize(String lang){
+	public static String BTN_CONFIRM;
+        public static String BTN_CANCEL;
+        public static String BTN_PAYMENTINFO;
+        public static String BTN_SELLINFO;
+        public static String PAYTOSTORE;
+        public static String COUPONNAME;
+	public static String DISCOUNTAMOUNT;
+        public static String GLOBALDISCOUNT;
+        public static String ITEMDISCOUNT;
+        public static String TYPEDISCOUNT;
+        public static String QUANTITYDISCOUNT;
+        
+        public static void initialize(String lang){
 		THISCOMMANDCANNOTBEUSEDFROMCONSOLE = "This command cannot be used from console";
 		REALSHOPPINGRELOADED = "RealShopping reloaded.";
 		YOUCANTUSETHATITEMINSTORE = "You can't use that item in store.";
@@ -804,8 +815,17 @@ public class LangPack {
 		EE_PAIRS_FROM_STORE_ = " entrance/exit pairs from store ";
 		DO_YOU_REALLY_WANT_TO_DELETE_ = "Do you really want to delete ";
 		AND_ALL_ITS_ = " and all its entrances, chests and prices.";
-
-		
+                BTN_CANCEL = "Cancel";
+                BTN_CONFIRM = "Confirm";
+                BTN_PAYMENTINFO = "Payment Information";
+                BTN_SELLINFO = "Sell Informations";
+                PAYTOSTORE = "Payment Panel";
+		COUPONNAME = "Discount Coupon";
+                DISCOUNTAMOUNT = "Discount";
+                GLOBALDISCOUNT = "One-Time, single purchase discount";
+                ITEMDISCOUNT = "One-Time, single item discount";
+                TYPEDISCOUNT = "One-Time, item type discount";
+                QUANTITYDISCOUNT = "One-Time, quantity driven discount";
 		UNIT = "$";
 		
 		File f = new File(RealShopping.MANDIR + "langpacks/" + lang + ".xml");
@@ -820,392 +840,1177 @@ public class LangPack {
 				for(int i = 0 ; i < nl.getLength();i++) {
 					Element el = (Element)nl.item(i);
 					String name = el.getTagName();
-					if(name.equals("UNIT")) UNIT = el.getAttribute("value");
-					else if(name.equals("THISCOMMANDCANNOTBEUSEDFROMCONSOLE")) THISCOMMANDCANNOTBEUSEDFROMCONSOLE = el.getAttribute("value");
-					else if(name.equals("REALSHOPPINGRELOADED")) REALSHOPPINGRELOADED = el.getAttribute("value");
-					else if(name.equals("YOUENTERED")) YOUENTERED = el.getAttribute("value");
-					else if(name.equals("YOULEFT")) YOULEFT = el.getAttribute("value");
-					else if(name.equals("YOURENOTATTHEENTRANCEOFASTORE")) YOURENOTATTHEENTRANCEOFASTORE = el.getAttribute("value");
-					else if(name.equals("YOURENOTATTHEEXITOFASTORE")) YOURENOTATTHEEXITOFASTORE = el.getAttribute("value");
-					else if(name.equals("THEREARENOSTORESSET")) THEREARENOSTORESSET = el.getAttribute("value");
-					else if(name.equals("YOUHAVENTPAIDFORALLYOURARTICLES")) YOUHAVENTPAIDFORALLYOURARTICLES = el.getAttribute("value");
-					else if(name.equals("YOURENOTINSIDEASTORE")) YOURENOTINSIDEASTORE = el.getAttribute("value");
-					else if(name.equals("YOUCANTAFFORDTOBUYTHINGSFOR")) YOUCANTAFFORDTOBUYTHINGSFOR = el.getAttribute("value");
-					else if(name.equals("YOUBOUGHTSTUFFFOR")) YOUBOUGHTSTUFFFOR = el.getAttribute("value");
-					else if(name.equals("THEREARENOPRICESSETFORTHISSTORE")) THEREARENOPRICESSETFORTHISSTORE = el.getAttribute("value");
-					else if(name.equals("YOURARTICLESCOST")) YOURARTICLESCOST = el.getAttribute("value");
-					else if(name.equals("TRYINGTOCHEATYOURWAYOUT")) TRYINGTOCHEATYOURWAYOUT = el.getAttribute("value");
-					else if(name.equals("HAVEFUNINHELL")) HAVEFUNINHELL = el.getAttribute("value");
-					else if(name.equals("ENTRANCEVARIABLESETTO")) ENTRANCEVARIABLESETTO = el.getAttribute("value");
-					else if(name.equals("EXITVARIABLESETTO")) EXITVARIABLESETTO = el.getAttribute("value");
-					else if(name.equals("WASCREATED")) WASCREATED = el.getAttribute("value");
-					else if(name.equals("WASREMOVED")) WASREMOVED = el.getAttribute("value");
-					else if(name.equals("WASNTFOUND")) WASNTFOUND = el.getAttribute("value");
-					else if(name.equals("YOUARENOTTHEOWNEROFTHISSTORE")) YOUARENOTTHEOWNEROFTHISSTORE = el.getAttribute("value");
-					else if(name.equals("THERESNOENTRANCESET")) THERESNOENTRANCESET = el.getAttribute("value");
-					else if(name.equals("THERSNOEXITSET")) THERSNOEXITSET = el.getAttribute("value");
-					else if(name.equals("YOUHAVETOUSETHESTOREARGUMENTWHENEXECUTINGTHISCOMMANDFROMCONSOLE")) YOUHAVETOUSETHESTOREARGUMENTWHENEXECUTINGTHISCOMMANDFROMCONSOLE = el.getAttribute("value");
-					else if(name.equals("YOUHAVETOBEINASTOREIFNOTUSINGTHESTOREARGUMENT")) YOUHAVETOBEINASTOREIFNOTUSINGTHESTOREARGUMENT = el.getAttribute("value");
-					else if(name.equals("THEPAGENUMBERMUSTBE1ORHIGHER")) THEPAGENUMBERMUSTBE1ORHIGHER = el.getAttribute("value");
-					else if(name.equals("ISNOTAVALIDPAGENUMBER")) ISNOTAVALIDPAGENUMBER = el.getAttribute("value");
-					else if(name.equals("YOUHAVETOBEINASTORETOUSETHISCOMMANDWITHTWOARGUENTS")) YOUHAVETOBEINASTORETOUSETHISCOMMANDWITHTWOARGUENTS = el.getAttribute("value");
-					else if(name.equals("YOUHAVETOUSEALLTHREEARGUMENTSWHENEXECUTINGTHISCOMMANDFROMCONSOLE")) YOUHAVETOUSEALLTHREEARGUMENTSWHENEXECUTINGTHISCOMMANDFROMCONSOLE = el.getAttribute("value");
-					else if(name.equals("PRICEFOR")) PRICEFOR = el.getAttribute("value");
-					else if(name.equals("SETTO")) SETTO = el.getAttribute("value");
-					else if(name.equals("ISNOTAPROPER_FOLLOWEDBYTHEPRICE_")) ISNOTAPROPER_FOLLOWEDBYTHEPRICE_ = el.getAttribute("value");
-					else if(name.equals("ISNOTAPROPER_")) ISNOTAPROPER_ = el.getAttribute("value");
-					else if(name.equals("REMOVEDPRICEFOR")) REMOVEDPRICEFOR = el.getAttribute("value");
-					else if(name.equals("COULDNTFINDPRICEFOR")) COULDNTFINDPRICEFOR = el.getAttribute("value");
-					else if(name.equals("YOUARENTPERMITTEDTOEMANAGETHISSTORE")) YOUARENTPERMITTEDTOEMANAGETHISSTORE = el.getAttribute("value");
-					else if(name.equals("DOESNTEXIST")) DOESNTEXIST = el.getAttribute("value");
-					else if(name.equals("CHESTCREATED")) CHESTCREATED = el.getAttribute("value");
-					else if(name.equals("CHESTREMOVED")) CHESTREMOVED = el.getAttribute("value");
-					else if(name.equals("ACHESTALREADYEXISTSONTHISLOCATION")) ACHESTALREADYEXISTSONTHISLOCATION = el.getAttribute("value");
-					else if(name.equals("COULDNTFINDCHESTONTHISLOCATION")) COULDNTFINDCHESTONTHISLOCATION = el.getAttribute("value");
-					else if(name.equals("ONLYADMINSTORESCANHAVESELFREFILLINGCHESTS")) ONLYADMINSTORESCANHAVESELFREFILLINGCHESTS = el.getAttribute("value");
-					else if(name.equals("ADDED")) ADDED = el.getAttribute("value");
-					else if(name.equals("REMOVED")) REMOVED = el.getAttribute("value");
-					else if(name.equals("ITEMS")) ITEMS = el.getAttribute("value");
-					else if(name.equals("THISCHESTDOESNTEXIST")) THISCHESTDOESNTEXIST = el.getAttribute("value");
-					else if(name.equals("ONEORMOREOFTHEITEMIDSWERENOTINTEGERS")) ONEORMOREOFTHEITEMIDSWERENOTINTEGERS = el.getAttribute("value");
-					else if(name.equals("YOUHAVETOBEINASTORETOUSETHISCOMMAND")) YOUHAVETOBEINASTORETOUSETHISCOMMAND = el.getAttribute("value");
-					else if(name.equals("MOREITEMSONPAGE")) MOREITEMSONPAGE = el.getAttribute("value");
-					else if(name.equals("THEREARENTTHATMANYPAGES")) THEREARENTTHATMANYPAGES = el.getAttribute("value");
-					else if(name.equals("TRIEDTOSTEALFROMTHESTORE")) TRIEDTOSTEALFROMTHESTORE = el.getAttribute("value");
-					else if(name.equals("WASTELEPORTEDTOHELL")) WASTELEPORTEDTOHELL = el.getAttribute("value");
-					else if(name.equals("CREATINGASTORECOSTS")) CREATINGASTORECOSTS = el.getAttribute("value");
-					else if(name.equals("YOUWEREJAILED")) YOUWEREJAILED = el.getAttribute("value");
-					else if(name.equals("WASJAILED")) WASJAILED = el.getAttribute("value");
-					else if(name.equals("YOUARENOLONGERINJAIL")) YOUARENOLONGERINJAIL  = el.getAttribute("value");
-					else if(name.equals("UNJAILED")) UNJAILED = el.getAttribute("value");
-					else if(name.equals("ISNOTJAILED")) ISNOTJAILED = el.getAttribute("value");
-					else if(name.equals("ISNOTONLINE")) ISNOTONLINE = el.getAttribute("value");
-					else if(name.equals("YOUAREBANNEDFROM")) YOUAREBANNEDFROM = el.getAttribute("value");
-					else if(name.equals("YOUDONTOWNTHEITEMSYOUWANTTOSELL")) YOUDONTOWNTHEITEMSYOUWANTTOSELL = el.getAttribute("value");
-					else if(name.equals("ADDEDTOSELLLIST")) ADDEDTOSELLLIST = el.getAttribute("value");
-					else if(name.equals("THISSTOREDOESNTBUY")) THISSTOREDOESNTBUY = el.getAttribute("value");
-					else if(name.equals("THISSTOREDOESNTBUYANYITEMS")) THISSTOREDOESNTBUYANYITEMS = el.getAttribute("value");
-					else if(name.equals("CANCELLEDSELLINGITEMS")) CANCELLEDSELLINGITEMS = el.getAttribute("value");
-					else if(name.equals("YOUDONTHAVEALLTHEITEMSYOUWANTEDTOSELL")) YOUDONTHAVEALLTHEITEMSYOUWANTEDTOSELL = el.getAttribute("value");
-					else if(name.equals("SOLD")) SOLD = el.getAttribute("value");
-					else if(name.equals("ITEMSFOR")) ITEMSFOR = el.getAttribute("value");
-					else if(name.equals("YOUCANTSHIPANEMPTYCART")) YOUCANTSHIPANEMPTYCART = el.getAttribute("value");
-					else if(name.equals("PACKAGEWAITINGTOBEDELIVERED")) PACKAGEWAITINGTOBEDELIVERED = el.getAttribute("value");
-					else if(name.equals("YOUHAVENTBOUGHTANYTHING")) YOUHAVENTBOUGHTANYTHING = el.getAttribute("value");
-					else if(name.equals("THERESNOPACKAGEWITHTHEID")) THERESNOPACKAGEWITHTHEID = el.getAttribute("value");
-					else if(name.equals("YOUHAVENTGOTANYITEMSWAITINGTOBEDELIVERED")) YOUHAVENTGOTANYITEMSWAITINGTOBEDELIVERED = el.getAttribute("value");
-					else if(name.equals("THEBLOCKYOUSELECTEDISNTACHEST")) THEBLOCKYOUSELECTEDISNTACHEST = el.getAttribute("value");
-					else if(name.equals("THEREISA")) THEREISA = el.getAttribute("value");
-					else if(name.equals("PCNTOFFSALEAT")) PCNTOFFSALEAT = el.getAttribute("value");
-					else if(name.equals("ONSALE")) ONSALE = el.getAttribute("value");
-					else if(name.equals("STORE")) STORE = el.getAttribute("value");
-					else if(name.equals("OWNEDBY")) OWNEDBY = el.getAttribute("value");
-					else if(name.equals("BUYSFOR")) BUYSFOR = el.getAttribute("value");
-					else if(name.equals("PCNTOFORIGINAL")) PCNTOFORIGINAL = el.getAttribute("value");
-					else if(name.equals("NOTBUYINGFROMPLAYERS")) NOTBUYINGFROMPLAYERS = el.getAttribute("value");
-					else if(name.equals("YOUCANTUSEAVALUEBELLOW0")) YOUCANTUSEAVALUEBELLOW0 = el.getAttribute("value");
-					else if(name.equals("YOUCANTUSEAVALUEOF0ORLESS")) YOUCANTUSEAVALUEOF0ORLESS = el.getAttribute("value");
-					else if(name.equals("YOUCANTUSEAVALUEOVER100")) YOUCANTUSEAVALUEOVER100 = el.getAttribute("value");
-					else if(name.equals("YOUCANTUSEAVALUEOF100ORMORE")) YOUCANTUSEAVALUEOF100ORMORE = el.getAttribute("value");
-					else if(name.equals("NOITEMSARESOLDINTHESTORE")) NOITEMSARESOLDINTHESTORE = el.getAttribute("value");
-					else if(name.equals("SALEENDED")) SALEENDED = el.getAttribute("value");
-					else if(name.equals("HASA")) HASA = el.getAttribute("value");
-					else if(name.equals("PCNTOFFSALERIGHTNOW")) PCNTOFFSALERIGHTNOW = el.getAttribute("value");
-					else if(name.equals("PCNTOFF")) PCNTOFF = el.getAttribute("value");
-					else if(name.equals("ISALREADYBANNEDFROMYOURSTORE")) ISALREADYBANNEDFROMYOURSTORE = el.getAttribute("value");
-					else if(name.equals("ISNOLONGERBANNEDFROMYOURSTORE")) ISNOLONGERBANNEDFROMYOURSTORE = el.getAttribute("value");
-					else if(name.equals("WASNTBANNEDFROMYOURSTORE")) WASNTBANNEDFROMYOURSTORE = el.getAttribute("value");
-					else if(name.equals("BANNED")) BANNED = el.getAttribute("value");
-					else if(name.equals("FROMSTORE")) FROMSTORE = el.getAttribute("value");
-					else if(name.equals("YOUDONTHAVEPERMISSIONTOMANAGETHATSTORE")) YOUDONTHAVEPERMISSIONTOMANAGETHATSTORE = el.getAttribute("value");
-					else if(name.equals("NOTHINGTOCOLLECT")) NOTHINGTOCOLLECT = el.getAttribute("value");
-					else if(name.equals("FILLEDCHESTWITH")) FILLEDCHESTWITH = el.getAttribute("value");
-					else if(name.equals("DROPPED")) DROPPED = el.getAttribute("value");
-					else if(name.equals("YOUHAVEPACKAGESWITHIDS_")) YOUHAVEPACKAGESWITHIDS_ = el.getAttribute("value");
-					else if(name.equals("YOUDONTHAVEANYPACKAGESTOPICKUP")) YOUDONTHAVEANYPACKAGESTOPICKUP = el.getAttribute("value");
-					else if(name.equals("TOPICKUP")) TOPICKUP = el.getAttribute("value");
-					else if(name.equals("YOUHAVETOSPECIFYTHEID_")) YOUHAVETOSPECIFYTHEID_ = el.getAttribute("value");
-					else if(name.equals("THECONTENTSOFTHEPACKAGEARE")) THECONTENTSOFTHEPACKAGEARE = el.getAttribute("value");
-					else if(name.equals("WHITELISTMODEALREADYSET")) WHITELISTMODEALREADYSET = el.getAttribute("value");
-					else if(name.equals("BLACKLISTMODEALREADYSET")) BLACKLISTMODEALREADYSET = el.getAttribute("value");
-					else if(name.equals("SETWHITELISTMODE")) SETWHITELISTMODE = el.getAttribute("value");
-					else if(name.equals("SETBLACKLISTMODE")) SETBLACKLISTMODE = el.getAttribute("value");
-					else if(name.equals("REMOVEDONEOFTHE")) REMOVEDONEOFTHE = el.getAttribute("value");
-					else if(name.equals("TELEPORTLOCATIONS")) TELEPORTLOCATIONS = el.getAttribute("value");
-					else if(name.equals("THEREISNO")) THEREISNO = el.getAttribute("value");
-					else if(name.equals("TELEPORTLOCATIONWITHITSCENTERHERE")) TELEPORTLOCATIONWITHITSCENTERHERE = el.getAttribute("value");
-					else if(name.equals("OLDRADIUSVALUE")) OLDRADIUSVALUE = el.getAttribute("value");
-					else if(name.equals("REPLACEDWITH")) REPLACEDWITH = el.getAttribute("value");
-					else if(name.equals("TELEPORTLOCATIONWITHARADIUSOF")) TELEPORTLOCATIONWITHARADIUSOF = el.getAttribute("value");
-					else if(name.equals("ISNOTANINTEGER")) ISNOTANINTEGER = el.getAttribute("value");
-					else if(name.equals("ISNOTAVALIDARGUMENT")) ISNOTAVALIDARGUMENT = el.getAttribute("value");
-					else if(name.equals("YOUARENTALLOWEDTOTELEPORTTHERE")) YOUARENTALLOWEDTOTELEPORTTHERE = el.getAttribute("value");
-					else if(name.equals("SELLINGTOSTORESISNOTENABLEDONTHISSERVER")) SELLINGTOSTORESISNOTENABLEDONTHISSERVER = el.getAttribute("value");
-					else if(name.equals("ISNOTINYOURSTORE")) ISNOTINYOURSTORE = el.getAttribute("value");
-					else if(name.equals("WASKICKEDFROMYOURSTORE")) WASKICKEDFROMYOURSTORE = el.getAttribute("value");
-					else if(name.equals("PLAYER")) PLAYER = el.getAttribute("value");
-					else if(name.equals("ISNTONLINEKICK")) ISNTONLINEKICK = el.getAttribute("value");
-					else if(name.equals("PLAYERSINSTORE")) PLAYERSINSTORE = el.getAttribute("value");
-					else if(name.equals("STORENOTEMPTY")) STORENOTEMPTY = el.getAttribute("value");
-					else if(name.equals("PACKAGESENT")) PACKAGESENT = el.getAttribute("value");
-					else if(name.equals("FROM")) FROM = el.getAttribute("value");
-					else if(name.equals("INWORLD")) INWORLD = el.getAttribute("value");
-					else if(name.equals("YOUCANTUSETHATITEMINSTORE")) YOUCANTUSETHATITEMINSTORE = el.getAttribute("value");
-					else if(name.equals("THISCHESTISPROTECTED")) THISCHESTISPROTECTED = el.getAttribute("value");
-					//v0.43
-					else if(name.equals("SELLTOSTORE")) SELLTOSTORE = el.getAttribute("value");
-					else if(name.equals("ENABLEDNOTIFICATIONSFOR")) ENABLEDNOTIFICATIONSFOR = el.getAttribute("value");
-					else if(name.equals("DISABLEDNOTIFICATIONSFOR")) DISABLEDNOTIFICATIONSFOR = el.getAttribute("value");
-					else if(name.equals("USAGE")) USAGE = el.getAttribute("value");
-					else if(name.equals("NOTIFICATIONSARE")) NOTIFICATIONSARE = el.getAttribute("value");
-					else if(name.equals("ON")) ON = el.getAttribute("value");
-					else if(name.equals("OFF")) OFF = el.getAttribute("value");
-					else if(name.equals("SKIPPSIGN")) SKIPPSIGN = el.getAttribute("value");
-					else if(name.equals("YOUWONTGETNOTIFIEDWHENYOURSTORE")) YOUWONTGETNOTIFIEDWHENYOURSTORE = el.getAttribute("value");
-					else if(name.equals("BECOMESMOREORLESSPOPULAR")) BECOMESMOREORLESSPOPULAR = el.getAttribute("value");
-					else if(name.equals("YOUWILLGETNOTIFIEDWHENYOURSTORE")) YOUWILLGETNOTIFIEDWHENYOURSTORE = el.getAttribute("value");
-					else if(name.equals("BECOMESATLEAST")) BECOMESATLEAST = el.getAttribute("value");
-					else if(name.equals("PLACESMOREORLESSPOPULAR")) PLACESMOREORLESSPOPULAR = el.getAttribute("value");
-					else if(name.equals("WHERETRESHOLDIS_")) WHERETRESHOLDIS_ = el.getAttribute("value");
-					else if(name.equals("ANDTHEPRICESWILLBE_")) ANDTHEPRICESWILLBE_ = el.getAttribute("value");
-					else if(name.equals("WHERETRESHOLDIS_CHANGES_")) WHERETRESHOLDIS_CHANGES_ = el.getAttribute("value");
-					else if(name.equals("ANDPERCENTIS_")) ANDPERCENTIS_ = el.getAttribute("value");
-					else if(name.equals("AI_ISNOTENABLED_")) AI_ISNOTENABLED_ = el.getAttribute("value");
-					else if(name.equals("SETMINIMALANDMAXIMALPRICESFOR")) SETMINIMALANDMAXIMALPRICESFOR = el.getAttribute("value");
-					else if(name.equals("OLDPRICESREPLACEDWITHPRICESFROM")) OLDPRICESREPLACEDWITHPRICESFROM = el.getAttribute("value");
-					else if(name.equals("OLDPRICESREPLACEDWITHTHELOWEST_")) OLDPRICESREPLACEDWITHTHELOWEST_ = el.getAttribute("value");
-					else if(name.equals("CLEAREDALLPRICESFOR")) CLEAREDALLPRICESFOR = el.getAttribute("value");
-					else if(name.equals("HASAMINIMALPRICEOF")) HASAMINIMALPRICEOF = el.getAttribute("value");
-					else if(name.equals("ANDAMAXIMALPRICEOF")) ANDAMAXIMALPRICEOF = el.getAttribute("value");
-					else if(name.equals("FOR")) FOR = el.getAttribute("value");
-					else if(name.equals("DOESNTHAVEAMINIMALANDMAXIMALPRICEFOR")) DOESNTHAVEAMINIMALANDMAXIMALPRICEFOR = el.getAttribute("value");
-					else if(name.equals("CLEAREDMINIMALANDMAXIMALPRICESFOR")) CLEAREDMINIMALANDMAXIMALPRICESFOR = el.getAttribute("value");
-					else if(name.equals("DIDNTHAVEAMINIMALANDMAXIMALPRICEFOR")) DIDNTHAVEAMINIMALANDMAXIMALPRICEFOR = el.getAttribute("value");
-					else if(name.equals("ISNOTAPROPERARGUMENT")) ISNOTAPROPERARGUMENT = el.getAttribute("value");
-					else if(name.equals("YOUCANTNAMEASTORETHAT")) YOUCANTNAMEASTORETHAT = el.getAttribute("value");
-					else if(name.equals("HIGHLIGHTED5LOCATIONSFOR5SECONDS")) HIGHLIGHTED5LOCATIONSFOR5SECONDS = el.getAttribute("value");
-					else if(name.equals("NOLOCATIONSTOHIGHLIGHT")) NOLOCATIONSTOHIGHLIGHT = el.getAttribute("value");
-					else if(name.equals("THISCHESTISALREADYPROTECTED")) THISCHESTISALREADYPROTECTED = el.getAttribute("value");
-					else if(name.equals("MADECHESTPROTECTED")) MADECHESTPROTECTED = el.getAttribute("value");
-					else if(name.equals("UNPROTECTEDCHEST")) UNPROTECTEDCHEST = el.getAttribute("value");
-					else if(name.equals("THISCHESTISNTPROTECTED")) THISCHESTISNTPROTECTED = el.getAttribute("value");
-					else if(name.equals("READINGDESCRIPTION")) READINGDESCRIPTION = el.getAttribute("value");
-					else if(name.equals("THISISTHENEWESTVERSION")) THISISTHENEWESTVERSION = el.getAttribute("value");
-					else if(name.equals("SUCCESSFULUPDATE")) SUCCESSFULUPDATE = el.getAttribute("value");
-					else if(name.equals("UPDATEFAILED")) UPDATEFAILED = el.getAttribute("value");
-					else if(name.equals("YOUARENTPERMITTEDTOUSETHISCOMMAND")) YOUARENTPERMITTEDTOUSETHISCOMMAND = el.getAttribute("value");
-					else if(name.equals("YOUCANTCOLLECT_YOUDONOTOWN")) YOUCANTCOLLECT_YOUDONOTOWN = el.getAttribute("value");
-					else if(name.equals("YOUCANTCOLLECT_SERVER")) YOUCANTCOLLECT_SERVER = el.getAttribute("value");
-					else if(name.equals("THELASTHOUR")) THELASTHOUR = el.getAttribute("value");
-					else if(name.equals("YESTERDAY")) YESTERDAY = el.getAttribute("value");
-					else if(name.equals("LASTWEEK")) LASTWEEK = el.getAttribute("value");
-					else if(name.equals("LASTMONTH")) LASTMONTH = el.getAttribute("value");
-					else if(name.equals("YOURSTORE")) YOURSTORE = el.getAttribute("value");
-					else if(name.equals("ISNOWTHE")) ISNOWTHE = el.getAttribute("value");
-					else if(name.equals("SINCE")) SINCE = el.getAttribute("value");
-					else if(name.equals("PROVIDEROF")) PROVIDEROF = el.getAttribute("value");
-					else if(name.equals("RAISEDTHEPRICEFOR")) RAISEDTHEPRICEFOR = el.getAttribute("value");
-					else if(name.equals("LOWEREDTHEPRICEFOR")) LOWEREDTHEPRICEFOR = el.getAttribute("value");
-					else if(name.equals("BY")) BY = el.getAttribute("value");
-					else if(name.equals("TO")) TO = el.getAttribute("value");
-					else if(name.equals("WENTFROMBEINGTHE")) WENTFROMBEINGTHE = el.getAttribute("value");
-					else if(name.equals("TONOTSELLINGANY")) TONOTSELLINGANY = el.getAttribute("value");
-					else if(name.equals("SHIPPEDPACKAGESENT")) SHIPPEDPACKAGESENT = el.getAttribute("value");
-					else if(name.equals("WITH")) WITH = el.getAttribute("value");
-					else if(name.equals("YOUCANNOTDROPITEMS_")) YOUCANNOTDROPITEMS_ = el.getAttribute("value");
-					else if(name.equals("YOUCANNOTEMPTYBUCKETS_")) YOUCANNOTEMPTYBUCKETS_ = el.getAttribute("value");
-					else if(name.equals("YOUCANNOTCRAFTITEMS_")) YOUCANNOTCRAFTITEMS_ = el.getAttribute("value");
-					else if(name.equals("SHOPPINGCARTSARENOTENABLED_")) SHOPPINGCARTSARENOTENABLED_ = el.getAttribute("value");
-					else if(name.equals("SHIPPINGISNOTENABLED_")) SHIPPINGISNOTENABLED_ = el.getAttribute("value");
-					else if(name.equals("YOUCANNOTOPENENDERCHESTS_")) YOUCANNOTOPENENDERCHESTS_ = el.getAttribute("value");
-					else if(name.equals("RESTARTTHESERVER_VERSION")) RESTARTTHESERVER_VERSION = el.getAttribute("value");
-					else if(name.equals("OFRE_UPDATECOMMAND")) OFRE_UPDATECOMMAND = el.getAttribute("value");
-					else if(name.equals("OFRE_UPDATEINFO")) OFRE_UPDATEINFO = el.getAttribute("value");
-					else if(name.equals("REALSHOPPINGINITIALIZED")) REALSHOPPINGINITIALIZED = el.getAttribute("value");
-					else if(name.equals("REALSHOPPINGDISABLED")) REALSHOPPINGDISABLED = el.getAttribute("value");
-					else if(name.equals("BOUGHTSTUFFFOR")) BOUGHTSTUFFFOR = el.getAttribute("value");
-					else if(name.equals("FROMYOURSTORE")) FROMYOURSTORE = el.getAttribute("value");
-					else if(name.equals("OWNER")) OWNER = el.getAttribute("value");
-					else if(name.equals("CANTAFFORDTOBUYITEMSFROMYOUFOR")) CANTAFFORDTOBUYITEMSFROMYOUFOR = el.getAttribute("value");
-					else if(name.equals("WITHDRAWNFROMYOURACCOUNT")) WITHDRAWNFROMYOURACCOUNT = el.getAttribute("value");
-					else if(name.equals("YOUCANTAFFORDTOPAYTHEDELIVERYFEEOF")) YOUCANTAFFORDTOPAYTHEDELIVERYFEEOF = el.getAttribute("value");
-					else if(name.equals("USESLEFT")) USESLEFT = el.getAttribute("value");
-					else if(name.equals("PRICES")) PRICES = el.getAttribute("value");
-					else if(name.equals("RSSTORESHELP")) RSSTORESHELP = el.getAttribute("value");
-					else if(name.equals("BUYFORHELP")) BUYFORHELP = el.getAttribute("value");
-					else if(name.equals("COLLECTHELP")) COLLECTHELP = el.getAttribute("value");
-					else if(name.equals("BANHELP")) BANHELP = el.getAttribute("value");
-					else if(name.equals("UNBANHELP")) UNBANHELP = el.getAttribute("value");
-					else if(name.equals("KICKHELP")) KICKHELP = el.getAttribute("value");
-					else if(name.equals("STARTSALEHELP")) STARTSALEHELP = el.getAttribute("value");
-					else if(name.equals("STARTSALEHELP2")) STARTSALEHELP2 = el.getAttribute("value");
-					else if(name.equals("ENDSALEHELP")) ENDSALEHELP = el.getAttribute("value");
-					else if(name.equals("NOTIFICATIONSHELP")) NOTIFICATIONSHELP = el.getAttribute("value");
-					else if(name.equals("ONCHANGEHELP")) ONCHANGEHELP = el.getAttribute("value");
-					else if(name.equals("SETDEFAULTPRICESFOR")) SETDEFAULTPRICESFOR = el.getAttribute("value");
-					else if(name.equals("THEREARENODEFAULTPRICES")) THEREARENODEFAULTPRICES = el.getAttribute("value");
-					else if(name.equals("QUITCONVERSATION")) QUITCONVERSATION = el.getAttribute("value");
-					else if(name.equals("WHICHFILEDOYOUWANTTOIMPORT_")) WHICHFILEDOYOUWANTTOIMPORT_ = el.getAttribute("value");
-					else if(name.equals("ERROR_NO_XLSX_")) ERROR_NO_XLSX_ = el.getAttribute("value");
-					else if(name.equals("INTHEMAINDIRECTORY")) INTHEMAINDIRECTORY = el.getAttribute("value");
-					else if(name.equals("INTHEREALSHOPPINGDIRECTORY")) INTHEREALSHOPPINGDIRECTORY = el.getAttribute("value");
-					else if(name.equals("TYPETHECORRESPONDINGNUMBER_")) TYPETHECORRESPONDINGNUMBER_ = el.getAttribute("value");
-					else if(name.equals("TOCANCEL")) TOCANCEL = el.getAttribute("value");
-					else if(name.equals("ERROR_INPUTISNOTAVALIDINTEGER")) ERROR_INPUTISNOTAVALIDINTEGER = el.getAttribute("value");
-					else if(name.equals("CHOSENFILE")) CHOSENFILE = el.getAttribute("value");
-					else if(name.equals("TYPE")) TYPE = el.getAttribute("value");
-					else if(name.equals("TOIMPORT_USERDEFINED_")) TOIMPORT_USERDEFINED_ = el.getAttribute("value");
-					else if(name.equals("TOIMPORT_PROPOSITION_")) TOIMPORT_PROPOSITION_ = el.getAttribute("value");
-					else if(name.equals("WRONGFILECHOSEN")) WRONGFILECHOSEN = el.getAttribute("value");
-					else if(name.equals("IMPORTED")) IMPORTED = el.getAttribute("value");
-					else if(name.equals("PRICESASDEFAULT")) PRICESASDEFAULT = el.getAttribute("value");
-					else if(name.equals("ERRORCOULDNTIMPORTPRICES")) ERRORCOULDNTIMPORTPRICES = el.getAttribute("value");
-					else if(name.equals("DONE")) DONE = el.getAttribute("value");
-					else if(name.equals("REALSHOPPINGUPDATEDTO")) REALSHOPPINGUPDATEDTO = el.getAttribute("value");
-					else if(name.equals("X_ST")) X_ST = el.getAttribute("value");
-					else if(name.equals("X_ND")) X_ND = el.getAttribute("value");
-					else if(name.equals("X_RD")) X_RD = el.getAttribute("value");
-					else if(name.equals("X_TH")) X_TH = el.getAttribute("value");
-					//v0.44
-					else if(name.equals(YOUWILLBENOTIFIEDIF)) YOUWILLBENOTIFIEDIF = el.getAttribute("value");
-					else if(name.equals(LOSESGAINS)) LOSESGAINS = el.getAttribute("value");
-					else if(name.equals(PLACES)) PLACES = el.getAttribute("value");
-					else if(name.equals(THEPRICEWILLBELOWEREDINCREASED_)) THEPRICEWILLBELOWEREDINCREASED_ = el.getAttribute("value");
-					else if(name.equals(PCNTIF)) PCNTIF = el.getAttribute("value");
-					else if(name.equals(WONTNOTIFY_)) WONTNOTIFY_ = el.getAttribute("value");
-					//v0.51
-					else if(name.equals("NO_HELP_DOCUMENTATION_")) NO_HELP_DOCUMENTATION_ = el.getAttribute("value");
-					else if(name.equals("FORHELPTYPE")) FORHELPTYPE = el.getAttribute("value");
-					else if(name.equals("BLOCK_ADDED_TO_SELECTION")) BLOCK_ADDED_TO_SELECTION = el.getAttribute("value");
-					else if(name.equals("BLOCK_ALREADY_SELECTED")) BLOCK_ALREADY_SELECTED = el.getAttribute("value");
-					else if(name.equals("BLOCK_REMOVED_FROM_SELECTION")) BLOCK_REMOVED_FROM_SELECTION = el.getAttribute("value");
-					else if(name.equals("BLOCK_WASNT_SELECTED")) BLOCK_WASNT_SELECTED = el.getAttribute("value");
-					else if(name.equals("CHANGES_UNDONE")) CHANGES_UNDONE = el.getAttribute("value");
-					else if(name.equals("PLEASE_SELECT_EXIT_")) PLEASE_SELECT_EXIT_ = el.getAttribute("value");
-					else if(name.equals("PLEASE_SELECT_THE_EXIT_LINKED_TO_ENTRANCE_")) PLEASE_SELECT_THE_EXIT_LINKED_TO_ENTRANCE_ = el.getAttribute("value");
-					else if(name.equals("PLEASE_SELECT_ENTRANCE_")) PLEASE_SELECT_ENTRANCE_ = el.getAttribute("value");
-					else if(name.equals("TO_EXITS_LIST")) TO_EXITS_LIST = el.getAttribute("value");
-					else if(name.equals("IS_NOT_AN_EXIT_TO_THE_LAST_ENTRANCE")) IS_NOT_AN_EXIT_TO_THE_LAST_ENTRANCE = el.getAttribute("value");
-					else if(name.equals("TO_ENTRANCES_LIST")) TO_ENTRANCES_LIST = el.getAttribute("value");
-					else if(name.equals("IS_NOT_AN_ENTRANCE_TO_")) IS_NOT_AN_ENTRANCE_TO_ = el.getAttribute("value");
-					else if(name.equals("ABANDONING_CONVERSATIONS")) ABANDONING_CONVERSATIONS = el.getAttribute("value");
-					else if(name.equals("CONVERSATIONS_ABANDONED")) CONVERSATIONS_ABANDONED = el.getAttribute("value");
-					else if(name.equals("QUIT_CONVERSATION_FOR_UNKNOWN_REASON")) QUIT_CONVERSATION_FOR_UNKNOWN_REASON = el.getAttribute("value");
-					else if(name.equals("IS_NOT_IN_A_STORE")) IS_NOT_IN_A_STORE = el.getAttribute("value");
-					else if(name.equals("IS_NOT_ALLOWED_TO_MANAGE_STORE_")) IS_NOT_ALLOWED_TO_MANAGE_STORE_ = el.getAttribute("value");
-					else if(name.equals("YOU_CANT_TELEPORT_WHILE_IN_A_CONVERSATION")) YOU_CANT_TELEPORT_WHILE_IN_A_CONVERSATION = el.getAttribute("value");
-					else if(name.equals("YOU_CANT_DO_THIS_WHILE_IN_A_CONVERSATION")) YOU_CANT_DO_THIS_WHILE_IN_A_CONVERSATION = el.getAttribute("value");
-					else if(name.equals("ALL_CONVERSATIONS_CAN_BE_ABORTED_WITH_")) ALL_CONVERSATIONS_CAN_BE_ABORTED_WITH_ = el.getAttribute("value");
-					else if(name.equals("YOU_HAVE_TO_SEARCH_FOR_A_SPECIFIC_ITEM")) YOU_HAVE_TO_SEARCH_FOR_A_SPECIFIC_ITEM = el.getAttribute("value");
-					else if(name.equals("NO_MATCHES_FOR_")) NO_MATCHES_FOR_ = el.getAttribute("value");
-					else if(name.equals("RSPRICESHELP")) RSPRICESHELP = el.getAttribute("value");
-					else if(name.equals("RSPRICESHELP2")) RSPRICESHELP2 = el.getAttribute("value");
-					else if(name.equals("RSPRICESHELP3")) RSPRICESHELP3 = el.getAttribute("value");
-					else if(name.equals("RSPROTECTHELP")) RSPROTECTHELP = el.getAttribute("value");
-					else if(name.equals("RSPROTECTHELP2")) RSPROTECTHELP2 = el.getAttribute("value");
-					else if(name.equals("RSPROTECTHELP3")) RSPROTECTHELP3 = el.getAttribute("value");
-					else if(name.equals("FOR_HELP_FOR_A_SPECIFIC_COMMAND_TYPE_")) FOR_HELP_FOR_A_SPECIFIC_COMMAND_TYPE_ = el.getAttribute("value");
-					else if(name.equals("YOU_CAN_GET_MORE_HELP_ABOUT_")) YOU_CAN_GET_MORE_HELP_ABOUT_ = el.getAttribute("value");
-					else if(name.equals("STARTS_AN_INTERACTIVE_PROMPT")) STARTS_AN_INTERACTIVE_PROMPT = el.getAttribute("value");
-					else if(name.equals("RSSETHELP")) RSSETHELP = el.getAttribute("value");
-					else if(name.equals("RSSETSTORESHELP")) RSSETSTORESHELP = el.getAttribute("value");
-					else if(name.equals("RSSETENTRANCEHELP")) RSSETENTRANCEHELP = el.getAttribute("value");
-					else if(name.equals("RSSETEXITHELP")) RSSETEXITHELP = el.getAttribute("value");
-					else if(name.equals("RSSETCREATEHELP")) RSSETCREATEHELP = el.getAttribute("value");
-					else if(name.equals("RSSETDELSTOREHELP")) RSSETDELSTOREHELP = el.getAttribute("value");
-					else if(name.equals("RSSETDELENHELP")) RSSETDELENHELP = el.getAttribute("value");
-					else if(name.equals("RSSETCHESTSHELP")) RSSETCHESTSHELP = el.getAttribute("value");
-					else if(name.equals("RSSETCHESTSCREATEHELP")) RSSETCHESTSCREATEHELP = el.getAttribute("value");
-					else if(name.equals("RSSETCHESTSDELHELP")) RSSETCHESTSDELHELP = el.getAttribute("value");
-					else if(name.equals("RSSETCHESTSADDITEMSHELP")) RSSETCHESTSADDITEMSHELP = el.getAttribute("value");
-					else if(name.equals("RSSETCHESTSDELITEMSHELP")) RSSETCHESTSDELITEMSHELP = el.getAttribute("value");
-					else if(name.equals("RSSETPRICESHELP")) RSSETPRICESHELP = el.getAttribute("value");
-					else if(name.equals("RSSETPRICESHELP2")) RSSETPRICESHELP2 = el.getAttribute("value");
-					else if(name.equals("RSSETPRICESADDHELP")) RSSETPRICESADDHELP = el.getAttribute("value");
-					else if(name.equals("RSSETPRICESADDHELP2")) RSSETPRICESADDHELP2 = el.getAttribute("value");
-					else if(name.equals("AND_")) AND_ = el.getAttribute("value");
-					else if(name.equals("ARGUMENTS")) ARGUMENTS = el.getAttribute("value");
-					else if(name.equals("RSSETPRICESDELHELP")) RSSETPRICESDELHELP = el.getAttribute("value");
-					else if(name.equals("RSSETPRICESDEFAUTLSHELP")) RSSETPRICESDEFAUTLSHELP = el.getAttribute("value");
-					else if(name.equals("RSSETPRICESCOPYHELP")) RSSETPRICESCOPYHELP = el.getAttribute("value");
-					else if(name.equals("RSSETPRICESCOPYHELP2")) RSSETPRICESCOPYHELP2 = el.getAttribute("value");
-					else if(name.equals("RSSETPRICESCOPYHELP3")) RSSETPRICESCOPYHELP3 = el.getAttribute("value");
-					else if(name.equals("RSSETPRICESCLEARHELP")) RSSETPRICESCLEARHELP = el.getAttribute("value");
-					else if(name.equals("RSSETPRICESSHOWMMHELP")) RSSETPRICESSHOWMMHELP = el.getAttribute("value");
-					else if(name.equals("RSSETPRICESCLEARMMHELP")) RSSETPRICESCLEARMMHELP = el.getAttribute("value");
-					else if(name.equals("RSSETPRICESSETMMHELP")) RSSETPRICESSETMMHELP = el.getAttribute("value");
-					else if(name.equals("RSSHIPPEDHELP")) RSSHIPPEDHELP = el.getAttribute("value");
-					else if(name.equals("RSSHIPPEDHELP2")) RSSHIPPEDHELP2 = el.getAttribute("value");
-					else if(name.equals("RSSHIPPEDHELP3")) RSSHIPPEDHELP3 = el.getAttribute("value");
-					else if(name.equals("RSTPLOCSHELP")) RSTPLOCSHELP = el.getAttribute("value");
-					else if(name.equals("RSTPLOCSWHITEHELP")) RSTPLOCSWHITEHELP = el.getAttribute("value");
-					else if(name.equals("RSTPLOCSBLACKHELP")) RSTPLOCSBLACKHELP = el.getAttribute("value");
-					else if(name.equals("RSTPLOCSLISTHELP")) RSTPLOCSLISTHELP = el.getAttribute("value");
-					else if(name.equals("RSTPLOCSADDHELP")) RSTPLOCSADDHELP = el.getAttribute("value");
-					else if(name.equals("RSTPLOCSADDHELP2")) RSTPLOCSADDHELP2 = el.getAttribute("value");
-					else if(name.equals("RSTPLOCSDELHELP")) RSTPLOCSDELHELP = el.getAttribute("value");
-					else if(name.equals("RSTPLOCSHIGHHELP")) RSTPLOCSHIGHHELP = el.getAttribute("value");
-					else if(name.equals("RSUPDATEHELP")) RSUPDATEHELP = el.getAttribute("value");
-					else if(name.equals("RSUPDATEUPDATEHELP")) RSUPDATEUPDATEHELP = el.getAttribute("value");
-					else if(name.equals("RSUPDATEINFOHELP")) RSUPDATEINFOHELP = el.getAttribute("value");
-					else if(name.equals("THIS_ENTRANCE_AND_EXIT_PAIR_IS_ALREADY_USED")) THIS_ENTRANCE_AND_EXIT_PAIR_IS_ALREADY_USED = el.getAttribute("value");
-					else if(name.equals("YOU_CANT_USE_THIS_COMMAND_INSIDE_A_STORE")) YOU_CANT_USE_THIS_COMMAND_INSIDE_A_STORE = el.getAttribute("value");
-					else if(name.equals("LOADED_CONFIG_SETTINGS")) LOADED_CONFIG_SETTINGS = el.getAttribute("value");
-					else if(name.equals("ENABLED_IN_ALL_WORLDS")) ENABLED_IN_ALL_WORLDS = el.getAttribute("value");
-					else if(name.equals("FOR_MORE")) FOR_MORE = el.getAttribute("value");
-					else if(name.equals("IS_NOT_AN_ACCEPTED_ARGUMENT")) IS_NOT_AN_ACCEPTED_ARGUMENT = el.getAttribute("value");
-					else if(name.equals("TO_CONTINUE_TYPE_ANY_OF_THE_PURPLE_KEYWORDS")) TO_CONTINUE_TYPE_ANY_OF_THE_PURPLE_KEYWORDS = el.getAttribute("value");
-					else if(name.equals("WHAT_DO_YOU_WANT_TO_DO_")) WHAT_DO_YOU_WANT_TO_DO_ = el.getAttribute("value");
-					else if(name.equals("THIS_PROMPT_WILL_AID_YOU_IN__CHESTS_")) THIS_PROMPT_WILL_AID_YOU_IN__CHESTS_ = el.getAttribute("value");
-					else if(name.equals("NEW_CHESTS_OR_")) NEW_CHESTS_OR_ = el.getAttribute("value");
-					else if(name.equals("OR_")) OR_ = el.getAttribute("value");
-					else if(name.equals("EXISTING_ONES")) EXISTING_ONES = el.getAttribute("value");
-					else if(name.equals("YOU_HAVE_CHOSEN_TO_CREATE_NEW_CHESTS_")) YOU_HAVE_CHOSEN_TO_CREATE_NEW_CHESTS_ = el.getAttribute("value");
-					else if(name.equals("YOU_HAVE_CHOSEN_TO_DELETE_EXISTING_CHESTS_")) YOU_HAVE_CHOSEN_TO_DELETE_EXISTING_CHESTS_ = el.getAttribute("value");
-					else if(name.equals("YOU_HAVE_CHOSEN_TO_MANAGE_EXISTING_CHESTS_")) YOU_HAVE_CHOSEN_TO_MANAGE_EXISTING_CHESTS_ = el.getAttribute("value");
-					else if(name.equals("APPLY_TO_ALL_CHOSEN_CHESTS_")) APPLY_TO_ALL_CHOSEN_CHESTS_ = el.getAttribute("value");
-					else if(name.equals("TO_CLEAR_THE_SELECTION_OF_CHESTS_OR_")) TO_CLEAR_THE_SELECTION_OF_CHESTS_OR_ = el.getAttribute("value");
-					else if(name.equals("TO_SELECT_ALL__EXIT_WITH_")) TO_SELECT_ALL__EXIT_WITH_ = el.getAttribute("value");
-					else if(name.equals("YOU_HAVE_CHOSEN_TO_MANAGE_EXISTING_CHESTS_FREELY_")) YOU_HAVE_CHOSEN_TO_MANAGE_EXISTING_CHESTS_FREELY_ = el.getAttribute("value");
-					else if(name.equals("CHESTS_CREATED")) CHESTS_CREATED = el.getAttribute("value");
-					else if(name.equals("CHESTS_REMOVED")) CHESTS_REMOVED = el.getAttribute("value");
-					else if(name.equals("ACTION_ABORTED")) ACTION_ABORTED = el.getAttribute("value");
-					else if(name.equals("ITEMS_TO_")) ITEMS_TO_ = el.getAttribute("value");
-					else if(name.equals("CHESTS")) CHESTS = el.getAttribute("value");
-					else if(name.equals("DELETED_")) DELETED_ = el.getAttribute("value");
-					else if(name.equals("ITEMS_FROM_")) ITEMS_FROM_ = el.getAttribute("value");
-					else if(name.equals("CLEARED_CONTENTS_OF_")) CLEARED_CONTENTS_OF_ = el.getAttribute("value");
-					else if(name.equals("UPDATED_CONTENTS_OF")) UPDATED_CONTENTS_OF = el.getAttribute("value");
-					else if(name.equals("SELECTED_")) SELECTED_ = el.getAttribute("value");
-					else if(name.equals("CLEARED_SELECTION")) CLEARED_SELECTION = el.getAttribute("value");
-					else if(name.equals("QUIT_MANAGING_CHESTS")) QUIT_MANAGING_CHESTS = el.getAttribute("value");
-					else if(name.equals("THIS_PROMPT_WILL_AID_YOU_IN__STORE_")) THIS_PROMPT_WILL_AID_YOU_IN__STORE_ = el.getAttribute("value");
-					else if(name.equals("THIS_PROMPT_WILL_AID_YOU_IN__PLAYER_STORE_")) THIS_PROMPT_WILL_AID_YOU_IN__PLAYER_STORE_ = el.getAttribute("value");
-					else if(name.equals("YOU_DONT_HAVE_THE_RIGHT_PERMISSIONS_TO_DO_THIS")) YOU_DONT_HAVE_THE_RIGHT_PERMISSIONS_TO_DO_THIS = el.getAttribute("value");
-					else if(name.equals("A_NEW_STORE_")) A_NEW_STORE_ = el.getAttribute("value");
-					else if(name.equals("ENTRANCES_AND_EXITS_OR_")) ENTRANCES_AND_EXITS_OR_ = el.getAttribute("value");
-					else if(name.equals("AN_EXISTING_STORE")) AN_EXISTING_STORE = el.getAttribute("value");
-					else if(name.equals("YOU_HAVE_CHOSEN_TO_CREATE_A_NEW_STORE_")) YOU_HAVE_CHOSEN_TO_CREATE_A_NEW_STORE_ = el.getAttribute("value");
-					else if(name.equals("YOU_HAVE_CHOSEN_TO_APPEND__STORE_")) YOU_HAVE_CHOSEN_TO_APPEND__STORE_ = el.getAttribute("value");
-					else if(name.equals("YOU_HAVE_CHOSEN_TO_DELETE__STORE_")) YOU_HAVE_CHOSEN_TO_DELETE__STORE_ = el.getAttribute("value");
-					else if(name.equals("YOU_HAVE_CHOSEN_TO_WIPE_OUT_A_STORE_")) YOU_HAVE_CHOSEN_TO_WIPE_OUT_A_STORE_ = el.getAttribute("value");
-					else if(name.equals("THE_NAME_")) THE_NAME_ = el.getAttribute("value");
-					else if(name.equals("IS_AVAILABLE")) IS_AVAILABLE = el.getAttribute("value");
-					else if(name.equals("THAT_NAME_IS_ALREADY_TAKEN")) THAT_NAME_IS_ALREADY_TAKEN = el.getAttribute("value");
-					else if(name.equals("YOU_CANT_USE_THIS_INSIDE_A_STORE")) YOU_CANT_USE_THIS_INSIDE_A_STORE = el.getAttribute("value");
-					else if(name.equals("RIGHTCLICK_A_BLOCK_TO_SELECT_IT_AS_EE_")) RIGHTCLICK_A_BLOCK_TO_SELECT_IT_AS_EE_ = el.getAttribute("value");
-					else if(name.equals("WHEN_DONE_OR_")) WHEN_DONE_OR_ = el.getAttribute("value");
-					else if(name.equals("TO_START_OVER_")) TO_START_OVER_ = el.getAttribute("value");
-					else if(name.equals("CREATED_STORE_")) CREATED_STORE_ = el.getAttribute("value");
-					else if(name.equals("EE_PAIRS")) EE_PAIRS = el.getAttribute("value");
-					else if(name.equals("NO_EE_SELECTED")) NO_EE_SELECTED = el.getAttribute("value");
-					else if(name.equals("YOU_HAVE_CHOSEN_TO_APPEND_NEW_EE_TO_")) YOU_HAVE_CHOSEN_TO_APPEND_NEW_EE_TO_ = el.getAttribute("value");
-					else if(name.equals("APPENDED_")) APPENDED_ = el.getAttribute("value");
-					else if(name.equals("EE_PAIRS_TO_STORE_")) EE_PAIRS_TO_STORE_ = el.getAttribute("value");
-					else if(name.equals("YOU_HAVE_CHOSEN_TO_DELETE_EE_FROM_")) YOU_HAVE_CHOSEN_TO_DELETE_EE_FROM_ = el.getAttribute("value");
-					else if(name.equals("EE_PAIRS_FROM_STORE_")) EE_PAIRS_FROM_STORE_ = el.getAttribute("value");
-					else if(name.equals("DO_YOU_REALLY_WANT_TO_DELETE_")) DO_YOU_REALLY_WANT_TO_DELETE_ = el.getAttribute("value");
-					else if(name.equals("AND_ALL_ITS_")) AND_ALL_ITS_ = el.getAttribute("value");
+                                        switch(name) {
+                                            case "UNIT":
+                                                UNIT = el.getAttribute("value");
+                                                break;
+                                            case "THISCOMMANDCANNOTBEUSEDFROMCONSOLE":
+                                                THISCOMMANDCANNOTBEUSEDFROMCONSOLE = el.getAttribute("value");
+                                                break;
+                                            case "REALSHOPPINGRELOADED":
+                                                REALSHOPPINGRELOADED = el.getAttribute("value");
+                                                break;
+                                            case "YOUENTERED":
+                                                YOUENTERED = el.getAttribute("value");
+                                                break;
+                                            case "YOULEFT":
+                                                YOULEFT = el.getAttribute("value");
+                                                break;
+                                            case "YOURENOTATTHEENTRANCEOFASTORE":
+                                                YOURENOTATTHEENTRANCEOFASTORE = el.getAttribute("value");
+                                                break;
+                                            case "YOURENOTATTHEEXITOFASTORE":
+                                                YOURENOTATTHEEXITOFASTORE = el.getAttribute("value");
+                                                break;
+                                            case "THEREARENOSTORESSET":
+                                                THEREARENOSTORESSET = el.getAttribute("value");
+                                                break;
+                                            case "YOUHAVENTPAIDFORALLYOURARTICLES":
+                                                YOUHAVENTPAIDFORALLYOURARTICLES = el.getAttribute("value");
+                                                break;
+                                            case "YOURENOTINSIDEASTORE":
+                                                YOURENOTINSIDEASTORE = el.getAttribute("value");
+                                                break;
+                                            case "YOUCANTAFFORDTOBUYTHINGSFOR":
+                                                YOUCANTAFFORDTOBUYTHINGSFOR = el.getAttribute("value");
+                                                break;
+                                            case "YOUBOUGHTSTUFFFOR":
+                                                YOUBOUGHTSTUFFFOR = el.getAttribute("value");
+                                                break;
+                                            case "THEREARENOPRICESSETFORTHISSTORE":
+                                                THEREARENOPRICESSETFORTHISSTORE = el.getAttribute("value");
+                                                break;
+                                            case "YOURARTICLESCOST":
+                                                YOURARTICLESCOST = el.getAttribute("value");
+                                                break;
+                                            case "TRYINGTOCHEATYOURWAYOUT":
+                                                TRYINGTOCHEATYOURWAYOUT = el.getAttribute("value");
+                                                break;
+                                            case "HAVEFUNINHELL":
+                                                HAVEFUNINHELL = el.getAttribute("value");
+                                                break;
+                                            case "ENTRANCEVARIABLESETTO":
+                                                ENTRANCEVARIABLESETTO = el.getAttribute("value");
+                                                break;
+                                            case "EXITVARIABLESETTO":
+                                                EXITVARIABLESETTO = el.getAttribute("value");
+                                                break;
+                                            case "WASCREATED":
+                                                WASCREATED = el.getAttribute("value");
+                                                break;
+                                            case "WASREMOVED":
+                                                WASREMOVED = el.getAttribute("value");
+                                                break;
+                                            case "WASNTFOUND":
+                                                WASNTFOUND = el.getAttribute("value");
+                                                break;
+                                            case "YOUARENOTTHEOWNEROFTHISSTORE":
+                                                YOUARENOTTHEOWNEROFTHISSTORE = el.getAttribute("value");
+                                                break;
+                                            case "THERESNOENTRANCESET":
+                                                THERESNOENTRANCESET = el.getAttribute("value");
+                                                break;
+                                            case "THERSNOEXITSET":
+                                                THERSNOEXITSET = el.getAttribute("value");
+                                                break;
+                                            case "YOUHAVETOUSETHESTOREARGUMENTWHENEXECUTINGTHISCOMMANDFROMCONSOLE":
+                                                YOUHAVETOUSETHESTOREARGUMENTWHENEXECUTINGTHISCOMMANDFROMCONSOLE = el.getAttribute("value");
+                                                break;
+                                            case "YOUHAVETOBEINASTOREIFNOTUSINGTHESTOREARGUMENT":
+                                                YOUHAVETOBEINASTOREIFNOTUSINGTHESTOREARGUMENT = el.getAttribute("value");
+                                                break;
+                                            case "THEPAGENUMBERMUSTBE1ORHIGHER":
+                                                THEPAGENUMBERMUSTBE1ORHIGHER = el.getAttribute("value");
+                                                break;
+                                            case "ISNOTAVALIDPAGENUMBER":
+                                                ISNOTAVALIDPAGENUMBER = el.getAttribute("value");
+                                                break;
+                                            case "YOUHAVETOBEINASTORETOUSETHISCOMMANDWITHTWOARGUENTS":
+                                                YOUHAVETOBEINASTORETOUSETHISCOMMANDWITHTWOARGUENTS = el.getAttribute("value");
+                                                break;
+                                            case "YOUHAVETOUSEALLTHREEARGUMENTSWHENEXECUTINGTHISCOMMANDFROMCONSOLE":
+                                                YOUHAVETOUSEALLTHREEARGUMENTSWHENEXECUTINGTHISCOMMANDFROMCONSOLE = el.getAttribute("value");
+                                                break;
+                                            case "PRICEFOR":
+                                                PRICEFOR = el.getAttribute("value");
+                                                break;
+                                            case "SETTO":
+                                                SETTO = el.getAttribute("value");
+                                                break;
+                                            case "ISNOTAPROPER_FOLLOWEDBYTHEPRICE_":
+                                                ISNOTAPROPER_FOLLOWEDBYTHEPRICE_ = el.getAttribute("value");
+                                                break;
+                                            case "ISNOTAPROPER_":
+                                                ISNOTAPROPER_ = el.getAttribute("value");
+                                                break;
+                                            case "REMOVEDPRICEFOR":
+                                                REMOVEDPRICEFOR = el.getAttribute("value");
+                                                break;
+                                            case "COULDNTFINDPRICEFOR":
+                                                COULDNTFINDPRICEFOR = el.getAttribute("value");
+                                                break;
+                                            case "YOUARENTPERMITTEDTOEMANAGETHISSTORE":
+                                                YOUARENTPERMITTEDTOEMANAGETHISSTORE = el.getAttribute("value");
+                                                break;
+                                            case "DOESNTEXIST":
+                                                DOESNTEXIST = el.getAttribute("value");
+                                                break;
+                                            case "CHESTCREATED":
+                                                CHESTCREATED = el.getAttribute("value");
+                                                break;
+                                            case "CHESTREMOVED":
+                                                CHESTREMOVED = el.getAttribute("value");
+                                                break;
+                                            case "ACHESTALREADYEXISTSONTHISLOCATION":
+                                                ACHESTALREADYEXISTSONTHISLOCATION = el.getAttribute("value");
+                                                break;
+                                            case "COULDNTFINDCHESTONTHISLOCATION":
+                                                COULDNTFINDCHESTONTHISLOCATION = el.getAttribute("value");
+                                                break;
+                                            case "ONLYADMINSTORESCANHAVESELFREFILLINGCHESTS":
+                                                ONLYADMINSTORESCANHAVESELFREFILLINGCHESTS = el.getAttribute("value");
+                                                break;
+                                            case "ADDED":
+                                                ADDED = el.getAttribute("value");
+                                                break;
+                                            case "REMOVED":
+                                                REMOVED = el.getAttribute("value");
+                                                break;
+                                            case "ITEMS":
+                                                ITEMS = el.getAttribute("value");
+                                                break;
+                                            case "THISCHESTDOESNTEXIST":
+                                                THISCHESTDOESNTEXIST = el.getAttribute("value");
+                                                break;
+                                            case "ONEORMOREOFTHEITEMIDSWERENOTINTEGERS":
+                                                ONEORMOREOFTHEITEMIDSWERENOTINTEGERS = el.getAttribute("value");
+                                                break;
+                                            case "YOUHAVETOBEINASTORETOUSETHISCOMMAND":
+                                                YOUHAVETOBEINASTORETOUSETHISCOMMAND = el.getAttribute("value");
+                                                break;
+                                            case "MOREITEMSONPAGE":
+                                                MOREITEMSONPAGE = el.getAttribute("value");
+                                                break;
+                                            case "THEREARENTTHATMANYPAGES":
+                                                THEREARENTTHATMANYPAGES = el.getAttribute("value");
+                                                break;
+                                            case "TRIEDTOSTEALFROMTHESTORE":
+                                                TRIEDTOSTEALFROMTHESTORE = el.getAttribute("value");
+                                                break;
+                                            case "WASTELEPORTEDTOHELL":
+                                                WASTELEPORTEDTOHELL = el.getAttribute("value");
+                                                break;
+                                            case "CREATINGASTORECOSTS":
+                                                CREATINGASTORECOSTS = el.getAttribute("value");
+                                                break;
+                                            case "YOUWEREJAILED":
+                                                YOUWEREJAILED = el.getAttribute("value");
+                                                break;
+                                            case "WASJAILED":
+                                                WASJAILED = el.getAttribute("value");
+                                                break;
+                                            case "YOUARENOLONGERINJAIL":
+                                                YOUARENOLONGERINJAIL  = el.getAttribute("value");
+                                                break;
+                                            case "UNJAILED":
+                                                UNJAILED = el.getAttribute("value");
+                                                break;
+                                            case "ISNOTJAILED":
+                                                ISNOTJAILED = el.getAttribute("value");
+                                                break;
+                                            case "ISNOTONLINE":
+                                                ISNOTONLINE = el.getAttribute("value");
+                                                break;
+                                            case "YOUAREBANNEDFROM":
+                                                YOUAREBANNEDFROM = el.getAttribute("value");
+                                                break;
+                                            case "YOUDONTOWNTHEITEMSYOUWANTTOSELL":
+                                                YOUDONTOWNTHEITEMSYOUWANTTOSELL = el.getAttribute("value");
+                                                break;
+                                            case "ADDEDTOSELLLIST":
+                                                ADDEDTOSELLLIST = el.getAttribute("value");
+                                                break;
+                                            case "THISSTOREDOESNTBUY":
+                                                THISSTOREDOESNTBUY = el.getAttribute("value");
+                                                break;
+                                            case "THISSTOREDOESNTBUYANYITEMS":
+                                                THISSTOREDOESNTBUYANYITEMS = el.getAttribute("value");
+                                                break;
+                                            case "CANCELLEDSELLINGITEMS":
+                                                CANCELLEDSELLINGITEMS = el.getAttribute("value");
+                                                break;
+                                            case "YOUDONTHAVEALLTHEITEMSYOUWANTEDTOSELL":
+                                                YOUDONTHAVEALLTHEITEMSYOUWANTEDTOSELL = el.getAttribute("value");
+                                                break;
+                                            case "SOLD":
+                                                SOLD = el.getAttribute("value");
+                                                break;
+                                            case "ITEMSFOR":
+                                                ITEMSFOR = el.getAttribute("value");
+                                                break;
+                                            case "YOUCANTSHIPANEMPTYCART":
+                                                YOUCANTSHIPANEMPTYCART = el.getAttribute("value");
+                                                break;
+                                            case "PACKAGEWAITINGTOBEDELIVERED":
+                                                PACKAGEWAITINGTOBEDELIVERED = el.getAttribute("value");
+                                                break;
+                                            case "YOUHAVENTBOUGHTANYTHING":
+                                                YOUHAVENTBOUGHTANYTHING = el.getAttribute("value");
+                                                break;
+                                            case "THERESNOPACKAGEWITHTHEID":
+                                                THERESNOPACKAGEWITHTHEID = el.getAttribute("value");
+                                                break;
+                                            case "YOUHAVENTGOTANYITEMSWAITINGTOBEDELIVERED":
+                                                YOUHAVENTGOTANYITEMSWAITINGTOBEDELIVERED = el.getAttribute("value");
+                                                break;
+                                            case "THEBLOCKYOUSELECTEDISNTACHEST":
+                                                THEBLOCKYOUSELECTEDISNTACHEST = el.getAttribute("value");
+                                                break;
+                                            case "THEREISA":
+                                                THEREISA = el.getAttribute("value");
+                                                break;
+                                            case "PCNTOFFSALEAT":
+                                                PCNTOFFSALEAT = el.getAttribute("value");
+                                                break;
+                                            case "ONSALE":
+                                                ONSALE = el.getAttribute("value");
+                                                break;
+                                            case "STORE":
+                                                STORE = el.getAttribute("value");
+                                                break;
+                                            case "OWNEDBY":
+                                                OWNEDBY = el.getAttribute("value");
+                                                break;
+                                            case "BUYSFOR":
+                                                BUYSFOR = el.getAttribute("value");
+                                                break;
+                                            case "PCNTOFORIGINAL":
+                                                PCNTOFORIGINAL = el.getAttribute("value");
+                                                break;
+                                            case "NOTBUYINGFROMPLAYERS":
+                                                NOTBUYINGFROMPLAYERS = el.getAttribute("value");
+                                                break;
+                                            case "YOUCANTUSEAVALUEBELLOW0":
+                                                YOUCANTUSEAVALUEBELLOW0 = el.getAttribute("value");
+                                                break;
+                                            case "YOUCANTUSEAVALUEOF0ORLESS":
+                                                YOUCANTUSEAVALUEOF0ORLESS = el.getAttribute("value");
+                                                break;
+                                            case "YOUCANTUSEAVALUEOVER100":
+                                                YOUCANTUSEAVALUEOVER100 = el.getAttribute("value");
+                                                break;
+                                            case "YOUCANTUSEAVALUEOF100ORMORE":
+                                                YOUCANTUSEAVALUEOF100ORMORE = el.getAttribute("value");
+                                                break;
+                                            case "NOITEMSARESOLDINTHESTORE":
+                                                NOITEMSARESOLDINTHESTORE = el.getAttribute("value");
+                                                break;
+                                            case "SALEENDED":
+                                                SALEENDED = el.getAttribute("value");
+                                                break;
+                                            case "HASA":
+                                                HASA = el.getAttribute("value");
+                                                break;
+                                            case "PCNTOFFSALERIGHTNOW":
+                                                PCNTOFFSALERIGHTNOW = el.getAttribute("value");
+                                                break;
+                                            case "PCNTOFF":
+                                                PCNTOFF = el.getAttribute("value");
+                                                break;
+                                            case "ISALREADYBANNEDFROMYOURSTORE":
+                                                ISALREADYBANNEDFROMYOURSTORE = el.getAttribute("value");
+                                                break;
+                                            case "ISNOLONGERBANNEDFROMYOURSTORE":
+                                                ISNOLONGERBANNEDFROMYOURSTORE = el.getAttribute("value");
+                                                break;
+                                            case "WASNTBANNEDFROMYOURSTORE":
+                                                WASNTBANNEDFROMYOURSTORE = el.getAttribute("value");
+                                                break;
+                                            case "BANNED":
+                                                BANNED = el.getAttribute("value");
+                                                break;
+                                            case "FROMSTORE":
+                                                FROMSTORE = el.getAttribute("value");
+                                                break;
+                                            case "YOUDONTHAVEPERMISSIONTOMANAGETHATSTORE":
+                                                YOUDONTHAVEPERMISSIONTOMANAGETHATSTORE = el.getAttribute("value");
+                                                break;
+                                            case "NOTHINGTOCOLLECT":
+                                                NOTHINGTOCOLLECT = el.getAttribute("value");
+                                                break;
+                                            case "FILLEDCHESTWITH":
+                                                FILLEDCHESTWITH = el.getAttribute("value");
+                                                break;
+                                            case "DROPPED":
+                                                DROPPED = el.getAttribute("value");
+                                                break;
+                                            case "YOUHAVEPACKAGESWITHIDS_":
+                                                YOUHAVEPACKAGESWITHIDS_ = el.getAttribute("value");
+                                                break;
+                                            case "YOUDONTHAVEANYPACKAGESTOPICKUP":
+                                                YOUDONTHAVEANYPACKAGESTOPICKUP = el.getAttribute("value");
+                                                break;
+                                            case "TOPICKUP":
+                                                TOPICKUP = el.getAttribute("value");
+                                                break;
+                                            case "YOUHAVETOSPECIFYTHEID_":
+                                                YOUHAVETOSPECIFYTHEID_ = el.getAttribute("value");
+                                                break;
+                                            case "THECONTENTSOFTHEPACKAGEARE":
+                                                THECONTENTSOFTHEPACKAGEARE = el.getAttribute("value");
+                                                break;
+                                            case "WHITELISTMODEALREADYSET":
+                                                WHITELISTMODEALREADYSET = el.getAttribute("value");
+                                                break;
+                                            case "BLACKLISTMODEALREADYSET":
+                                                BLACKLISTMODEALREADYSET = el.getAttribute("value");
+                                                break;
+                                            case "SETWHITELISTMODE":
+                                                SETWHITELISTMODE = el.getAttribute("value");
+                                                break;
+                                            case "SETBLACKLISTMODE":
+                                                SETBLACKLISTMODE = el.getAttribute("value");
+                                                break;
+                                            case "REMOVEDONEOFTHE":
+                                                REMOVEDONEOFTHE = el.getAttribute("value");
+                                                break;
+                                            case "TELEPORTLOCATIONS":
+                                                TELEPORTLOCATIONS = el.getAttribute("value");
+                                                break;
+                                            case "THEREISNO":
+                                                THEREISNO = el.getAttribute("value");
+                                                break;
+                                            case "TELEPORTLOCATIONWITHITSCENTERHERE":
+                                                TELEPORTLOCATIONWITHITSCENTERHERE = el.getAttribute("value");
+                                                break;
+                                            case "OLDRADIUSVALUE":
+                                                OLDRADIUSVALUE = el.getAttribute("value");
+                                                break;
+                                            case "REPLACEDWITH":
+                                                REPLACEDWITH = el.getAttribute("value");
+                                                break;
+                                            case "TELEPORTLOCATIONWITHARADIUSOF":
+                                                TELEPORTLOCATIONWITHARADIUSOF = el.getAttribute("value");
+                                                break;
+                                            case "ISNOTANINTEGER":
+                                                ISNOTANINTEGER = el.getAttribute("value");
+                                                break;
+                                            case "ISNOTAVALIDARGUMENT":
+                                                ISNOTAVALIDARGUMENT = el.getAttribute("value");
+                                                break;
+                                            case "YOUARENTALLOWEDTOTELEPORTTHERE":
+                                                YOUARENTALLOWEDTOTELEPORTTHERE = el.getAttribute("value");
+                                                break;
+                                            case "SELLINGTOSTORESISNOTENABLEDONTHISSERVER":
+                                                SELLINGTOSTORESISNOTENABLEDONTHISSERVER = el.getAttribute("value");
+                                                break;
+                                            case "ISNOTINYOURSTORE":
+                                                ISNOTINYOURSTORE = el.getAttribute("value");
+                                                break;
+                                            case "WASKICKEDFROMYOURSTORE":
+                                                WASKICKEDFROMYOURSTORE = el.getAttribute("value");
+                                                break;
+                                            case "PLAYER":
+                                                PLAYER = el.getAttribute("value");
+                                                break;
+                                            case "ISNTONLINEKICK":
+                                                ISNTONLINEKICK = el.getAttribute("value");
+                                                break;
+                                            case "PLAYERSINSTORE":
+                                                PLAYERSINSTORE = el.getAttribute("value");
+                                                break;
+                                            case "STORENOTEMPTY":
+                                                STORENOTEMPTY = el.getAttribute("value");
+                                                break;
+                                            case "PACKAGESENT":
+                                                PACKAGESENT = el.getAttribute("value");
+                                                break;
+                                            case "FROM":
+                                                FROM = el.getAttribute("value");
+                                                break;
+                                            case "INWORLD":
+                                                INWORLD = el.getAttribute("value");
+                                                break;
+                                            case "YOUCANTUSETHATITEMINSTORE":
+                                                YOUCANTUSETHATITEMINSTORE = el.getAttribute("value");
+                                                break;
+                                            case "THISCHESTISPROTECTED":
+                                                THISCHESTISPROTECTED = el.getAttribute("value");
+                                                break;
+                                            case "SELLTOSTORE":
+                                                SELLTOSTORE = el.getAttribute("value");
+                                                break;
+                                            case "ENABLEDNOTIFICATIONSFOR":
+                                                ENABLEDNOTIFICATIONSFOR = el.getAttribute("value");
+                                                break;
+                                            case "DISABLEDNOTIFICATIONSFOR":
+                                                DISABLEDNOTIFICATIONSFOR = el.getAttribute("value");
+                                                break;
+                                            case "USAGE":
+                                                USAGE = el.getAttribute("value");
+                                                break;
+                                            case "NOTIFICATIONSARE":
+                                                NOTIFICATIONSARE = el.getAttribute("value");
+                                                break;
+                                            case "ON":
+                                                ON = el.getAttribute("value");
+                                                break;
+                                            case "OFF":
+                                                OFF = el.getAttribute("value");
+                                                break;
+                                            case "SKIPPSIGN":
+                                                SKIPPSIGN = el.getAttribute("value");
+                                                break;
+                                            case "YOUWONTGETNOTIFIEDWHENYOURSTORE":
+                                                YOUWONTGETNOTIFIEDWHENYOURSTORE = el.getAttribute("value");
+                                                break;
+                                            case "BECOMESMOREORLESSPOPULAR":
+                                                BECOMESMOREORLESSPOPULAR = el.getAttribute("value");
+                                                break;
+                                            case "YOUWILLGETNOTIFIEDWHENYOURSTORE":
+                                                YOUWILLGETNOTIFIEDWHENYOURSTORE = el.getAttribute("value");
+                                                break;
+                                            case "BECOMESATLEAST":
+                                                BECOMESATLEAST = el.getAttribute("value");
+                                                break;
+                                            case "PLACESMOREORLESSPOPULAR":
+                                                PLACESMOREORLESSPOPULAR = el.getAttribute("value");
+                                                break;
+                                            case "WHERETRESHOLDIS_":
+                                                WHERETRESHOLDIS_ = el.getAttribute("value");
+                                                break;
+                                            case "ANDTHEPRICESWILLBE_":
+                                                ANDTHEPRICESWILLBE_ = el.getAttribute("value");
+                                                break;
+                                            case "WHERETRESHOLDIS_CHANGES_":
+                                                WHERETRESHOLDIS_CHANGES_ = el.getAttribute("value");
+                                                break;
+                                            case "ANDPERCENTIS_":
+                                                ANDPERCENTIS_ = el.getAttribute("value");
+                                                break;
+                                            case "AI_ISNOTENABLED_":
+                                                AI_ISNOTENABLED_ = el.getAttribute("value");
+                                                break;
+                                            case "SETMINIMALANDMAXIMALPRICESFOR":
+                                                SETMINIMALANDMAXIMALPRICESFOR = el.getAttribute("value");
+                                                break;
+                                            case "OLDPRICESREPLACEDWITHPRICESFROM":
+                                                OLDPRICESREPLACEDWITHPRICESFROM = el.getAttribute("value");
+                                                break;
+                                            case "OLDPRICESREPLACEDWITHTHELOWEST_":
+                                                OLDPRICESREPLACEDWITHTHELOWEST_ = el.getAttribute("value");
+                                                break;
+                                            case "CLEAREDALLPRICESFOR":
+                                                CLEAREDALLPRICESFOR = el.getAttribute("value");
+                                                break;
+                                            case "HASAMINIMALPRICEOF":
+                                                HASAMINIMALPRICEOF = el.getAttribute("value");
+                                                break;
+                                            case "ANDAMAXIMALPRICEOF":
+                                                ANDAMAXIMALPRICEOF = el.getAttribute("value");
+                                                break;
+                                            case "FOR":
+                                                FOR = el.getAttribute("value");
+                                                break;
+                                            case "DOESNTHAVEAMINIMALANDMAXIMALPRICEFOR":
+                                                DOESNTHAVEAMINIMALANDMAXIMALPRICEFOR = el.getAttribute("value");
+                                                break;
+                                            case "CLEAREDMINIMALANDMAXIMALPRICESFOR":
+                                                CLEAREDMINIMALANDMAXIMALPRICESFOR = el.getAttribute("value");
+                                                break;
+                                            case "DIDNTHAVEAMINIMALANDMAXIMALPRICEFOR":
+                                                DIDNTHAVEAMINIMALANDMAXIMALPRICEFOR = el.getAttribute("value");
+                                                break;
+                                            case "ISNOTAPROPERARGUMENT":
+                                                ISNOTAPROPERARGUMENT = el.getAttribute("value");
+                                                break;
+                                            case "YOUCANTNAMEASTORETHAT":
+                                                YOUCANTNAMEASTORETHAT = el.getAttribute("value");
+                                                break;
+                                            case "HIGHLIGHTED5LOCATIONSFOR5SECONDS":
+                                                HIGHLIGHTED5LOCATIONSFOR5SECONDS = el.getAttribute("value");
+                                                break;
+                                            case "NOLOCATIONSTOHIGHLIGHT":
+                                                NOLOCATIONSTOHIGHLIGHT = el.getAttribute("value");
+                                                break;
+                                            case "THISCHESTISALREADYPROTECTED":
+                                                THISCHESTISALREADYPROTECTED = el.getAttribute("value");
+                                                break;
+                                            case "MADECHESTPROTECTED":
+                                                MADECHESTPROTECTED = el.getAttribute("value");
+                                                break;
+                                            case "UNPROTECTEDCHEST":
+                                                UNPROTECTEDCHEST = el.getAttribute("value");
+                                                break;
+                                            case "THISCHESTISNTPROTECTED":
+                                                THISCHESTISNTPROTECTED = el.getAttribute("value");
+                                                break;
+                                            case "READINGDESCRIPTION":
+                                                READINGDESCRIPTION = el.getAttribute("value");
+                                                break;
+                                            case "THISISTHENEWESTVERSION":
+                                                THISISTHENEWESTVERSION = el.getAttribute("value");
+                                                break;
+                                            case "SUCCESSFULUPDATE":
+                                                SUCCESSFULUPDATE = el.getAttribute("value");
+                                                break;
+                                            case "UPDATEFAILED":
+                                                UPDATEFAILED = el.getAttribute("value");
+                                                break;
+                                            case "YOUARENTPERMITTEDTOUSETHISCOMMAND":
+                                                YOUARENTPERMITTEDTOUSETHISCOMMAND = el.getAttribute("value");
+                                                break;
+                                            case "YOUCANTCOLLECT_YOUDONOTOWN":
+                                                YOUCANTCOLLECT_YOUDONOTOWN = el.getAttribute("value");
+                                                break;
+                                            case "YOUCANTCOLLECT_SERVER":
+                                                YOUCANTCOLLECT_SERVER = el.getAttribute("value");
+                                                break;
+                                            case "THELASTHOUR":
+                                                THELASTHOUR = el.getAttribute("value");
+                                                break;
+                                            case "YESTERDAY":
+                                                YESTERDAY = el.getAttribute("value");
+                                                break;
+                                            case "LASTWEEK":
+                                                LASTWEEK = el.getAttribute("value");
+                                                break;
+                                            case "LASTMONTH":
+                                                LASTMONTH = el.getAttribute("value");
+                                                break;
+                                            case "YOURSTORE":
+                                                YOURSTORE = el.getAttribute("value");
+                                                break;
+                                            case "ISNOWTHE":
+                                                ISNOWTHE = el.getAttribute("value");
+                                                break;
+                                            case "SINCE":
+                                                SINCE = el.getAttribute("value");
+                                                break;
+                                            case "PROVIDEROF":
+                                                PROVIDEROF = el.getAttribute("value");
+                                                break;
+                                            case "RAISEDTHEPRICEFOR":
+                                                RAISEDTHEPRICEFOR = el.getAttribute("value");
+                                                break;
+                                            case "LOWEREDTHEPRICEFOR":
+                                                LOWEREDTHEPRICEFOR = el.getAttribute("value");
+                                                break;
+                                            case "BY":
+                                                BY = el.getAttribute("value");
+                                                break;
+                                            case "TO":
+                                                TO = el.getAttribute("value");
+                                                break;
+                                            case "WENTFROMBEINGTHE":
+                                                WENTFROMBEINGTHE = el.getAttribute("value");
+                                                break;
+                                            case "TONOTSELLINGANY":
+                                                TONOTSELLINGANY = el.getAttribute("value");
+                                                break;
+                                            case "SHIPPEDPACKAGESENT":
+                                                SHIPPEDPACKAGESENT = el.getAttribute("value");
+                                                break;
+                                            case "WITH":
+                                                WITH = el.getAttribute("value");
+                                                break;
+                                            case "YOUCANNOTDROPITEMS_":
+                                                YOUCANNOTDROPITEMS_ = el.getAttribute("value");
+                                                break;
+                                            case "YOUCANNOTEMPTYBUCKETS_":
+                                                YOUCANNOTEMPTYBUCKETS_ = el.getAttribute("value");
+                                                break;
+                                            case "YOUCANNOTCRAFTITEMS_":
+                                                YOUCANNOTCRAFTITEMS_ = el.getAttribute("value");
+                                                break;
+                                            case "SHOPPINGCARTSARENOTENABLED_":
+                                                SHOPPINGCARTSARENOTENABLED_ = el.getAttribute("value");
+                                                break;
+                                            case "SHIPPINGISNOTENABLED_":
+                                                SHIPPINGISNOTENABLED_ = el.getAttribute("value");
+                                                break;
+                                            case "YOUCANNOTOPENENDERCHESTS_":
+                                                YOUCANNOTOPENENDERCHESTS_ = el.getAttribute("value");
+                                                break;
+                                            case "RESTARTTHESERVER_VERSION":
+                                                RESTARTTHESERVER_VERSION = el.getAttribute("value");
+                                                break;
+                                            case "OFRE_UPDATECOMMAND":
+                                                OFRE_UPDATECOMMAND = el.getAttribute("value");
+                                                break;
+                                            case "OFRE_UPDATEINFO":
+                                                OFRE_UPDATEINFO = el.getAttribute("value");
+                                                break;
+                                            case "REALSHOPPINGINITIALIZED":
+                                                REALSHOPPINGINITIALIZED = el.getAttribute("value");
+                                                break;
+                                            case "REALSHOPPINGDISABLED":
+                                                REALSHOPPINGDISABLED = el.getAttribute("value");
+                                                break;
+                                            case "BOUGHTSTUFFFOR":
+                                                BOUGHTSTUFFFOR = el.getAttribute("value");
+                                                break;
+                                            case "FROMYOURSTORE":
+                                                FROMYOURSTORE = el.getAttribute("value");
+                                                break;
+                                            case "OWNER":
+                                                OWNER = el.getAttribute("value");
+                                                break;
+                                            case "CANTAFFORDTOBUYITEMSFROMYOUFOR":
+                                                CANTAFFORDTOBUYITEMSFROMYOUFOR = el.getAttribute("value");
+                                                break;
+                                            case "WITHDRAWNFROMYOURACCOUNT":
+                                                WITHDRAWNFROMYOURACCOUNT = el.getAttribute("value");
+                                                break;
+                                            case "YOUCANTAFFORDTOPAYTHEDELIVERYFEEOF":
+                                                YOUCANTAFFORDTOPAYTHEDELIVERYFEEOF = el.getAttribute("value");
+                                                break;
+                                            case "USESLEFT":
+                                                USESLEFT = el.getAttribute("value");
+                                                break;
+                                            case "PRICES":
+                                                PRICES = el.getAttribute("value");
+                                                break;
+                                            case "RSSTORESHELP":
+                                                RSSTORESHELP = el.getAttribute("value");
+                                                break;
+                                            case "BUYFORHELP":
+                                                BUYFORHELP = el.getAttribute("value");
+                                                break;
+                                            case "COLLECTHELP":
+                                                COLLECTHELP = el.getAttribute("value");
+                                                break;
+                                            case "BANHELP":
+                                                BANHELP = el.getAttribute("value");
+                                                break;
+                                            case "UNBANHELP":
+                                                UNBANHELP = el.getAttribute("value");
+                                                break;
+                                            case "KICKHELP":
+                                                KICKHELP = el.getAttribute("value");
+                                                break;
+                                            case "STARTSALEHELP":
+                                                STARTSALEHELP = el.getAttribute("value");
+                                                break;
+                                            case "STARTSALEHELP2":
+                                                STARTSALEHELP2 = el.getAttribute("value");
+                                                break;
+                                            case "ENDSALEHELP":
+                                                ENDSALEHELP = el.getAttribute("value");
+                                                break;
+                                            case "NOTIFICATIONSHELP":
+                                                NOTIFICATIONSHELP = el.getAttribute("value");
+                                                break;
+                                            case "ONCHANGEHELP":
+                                                ONCHANGEHELP = el.getAttribute("value");
+                                                break;
+                                            case "SETDEFAULTPRICESFOR":
+                                                SETDEFAULTPRICESFOR = el.getAttribute("value");
+                                                break;
+                                            case "THEREARENODEFAULTPRICES":
+                                                THEREARENODEFAULTPRICES = el.getAttribute("value");
+                                                break;
+                                            case "QUITCONVERSATION":
+                                                QUITCONVERSATION = el.getAttribute("value");
+                                                break;
+                                            case "WHICHFILEDOYOUWANTTOIMPORT_":
+                                                WHICHFILEDOYOUWANTTOIMPORT_ = el.getAttribute("value");
+                                                break;
+                                            case "ERROR_NO_XLSX_":
+                                                ERROR_NO_XLSX_ = el.getAttribute("value");
+                                                break;
+                                            case "INTHEMAINDIRECTORY":
+                                                INTHEMAINDIRECTORY = el.getAttribute("value");
+                                                break;
+                                            case "INTHEREALSHOPPINGDIRECTORY":
+                                                INTHEREALSHOPPINGDIRECTORY = el.getAttribute("value");
+                                                break;
+                                            case "TYPETHECORRESPONDINGNUMBER_":
+                                                TYPETHECORRESPONDINGNUMBER_ = el.getAttribute("value");
+                                                break;
+                                            case "TOCANCEL":
+                                                TOCANCEL = el.getAttribute("value");
+                                                break;
+                                            case "ERROR_INPUTISNOTAVALIDINTEGER":
+                                                ERROR_INPUTISNOTAVALIDINTEGER = el.getAttribute("value");
+                                                break;
+                                            case "CHOSENFILE":
+                                                CHOSENFILE = el.getAttribute("value");
+                                                break;
+                                            case "TYPE":
+                                                TYPE = el.getAttribute("value");
+                                                break;
+                                            case "TOIMPORT_USERDEFINED_":
+                                                TOIMPORT_USERDEFINED_ = el.getAttribute("value");
+                                                break;
+                                            case "TOIMPORT_PROPOSITION_":
+                                                TOIMPORT_PROPOSITION_ = el.getAttribute("value");
+                                                break;
+                                            case "WRONGFILECHOSEN":
+                                                WRONGFILECHOSEN = el.getAttribute("value");
+                                                break;
+                                            case "IMPORTED":
+                                                IMPORTED = el.getAttribute("value");
+                                                break;
+                                            case "PRICESASDEFAULT":
+                                                PRICESASDEFAULT = el.getAttribute("value");
+                                                break;
+                                            case "ERRORCOULDNTIMPORTPRICES":
+                                                ERRORCOULDNTIMPORTPRICES = el.getAttribute("value");
+                                                break;
+                                            case "DONE":
+                                                DONE = el.getAttribute("value");
+                                                break;
+                                            case "REALSHOPPINGUPDATEDTO":
+                                                REALSHOPPINGUPDATEDTO = el.getAttribute("value");
+                                                break;
+                                            case "X_ST":
+                                                X_ST = el.getAttribute("value");
+                                                break;
+                                            case "X_ND":
+                                                X_ND = el.getAttribute("value");
+                                                break;
+                                            case "X_RD":
+                                                X_RD = el.getAttribute("value");
+                                                break;
+                                            case "X_TH":
+                                                X_TH = el.getAttribute("value");
+                                                break;
+                                            case "YOUWILLBENOTIFIEDIF":
+                                                YOUWILLBENOTIFIEDIF = el.getAttribute("value");
+                                                break;
+                                            case "LOSESGAINS":
+                                                LOSESGAINS = el.getAttribute("value");
+                                                break;
+                                            case "PLACES":
+                                                PLACES = el.getAttribute("value");
+                                                break;
+                                            case "THEPRICEWILLBELOWEREDINCREASED_":
+                                                THEPRICEWILLBELOWEREDINCREASED_ = el.getAttribute("value");
+                                                break;
+                                            case "PCNTIF":
+                                                PCNTIF = el.getAttribute("value");
+                                                break;
+                                            case "WONTNOTIFY_":
+                                                WONTNOTIFY_ = el.getAttribute("value");
+                                                break;
+                                            case "NO_HELP_DOCUMENTATION_":
+                                                NO_HELP_DOCUMENTATION_ = el.getAttribute("value");
+                                                break;
+                                            case "FORHELPTYPE":
+                                                FORHELPTYPE = el.getAttribute("value");
+                                                break;
+                                            case "BLOCK_ADDED_TO_SELECTION":
+                                                BLOCK_ADDED_TO_SELECTION = el.getAttribute("value");
+                                                break;
+                                            case "BLOCK_ALREADY_SELECTED":
+                                                BLOCK_ALREADY_SELECTED = el.getAttribute("value");
+                                                break;
+                                            case "BLOCK_REMOVED_FROM_SELECTION":
+                                                BLOCK_REMOVED_FROM_SELECTION = el.getAttribute("value");
+                                                break;
+                                            case "BLOCK_WASNT_SELECTED":
+                                                BLOCK_WASNT_SELECTED = el.getAttribute("value");
+                                                break;
+                                            case "CHANGES_UNDONE":
+                                                CHANGES_UNDONE = el.getAttribute("value");
+                                                break;
+                                            case "PLEASE_SELECT_EXIT_":
+                                                PLEASE_SELECT_EXIT_ = el.getAttribute("value");
+                                                break;
+                                            case "PLEASE_SELECT_THE_EXIT_LINKED_TO_ENTRANCE_":
+                                                PLEASE_SELECT_THE_EXIT_LINKED_TO_ENTRANCE_ = el.getAttribute("value");
+                                                break;
+                                            case "PLEASE_SELECT_ENTRANCE_":
+                                                PLEASE_SELECT_ENTRANCE_ = el.getAttribute("value");
+                                                break;
+                                            case "TO_EXITS_LIST":
+                                                TO_EXITS_LIST = el.getAttribute("value");
+                                                break;
+                                            case "IS_NOT_AN_EXIT_TO_THE_LAST_ENTRANCE":
+                                                IS_NOT_AN_EXIT_TO_THE_LAST_ENTRANCE = el.getAttribute("value");
+                                                break;
+                                            case "TO_ENTRANCES_LIST":
+                                                TO_ENTRANCES_LIST = el.getAttribute("value");
+                                                break;
+                                            case "IS_NOT_AN_ENTRANCE_TO_":
+                                                IS_NOT_AN_ENTRANCE_TO_ = el.getAttribute("value");
+                                                break;
+                                            case "ABANDONING_CONVERSATIONS":
+                                                ABANDONING_CONVERSATIONS = el.getAttribute("value");
+                                                break;
+                                            case "CONVERSATIONS_ABANDONED":
+                                                CONVERSATIONS_ABANDONED = el.getAttribute("value");
+                                                break;
+                                            case "QUIT_CONVERSATION_FOR_UNKNOWN_REASON":
+                                                QUIT_CONVERSATION_FOR_UNKNOWN_REASON = el.getAttribute("value");
+                                                break;
+                                            case "IS_NOT_IN_A_STORE":
+                                                IS_NOT_IN_A_STORE = el.getAttribute("value");
+                                                break;
+                                            case "IS_NOT_ALLOWED_TO_MANAGE_STORE_":
+                                                IS_NOT_ALLOWED_TO_MANAGE_STORE_ = el.getAttribute("value");
+                                                break;
+                                            case "YOU_CANT_TELEPORT_WHILE_IN_A_CONVERSATION":
+                                                YOU_CANT_TELEPORT_WHILE_IN_A_CONVERSATION = el.getAttribute("value");
+                                                break;
+                                            case "YOU_CANT_DO_THIS_WHILE_IN_A_CONVERSATION":
+                                                YOU_CANT_DO_THIS_WHILE_IN_A_CONVERSATION = el.getAttribute("value");
+                                                break;
+                                            case "ALL_CONVERSATIONS_CAN_BE_ABORTED_WITH_":
+                                                ALL_CONVERSATIONS_CAN_BE_ABORTED_WITH_ = el.getAttribute("value");
+                                                break;
+                                            case "YOU_HAVE_TO_SEARCH_FOR_A_SPECIFIC_ITEM":
+                                                YOU_HAVE_TO_SEARCH_FOR_A_SPECIFIC_ITEM = el.getAttribute("value");
+                                                break;
+                                            case "NO_MATCHES_FOR_":
+                                                NO_MATCHES_FOR_ = el.getAttribute("value");
+                                                break;
+                                            case "RSPRICESHELP":
+                                                RSPRICESHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSPRICESHELP2":
+                                                RSPRICESHELP2 = el.getAttribute("value");
+                                                break;
+                                            case "RSPRICESHELP3":
+                                                RSPRICESHELP3 = el.getAttribute("value");
+                                                break;
+                                            case "RSPROTECTHELP":
+                                                RSPROTECTHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSPROTECTHELP2":
+                                                RSPROTECTHELP2 = el.getAttribute("value");
+                                                break;
+                                            case "RSPROTECTHELP3":
+                                                RSPROTECTHELP3 = el.getAttribute("value");
+                                                break;
+                                            case "FOR_HELP_FOR_A_SPECIFIC_COMMAND_TYPE_":
+                                                FOR_HELP_FOR_A_SPECIFIC_COMMAND_TYPE_ = el.getAttribute("value");
+                                                break;
+                                            case "YOU_CAN_GET_MORE_HELP_ABOUT_":
+                                                YOU_CAN_GET_MORE_HELP_ABOUT_ = el.getAttribute("value");
+                                                break;
+                                            case "STARTS_AN_INTERACTIVE_PROMPT":
+                                                STARTS_AN_INTERACTIVE_PROMPT = el.getAttribute("value");
+                                                break;
+                                            case "RSSETHELP":
+                                                RSSETHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSETSTORESHELP":
+                                                RSSETSTORESHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSETENTRANCEHELP":
+                                                RSSETENTRANCEHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSETEXITHELP":
+                                                RSSETEXITHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSETCREATEHELP":
+                                                RSSETCREATEHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSETDELSTOREHELP":
+                                                RSSETDELSTOREHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSETDELENHELP":
+                                                RSSETDELENHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSETCHESTSHELP":
+                                                RSSETCHESTSHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSETCHESTSCREATEHELP":
+                                                RSSETCHESTSCREATEHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSETCHESTSDELHELP":
+                                                RSSETCHESTSDELHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSETCHESTSADDITEMSHELP":
+                                                RSSETCHESTSADDITEMSHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSETCHESTSDELITEMSHELP":
+                                                RSSETCHESTSDELITEMSHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSETPRICESHELP":
+                                                RSSETPRICESHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSETPRICESHELP2":
+                                                RSSETPRICESHELP2 = el.getAttribute("value");
+                                                break;
+                                            case "RSSETPRICESADDHELP":
+                                                RSSETPRICESADDHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSETPRICESADDHELP2":
+                                                RSSETPRICESADDHELP2 = el.getAttribute("value");
+                                                break;
+                                            case "AND_":
+                                                AND_ = el.getAttribute("value");
+                                                break;
+                                            case "ARGUMENTS":
+                                                ARGUMENTS = el.getAttribute("value");
+                                                break;
+                                            case "RSSETPRICESDELHELP":
+                                                RSSETPRICESDELHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSETPRICESDEFAUTLSHELP":
+                                                RSSETPRICESDEFAUTLSHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSETPRICESCOPYHELP":
+                                                RSSETPRICESCOPYHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSETPRICESCOPYHELP2":
+                                                RSSETPRICESCOPYHELP2 = el.getAttribute("value");
+                                                break;
+                                            case "RSSETPRICESCOPYHELP3":
+                                                RSSETPRICESCOPYHELP3 = el.getAttribute("value");
+                                                break;
+                                            case "RSSETPRICESCLEARHELP":
+                                                RSSETPRICESCLEARHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSETPRICESSHOWMMHELP":
+                                                RSSETPRICESSHOWMMHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSETPRICESCLEARMMHELP":
+                                                RSSETPRICESCLEARMMHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSETPRICESSETMMHELP":
+                                                RSSETPRICESSETMMHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSHIPPEDHELP":
+                                                RSSHIPPEDHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSSHIPPEDHELP2":
+                                                RSSHIPPEDHELP2 = el.getAttribute("value");
+                                                break;
+                                            case "RSSHIPPEDHELP3":
+                                                RSSHIPPEDHELP3 = el.getAttribute("value");
+                                                break;
+                                            case "RSTPLOCSHELP":
+                                                RSTPLOCSHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSTPLOCSWHITEHELP":
+                                                RSTPLOCSWHITEHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSTPLOCSBLACKHELP":
+                                                RSTPLOCSBLACKHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSTPLOCSLISTHELP":
+                                                RSTPLOCSLISTHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSTPLOCSADDHELP":
+                                                RSTPLOCSADDHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSTPLOCSADDHELP2":
+                                                RSTPLOCSADDHELP2 = el.getAttribute("value");
+                                                break;
+                                            case "RSTPLOCSDELHELP":
+                                                RSTPLOCSDELHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSTPLOCSHIGHHELP":
+                                                RSTPLOCSHIGHHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSUPDATEHELP":
+                                                RSUPDATEHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSUPDATEUPDATEHELP":
+                                                RSUPDATEUPDATEHELP = el.getAttribute("value");
+                                                break;
+                                            case "RSUPDATEINFOHELP":
+                                                RSUPDATEINFOHELP = el.getAttribute("value");
+                                                break;
+                                            case "THIS_ENTRANCE_AND_EXIT_PAIR_IS_ALREADY_USED":
+                                                THIS_ENTRANCE_AND_EXIT_PAIR_IS_ALREADY_USED = el.getAttribute("value");
+                                                break;
+                                            case "YOU_CANT_USE_THIS_COMMAND_INSIDE_A_STORE":
+                                                YOU_CANT_USE_THIS_COMMAND_INSIDE_A_STORE = el.getAttribute("value");
+                                                break;
+                                            case "LOADED_CONFIG_SETTINGS":
+                                                LOADED_CONFIG_SETTINGS = el.getAttribute("value");
+                                                break;
+                                            case "ENABLED_IN_ALL_WORLDS":
+                                                ENABLED_IN_ALL_WORLDS = el.getAttribute("value");
+                                                break;
+                                            case "FOR_MORE":
+                                                FOR_MORE = el.getAttribute("value");
+                                                break;
+                                            case "IS_NOT_AN_ACCEPTED_ARGUMENT":
+                                                IS_NOT_AN_ACCEPTED_ARGUMENT = el.getAttribute("value");
+                                                break;
+                                            case "TO_CONTINUE_TYPE_ANY_OF_THE_PURPLE_KEYWORDS":
+                                                TO_CONTINUE_TYPE_ANY_OF_THE_PURPLE_KEYWORDS = el.getAttribute("value");
+                                                break;
+                                            case "WHAT_DO_YOU_WANT_TO_DO_":
+                                                WHAT_DO_YOU_WANT_TO_DO_ = el.getAttribute("value");
+                                                break;
+                                            case "THIS_PROMPT_WILL_AID_YOU_IN__CHESTS_":
+                                                THIS_PROMPT_WILL_AID_YOU_IN__CHESTS_ = el.getAttribute("value");
+                                                break;
+                                            case "NEW_CHESTS_OR_":
+                                                NEW_CHESTS_OR_ = el.getAttribute("value");
+                                                break;
+                                            case "OR_":
+                                                OR_ = el.getAttribute("value");
+                                                break;
+                                            case "EXISTING_ONES":
+                                                EXISTING_ONES = el.getAttribute("value");
+                                                break;
+                                            case "YOU_HAVE_CHOSEN_TO_CREATE_NEW_CHESTS_":
+                                                YOU_HAVE_CHOSEN_TO_CREATE_NEW_CHESTS_ = el.getAttribute("value");
+                                                break;
+                                            case "YOU_HAVE_CHOSEN_TO_DELETE_EXISTING_CHESTS_":
+                                                YOU_HAVE_CHOSEN_TO_DELETE_EXISTING_CHESTS_ = el.getAttribute("value");
+                                                break;
+                                            case "YOU_HAVE_CHOSEN_TO_MANAGE_EXISTING_CHESTS_":
+                                                YOU_HAVE_CHOSEN_TO_MANAGE_EXISTING_CHESTS_ = el.getAttribute("value");
+                                                break;
+                                            case "APPLY_TO_ALL_CHOSEN_CHESTS_":
+                                                APPLY_TO_ALL_CHOSEN_CHESTS_ = el.getAttribute("value");
+                                                break;
+                                            case "TO_CLEAR_THE_SELECTION_OF_CHESTS_OR_":
+                                                TO_CLEAR_THE_SELECTION_OF_CHESTS_OR_ = el.getAttribute("value");
+                                                break;
+                                            case "TO_SELECT_ALL__EXIT_WITH_":
+                                                TO_SELECT_ALL__EXIT_WITH_ = el.getAttribute("value");
+                                                break;
+                                            case "YOU_HAVE_CHOSEN_TO_MANAGE_EXISTING_CHESTS_FREELY_":
+                                                YOU_HAVE_CHOSEN_TO_MANAGE_EXISTING_CHESTS_FREELY_ = el.getAttribute("value");
+                                                break;
+                                            case "CHESTS_CREATED":
+                                                CHESTS_CREATED = el.getAttribute("value");
+                                                break;
+                                            case "CHESTS_REMOVED":
+                                                CHESTS_REMOVED = el.getAttribute("value");
+                                                break;
+                                            case "ACTION_ABORTED":
+                                                ACTION_ABORTED = el.getAttribute("value");
+                                                break;
+                                            case "ITEMS_TO_":
+                                                ITEMS_TO_ = el.getAttribute("value");
+                                                break;
+                                            case "CHESTS":
+                                                CHESTS = el.getAttribute("value");
+                                                break;
+                                            case "DELETED_":
+                                                DELETED_ = el.getAttribute("value");
+                                                break;
+                                            case "ITEMS_FROM_":
+                                                ITEMS_FROM_ = el.getAttribute("value");
+                                                break;
+                                            case "CLEARED_CONTENTS_OF_":
+                                                CLEARED_CONTENTS_OF_ = el.getAttribute("value");
+                                                break;
+                                            case "UPDATED_CONTENTS_OF":
+                                                UPDATED_CONTENTS_OF = el.getAttribute("value");
+                                                break;
+                                            case "SELECTED_":
+                                                SELECTED_ = el.getAttribute("value");
+                                                break;
+                                            case "CLEARED_SELECTION":
+                                                CLEARED_SELECTION = el.getAttribute("value");
+                                                break;
+                                            case "QUIT_MANAGING_CHESTS":
+                                                QUIT_MANAGING_CHESTS = el.getAttribute("value");
+                                                break;
+                                            case "THIS_PROMPT_WILL_AID_YOU_IN__STORE_":
+                                                THIS_PROMPT_WILL_AID_YOU_IN__STORE_ = el.getAttribute("value");
+                                                break;
+                                            case "THIS_PROMPT_WILL_AID_YOU_IN__PLAYER_STORE_":
+                                                THIS_PROMPT_WILL_AID_YOU_IN__PLAYER_STORE_ = el.getAttribute("value");
+                                                break;
+                                            case "YOU_DONT_HAVE_THE_RIGHT_PERMISSIONS_TO_DO_THIS":
+                                                YOU_DONT_HAVE_THE_RIGHT_PERMISSIONS_TO_DO_THIS = el.getAttribute("value");
+                                                break;
+                                            case "A_NEW_STORE_":
+                                                A_NEW_STORE_ = el.getAttribute("value");
+                                                break;
+                                            case "ENTRANCES_AND_EXITS_OR_":
+                                                ENTRANCES_AND_EXITS_OR_ = el.getAttribute("value");
+                                                break;
+                                            case "AN_EXISTING_STORE":
+                                                AN_EXISTING_STORE = el.getAttribute("value");
+                                                break;
+                                            case "YOU_HAVE_CHOSEN_TO_CREATE_A_NEW_STORE_":
+                                                YOU_HAVE_CHOSEN_TO_CREATE_A_NEW_STORE_ = el.getAttribute("value");
+                                                break;
+                                            case "YOU_HAVE_CHOSEN_TO_APPEND__STORE_":
+                                                YOU_HAVE_CHOSEN_TO_APPEND__STORE_ = el.getAttribute("value");
+                                                break;
+                                            case "YOU_HAVE_CHOSEN_TO_DELETE__STORE_":
+                                                YOU_HAVE_CHOSEN_TO_DELETE__STORE_ = el.getAttribute("value");
+                                                break;
+                                            case "YOU_HAVE_CHOSEN_TO_WIPE_OUT_A_STORE_":
+                                                YOU_HAVE_CHOSEN_TO_WIPE_OUT_A_STORE_ = el.getAttribute("value");
+                                                break;
+                                            case "THE_NAME_":
+                                                THE_NAME_ = el.getAttribute("value");
+                                                break;
+                                            case "IS_AVAILABLE":
+                                                IS_AVAILABLE = el.getAttribute("value");
+                                                break;
+                                            case "THAT_NAME_IS_ALREADY_TAKEN":
+                                                THAT_NAME_IS_ALREADY_TAKEN = el.getAttribute("value");
+                                                break;
+                                            case "YOU_CANT_USE_THIS_INSIDE_A_STORE":
+                                                YOU_CANT_USE_THIS_INSIDE_A_STORE = el.getAttribute("value");
+                                                break;
+                                            case "RIGHTCLICK_A_BLOCK_TO_SELECT_IT_AS_EE_":
+                                                RIGHTCLICK_A_BLOCK_TO_SELECT_IT_AS_EE_ = el.getAttribute("value");
+                                                break;
+                                            case "WHEN_DONE_OR_":
+                                                WHEN_DONE_OR_ = el.getAttribute("value");
+                                                break;
+                                            case "TO_START_OVER_":
+                                                TO_START_OVER_ = el.getAttribute("value");
+                                                break;
+                                            case "CREATED_STORE_":
+                                                CREATED_STORE_ = el.getAttribute("value");
+                                                break;
+                                            case "EE_PAIRS":
+                                                EE_PAIRS = el.getAttribute("value");
+                                                break;
+                                            case "NO_EE_SELECTED":
+                                                NO_EE_SELECTED = el.getAttribute("value");
+                                                break;
+                                            case "YOU_HAVE_CHOSEN_TO_APPEND_NEW_EE_TO_":
+                                                YOU_HAVE_CHOSEN_TO_APPEND_NEW_EE_TO_ = el.getAttribute("value");
+                                                break;
+                                            case "APPENDED_":
+                                                APPENDED_ = el.getAttribute("value");
+                                                break;
+                                            case "EE_PAIRS_TO_STORE_":
+                                                EE_PAIRS_TO_STORE_ = el.getAttribute("value");
+                                                break;
+                                            case "YOU_HAVE_CHOSEN_TO_DELETE_EE_FROM_":
+                                                YOU_HAVE_CHOSEN_TO_DELETE_EE_FROM_ = el.getAttribute("value");
+                                                break;
+                                            case "EE_PAIRS_FROM_STORE_":
+                                                EE_PAIRS_FROM_STORE_ = el.getAttribute("value");
+                                                break;
+                                            case "DO_YOU_REALLY_WANT_TO_DELETE_":
+                                                DO_YOU_REALLY_WANT_TO_DELETE_ = el.getAttribute("value");
+                                                break;
+                                            case "AND_ALL_ITS_":
+                                                AND_ALL_ITS_ = el.getAttribute("value");
+                                                break;
+                                            //0.51 inventory buttons
+                                            case "BTN_CANCEL":
+                                                BTN_CANCEL = el.getAttribute("value");
+                                                break;
+                                            case "BTN_CONFIRM":
+                                                BTN_CONFIRM = el.getAttribute("value");
+                                                break;
+                                            case "BTN_PAYMENTINFO":
+                                                BTN_PAYMENTINFO = el.getAttribute("value");
+                                                break;
+                                            case "BTN_SELLINFO":
+                                                BTN_SELLINFO = el.getAttribute("value");
+                                                break;
+                                            case "PAYTOSTORE":
+                                                PAYTOSTORE = el.getAttribute("value");
+                                                break;
+                                            case "COUPONNAME":
+                                                COUPONNAME = el.getAttribute("value");
+                                            default:
+                                                break;
+                                        }
 				}
 				RealShopping.loginfo("Loaded " + lang + " language pack.");
 			}

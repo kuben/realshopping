@@ -12,6 +12,7 @@ import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.exceptions.RealShoppingException;
 import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.kuben.realshopping.prompts.PromptMaster.PromptType;
+import com.github.stengun.realshopping.SerializationManager;
 
 class RSSetStores extends RSPlayerCommand {
 
@@ -52,7 +53,7 @@ class RSSetStores extends RSPlayerCommand {
 				    		try {
 								RealShopping.getShop(args[1]).addEntranceExit(RealShopping.getPlayerEntrance(player.getName())
 									, RealShopping.getPlayerExit(player.getName()));
-					    		RealShopping.updateShopsDb();
+					    		SerializationManager.saveShops();
 					    		player.sendMessage(ChatColor.GREEN + args[1] + LangPack.WASCREATED);
 							} catch (RealShoppingException e) {
 								player.sendMessage(ChatColor.RED + LangPack.THIS_ENTRANCE_AND_EXIT_PAIR_IS_ALREADY_USED);
@@ -70,7 +71,7 @@ class RSSetStores extends RSPlayerCommand {
 							RealShopping.getShop(args[1]).clearEntrancesExits();
 							RealShopping.removeShop(args[1]);
 							player.sendMessage(ChatColor.RED + args[1] + LangPack.WASREMOVED);
-							RealShopping.updateShopsDb();
+							SerializationManager.saveShops();
 						} else player.sendMessage(ChatColor.RED + LangPack.STORENOTEMPTY);
 					} else player.sendMessage(ChatColor.RED + LangPack.YOUARENOTTHEOWNEROFTHISSTORE);
 					return true;

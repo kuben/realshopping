@@ -12,6 +12,7 @@ import com.github.kuben.realshopping.exceptions.RSListenerException;
 import com.github.kuben.realshopping.listeners.SetupStoreListener;
 import com.github.kuben.realshopping.listeners.SetupStoreListener.Type;
 import com.github.kuben.realshopping.listeners.RSPlayerListener;
+import com.github.stengun.realshopping.SerializationManager;
 
 public class SetupStorePrompt implements Prompt {
 	 
@@ -215,7 +216,7 @@ public class SetupStorePrompt implements Prompt {
         					tempShop.clearEntrancesExits();
         					RealShopping.removeShop(tempShop.getName());
         					rtrn = ChatColor.GREEN + LangPack.DELETED_ + ChatColor.DARK_AQUA + context.getSessionData("shop") + ChatColor.GREEN + " .";
-        					RealShopping.updateShopsDb();
+        					SerializationManager.saveShops();
         				} else rtrn = ChatColor.RED + LangPack.STORENOTEMPTY;
         			} else rtrn = ChatColor.DARK_RED + "Error #2001";
         			context.setSessionData("ID", "second");

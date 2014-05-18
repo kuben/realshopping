@@ -20,10 +20,13 @@
 package com.github.stengun.realshopping;
 
 import com.github.kuben.realshopping.LangPack;
+import com.github.kuben.realshopping.Price;
+import com.github.kuben.realshopping.RSPlayerInventory;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
 import com.github.stengun.realshopping.events.OptionClickedEvent;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
@@ -34,42 +37,38 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 /**
- * A custom class for Sell to store inventories.
- * This class works as a "wrapper" of Inventory, providing item price visualization in its Lore lines.
- This will facilitate the reading of the sell PrintPrices while selling items to a shop.
+ *
  * @author stengun
  */
-public class SellInventory extends InventoryManager{
-
-    private final Shop shop;
-    private final Player p;
-    public SellInventory(Player p, Inventory inventory) {
+public class PayInventory extends InventoryManager{
+    Collection<Inventory> carts;
+    Player p;
+    public PayInventory(Player p, Inventory inventory, Collection<Inventory> carts) {
         super(inventory);
-        this.shop = RealShopping.getPInv(p).getShop();
+        addOption(8, LangPack.BTN_PAYMENTINFO, Material.ITEM_FRAME);
+        addOption(17, LangPack.BTN_CONFIRM, DyeColor.GREEN);
+        addOption(26, LangPack.BTN_CANCEL, DyeColor.RED);
+        this.carts = carts;
         this.p = p;
-        this.addOption(8, LangPack.BTN_SELLINFO, Material.ITEM_FRAME);
-        this.addOption(17, LangPack.BTN_CONFIRM, DyeColor.GREEN);
-        this.addOption(26, LangPack.BTN_CANCEL, DyeColor.RED);
     }
     
-    /**
-     * Updates the content of this inventory given the "real inventory" (the one
-     * that's hidden inside this class).
-     */
-    @Override
-    protected void update() {
-        double stackprice = 0.;
-        for(int i = 0; i < contents.getSize(); i++) {
-            if(this.isAnOption(i) || contents.getItem(i) == null) continue;
-            ItemStack itm = contents.getItem(i);
-            stackprice += Shop.sellPrice(shop, itm);
-        }
-        List<String> lore = new ArrayList<>();
-        lore.add("Total sell price: "+stackprice);
-        updateOption(8, null, lore);
-        //addOption(8, "Total sell price: " + stackprice, Material.ITEM_FRAME);
+
+    public boolean isEligible(ItemStack itm) {
+        Coupon coup = Coupon.itemToCoupon(itm);
+        if(coup != null) return true;
+        Shop shop = RealShopping.getPInv(p).getShop();
+        return shop.hasPrice(new Price(itm));
     }
 
+    @Override
+    public void update() {
+        RSPlayerInventory pinv = RealShopping.getPInv(p);
+        double totalcost = pinv.toPay(carts.toArray(new Inventory[0]), pinv.getShop())/100d;
+        List<String> lore = new ArrayList<>();
+        lore.add("Total cost of chosen items: " + totalcost);
+        // TODO add discount coupon indicator in lore
+        updateOption(8, null, lore);
+    }
     @Override
     @EventHandler(priority = EventPriority.MONITOR)
     public void onOptionClicked(OptionClickedEvent event) {
@@ -80,13 +79,22 @@ public class SellInventory extends InventoryManager{
             case 17:
                 List<ItemStack> sellitms = getContentsList();
                 List<ItemStack> unsold = Shop.sellToStore(p, sellitms);
+                List<Coupon> couplist = new ArrayList<>();
+                for(ItemStack it : unsold.toArray(new ItemStack[0])) {
+                    Coupon coup = Coupon.itemToCoupon(it);
+                    if(coup != null) {
+                        unsold.remove(it);
+                        couplist.add(coup);
+                    }
+                }
                 p.getInventory().addItem(unsold.toArray(new ItemStack[0]));
-                p.updateInventory();
+                Shop.pay(p, carts.toArray(new Inventory[0]), couplist);
             case 26:
                 p.closeInventory();
             default:
                 break;
         }
-        event.getSender().sendMessage("Hai cliccato " + options.get(event.getIndex()).getItemMeta().getDisplayName());
+        //event.getSender().sendMessage("Hai cliccato " + options.get(event.getIndex()).getItemMeta().getDisplayName());
+        
     }
 }

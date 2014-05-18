@@ -9,12 +9,18 @@ import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
 import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
+import com.github.stengun.realshopping.SerializationManager;
+import java.util.ArrayList;
 import java.util.Locale;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Chest;
 import org.bukkit.command.CommandSender;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 class RSStores extends RSCommand {
 
@@ -191,7 +197,7 @@ class RSStores extends RSCommand {
 						shop.setBuyFor(pcnt);
 						if(pcnt > 0) sender.sendMessage(GR + LangPack.BUYSFOR + DG + pcnt + GR + LangPack.PCNTOFORIGINAL);
 						else sender.sendMessage(RD + LangPack.NOTBUYINGFROMPLAYERS);
-						RealShopping.updateShopsDb();
+						SerializationManager.saveShops();
 						return true;
 					} else sender.sendMessage(RD + LangPack.YOUCANTUSEAVALUEBELLOW0);
 				} else sender.sendMessage(RD + LangPack.YOUCANTUSEAVALUEOVER100);
@@ -209,7 +215,7 @@ class RSStores extends RSCommand {
 			shop.addBanned(args[2].toLowerCase());
 			sender.sendMessage(GR + LangPack.BANNED + DG + args[2] + GR + LangPack.FROMSTORE);
 		}
-		RealShopping.updateShopsDb();
+		SerializationManager.saveShops();
 		return true;
 	}
 	
@@ -219,7 +225,7 @@ class RSStores extends RSCommand {
  				shop.removeBanned(args[2].toLowerCase());
  				sender.sendMessage(DG + args[2] + GR + LangPack.ISNOLONGERBANNEDFROMYOURSTORE);
  			} else sender.sendMessage(DR + args[2] + RD + LangPack.WASNTBANNEDFROMYOURSTORE);
- 			RealShopping.updateShopsDb();
+ 			SerializationManager.saveShops();
  			return true;
 	}
 	
@@ -361,40 +367,103 @@ class RSStores extends RSCommand {
 	    } else sender.sendMessage(RD + "The broadcast cannot be longer than " + DR + MAX + RD + " characters.");//LANG
 	    return true;
 	}
-	
-	@Override
-	protected boolean execute() {
-		if(!determineIfOwner()) return false;
-		
-		if(args.length == 1){//First argument MUST be store
-			sender.sendMessage(GR + LangPack.STORE + ChatColor.YELLOW + args[0] + ((shop.getOwner().equalsIgnoreCase("@admin"))?"":GR + LangPack.OWNEDBY + DG + shop.getOwner()));
-			if(shop.getBuyFor() > 0) sender.sendMessage(GR + LangPack.BUYSFOR + DG + shop.getBuyFor() + GR + LangPack.PCNTOFORIGINAL);
-			if(shop.hasSales()) sender.sendMessage(GR + LangPack.HASA + DG + shop.getFirstSale() + GR + LangPack.PCNTOFFSALERIGHTNOW);
-			if(!RealShopping.getPlayersInStore(args[0])[0].equals("")){
-				sender.sendMessage(DG + LangPack.PLAYERSINSTORE + "\n" + RESET + RSUtils.formatPlayerListToMess(RealShopping.getPlayersInStore(args[0])));
-			}
-			sender.sendMessage(GR + LangPack.FORHELPTYPE + LP + "/rsstores help");
-			return true;
-		} else if(isOwner || player == null){
-			if(args[1].equalsIgnoreCase("collect")){
-				return collect();
-			} else if(args[1].equalsIgnoreCase("buyfor")){
-				return buyfor();
-     		} else if(args[1].equalsIgnoreCase("ban")){
-    			return ban();
-     		} else if(args.length == 3 && args[1].equalsIgnoreCase("unban")){
-     			return unban();
-    		} else if(args[1].equalsIgnoreCase("kick")){
-    			return kick();
-    		} else if(args.length > 2 && args[1].equalsIgnoreCase("startsale")){
-    			return startsale();
-    		} else if(args.length == 2 && args[1].equalsIgnoreCase("endsale")){
-                return endsale();
-            } else if(args.length > 2 && args[1].equalsIgnoreCase("broadcast")){
-                return broadcast();
+	 
+        private boolean coupon() {
+            String type = args[2];
+            Integer percent;
+            String item = "";
+            if(args.length == 4) percent = Integer.parseInt(args[3]);
+            else {
+                item = args[3];
+                percent = Integer.parseInt(args[4]);
             }
-		} else sender.sendMessage(RD + LangPack.YOUDONTHAVEPERMISSIONTOMANAGETHATSTORE);
-		return false;
+            ItemMeta meta = Bukkit.getServer().getItemFactory().getItemMeta(Material.PAPER);
+            meta.setDisplayName("Discount coupon");
+            ArrayList<String> lore = new ArrayList<>();
+            lore.add(shop.getName());
+            switch(type.toLowerCase()) {
+                case "global":
+                    lore.add("Discount on any buy you do.");
+                    lore.add(percent + "% Discount");
+                    break;
+                case "material":
+                    lore.add("Discount on any item reported here.");
+                    lore.add(item);
+                    lore.add(percent + "% Discount on selected items.");
+                    break;
+                case "exact":
+                    break;
+                default:
+                    return false;
+            }
+            meta.setLore(lore);
+            Location lctn = Bukkit.getServer().getPlayer(sender.getName()).getLocation();
+            ItemStack coupon = new ItemStack(Material.PAPER);
+            coupon.setItemMeta(meta);
+            Bukkit.getServer().getPlayer(sender.getName()).getWorld().dropItem(lctn, coupon);
+            return true;
+        }
+	
+        @Override
+	protected boolean execute() {
+            if(!determineIfOwner()) return false;
+
+                if(args.length == 1){//First argument MUST be store
+                        sender.sendMessage(GR + LangPack.STORE + ChatColor.YELLOW + args[0] + ((shop.getOwner().equalsIgnoreCase("@admin"))?"":GR + LangPack.OWNEDBY + DG + shop.getOwner()));
+                        if(shop.getBuyFor() > 0) sender.sendMessage(GR + LangPack.BUYSFOR + DG + shop.getBuyFor() + GR + LangPack.PCNTOFORIGINAL);
+                        if(shop.hasSales()) sender.sendMessage(GR + LangPack.HASA + DG + shop.getFirstSale() + GR + LangPack.PCNTOFFSALERIGHTNOW);
+                        if(!RealShopping.getPlayersInStore(args[0])[0].equals("")){
+                                sender.sendMessage(DG + LangPack.PLAYERSINSTORE + "\n" + RESET + RSUtils.formatPlayerListToMess(RealShopping.getPlayersInStore(args[0])));
+                        }
+                        sender.sendMessage(GR + LangPack.FORHELPTYPE + LP + "/rsstores help");
+                        return true;
+                } else if(isOwner || player == null){
+                    switch(args[1].toLowerCase()) {
+                        case "collect":
+                            return collect();
+                        case "buyfor":
+                            return buyfor();
+                        case "ban":
+                            return ban();
+                        case "unban":
+                            if(args.length != 3) break;
+                            return unban();
+                        case "kick":
+                            return kick();
+                        case "startsale":
+                            if(args.length < 3) break;
+                            return startsale();
+                        case "endsale":
+                            if(args.length != 2) break;
+                            return endsale();
+                        case "broadcast":
+                            if(args.length < 3) break;
+                            return broadcast();
+                        case "coupon":
+                            if(args.length < 4) break;
+                            return coupon();
+                        default:
+                            break;
+                    }
+//                    if(args[1].equalsIgnoreCase("collect")){
+//                            return collect();
+//                    } else if(args[1].equalsIgnoreCase("buyfor")){
+//                                return buyfor();
+//                    } else if(args[1].equalsIgnoreCase("ban")){
+//                            return ban();
+//                    } else if(args.length == 3 && args[1].equalsIgnoreCase("unban")){
+//                            return unban();
+//                    } else if(args[1].equalsIgnoreCase("kick")){
+//                            return kick();
+//                    } else if(args.length > 2 && args[1].equalsIgnoreCase("startsale")){
+//                            return startsale();
+//                    } else if(args.length == 2 && args[1].equalsIgnoreCase("endsale")){
+//                    return endsale();
+//                    } else if(args.length > 2 && args[1].equalsIgnoreCase("broadcast")){
+//                        return broadcast();
+//                    }
+                } else sender.sendMessage(RD + LangPack.YOUDONTHAVEPERMISSIONTOMANAGETHATSTORE);
+            return false;
 	}
 
 }

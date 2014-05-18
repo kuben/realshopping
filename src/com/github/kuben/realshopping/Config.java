@@ -100,7 +100,7 @@ public class Config {
         }
 
         debug = false;
-        cartEnabledW = new HashSet<String>();
+        cartEnabledW = new HashSet<>();
         debug = false;
         keepstolen = false;
         langpack = "default";
@@ -290,7 +290,7 @@ public class Config {
     public static int getMaxPendingNots() { return maxPendingNots; }
     public static int getMaxPendingUserNots() { return maxPendingNotsPerUser; }
     public static Set<String> getCartEnabledW() { return cartEnabledW; }
-    public static boolean isCartEnabledW(String s) { if(cartEnabledW.contains("@all") || cartEnabledW.contains(s)) return true; return false; }
+    public static boolean isCartEnabledW(String s) { return (cartEnabledW.contains("@all") || cartEnabledW.contains(s)); }
 
 
     private enum Setting {

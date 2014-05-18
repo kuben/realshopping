@@ -28,6 +28,8 @@ import com.github.kuben.realshopping.Shop;
 import com.github.kuben.realshopping.exceptions.RSListenerException;
 import com.github.kuben.realshopping.exceptions.RSListenerException.Type;
 import com.github.kuben.realshopping.prompts.PromptMaster;
+import com.github.stengun.realshopping.events.PayInventoryOpen;
+import com.github.stengun.realshopping.events.SellInventoryOpen;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -251,7 +253,7 @@ public class RSPlayerListener implements Listener {
             event.setCancelled(true);
             return;
         }
-        //Stiamo piazzando un blocco? stiamo usando un item?
+        
         if (RealShopping.hasPInv(player) && event.getItem() != null && RealShopping.isForbiddenInStore(event.getItem().getType())) {
             if (event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR) {
                 player.sendMessage(ChatColor.RED + LangPack.YOUCANTUSETHATITEMINSTORE);
@@ -276,17 +278,12 @@ public class RSPlayerListener implements Listener {
             {
                 Location plloc = player.getLocation().getBlock().getLocation().clone();
                 Location clickloc = b.getLocation().getBlock().getLocation().clone();
-                Location upper = new Location(clickloc.getWorld(), clickloc.getBlockX(), clickloc.getBlockY() + 1, clickloc.getBlockZ());
                 Location lower = new Location(clickloc.getWorld(), clickloc.getBlockX(), clickloc.getBlockY()- 1, clickloc.getBlockZ());
                 //Se la porta si trova su una entrata l'evento va sempre cancellato.
                 //Se il giocatore clicca su una entrata e il giocatore può entrare allora fallo entrare/uscire.
                 for(Shop s : RealShopping.getShops()) {
-                    if(     s.hasEntrance(clickloc) || 
-                            s.hasEntrance(upper) ||
-                            s.hasEntrance(lower) ||
-                            s.hasExit(clickloc) ||
-                            s.hasExit(lower) ||
-                            s.hasExit(upper)) 
+                    if(     s.hasEntrance(clickloc) || s.hasEntrance(lower) ||
+                            s.hasExit(clickloc) || s.hasExit(lower)) 
                     {
                         event.setCancelled(true);
                         if(s.hasEntrance(plloc) || s.hasExit(plloc)) {
@@ -309,23 +306,26 @@ public class RSPlayerListener implements Listener {
             // We are clicking on an obsidian block while inside a store?
             // Take action depending on the block above the obsidian one.
             if(b.getType() == Material.OBSIDIAN && RealShopping.hasPInv(player)) {
-                switch(player.getWorld().getBlockAt(b.getLocation().add(0, 1, 0)).getType()) {
+                switch(player.getWorld().getBlockAt(b.getLocation().clone().add(0, 1, 0)).getType()) {
                     case STEP: // Cash block
-                        Inventory[] carts = null;
+                        List<Inventory> carts = new LinkedList<>();
                         if (Config.isAllowFillChests() && Config.isCartEnabledW(player.getWorld().getName())) {
                             StorageMinecart[] SM = RSUtils.checkForCarts(event.getClickedBlock().getLocation());
-                            carts = new Inventory[SM.length];
-                            for (int i = 0; i < SM.length; i++) {
-                                carts[i] = SM[i].getInventory();
+                            for (StorageMinecart SM1 : SM) {
+                                carts.add(SM1.getInventory());
                             }
                         }
                         if (event.getAction() == Action.RIGHT_CLICK_BLOCK && player.hasPermission("realshopping.rspay")) {
-                            event.setCancelled(Shop.pay(player, carts));
+                            //TODO add count of discount coupons
+                            PayInventoryOpen payinvop = new PayInventoryOpen(player, carts);
+                            Bukkit.getServer().getPluginManager().callEvent(payinvop);
+                            //PayInventory.openPayInventory(player);
+                            //event.setCancelled(Shop.pay(player, carts));
                             return;
                         } 
                         if (event.getAction() == Action.LEFT_CLICK_BLOCK && player.hasPermission("realshopping.rscost")) {
                             event.setCancelled(true);
-                            player.sendMessage(LangPack.YOURARTICLESCOST + RealShopping.getPInv(player).toPay(carts) / 100f + LangPack.UNIT);
+                            player.sendMessage(LangPack.YOURARTICLESCOST + RealShopping.getPInv(player).toPay(carts.toArray(new Inventory[0])) / 100f + LangPack.UNIT);
                         }
                         return;
                     case RED_MUSHROOM: // Shipment block
@@ -333,7 +333,7 @@ public class RSPlayerListener implements Listener {
                             if (Config.isAllowFillChests()) {
                                 if (Config.isCartEnabledW(player.getWorld().getName())) {
                                     for (StorageMinecart o : player.getWorld().getEntitiesByClass(StorageMinecart.class)) {
-                                        if ((o.getLocation().getBlock().getLocation().equals(b.getLocation().subtract(0, 1, 0)))) {
+                                        if ((o.getLocation().getBlock().getLocation().equals(b.getLocation().clone().subtract(0, 1, 0)))) {
                                             event.setCancelled(RSUtils.shipCartContents(o, player));
                                             break;
                                         }
@@ -351,8 +351,8 @@ public class RSPlayerListener implements Listener {
                                 if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
                                     player.sendMessage("I will pay " + Shop.sellPrice(RealShopping.getPInv(player).getShop(), player.getItemInHand()) + "for that item.");
                                 } else if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-                                    Inventory tempInv = Bukkit.createInventory(null, 36, LangPack.SELLTOSTORE);
-                                    player.openInventory(tempInv);
+                                    SellInventoryOpen sellop = new SellInventoryOpen(player, RealShopping.getPInv(player).getShop());
+                                    Bukkit.getServer().getPluginManager().callEvent(sellop);
                                 }
                             } else player.sendMessage(ChatColor.RED + LangPack.NOTBUYINGFROMPLAYERS);
                             return;

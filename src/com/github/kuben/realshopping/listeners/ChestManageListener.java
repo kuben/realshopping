@@ -15,6 +15,7 @@ import com.github.kuben.realshopping.LangPack;
 import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.exceptions.RSListenerException;
 import com.github.kuben.realshopping.exceptions.RSListenerException.Type;
+import com.github.stengun.realshopping.SerializationManager;
 import java.util.Collection;
 import org.bukkit.inventory.ItemStack;
 
@@ -102,7 +103,7 @@ public class ChestManageListener extends GeneralListener implements SignalReceiv
         for(Location l:selected){
             getShop().clearChestItems(l);
         }
-        RealShopping.updateShopsDb();
+        SerializationManager.saveShops();
         return selected.size();
     }
 
@@ -112,7 +113,7 @@ public class ChestManageListener extends GeneralListener implements SignalReceiv
             getShop().addChestItem(l, ids);
             i++;
         }
-        RealShopping.updateShopsDb();
+        SerializationManager.saveShops();
         return new int[]{ids.size(), i};
     }
 
@@ -122,7 +123,7 @@ public class ChestManageListener extends GeneralListener implements SignalReceiv
             getShop().delChestItem(l, ids);
             i++;
         }
-        RealShopping.updateShopsDb();
+        SerializationManager.saveShops();
         return new int[]{ids.size(), i};
     }
 

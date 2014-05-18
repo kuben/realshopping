@@ -1,6 +1,6 @@
 /*
  * RealShopping Bukkit plugin for Minecraft
- * Copyright 2013 Jakub Fojt
+ * Copyright 2013 Jakub Fojt, 2014 Roberto Benfatto
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,27 @@
  */
 
 package com.github.stengun.realshopping;
+import com.github.kuben.realshopping.Config;
 import com.github.kuben.realshopping.EEPair;
 import com.github.kuben.realshopping.Price;
 import com.github.kuben.realshopping.RSPlayerInventory;
 import com.github.kuben.realshopping.RSUtils;
 import com.github.kuben.realshopping.RealShopping;
+import static com.github.kuben.realshopping.RealShopping.MANDIR;
+import static com.github.kuben.realshopping.RealShopping.VERFLOAT;
+import static com.github.kuben.realshopping.RealShopping.loginfo;
+import static com.github.kuben.realshopping.RealShopping.logsevere;
+import static com.github.kuben.realshopping.RealShopping.logwarning;
 import com.github.kuben.realshopping.ShippedPackage;
 import com.github.kuben.realshopping.Shop;
 import com.github.kuben.realshopping.Statistic;
 import com.github.kuben.realshopping.exceptions.RealShoppingException;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -38,22 +50,83 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.MaterialData;
 
 /**
- * This class helps with serialization of specific objects that cannot be saved because
- * they don't implement Serialization interface. 
+ * This class handles the serialization of objects into configuration files formatted with YAML.
  *
  * @author stengun
  */
-public class ClassSerialization {
+public class SerializationManager {
     //TODO Test savejailed / loadjailed
     //TODO Test savetplocs / loadtplocs
     //TODO Test savetoclaim / loadtoclaim
     //TODO Test savestats / loadstats
     //TODO Test savenotifications / loadnotifications
     
+    /**
+     * This method loads the plugin's configuration.
+     * If the configuration file is missing, a default configuration is loaded instead.
+     */
+    public static void loadConfiguration() {
+        Config.initialize();
+    }
+    
+    /**
+     * Shop database Loader method.
+     * This method will load the entire shop database into realshopping.
+     * @return true if succeeded, false otherwise.
+     */
+    public static boolean loadShops() {
+        String path = MANDIR + "shops.db";
+        FileConfiguration conf = new YamlConfiguration();
+        try {
+            File f = new File(path);
+            if (!f.exists()) {
+                f.createNewFile();
+            }
+            conf.load(f);
+            for(String sh:conf.getKeys(false)) {
+                if(sh.equals("version")) continue;
+                RealShopping.addShop(SerializationManager.loadShop(conf.getConfigurationSection(sh)));
+            }
+        } catch (IOException ex) {
+            logsevere("IO Error while reading " + path);
+            return false;
+        } catch (InvalidConfigurationException ex) {
+            RealShopping.logwarning("Error loading YAML shops.db, replacing with old shops.db converter.");
+            return shopsdbConverter(path);
+        } catch (RealShoppingException ex) {
+            logwarning("Warning: " + ex.getType().toString());
+            return false;
+        }
+        return true;
+    }
+    
+    /**
+     * This method saves the entire shop list with their settings.
+     */
+    public static void saveShops() {
+        FileConfiguration conf = new YamlConfiguration();
+        long tstamp = System.nanoTime();
+        try {
+            File f = new File(MANDIR + "shops.db");
+            if(!f.exists()) f.createNewFile();
+            conf.set("version", VERFLOAT);
+            for(Shop shop:RealShopping.getShops()){
+                SerializationManager.saveShop(shop, conf.createSection(shop.getName()));
+            }
+            conf.save(f);
+        } catch (IOException e) {
+            RealShopping.logsevere("Error while saving shops.db");
+            e.printStackTrace();
+        }
+        if(Config.debug) loginfo("Finished updating shops.db in " + (System.nanoTime() - tstamp) + "ns");
+    }
     /**
      * Correctly saves a shop's item stat into a configuration section.
      * @param stat
@@ -65,7 +138,11 @@ public class ClassSerialization {
         destination.set("bought", stat.isBought());
         destination.set("name", stat.getName());
     }
-    
+    /**
+     * Loads a Statistic from a YAML parsed document.
+     * @param section section where to take stuff
+     * @return Statistic loaded
+     */
     public static Statistic loadStatistic(ConfigurationSection section) {
         Material mat = Material.getMaterial(section.getString("itemtype"));
         Statistic st = new Statistic(mat, section.getString("name"), section.getInt("amount"), section.getBoolean("bought"));
@@ -362,5 +439,105 @@ public class ClassSerialization {
         }
 
         return retval;
+    }
+
+    private static boolean shopsdbConverter(String path) {
+        try {
+            File f = new File(path);
+            if(!f.exists()) f.createNewFile();
+            BufferedReader br;
+            Float version;
+            try (FileInputStream fstream = new FileInputStream(f)) {
+                br = new BufferedReader(new InputStreamReader(fstream));
+                String s;
+                String header = "Shops database for RealShopping v";
+                version = 0f;
+                boolean notHeader = false;
+                while ((s = br.readLine()) != null){// Read shops.db
+                    if(version == 0 && s.substring(0, header.length()).equals(header)){
+                        version = Float.parseFloat(s.substring(header.length()));
+                        notHeader = version.equals(VERFLOAT);
+                        continue;
+                    }
+                    if(notHeader) {
+                        String[] tS = s.split(";")[0].split(":");
+                        Shop tempShop = new Shop(tS[0], tS[1], (version >= 0.20)?tS[2]:"@admin");
+                        if(version >= 0.30) tempShop.setBuyFor(Integer.parseInt(tS[3]));
+                        /*
+                        * For versions 0.40 through 0.50 notifications and AI settings for stores are ignored.
+                        * The shop owner will just have to set them again, using /rsme.
+                        */
+                        for(int i =
+                                (version >= 0.51f)?4:
+                                (version >= 0.40f)?8:
+                                (version >= 0.30f)?4:
+                                (version >= 0.20f)?3:2
+                                ;i < tS.length;i++){//The entrances + exits
+                            String[] tSS = tS[i].split(",");
+                            Location en = new Location(Bukkit.getServer().getWorld(tS[1]), Integer.parseInt(tSS[0]),Integer.parseInt(tSS[1]), Integer.parseInt(tSS[2]));
+                            Location ex = new Location(Bukkit.getServer().getWorld(tS[1]), Integer.parseInt(tSS[3]),Integer.parseInt(tSS[4]), Integer.parseInt(tSS[5]));
+                            try {
+                                tempShop.addEntranceExit(en, ex);
+                            } catch (RealShoppingException e) {
+                                if(e.getType() == RealShoppingException.Type.EEPAIR_ALREADY_EXISTS){
+                                    loginfo("Duplicate entrance/exit pair, skipping (entrance: "
+                                            + RSUtils.locAsString(en) + ", exit: "
+                                            + RSUtils.locAsString(ex) + " in store " + tS[1] + ".");
+                                    if(Config.debug) e.printStackTrace();
+                                } else e.printStackTrace();
+                            }
+                        }
+                        for(int i = 1;i < s.split(";").length;i++){//There are chests
+                            Location l = new Location(Bukkit.getServer().getWorld(tS[1]), Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[0])
+                                    , Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[1])
+                                    , Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[2]));
+                            tempShop.addChest(l);
+                            String idS = s.split(";")[i].split("\\[")[1].split("\\]")[0];
+                            if(!idS.split(",")[0].trim().equals("")){
+                                int[][] ids = new int[idS.split(",").length][3];
+                                for(int j = 0;j < ids.length;j++){//The chests
+                                    if(idS.split(",")[j].contains(":")){
+                                        ids[j][0] = Integer.parseInt(idS.split(",")[j].split(":")[0].trim());
+                                        ids[j][1] = Integer.parseInt(idS.split(",")[j].split(":")[1].trim());
+                                        if(idS.split(",")[j].split(":").length > 2)
+                                            ids[j][2] = Integer.parseInt(idS.split(",")[j].split(":")[2].trim());
+                                        else ids[j][2] = 0;
+                                    } else {
+                                        ids[j][0] = Integer.parseInt(idS.split(",")[j].trim());
+                                        ids[j][1] = 0;
+                                        ids[j][2] = 0;
+                                    }
+                                }
+                                List<ItemStack> ret = new ArrayList<>();
+                                for(int[] zot : ids) {
+                                    ItemStack tmp = new ItemStack((new MaterialData(zot[0], (byte)zot[1])).getItemType(), zot[3]);
+                                    ret.add(tmp);
+                                }
+                                tempShop.addChestItem(l, ret);
+                            }
+                        }
+                        int bIdx = s.indexOf("BANNED_");
+                        if(bIdx > -1){//There are banned players
+                            String[] banned = s.substring(bIdx + 7).split(",");
+                            for (String banned1 : banned) {
+                                tempShop.addBanned(banned1);
+                            }
+                        }
+                        RealShopping.addShop(tempShop);
+                    }
+                }
+            }
+            br.close();
+            saveShops();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            loginfo("Failed while reading/converting shops.db, File not found.");
+            return false;
+        } catch (IOException e) {
+            e.printStackTrace();
+            loginfo("Failed while reading/converting shops.db, IO error.");
+            return false;
+        }
+        return true;
     }
 }

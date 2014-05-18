@@ -18,13 +18,10 @@
  */
 package com.github.kuben.realshopping;
 
-import com.github.stengun.realshopping.SellInventoryListener;
-import java.io.BufferedReader;
+import com.github.stengun.realshopping.InventoryListener;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -55,16 +52,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.github.kuben.realshopping.commands.RSCommandExecutor;
-import com.github.kuben.realshopping.exceptions.RealShoppingException;
 import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.stengun.realshopping.PriceParser;
-import com.github.stengun.realshopping.ClassSerialization;
+import com.github.stengun.realshopping.SerializationManager;
 import net.gravitydevelopment.updater.Updater;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.material.MaterialData;
 
-public class RealShopping extends JavaPlugin {//TODO stores case sensitive, players case preserving
+public class RealShopping extends JavaPlugin {//TODO stores case sensitive, player by UUID
     private Updater updater;
     
     private StatUpdater statUpdater;
@@ -142,7 +136,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 
         if (!smallReload) {
             getServer().getPluginManager().registerEvents(new RSPlayerListener(), this);
-            getServer().getPluginManager().registerEvents(new SellInventoryListener(), this);
+            getServer().getPluginManager().registerEvents(new InventoryListener(), this);
             RSCommandExecutor cmdExe = new RSCommandExecutor(this);
             getCommand("rsenter").setExecutor(cmdExe);
             getCommand("rsexit").setExecutor(cmdExe);
@@ -171,7 +165,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
 
         PromptMaster.initialize(this);
         RSEconomy.setupEconomy();
-        Config.initialize();
+        SerializationManager.loadConfiguration();
         if (Config.getAutoUpdate() > 0) {
             if (Config.getAutoUpdate() == 5) {
                 setUpdater(new Updater(this, PLUGINDEVID, this.getFile(), Updater.UpdateType.DEFAULT, true));
@@ -182,10 +176,8 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                 checkUpdates();
             }
         }
-
-        File f;
         
-        loadShopsDb();
+        SerializationManager.loadShops();
 
         try {
             PriceParser.loadPriceMap();
@@ -204,7 +196,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         //TODO Save/load stats
         //TODO load psettings and load default PrintPrices
         //TODO modify default PrintPrices
-
+        File f;
         f = new File(MANDIR + "langpacks/");
         if (!f.exists()) {
             f.mkdir();
@@ -229,7 +221,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     @Override
     public void onDisable() {
         try {
-            updateShopsDb();
+            SerializationManager.saveShops();
             PromptMaster.abandonAllConversations();
             //TODO disable executor
             saveTemporaryFile(TempFiles.INVENTORIES);//Inventories
@@ -275,151 +267,11 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         return false;
     }
     
-    private boolean loadShopsDb() {
-        String path = MANDIR + "shops.db";
-        FileConfiguration conf = new YamlConfiguration();
-        try {
-            File f = new File(path);
-            if (!f.exists()) {
-                f.createNewFile();
-            }
-            conf.load(f);
-            for(String sh:conf.getKeys(false)) {
-                if(sh.equals("version")) continue;
-                shopSet.add(ClassSerialization.loadShop(conf.getConfigurationSection(sh)));
-            }
-        } catch (IOException ex) {
-            logsevere("IO Error while reading " + path);
-            return false;
-        } catch (InvalidConfigurationException ex) {
-            RealShopping.logwarning("Error loading YAML shops.db, replacing with old shops.db converter.");
-            return shopsdbConverter(path);
-        } catch (RealShoppingException ex) {
-            logwarning("Warning: " + ex.getType().toString());
-            return false;
-        }
-        return true;
-    }
     
-    private boolean shopsdbConverter(String path) {
-        try { //TODO make a converter for old shops.db format to new one.
-            File f = new File(path);
-            if(!f.exists()) f.createNewFile();
-            BufferedReader br;
-            Float version;
-            try (FileInputStream fstream = new FileInputStream(f)) {
-                br = new BufferedReader(new InputStreamReader(fstream));
-                String s;
-                String header = "Shops database for RealShopping v";
-                version = 0f;
-                boolean notHeader = false;
-                while ((s = br.readLine()) != null){// Read shops.db
-                    if(version == 0 && s.substring(0, header.length()).equals(header)){
-                        version = Float.parseFloat(s.substring(header.length()));
-                        notHeader = version.equals(VERFLOAT);
-                        continue;
-                    }
-                    if(notHeader) {
-                        String[] tS = s.split(";")[0].split(":");
-                        Shop tempShop = new Shop(tS[0], tS[1], (version >= 0.20)?tS[2]:"@admin");
-                        if(version >= 0.30) tempShop.setBuyFor(Integer.parseInt(tS[3]));
-                        /*
-                        * For versions 0.40 through 0.50 notifications and AI settings for stores are ignored.
-                        * The shop owner will just have to set them again, using /rsme.
-                        */
-                        for(int i =
-                                (version >= 0.51f)?4:
-                                (version >= 0.40f)?8:
-                                (version >= 0.30f)?4:
-                                (version >= 0.20f)?3:2
-                                ;i < tS.length;i++){//The entrances + exits
-                            String[] tSS = tS[i].split(",");
-                            Location en = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[0]),Integer.parseInt(tSS[1]), Integer.parseInt(tSS[2]));
-                            Location ex = new Location(getServer().getWorld(tS[1]), Integer.parseInt(tSS[3]),Integer.parseInt(tSS[4]), Integer.parseInt(tSS[5]));
-                            try {
-                                tempShop.addEntranceExit(en, ex);
-                            } catch (RealShoppingException e) {
-                                if(e.getType() == RealShoppingException.Type.EEPAIR_ALREADY_EXISTS){
-                                    loginfo("Duplicate entrance/exit pair, skipping (entrance: "
-                                            + RSUtils.locAsString(en) + ", exit: "
-                                            + RSUtils.locAsString(ex) + " in store " + tS[1] + ".");
-                                    if(Config.debug) e.printStackTrace();
-                                } else e.printStackTrace();
-                            }
-                        }
-                        for(int i = 1;i < s.split(";").length;i++){//There are chests
-                            Location l = new Location(getServer().getWorld(tS[1]), Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[0])
-                                    , Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[1])
-                                    , Integer.parseInt(s.split(";")[i].split("\\[")[0].split(",")[2]));
-                            tempShop.addChest(l);
-                            String idS = s.split(";")[i].split("\\[")[1].split("\\]")[0];
-                            if(!idS.split(",")[0].trim().equals("")){
-                                int[][] ids = new int[idS.split(",").length][3];
-                                for(int j = 0;j < ids.length;j++){//The chests
-                                    if(idS.split(",")[j].contains(":")){
-                                        ids[j][0] = Integer.parseInt(idS.split(",")[j].split(":")[0].trim());
-                                        ids[j][1] = Integer.parseInt(idS.split(",")[j].split(":")[1].trim());
-                                        if(idS.split(",")[j].split(":").length > 2)
-                                            ids[j][2] = Integer.parseInt(idS.split(",")[j].split(":")[2].trim());
-                                        else ids[j][2] = 0;
-                                    } else {
-                                        ids[j][0] = Integer.parseInt(idS.split(",")[j].trim());
-                                        ids[j][1] = 0;
-                                        ids[j][2] = 0;
-                                    }
-                                }
-                                List<ItemStack> ret = new ArrayList<>();
-                                for(int[] zot : ids) {
-                                    ItemStack tmp = new ItemStack((new MaterialData(zot[0], (byte)zot[1])).getItemType(), zot[3]);
-                                    ret.add(tmp);
-                                }
-                                tempShop.addChestItem(l, ret);
-                            }
-                        }
-                        int bIdx = s.indexOf("BANNED_");
-                        if(bIdx > -1){//There are banned players
-                            String[] banned = s.substring(bIdx + 7).split(",");
-                            for(int i = 0;i < banned.length;i++){
-                                tempShop.addBanned(banned[i]);
-                            }
-                        }
-                        shopSet.add(tempShop);
-                    }
-                }
-            }
-            br.close();
-            updateShopsDb();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            loginfo("Failed while reading/converting shops.db, File not found.");
-            return false;
-        } catch (IOException e) {
-            e.printStackTrace();
-            loginfo("Failed while reading/converting shops.db, IO error.");
-            return false;
-        }
-        return true;
-    }
-    
-    public static void updateShopsDb(){
-        //Update file
-        FileConfiguration conf = new YamlConfiguration();
-        long tstamp = System.nanoTime();
-        try {
-            File f = new File(MANDIR + "shops.db");
-            if(!f.exists()) f.createNewFile();
-            conf.set("version", VERFLOAT);
-            for(Shop shop:shopSet){
-                ClassSerialization.saveShop(shop, conf.createSection(shop.getName()));
-            }
-            conf.save(f);
-        } catch (IOException e) {
-            RealShopping.logsevere("Error while saving shops.db");
-            e.printStackTrace();
-        }
-        if(Config.debug) loginfo("Finished updating shops.db in " + (System.nanoTime() - tstamp) + "ns");
-    }
-
+@Deprecated
+/**
+ * This is redundant
+ */
     private void initMaxDur(){
         maxDurMap.put(Material.IRON_SPADE,251);//Iron tools
         maxDurMap.put(Material.IRON_PICKAXE,251);
@@ -1100,7 +952,6 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
             File f = new File(getCorrectPath(what));
             conf.load(f);
             version = Float.parseFloat(conf.getString("version"));
-            if(version == null) version = VERFLOAT;
         } catch (InvalidConfigurationException ex) {
             logsevere("Error reading " + what.toString() + ": " + ex.getMessage());
             return;
@@ -1116,34 +967,35 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
             if(key.equals("version")) continue;
             switch (what) {
                 case INVENTORIES:
-                    PInvSet.add(ClassSerialization.loadInventory(conf.getConfigurationSection(key)));
+                    PInvSet.add(SerializationManager.loadInventory(conf.getConfigurationSection(key)));
                     if(Bukkit.getPlayer(key) != null) Shop.addPager(key);
                     break;
                 case JAILED:
-                    jailedPlayers.put(key, ClassSerialization.loadLocation(conf.getConfigurationSection(key)));
+                    jailedPlayers.put(key, SerializationManager.loadLocation(conf.getConfigurationSection(key)));
                     break;
                 case TPLOCS:
                     Integer val = conf.getConfigurationSection(key).getInt("isForbidden");
-                    forbiddenTpLocs.put(ClassSerialization.loadLocation(conf.getConfigurationSection(key)),val);
+                    forbiddenTpLocs.put(SerializationManager.loadLocation(conf.getConfigurationSection(key)),val);
                     break;
                 case SHIPPEDPACKAGES:
                     List<ShippedPackage> packs = new LinkedList<>();
                     ConfigurationSection players = conf.getConfigurationSection(key);
+                    if(players == null) break;
                     for(String pkg:players.getKeys(false)){
-                        packs.add(ClassSerialization.loadShippedPackage(players.getConfigurationSection(pkg)));
+                        packs.add(SerializationManager.loadShippedPackage(players.getConfigurationSection(pkg)));
                     }
                     shippedToCollect.put(key, packs);
                     break;
                 case TOCLAIM:
                     ConfigurationSection stolen = conf.getConfigurationSection(key);
-                    getShop(key).setToClaim(ClassSerialization.loadItemStack(stolen));
+                    getShop(key).setToClaim(SerializationManager.loadItemStack(stolen));
                     break;
                 case NOTIFICATIONS:
-                    notificator.put(key, ClassSerialization.loadNotifications(conf.getConfigurationSection(key)));
+                    notificator.put(key, SerializationManager.loadNotifications(conf.getConfigurationSection(key)));
                     break;
                 case STATS:
                     for(String g: conf.getConfigurationSection(key).getKeys(false)) {
-                        getShop(key).addStat(ClassSerialization.loadStatistic(conf.getConfigurationSection(g)));
+                        getShop(key).addStat(SerializationManager.loadStatistic(conf.getConfigurationSection(g)));
                     }
                 default:
                     break;
@@ -1183,19 +1035,19 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                 case INVENTORIES:
                     for (RSPlayerInventory pinv : PInvSet) {
                         ConfigurationSection player = conf.createSection(pinv.getPlayer());
-                        ClassSerialization.saveInventory(pinv, player);
+                        SerializationManager.saveInventory(pinv, player);
                     }
                     break;
                 case JAILED:
                     for(String ply:jailedPlayers.keySet()) {
-                        ClassSerialization.saveLocation(jailedPlayers.get(ply), conf.createSection(ply));
+                        SerializationManager.saveLocation(jailedPlayers.get(ply), conf.createSection(ply));
                     }
                     break;
                 case TPLOCS:
                     int j=0;
                     for(Location loc:forbiddenTpLocs.keySet()) {
                         ConfigurationSection tmp = conf.createSection(Integer.toString(j++));
-                        ClassSerialization.saveLocation(loc, tmp);
+                        SerializationManager.saveLocation(loc, tmp);
                         tmp.set("isForbidden", forbiddenTpLocs.get(loc));
                     }
                     break;
@@ -1204,7 +1056,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                         ConfigurationSection player = conf.createSection(s);
                         for (ShippedPackage pkg : shippedToCollect.get(s)) {
                             ConfigurationSection date = player.createSection(Long.toString(pkg.getDateSent()));
-                            ClassSerialization.saveShippedPackage(pkg, date);
+                            SerializationManager.saveShippedPackage(pkg, date);
                         }
                     }
                     break;
@@ -1212,12 +1064,12 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                     for(Shop shop : shopSet) {
                         if(shop.getToClaim().isEmpty()) break;
                         ConfigurationSection shopsec = conf.createSection(shop.getName());
-                        ClassSerialization.saveItemStackList(shop.getToClaim(), shopsec);
+                        SerializationManager.saveItemStackList(shop.getToClaim(), shopsec);
                     }
                     break;
                 case NOTIFICATIONS:
                     for(String ply: notificator.keySet()) {
-                        ClassSerialization.saveNotifications(notificator.get(ply), conf.createSection(ply));
+                        SerializationManager.saveNotifications(notificator.get(ply), conf.createSection(ply));
                     }
                     break;
                 case STATS:
@@ -1225,7 +1077,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
                         int i = 0;
                         ConfigurationSection tmp = conf.createSection(shop.getName());
                         for(Statistic stat : shop.getStats()) {
-                            ClassSerialization.saveStatistic(stat, tmp.createSection(Integer.toString(i++)));
+                            SerializationManager.saveStatistic(stat, tmp.createSection(Integer.toString(i++)));
                         }
                     }
                     break;
@@ -1290,7 +1142,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
      * @param store A string with the name of the store you want to check for.
      * @return true if the store exists, false otherwise.
      */
-    public static boolean shopExists(String store){ return getShop(store)==null?false:true; }
+    public static boolean shopExists(String store){ return getShop(store)!=null; }
 
     /**
      * Gets a store by given name.
@@ -1324,6 +1176,8 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
     }
     
     /**
+     * Provides the entire shop list for registered shops in this server.
+     * The list is cloned so modifications can't be made from here.
      * @return A clone of the entire shop set.
      */
     public static Set<Shop> getShops(){ return new HashSet<>(shopSet); }
@@ -1427,7 +1281,7 @@ public class RealShopping extends JavaPlugin {//TODO stores case sensitive, play
         return false;
     }
     protected static int clearEntrancesExits(Shop shop){
-        Map<EEPair, Shop> tempPairs = new HashMap<EEPair, Shop>(eePairs);
+        Map<EEPair, Shop> tempPairs = new HashMap<>(eePairs);
         int i = 0;
         for(EEPair ee:tempPairs.keySet()){
             if(tempPairs.get(ee).equals(shop)){

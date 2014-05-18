@@ -10,6 +10,7 @@ import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
 import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.kuben.realshopping.prompts.PromptMaster.PromptType;
+import com.github.stengun.realshopping.SerializationManager;
 
 class RSSetChests extends RSPlayerCommand {
 
@@ -31,14 +32,14 @@ class RSSetChests extends RSPlayerCommand {
         			if (args.length == 1 && args[0].equalsIgnoreCase("create")){
         				if(tempShop.addChest(loc)){
         					player.sendMessage(ChatColor.RED + LangPack.CHESTCREATED);
-        					RealShopping.updateShopsDb();
+        					SerializationManager.saveShops();
         				}
         				else player.sendMessage(ChatColor.RED + LangPack.ACHESTALREADYEXISTSONTHISLOCATION);
         				return true;
         			} else if (args.length == 1 && args[0].equalsIgnoreCase("del")){
         				if(tempShop.delChest(loc)){
         					player.sendMessage(ChatColor.RED + LangPack.CHESTREMOVED);
-        					RealShopping.updateShopsDb();
+        					SerializationManager.saveShops();
         				}
         				else player.sendMessage(ChatColor.RED + LangPack.COULDNTFINDCHESTONTHISLOCATION);
         				return true;
@@ -58,7 +59,7 @@ class RSSetChests extends RSPlayerCommand {
 			int j = tempShop.addChestItem(loc, RSUtils.pullItems(args[1]));
 			if(j > -1){
 				sender.sendMessage(ChatColor.RED + LangPack.ADDED + j + LangPack.ITEMS);
-				RealShopping.updateShopsDb();
+				SerializationManager.saveShops();
 				return true;
 			} else {
 				sender.sendMessage(ChatColor.RED + LangPack.THISCHESTDOESNTEXIST);
@@ -74,7 +75,7 @@ class RSSetChests extends RSPlayerCommand {
 			int j = tempShop.delChestItem(loc, RSUtils.pullItems(args[1]));
 			if(j > -1){
 				sender.sendMessage(ChatColor.RED + LangPack.REMOVED + j + LangPack.ITEMS);
-				RealShopping.updateShopsDb();
+				SerializationManager.saveShops();
 				return true;
 			} else {
 				sender.sendMessage(ChatColor.RED + LangPack.THISCHESTDOESNTEXIST);
