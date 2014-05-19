@@ -36,8 +36,7 @@ public enum DiscountType {
         this.easyname = easyname;
     }
     
-    @Override
-    public String toString() {
+    public String easyName() {
         return easyname;
     }
 }

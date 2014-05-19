@@ -9,6 +9,9 @@ import com.github.kuben.realshopping.RealShopping;
 import com.github.kuben.realshopping.Shop;
 import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
+import com.github.stengun.realshopping.Coupon;
+import com.github.stengun.realshopping.DiscountAmountType;
+import com.github.stengun.realshopping.DiscountType;
 import com.github.stengun.realshopping.SerializationManager;
 import java.util.ArrayList;
 import java.util.Locale;
@@ -18,7 +21,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Chest;
 import org.bukkit.command.CommandSender;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -37,6 +39,7 @@ class RSStores extends RSCommand {
                     + RESET + ", " + LP + "ban"
                     + RESET + ", " + LP + "unban"
                     + RESET + ", " + LP + "kick"
+                    + RESET + ", " + LP + "coupon"
                     + RESET + ", " + LP + "startsale"
                     + RESET + ", " + LP + "endsale"
                     + RESET + ", " + LP + "broadcast";
@@ -75,6 +78,9 @@ class RSStores extends RSCommand {
 			        case "kick":
 			            sender.sendMessage(LangPack.USAGE + LP + "kick [-o] " + DP + "PLAYER" + RESET + LangPack.KICKHELP);
 			            break;
+                                case "coupon":
+                                    sender.sendMessage(LangPack.USAGE + LP + "coupon " + DP + "type" + LP + "amount[% optional]" + RESET + LangPack.KICKHELP);
+                                    break;
 			        case "startsale":
 			            sender.sendMessage(LangPack.USAGE + LP + "startsale " + DP + "%_OFF" + LP  + " [" + DP + "ITEM(S)" + LP + "]" + RESET
 			                    + LangPack.STARTSALEHELP + DP + "ITEMID" + LP + "[:" + DP + "DATA" + LP +"]" + RESET + LangPack.STARTSALEHELP2);
@@ -124,67 +130,67 @@ class RSStores extends RSCommand {
 	}
 	
 	private boolean collect(){
-		if(player == null) return false;
-		int amount = 0;
-		boolean cFlag = false;
-		
-		if(args.length == 3){
-			if(args[2].equalsIgnoreCase("-c")){
-				cFlag = true;
-			} else {
-				try {
-    				amount = Integer.parseInt(args[2]);
-				} catch(NumberFormatException e){
-					sender.sendMessage(DR + args[2] + RD + LangPack.ISNOTANINTEGER);
-				}
-			}
-		} else if(args.length == 4){
-			if(!args[2].equalsIgnoreCase("-c")) return false;
-				try {
-        					amount = Integer.parseInt(args[3]);
-        					cFlag = true;
-				} catch(NumberFormatException e){
-					sender.sendMessage(DR + args[3] + RD + LangPack.ISNOTANINTEGER);
-				}
-		}
-		if(player != null){
-			if(!shop.getOwner().equalsIgnoreCase("@admin")){
-				if(cFlag){
-					if(Config.isAllowFillChests()){
-						if(!RealShopping.hasPInv(player) || shop.getOwner().equals(player.getName())){
-							if(player.getLocation().getBlock().getState() instanceof Chest){
-								if(shop.hasToClaim()){
-									if(amount == 0 || amount > 27) amount = 27;
-									ItemStack[] tempIs = new ItemStack[27];
-									int i = 0;
-									for(;i < amount;i++){
-										tempIs[i] = shop.pullFirstToClaim();
-										if(tempIs[i] == null) break;
-									}
-									ItemStack[] oldCont = ((Chest)player.getLocation().getBlock().getState()).getBlockInventory().getContents();
-									for(ItemStack tempIS:oldCont) if(tempIS != null) player.getWorld().dropItem(player.getLocation(), tempIS);
-									((Chest)player.getLocation().getBlock().getState()).getBlockInventory().setContents(tempIs);
-									player.sendMessage(GR + LangPack.FILLEDCHESTWITH + i + LangPack.ITEMS);
-									return true;
-								} else sender.sendMessage(RD + LangPack.NOTHINGTOCOLLECT);
-							} else sender.sendMessage(RD + LangPack.THEBLOCKYOUSELECTEDISNTACHEST);
-						} else sender.sendMessage(RD + LangPack.YOUCANTCOLLECT_YOUDONOTOWN);
-					} else {
-						sender.sendMessage(RD + LangPack.YOUCANTCOLLECT_SERVER);
-						return true;
-					}
-				} else {
-					int i = 0;
-					for(;amount == 0 || i < amount;i++){
-						ItemStack tempIs = shop.pullFirstToClaim();
-						if(tempIs != null) player.getWorld().dropItem(player.getLocation(), tempIs);
-						else break;
-					}
-					player.sendMessage(GR + LangPack.DROPPED + i + LangPack.ITEMS);
-				}
-			}
-		} else sender.sendMessage(RD + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE);
-		return false;
+            if(player == null) return false;
+            int amount = 0;
+            boolean cFlag = false;
+
+            if(args.length == 3){
+                if(args[2].equalsIgnoreCase("-c")){
+                        cFlag = true;
+                } else {
+                    try {
+                    amount = Integer.parseInt(args[2]);
+                    } catch(NumberFormatException e){
+                        sender.sendMessage(DR + args[2] + RD + LangPack.ISNOTANINTEGER);
+                    }
+                }
+            } else if(args.length == 4){
+                if(!args[2].equalsIgnoreCase("-c")) return false;
+                    try {
+                        amount = Integer.parseInt(args[3]);
+                        cFlag = true;
+                    } catch(NumberFormatException e){
+                        sender.sendMessage(DR + args[3] + RD + LangPack.ISNOTANINTEGER);
+                    }
+            }
+            if(player != null){
+                if(!shop.getOwner().equalsIgnoreCase("@admin")){
+                    if(cFlag){
+                        if(Config.isAllowFillChests()){
+                            if(!RealShopping.hasPInv(player) || shop.getOwner().equals(player.getName())){
+                                if(player.getLocation().getBlock().getState() instanceof Chest){
+                                    if(shop.hasToClaim()){
+                                        if(amount == 0 || amount > 27) amount = 27;
+                                        ItemStack[] tempIs = new ItemStack[27];
+                                        int i = 0;
+                                        for(;i < amount;i++){
+                                            tempIs[i] = shop.pullFirstToClaim();
+                                            if(tempIs[i] == null) break;
+                                        }
+                                        ItemStack[] oldCont = ((Chest)player.getLocation().getBlock().getState()).getBlockInventory().getContents();
+                                        for(ItemStack tempIS:oldCont) if(tempIS != null) player.getWorld().dropItem(player.getLocation(), tempIS);
+                                        ((Chest)player.getLocation().getBlock().getState()).getBlockInventory().setContents(tempIs);
+                                        player.sendMessage(GR + LangPack.FILLEDCHESTWITH + i + LangPack.ITEMS);
+                                        return true;
+                                    } else sender.sendMessage(RD + LangPack.NOTHINGTOCOLLECT);
+                                } else sender.sendMessage(RD + LangPack.THEBLOCKYOUSELECTEDISNTACHEST);
+                            } else sender.sendMessage(RD + LangPack.YOUCANTCOLLECT_YOUDONOTOWN);
+                        } else {
+                            sender.sendMessage(RD + LangPack.YOUCANTCOLLECT_SERVER);
+                            return true;
+                        }
+                    } else {
+                        int i = 0;
+                        for(;amount == 0 || i < amount;i++){
+                            ItemStack tempIs = shop.pullFirstToClaim();
+                            if(tempIs != null) player.getWorld().dropItem(player.getLocation(), tempIs);
+                            else break;
+                        }
+                        player.sendMessage(GR + LangPack.DROPPED + i + LangPack.ITEMS);
+                    }
+                }
+            } else sender.sendMessage(RD + LangPack.THISCOMMANDCANNOTBEUSEDFROMCONSOLE);
+            return false;
 	}
 	
 	private boolean buyfor(){
@@ -256,72 +262,72 @@ class RSStores extends RSCommand {
 	    } else return false;
 	}
 	
-	private boolean startsale(){
-        try {
-            int pcnt = Integer.parseInt(args[2]);
-            if(pcnt < 100){
-                if(pcnt > 0){
-                    if(shop != null){
-                        if(shop.hasPrices()){
-                            shop.clearSales();
-                            if(args.length == 3){
-                                Price[] keys = shop.getCosts().keySet().toArray(new Price[0]);
-                                int i = 0;
-                                for(;i < keys.length;i++){
-                                    shop.addSale(keys[i], pcnt);
-                                }
-                                if(i > 0){
-                                    sender.sendMessage(DG + "" + pcnt + GR + LangPack.PCNTOFF + DG + i + GR + LangPack.ITEMS);
-                                    int subs = 0;
-                                    for(PSetting pS:RealShopping.getPlayerSettings()){
-                                        if(pS.getSalesNotifications(shop) && RealShopping.sendNotification(pS.getPlayer(), 
-                                               GR + LangPack.STORE + DG + shop.getName() + GR + " now has a " + DG + pcnt + GR + "% off sale for " + DG + i + GR + LangPack.ITEMS))//LANG
-                                        subs++;
-                                    }
-                                    if(subs > 0) sender.sendMessage(GR + "Informed " + DG + subs + GR + " subscribers about the sale.");//LANG
-                                }
-                                else sender.sendMessage(RD + LangPack.NOITEMSARESOLDINTHESTORE);
-                                return true;
-                            } else {//If args.length > 3
-                                String[] keys;
-                                boolean generic = false;
-                                if(args[3].equals("-g") && args.length>4) {
-                                    generic = true;
-                                    keys =args[4].split(",");
-                                } else keys = args[3].split(",");
-
-                                if(keys.length > 0){
-                                    int i = 0, j = 0;
+        private boolean startsale(){
+            try {
+                int pcnt = Integer.parseInt(args[2]);
+                if(pcnt < 100){
+                    if(pcnt > 0){
+                        if(shop != null){
+                            if(shop.hasPrices()){
+                                shop.clearSales();
+                                if(args.length == 3){
+                                    Price[] keys = shop.getCosts().keySet().toArray(new Price[0]);
+                                    int i = 0;
                                     for(;i < keys.length;i++){
-                                        Price tempP = RSUtils.pullPrice(keys[i],this.player);
-                                        tempP.setGeneric(generic);
-                                        if(shop.hasPrice(tempP)){
-                                            shop.addSale(tempP, pcnt);
-                                            j++;
-                                        }
+                                        shop.addSale(keys[i], pcnt);
                                     }
-                                    if(j > 0){
-                                        sender.sendMessage(DG + "" + pcnt + GR + LangPack.PCNTOFF + DG + j + GR + LangPack.ITEMS);
+                                    if(i > 0){
+                                        sender.sendMessage(DG + "" + pcnt + GR + LangPack.PCNTOFF + DG + i + GR + LangPack.ITEMS);
                                         int subs = 0;
                                         for(PSetting pS:RealShopping.getPlayerSettings()){
                                             if(pS.getSalesNotifications(shop) && RealShopping.sendNotification(pS.getPlayer(), 
-                                                   GR + LangPack.STORE + DG + shop.getName() + GR + " now has a " + DG + pcnt + GR + "% off sale for " + DG + i + GR + LangPack.ITEMS))
+                                                   GR + LangPack.STORE + DG + shop.getName() + GR + " now has a " + DG + pcnt + GR + "% off sale for " + DG + i + GR + LangPack.ITEMS))//LANG
                                             subs++;
                                         }
-                                        if(subs > 0) sender.sendMessage(GR + "Informed " + DG + subs + GR + " subscribers about the sale.");
+                                        if(subs > 0) sender.sendMessage(GR + "Informed " + DG + subs + GR + " subscribers about the sale.");//LANG
                                     }
                                     else sender.sendMessage(RD + LangPack.NOITEMSARESOLDINTHESTORE);
                                     return true;
-                                } else sender.sendMessage(DR + args[3] + RD + LangPack.ISNOTAVALIDARGUMENT);
-                            }
-                        } else sender.sendMessage(RD + LangPack.NOITEMSARESOLDINTHESTORE);	
-                    } else sender.sendMessage(RD + LangPack.STORE + DR + args[0] + RD + LangPack.DOESNTEXIST);
-                } else sender.sendMessage(RD + LangPack.YOUCANTUSEAVALUEOF0ORLESS);
-            } else  sender.sendMessage(RD + LangPack.YOUCANTUSEAVALUEOF100ORMORE);
-        } catch(NumberFormatException e){
-            sender.sendMessage(DR + args[2] + RD + LangPack.ISNOTANINTEGER);
-        }
-        return false;
+                                } else {//If args.length > 3
+                                    String[] keys;
+                                    boolean generic = false;
+                                    if(args[3].equals("-g") && args.length>4) {
+                                        generic = true;
+                                        keys =args[4].split(",");
+                                    } else keys = args[3].split(",");
+
+                                    if(keys.length > 0){
+                                        int i = 0, j = 0;
+                                        for(;i < keys.length;i++){
+                                            Price tempP = RSUtils.pullPrice(keys[i],this.player);
+                                            tempP.setGeneric(generic);
+                                            if(shop.hasPrice(tempP)){
+                                                shop.addSale(tempP, pcnt);
+                                                j++;
+                                            }
+                                        }
+                                        if(j > 0){
+                                            sender.sendMessage(DG + "" + pcnt + GR + LangPack.PCNTOFF + DG + j + GR + LangPack.ITEMS);
+                                            int subs = 0;
+                                            for(PSetting pS:RealShopping.getPlayerSettings()){
+                                                if(pS.getSalesNotifications(shop) && RealShopping.sendNotification(pS.getPlayer(), 
+                                                       GR + LangPack.STORE + DG + shop.getName() + GR + " now has a " + DG + pcnt + GR + "% off sale for " + DG + i + GR + LangPack.ITEMS))
+                                                subs++;
+                                            }
+                                            if(subs > 0) sender.sendMessage(GR + "Informed " + DG + subs + GR + " subscribers about the sale.");
+                                        }
+                                        else sender.sendMessage(RD + LangPack.NOITEMSARESOLDINTHESTORE);
+                                        return true;
+                                    } else sender.sendMessage(DR + args[3] + RD + LangPack.ISNOTAVALIDARGUMENT);
+                                }
+                            } else sender.sendMessage(RD + LangPack.NOITEMSARESOLDINTHESTORE);	
+                        } else sender.sendMessage(RD + LangPack.STORE + DR + args[0] + RD + LangPack.DOESNTEXIST);
+                    } else sender.sendMessage(RD + LangPack.YOUCANTUSEAVALUEOF0ORLESS);
+                } else  sender.sendMessage(RD + LangPack.YOUCANTUSEAVALUEOF100ORMORE);
+            } catch(NumberFormatException e){
+                sender.sendMessage(DR + args[2] + RD + LangPack.ISNOTANINTEGER);
+            }
+            return false;
 	}
 	
 	private boolean endsale(){
@@ -370,37 +376,21 @@ class RSStores extends RSCommand {
 	 
         private boolean coupon() {
             String type = args[2];
-            Integer percent;
-            String item = "";
-            if(args.length == 4) percent = Integer.parseInt(args[3]);
-            else {
-                item = args[3];
-                percent = Integer.parseInt(args[4]);
-            }
-            ItemMeta meta = Bukkit.getServer().getItemFactory().getItemMeta(Material.PAPER);
-            meta.setDisplayName("Discount coupon");
-            ArrayList<String> lore = new ArrayList<>();
-            lore.add(shop.getName());
+            String str_amount = args[3];
+            String shop = args[0];
+            DiscountType disctype;
+            DiscountAmountType amount_type = (str_amount.endsWith("%")?DiscountAmountType.PERCENT:DiscountAmountType.FIXED);
+            Double amount_discount = Double.parseDouble(str_amount.replace("%", ""));
             switch(type.toLowerCase()) {
                 case "global":
-                    lore.add("Discount on any buy you do.");
-                    lore.add(percent + "% Discount");
-                    break;
-                case "material":
-                    lore.add("Discount on any item reported here.");
-                    lore.add(item);
-                    lore.add(percent + "% Discount on selected items.");
-                    break;
-                case "exact":
+                    disctype = DiscountType.ALLITEMS;
                     break;
                 default:
                     return false;
             }
-            meta.setLore(lore);
-            Location lctn = Bukkit.getServer().getPlayer(sender.getName()).getLocation();
-            ItemStack coupon = new ItemStack(Material.PAPER);
-            coupon.setItemMeta(meta);
-            Bukkit.getServer().getPlayer(sender.getName()).getWorld().dropItem(lctn, coupon);
+            if(disctype == null) return false;
+            Coupon coupon = new Coupon(shop, disctype, amount_type, amount_discount, null, null);
+            Bukkit.getServer().getPlayer(sender.getName()).getInventory().addItem(coupon.buildItemCoupon());
             return true;
         }
 	
@@ -440,28 +430,11 @@ class RSStores extends RSCommand {
                             if(args.length < 3) break;
                             return broadcast();
                         case "coupon":
-                            if(args.length < 4) break;
+                            if(args.length < 3) break;
                             return coupon();
                         default:
                             break;
                     }
-//                    if(args[1].equalsIgnoreCase("collect")){
-//                            return collect();
-//                    } else if(args[1].equalsIgnoreCase("buyfor")){
-//                                return buyfor();
-//                    } else if(args[1].equalsIgnoreCase("ban")){
-//                            return ban();
-//                    } else if(args.length == 3 && args[1].equalsIgnoreCase("unban")){
-//                            return unban();
-//                    } else if(args[1].equalsIgnoreCase("kick")){
-//                            return kick();
-//                    } else if(args.length > 2 && args[1].equalsIgnoreCase("startsale")){
-//                            return startsale();
-//                    } else if(args.length == 2 && args[1].equalsIgnoreCase("endsale")){
-//                    return endsale();
-//                    } else if(args.length > 2 && args[1].equalsIgnoreCase("broadcast")){
-//                        return broadcast();
-//                    }
                 } else sender.sendMessage(RD + LangPack.YOUDONTHAVEPERMISSIONTOMANAGETHATSTORE);
             return false;
 	}

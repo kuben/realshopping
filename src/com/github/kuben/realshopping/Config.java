@@ -101,7 +101,6 @@ public class Config {
 
         debug = false;
         cartEnabledW = new HashSet<>();
-        debug = false;
         keepstolen = false;
         langpack = "default";
         punishment = "none";

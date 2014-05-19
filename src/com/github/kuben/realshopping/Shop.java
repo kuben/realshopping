@@ -22,15 +22,22 @@ import com.github.kuben.realshopping.exceptions.RealShoppingException;
 import com.github.kuben.realshopping.listeners.RSPlayerListener;
 import com.github.kuben.realshopping.prompts.PromptMaster;
 import com.github.stengun.realshopping.Coupon;
+import com.github.stengun.realshopping.DiscountType;
 import com.github.stengun.realshopping.Pager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bukkit.ChatColor;
@@ -669,36 +676,21 @@ public class Shop {
      */
     
     public static List<ItemStack> sellToStore(Player p, List<ItemStack> iS) {
-        List<ItemStack> cannotsell = new ArrayList<>();
         if ( !Config.isEnableSelling() 
                 || !RealShopping.hasPInv(p)
                 || !RealShopping.getPInv(p).getShop().hasPrices() 
                 || RealShopping.getPInv(p).getShop().getBuyFor() < 1) 
         {
-            return cannotsell;
+            return iS;
         }
         boolean sold = true;
         RSPlayerInventory pinv = RealShopping.getPInv(p);
         Shop shop = pinv.getShop();
-        float payment = 0.0f;
-        List<ItemStack> cansell = new ArrayList<>();
-        //List<ItemStack> cannotsell = new ArrayList<>();
-        // Separate objects that I can sell from objects that I can't
-        for(ItemStack itm : iS){
-            if(pinv.getAmount(itm) == 0 || sellPrice(shop,itm) == 0.0f) {
-                if (itm != null) cannotsell.add(itm);
-                continue;
-            }
-            int excess = itm.getAmount() - pinv.getAmount(itm);
-            itm.setAmount(itm.getAmount() - excess);
-            pinv.removeItem(itm, itm.getAmount());
-            cansell.add(itm);
+        double payment = 0d;
+        List<ItemStack> cansell = new ArrayList<>(iS);
+        List<ItemStack> cannotsell = RSUtils.illegalPlayerItems(p, cansell);
+        for(ItemStack itm : cansell) {
             payment += sellPrice(shop, itm);
-            if(excess >0) {
-                ItemStack tmp = new ItemStack(itm);
-                tmp.setAmount(excess);
-                cannotsell.add(tmp);
-            }            
         }
         // Calculate prices for items that can be sold. If this price cannot be afforded
         // by shopkeeper the objects will be returned to the player.
@@ -711,8 +703,8 @@ public class Shop {
             } else if(!owner.equals("@admin")){
                 if(RSEconomy.getBalance(owner) >= payment) {
                     RSEconomy.withdraw(owner, payment);
-                    for (ItemStack itm : cansell) {
-                        if (Config.isEnableAI()) {
+                    if (Config.isEnableAI()) {
+                        for (ItemStack itm : cansell) {
                             shop.addStat(new Statistic(itm.getType(), "", itm.getAmount(), false));
                         }
                     }
@@ -800,27 +792,25 @@ public class Shop {
             RSPlayerInventory pinv = RealShopping.getPInv(player);
             Shop shop = pinv.getShop();
             if (shop.hasPrices()) {
-                double toPay = pinv.toPay(invs);
-                if (toPay == 0) {
+                Double toPay = pinv.toPay(invs)/100d;
+                if (toPay == 0.) {
                     return false;
                 }
                 //insert coupon discounts
-                int discount_percent = 0;
-                double discount = 0.;
-                if(discounts != null && discounts.size() > 0) {
-                    discount = 0;
+                toPay = toPay - Coupon.calculateTotalDiscount(discounts, toPay);
+                if(toPay < 0.) return false;
+                //very ugly, truncate 2 decimals.
+                toPay = toPay*100d;
+                toPay = toPay.intValue()/100d;
+                if (RSEconomy.getBalance(player.getName()) < toPay) {
+                    player.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOBUYTHINGSFOR + toPay + LangPack.UNIT);
+                    return false;
                 }
-                toPay = (toPay - (toPay*discount_percent/100d));
-                toPay = (toPay > discount ? toPay - discount : 0);
-                if (RSEconomy.getBalance(player.getName()) < toPay / 100d) {
-                    player.sendMessage(ChatColor.RED + LangPack.YOUCANTAFFORDTOBUYTHINGSFOR + toPay / 100d + LangPack.UNIT);
-                    return true;
-                }
-                RSEconomy.withdraw(player.getName(), toPay/100d);
+                RSEconomy.withdraw(player.getName(), toPay);
                 if(!shop.getOwner().equals("@admin")){
-                    RSEconomy.deposit(shop.getOwner(), toPay/100d);//If player owned store, pay player
-                    if(RealShopping.getPlayerSettings(player.getName()).getSoldNotifications(shop, toPay/100d))//And send a notification perhaps
-                        RealShopping.sendNotification(shop.getOwner(), player.getName() + LangPack.BOUGHTSTUFFFOR + toPay/100d + LangPack.UNIT + LangPack.FROMYOURSTORE + shop.getName() + ".");
+                    RSEconomy.deposit(shop.getOwner(), toPay);//If player owned store, pay player
+                    if(RealShopping.getPlayerSettings(player.getName()).getSoldNotifications(shop, toPay))//And send a notification perhaps
+                        RealShopping.sendNotification(shop.getOwner(), player.getName() + LangPack.BOUGHTSTUFFFOR + toPay + LangPack.UNIT + LangPack.FROMYOURSTORE + shop.getName() + ".");
                 }
                 Map<Price, Integer> bought = pinv.getBoughtWait(invs);
                 for (Price p : bought.keySet()) {
@@ -833,11 +823,11 @@ public class Shop {
                     }
                 }
 
-                player.sendMessage(ChatColor.GREEN + LangPack.YOUBOUGHTSTUFFFOR + toPay / 100f + LangPack.UNIT);
+                player.sendMessage(ChatColor.GREEN + LangPack.YOUBOUGHTSTUFFFOR + toPay + LangPack.UNIT);
                 return true;
             } else {
                 player.sendMessage(ChatColor.RED + LangPack.THEREARENOPRICESSETFORTHISSTORE);
-                return true;
+                return false;
             }
         } else player.sendMessage(ChatColor.RED + LangPack.YOURENOTINSIDEASTORE);
         return false;

@@ -21,7 +21,6 @@ package com.github.stengun.realshopping;
 
 import com.github.kuben.realshopping.LangPack;
 import com.github.kuben.realshopping.RealShopping;
-import com.github.kuben.realshopping.Shop;
 import com.github.stengun.realshopping.events.OptionClickedEvent;
 import com.github.stengun.realshopping.events.PayInventoryOpen;
 import com.github.stengun.realshopping.events.SellInventoryOpen;
@@ -39,9 +38,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
 
 /**
  * This class will listen for all Inventory events for Store specific invs.
@@ -119,7 +116,6 @@ public class InventoryListener implements Listener{
     public void onInventoryClose(InventoryCloseEvent event) {
         Player player = (Player) event.getPlayer();
         if(event.getInventory().getTitle().equals("PayInventory") && RealShopping.hasPInv(player)) {
-            //Shop.pay(player, invs, coupons);
             HandlerList.unregisterAll(Payinv_map.get(player.getName()));
             Payinv_map.remove(player.getName());
             return;

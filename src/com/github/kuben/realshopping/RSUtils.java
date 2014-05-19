@@ -1,5 +1,6 @@
 package com.github.kuben.realshopping;
 
+import static com.github.kuben.realshopping.Shop.sellPrice;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -24,6 +25,39 @@ import org.bukkit.material.MaterialData;
 public class RSUtils {
 
     private RSUtils(){}//All static
+    
+    /**
+     * This method checks the items with the player inventory, ensuring that no other items than
+     * what is in its inventory can pass through.
+     * @param p Player checked
+     * @param iS List of items. This parameter is read and written. When the method is performed, all legit items are there.
+     * @return The list of discarded items.
+     */
+    public static List<ItemStack> illegalPlayerItems(Player p, List<ItemStack> iS) {
+        List<ItemStack> cannotsell = new ArrayList<>();
+        RSPlayerInventory pinv = RealShopping.getPInv(p);
+        Shop shop = pinv.getShop();
+        // Separate objects that I can sell from objects that I can't
+        for(ItemStack itm : iS.toArray(new ItemStack[0])){
+            iS.remove(itm);
+            if(pinv.getAmount(itm) == 0 || sellPrice(shop,itm) == 0d) {
+                if (itm != null) {
+                    cannotsell.add(itm);
+                }
+                continue;
+            }
+            int excess = itm.getAmount() - pinv.getAmount(itm);
+            if(excess > 0) {
+                itm.setAmount(pinv.getAmount(itm));
+                ItemStack tmp = new ItemStack(itm);
+                tmp.setAmount(excess);
+                p.getInventory().addItem(tmp);
+            }
+            iS.add(itm);
+            pinv.removeItem(itm, itm.getAmount());
+        }
+        return cannotsell;
+    }
 
     /*
      * 

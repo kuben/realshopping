@@ -42,12 +42,17 @@ import org.bukkit.inventory.ItemStack;
  */
 public class PayInventory extends InventoryManager{
     Collection<Inventory> carts;
+    List<Coupon> coupons;
+    List<ItemStack> cantrade;
+    Double tradediscount;
+    Shop shop;
     Player p;
     public PayInventory(Player p, Inventory inventory, Collection<Inventory> carts) {
         super(inventory);
         addOption(8, LangPack.BTN_PAYMENTINFO, Material.ITEM_FRAME);
         addOption(17, LangPack.BTN_CONFIRM, DyeColor.GREEN);
         addOption(26, LangPack.BTN_CANCEL, DyeColor.RED);
+        this.shop = RealShopping.getPInv(p).getShop();
         this.carts = carts;
         this.p = p;
     }
@@ -56,17 +61,31 @@ public class PayInventory extends InventoryManager{
     public boolean isEligible(ItemStack itm) {
         Coupon coup = Coupon.itemToCoupon(itm);
         if(coup != null) return true;
-        Shop shop = RealShopping.getPInv(p).getShop();
         return shop.hasPrice(new Price(itm));
     }
-
+    
     @Override
     public void update() {
         RSPlayerInventory pinv = RealShopping.getPInv(p);
-        double totalcost = pinv.toPay(carts.toArray(new Inventory[0]), pinv.getShop())/100d;
+        coupons = new ArrayList<>();
+        cantrade = new ArrayList<>();
+        tradediscount = 0.;
+        for(ItemStack itm : getContentsList()) {
+            Coupon coup = Coupon.itemToCoupon(itm);
+            if(coup != null) coupons.add(coup);
+            else {
+                tradediscount += Shop.sellPrice(shop, itm);
+                cantrade.add(itm);
+            }
+        }
+        Double fullcost = pinv.toPay(carts.toArray(new Inventory[0]), pinv.getShop())/100d;
+        Double totaldiscount = Coupon.calculateTotalDiscount(coupons, fullcost);
+        Double totalcost = fullcost - (totaldiscount + tradediscount);
         List<String> lore = new ArrayList<>();
-        lore.add("Total cost of chosen items: " + totalcost);
-        // TODO add discount coupon indicator in lore
+        lore.add(LangPack.TOTALCOST +": " + (totalcost < 0. ? 0.:totalcost));
+        lore.add(LangPack.FULLPRICE + ": " + fullcost);
+        lore.add(LangPack.TOTALDISCOUNTPRICE + ": " + totaldiscount);
+        lore.add(LangPack.TOTALDISCOUNTTRADE + ": " + tradediscount);
         updateOption(8, null, lore);
     }
     @Override
@@ -77,24 +96,21 @@ public class PayInventory extends InventoryManager{
                 update();
                 break;
             case 17:
-                List<ItemStack> sellitms = getContentsList();
-                List<ItemStack> unsold = Shop.sellToStore(p, sellitms);
-                List<Coupon> couplist = new ArrayList<>();
-                for(ItemStack it : unsold.toArray(new ItemStack[0])) {
-                    Coupon coup = Coupon.itemToCoupon(it);
-                    if(coup != null) {
-                        unsold.remove(it);
-                        couplist.add(coup);
-                    }
+                if(tradediscount > 0) {
+                    coupons.add(new Coupon(shop.getName(), DiscountType.ALLITEMS, DiscountAmountType.FIXED, tradediscount, null, null));
                 }
-                p.getInventory().addItem(unsold.toArray(new ItemStack[0]));
-                Shop.pay(p, carts.toArray(new Inventory[0]), couplist);
+                if(Shop.pay(p, carts.toArray(new Inventory[0]), coupons)) {
+                    RSPlayerInventory pinv = RealShopping.getPInv(p);
+                    pinv.removeItems(getContentsList());
+                    shop.addToClaim(cantrade);
+                } else {
+                    p.getInventory().addItem(getContentsList().toArray(new ItemStack[0]));
+                }
             case 26:
                 p.closeInventory();
             default:
                 break;
         }
-        //event.getSender().sendMessage("Hai cliccato " + options.get(event.getIndex()).getItemMeta().getDisplayName());
         
     }
 }

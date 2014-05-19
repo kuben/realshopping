@@ -1,6 +1,6 @@
 /*
  * RealShopping Bukkit plugin for Minecraft
- * Copyright 2013 Jakub Fojt
+ * Copyright 2013 Jakub Fojt, Copyright 2014 Roberto Benfatto
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,7 +67,6 @@ public class SellInventory extends InventoryManager{
         List<String> lore = new ArrayList<>();
         lore.add("Total sell price: "+stackprice);
         updateOption(8, null, lore);
-        //addOption(8, "Total sell price: " + stackprice, Material.ITEM_FRAME);
     }
 
     @Override
@@ -81,12 +80,12 @@ public class SellInventory extends InventoryManager{
                 List<ItemStack> sellitms = getContentsList();
                 List<ItemStack> unsold = Shop.sellToStore(p, sellitms);
                 p.getInventory().addItem(unsold.toArray(new ItemStack[0]));
+                RealShopping.getPInv(p).addItems(unsold);
                 p.updateInventory();
             case 26:
                 p.closeInventory();
             default:
                 break;
         }
-        event.getSender().sendMessage("Hai cliccato " + options.get(event.getIndex()).getItemMeta().getDisplayName());
     }
 }

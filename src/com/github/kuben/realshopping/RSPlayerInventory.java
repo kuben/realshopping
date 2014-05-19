@@ -20,6 +20,7 @@ package com.github.kuben.realshopping;
 
 import com.github.kuben.realshopping.exceptions.RealShoppingException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang.ArrayUtils;
 import org.bukkit.Bukkit;
@@ -234,7 +235,7 @@ public class RSPlayerInventory {
 
         return surplus;
     }
-
+//Is that the same as "getboughtwait" isn't it?
     public Map<Price, Integer> getStolen() {
         //Get stolen items
         //Old inv = items
@@ -350,7 +351,15 @@ public class RSPlayerInventory {
         return this.getItems().get(pi);
 //        return items.get(pi);
     }
-
+    
+    public int removeItems(List<ItemStack> itms) {
+        int retval = 0;
+        for(ItemStack itm: itms) {
+            retval += removeItem(itm, itm.getAmount());
+        }
+        return retval;
+    }
+    
     public int removeItem(ItemStack iS, int amount) {
         return removeItem(new Price(iS), amount);
     }
@@ -387,6 +396,13 @@ public class RSPlayerInventory {
         return retval;
     }
 
+    public boolean addItems(List<ItemStack> iS) {
+        for(ItemStack itm : iS) {
+            addItem(itm, itm.getAmount());
+        }
+        return true;
+    }
+    
     public boolean addItem(ItemStack iS, int amount) {
         Price tempP = new Price(iS);
         if (items.containsKey(tempP)) {
